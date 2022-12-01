@@ -1,0 +1,20 @@
+name: name
+author: srnyx
+description: This is an example description
+
+main: tld.domain.name.Main
+version: ${version}
+api-version: 1.19
+
+commands:
+  example:
+    description: This is an example command
+    aliases:
+      - ex
+      - examples
+    permission: name.example
+
+permissions:
+  name.example:
+    description: This is an example permission
+    default: true
