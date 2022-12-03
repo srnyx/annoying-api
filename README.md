@@ -1,5 +1,5 @@
-# Template
+# Annoying API
 
-Public template repository used when I create a new repository for one of my projects. Feel free to use this or create a pull request to improve it!
+General purpose API for my plugins. Just contains some utility classes and methods.
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d2231a402af840f3a564665440f1797a)](https://www.codacy.com/gh/srnyx/template/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=srnyx/template&amp;utm_campaign=Badge_Grade)
+You can use it in your plugins too. I'll try my best to provide support if needed, but don't expect it to be very good.

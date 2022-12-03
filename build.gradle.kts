@@ -1,9 +1,10 @@
-description = "name"
-version = "0.0.1"
-group = "tld.domain"
+description = "AnnoyingAPI"
+version = "1.0.0"
+group = "xyz.srnyx"
 
 plugins {
     java
+    `maven-publish`
 }
 
 repositories {
@@ -13,7 +14,22 @@ repositories {
 
 dependencies {
     compileOnly("org.spigotmc", "spigot-api", "1.19.2-R0.1-SNAPSHOT")
-    implementation("org.jetbrains:annotations:23.0.0")
+    compileOnly("org.jetbrains", "annotations", "23.0.0")
+    compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+}
+
+java {
+    withJavadocJar()
+}
+
+configure<PublishingExtension> {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.github.srnyx"
+            artifactId = "annoyingapi"
+            from(components["java"])
+        }
+    }
 }
 
 tasks {
