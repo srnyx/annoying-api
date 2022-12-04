@@ -32,25 +32,27 @@ import java.util.logging.Level;
  */
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
-    @NotNull private final Set<AnnoyingDependency> plugins;
+    @NotNull private final Set<AnnoyingDependency> dependencies;
     private AnnoyingDownloadFinish finish;
     private int remaining = 0;
 
     /**
-     * Constructor for {@link AnnoyingDownload} with multiple plugins
+     * Constructor for {@link AnnoyingDownload} with multiple dependencies
      *
-     * @param   plugins the plugins (represented as {@link AnnoyingDependency}) to download
+     * @param   plugin          the plugin that is downloading the dependencies
+     * @param   dependencies    the {@link AnnoyingDependency}s to download
      */
     @Contract(pure = true)
-    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull Set<AnnoyingDependency> plugins) {
+    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull Set<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
-        this.plugins = plugins;
+        this.dependencies = dependencies;
     }
 
     /**
-     * Constructor for {@link AnnoyingDownload} with a single plugin
+     * Constructor for {@link AnnoyingDownload} with a single dependency
      *
-     * @param   plugin  the plugin (represented as {@link AnnoyingDependency}) to download
+     * @param   plugin      the plugin that is downloading the {@link AnnoyingDependency}
+     * @param   dependency  the {@link AnnoyingDependency} to download
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull AnnoyingDependency dependency) {
         this(plugin, Set.of(dependency));
@@ -63,8 +65,8 @@ public class AnnoyingDownload {
      */
     public void downloadPlugins(@Nullable AnnoyingDownloadFinish finish) {
         this.finish = finish;
-        remaining = plugins.size();
-        plugins.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
+        remaining = dependencies.size();
+        dependencies.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
     }
 
     /**
@@ -235,8 +237,8 @@ public class AnnoyingDownload {
     private void finish() {
         remaining--;
         if (remaining == 0) {
-            plugin.log(Level.INFO, "\n&a&lAll &2&l" + plugins.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
-            if (finish != null) finish.onFinish(plugins);
+            plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
+            if (finish != null) finish.onFinish(dependencies);
         }
     }
 }

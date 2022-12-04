@@ -23,6 +23,7 @@ public class AnnoyingCooldown {
     /**
      * Creates and starts a cooldown of the specified {@link AnnoyingCooldownType} for the specified player
      *
+     * @param   plugin  the plugin that is creating the cooldown
      * @param   uuid    the player's UUID
      * @param   type    the cooldown type
      */

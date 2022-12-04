@@ -8,6 +8,9 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 
+/**
+ * A listener that can be registered to the Bukkit event system
+ */
 public interface AnnoyingListener extends Listener {
     /**
      * Registers the listener to the {@link #getPlugin()}

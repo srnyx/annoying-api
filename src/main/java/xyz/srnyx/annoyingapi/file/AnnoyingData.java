@@ -23,6 +23,7 @@ public class AnnoyingData extends YamlConfiguration implements AnnoyingFile {
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path
      *
+     * @param   plugin      the plugin that is creating the file
      * @param   path        the path to the file (relative to {@code data} folder in the plugin's folder)
      * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
      */
@@ -36,6 +37,7 @@ public class AnnoyingData extends YamlConfiguration implements AnnoyingFile {
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path
      *
+     * @param   plugin  the plugin that is creating the file
      * @param   path    the path to the file (inside {@code /data/})
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path) {

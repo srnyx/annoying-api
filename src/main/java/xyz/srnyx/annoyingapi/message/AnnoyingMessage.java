@@ -36,7 +36,8 @@ public class AnnoyingMessage {
     /**
      * Constructs a new {@link AnnoyingMessage} with the specified key
      *
-     * @param   key the key of the message
+     * @param   plugin  the plugin getting the message
+     * @param   key     the key of the message
      */
     public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
         this.plugin = plugin;
