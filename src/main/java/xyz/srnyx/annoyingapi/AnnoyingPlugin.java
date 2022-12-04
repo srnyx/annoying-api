@@ -36,6 +36,13 @@ public class AnnoyingPlugin extends JavaPlugin {
     public static File PLUGIN_FOLDER;
 
     /**
+     * Creates a new instance of the plugin. This only exists to give the constructor a Javadoc.
+     */
+    public AnnoyingPlugin() {
+        super();
+    }
+
+    /**
      * Called when this plugin is enabled
      */
     @Override

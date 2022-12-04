@@ -38,7 +38,11 @@ public class AnnoyingCooldown {
     }
 
     /**
+     * A {@code long} of the time remaining on the cooldown
+     *
      * @return  amount of time left in the cooldown (in milliseconds)
+     *
+     * @see     AnnoyingCooldown#getRemainingPretty(String)
      */
     public long getRemaining() {
         final Map<AnnoyingCooldownType, Long> map = COOLDOWNS.get(uuid);
@@ -49,22 +53,32 @@ public class AnnoyingCooldown {
     }
 
     /**
+     * {@link #getRemaining()} but pretty
+     *
      * @param   pattern the pattern to format the time with
      *
      * @return          the formatted time left in the cooldown
+     *
+     * @see             AnnoyingCooldown#getRemaining()
      */
     public String getRemainingPretty(@Nullable String pattern) {
         return AnnoyingPlugin.formatMillis(getRemaining(), pattern);
     }
 
     /**
+     * The duration of the {@link AnnoyingCooldownType}
+     *
      * @return  how long the cooldown is (in milliseconds)
+     *
+     * @see     AnnoyingCooldownType#getDuration()
      */
     public long getDuration() {
         return type.getDuration();
     }
 
     /**
+     * A {@code boolean} of whether the cooldown is active
+     *
      * @return  whether the player is on cooldown
      */
     public boolean isOnCooldown() {

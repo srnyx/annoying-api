@@ -20,24 +20,32 @@ import java.util.logging.Level;
  */
 public interface AnnoyingFile {
     /**
+     * Every {@link AnnoyingFile} should extend {@link YamlConfiguration}
+     *
      * @return  the {@link YamlConfiguration} for this file
      */
     @NotNull
     YamlConfiguration getYaml();
 
     /**
+     * The path is from the plugin's folder, not the server/root folder (unless otherwise specified)
+     *
      * @return  the path to this file
      */
     @NotNull
     String getPath();
 
     /**
+     * The file is constructed using {@link #getPath()}
+     *
      * @return  the {@link File}
      */
     @NotNull
     File getFile();
 
     /**
+     * This {@code boolean} is used by {@link #save(AnnoyingPlugin)}
+     *
      * @return  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save(AnnoyingPlugin)} is used
      */
     boolean canBeEmpty();

@@ -43,21 +43,27 @@ public class AnnoyingTitle {
     }
 
     /**
-     * @return  how long the text will take to fade in (in ticks)
+     * How long the text will take to fade in (in ticks)
+     *
+     * @return  {@link #fadeIn}
      */
     public int getFadeIn() {
         return fadeIn;
     }
 
     /**
-     * @return  how long the text will stay on the screen (in ticks)
+     * How long the text will stay on the screen (in ticks)
+     *
+     * @return  {@link #stay}
      */
     public int getStay() {
         return stay;
     }
 
     /**
-     * @return  how long the text will take to fade out (in ticks)
+     * How long the text will take to fade out (in ticks)
+     *
+     * @return  {@link #fadeOut}
      */
     public int getFadeOut() {
         return fadeOut;

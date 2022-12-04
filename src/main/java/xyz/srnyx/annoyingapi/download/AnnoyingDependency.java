@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public record AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingPlatform, String> platforms) {
     /**
+     * This uses {@link Bukkit#getPluginManager()} to check if the dependency is installed. So it's vital that {@link #name} is from the plugin's {@code plugin.yml}
+     *
      * @return  whether the dependency is currently installed
      */
     public boolean isInstalled() {

@@ -44,6 +44,8 @@ public class AnnoyingSender {
     }
 
     /**
+     * Returns the {@link CommandSender} that was used
+     *
      * @return  the {@link CommandSender} used
      */
     @NotNull
@@ -52,6 +54,8 @@ public class AnnoyingSender {
     }
 
     /**
+     * Returns the {@link Command} that was used
+     *
      * @return  the {@link Command} that was used
      */
     @Nullable
@@ -60,6 +64,8 @@ public class AnnoyingSender {
     }
 
     /**
+     * Returns the {@link Command}'s label that was used
+     *
      * @return  the {@link Command}'s label that was used
      */
     @Nullable
@@ -68,6 +74,8 @@ public class AnnoyingSender {
     }
 
     /**
+     * Returns the {@link Command}'s arguments that were used
+     *
      * @return  the {@link Command}'s arguments that were used
      */
     @Nullable

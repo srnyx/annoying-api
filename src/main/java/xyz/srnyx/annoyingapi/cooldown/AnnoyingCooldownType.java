@@ -6,6 +6,8 @@ package xyz.srnyx.annoyingapi.cooldown;
  */
 public interface AnnoyingCooldownType {
     /**
+     * Returns the cooldown's duration in milliseconds
+     *
      * @return  the duration of the cooldown in milliseconds
      */
     long getDuration();
