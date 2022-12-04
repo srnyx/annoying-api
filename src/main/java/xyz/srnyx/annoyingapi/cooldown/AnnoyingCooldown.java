@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,11 +16,7 @@ import java.util.UUID;
  * This class is used to create and manage cooldowns for players
  */
 public class AnnoyingCooldown {
-    /**
-     * Stores the cooldowns for each player/type
-     */
-    @NotNull public static final Map<UUID, Map<AnnoyingCooldownType, Long>> COOLDOWNS = new HashMap<>();
-
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final UUID uuid;
     @NotNull private final AnnoyingCooldownType type;
 
@@ -31,10 +27,11 @@ public class AnnoyingCooldown {
      * @param   type    the cooldown type
      */
     @Contract(pure = true)
-    public AnnoyingCooldown(@NotNull UUID uuid, @NotNull AnnoyingCooldownType type) {
+    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull AnnoyingCooldownType type) {
+        this.plugin = plugin;
         this.uuid = uuid;
         this.type = type;
-        COOLDOWNS.computeIfAbsent(uuid, k -> Collections.emptyMap()).put(type, System.currentTimeMillis() + type.getDuration());
+        plugin.cooldowns.computeIfAbsent(uuid, k -> Collections.emptyMap()).put(type, System.currentTimeMillis() + type.getDuration());
     }
 
     /**
@@ -45,7 +42,7 @@ public class AnnoyingCooldown {
      * @see     AnnoyingCooldown#getRemainingPretty(String)
      */
     public long getRemaining() {
-        final Map<AnnoyingCooldownType, Long> map = COOLDOWNS.get(uuid);
+        final Map<AnnoyingCooldownType, Long> map = plugin.cooldowns.get(uuid);
         if (map == null) return 0;
         final Long time = map.get(type);
         if (time == null) return 0;
@@ -62,7 +59,7 @@ public class AnnoyingCooldown {
      * @see             AnnoyingCooldown#getRemaining()
      */
     public String getRemainingPretty(@Nullable String pattern) {
-        return AnnoyingPlugin.formatMillis(getRemaining(), pattern);
+        return AnnoyingUtility.formatMillis(getRemaining(), pattern);
     }
 
     /**
@@ -86,9 +83,9 @@ public class AnnoyingCooldown {
     }
 
     /**
-     * If the player should no longer be on cooldown, this will remove them from {@link #COOLDOWNS}
+     * If the player should no longer be on cooldown, this will remove them from {@link AnnoyingPlugin#cooldowns}
      */
     public void check() {
-        if (!isOnCooldown()) COOLDOWNS.get(uuid).remove(type);
+        if (!isOnCooldown()) plugin.cooldowns.get(uuid).remove(type);
     }
 }

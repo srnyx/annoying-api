@@ -14,7 +14,7 @@ public enum AnnoyingBroadcast {
      */
     TITLE,
     /**
-     * Message w ill be sent as a subtitle
+     * Message will be sent as a subtitle
      */
     SUBTITLE,
     /**

@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi.file;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
@@ -14,6 +13,7 @@ import java.io.File;
  * Represents a file in the plugin's folder (usually a config file)
  */
 public class AnnoyingResource extends YamlConfiguration implements AnnoyingFile {
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String path;
     @NotNull private final File file;
     private final boolean canBeEmpty;
@@ -21,25 +21,26 @@ public class AnnoyingResource extends YamlConfiguration implements AnnoyingFile 
     /**
      * Constructs and loads a new {@link AnnoyingResource} from the path
      *
-     * @param   path        the path to the file (relative to {@link AnnoyingPlugin#PLUGIN_FOLDER})
-     * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save(AnnoyingPlugin)} is used
-     * @param   plugin      the {@link AnnoyingPlugin} instance (used in {@link #load(AnnoyingPlugin)})
+     * @param   path        the path to the file (relative to the plugin's folder)
+     * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     * @param   plugin      the {@link AnnoyingPlugin} instance (used in {@link #load()})
      */
-    public AnnoyingResource(@NotNull String path, boolean canBeEmpty, @NotNull AnnoyingPlugin plugin) {
+    public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path, boolean canBeEmpty) {
+        this.plugin = plugin;
         this.path = path;
         this.file = new File(plugin.getDataFolder(), path);
         this.canBeEmpty = canBeEmpty;
-        load(plugin);
+        load();
     }
 
     /**
      * Constructs and loads a new {@link AnnoyingResource} from the path
      *
-     * @param   path    the path to the file (relative to {@link AnnoyingPlugin#PLUGIN_FOLDER})
-     * @param   plugin  the {@link AnnoyingPlugin} instance (used in {@link #load(AnnoyingPlugin)})
+     * @param   path    the path to the file (relative to the plugin's folder)
+     * @param   plugin  the {@link AnnoyingPlugin} instance (used in {@link #load()})
      */
-    public AnnoyingResource(@NotNull String path, @NotNull AnnoyingPlugin plugin) {
-        this(path, true, plugin);
+    public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
+        this(plugin, path, true);
     }
 
     @Override @NotNull
@@ -60,7 +61,7 @@ public class AnnoyingResource extends YamlConfiguration implements AnnoyingFile 
     }
 
     @Override
-    public void create(@Nullable AnnoyingPlugin plugin) {
-        if (plugin != null) plugin.saveResource(path, false);
+    public void create() {
+        plugin.saveResource(path, false);
     }
 }

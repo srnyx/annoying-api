@@ -12,9 +12,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.AnnoyingSender;
+import xyz.srnyx.annoyingapi.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import java.util.Map;
  * Represents a message from the {@link AnnoyingOptions#messages} file.
  */
 public class AnnoyingMessage {
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String key;
     @NotNull private String message;
     @NotNull private final String prefix;
@@ -36,10 +38,11 @@ public class AnnoyingMessage {
      *
      * @param   key the key of the message
      */
-    public AnnoyingMessage(@NotNull String key) {
+    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
+        this.plugin = plugin;
         this.key = key;
         this.message = getMessage(key);
-        this.prefix = getMessage(AnnoyingPlugin.OPTIONS.prefix);
+        this.prefix = getMessage(plugin.options.prefix);
         replace("%prefix%", prefix);
     }
 
@@ -114,12 +117,12 @@ public class AnnoyingMessage {
      */
     public void send(@NotNull AnnoyingSender annoyingSender) {
         final CommandSender sender = annoyingSender.getCmdSender();
-        final AnnoyingResource messages = AnnoyingPlugin.OPTIONS.messages;
+        final AnnoyingResource messages = plugin.options.messages;
         if (messages == null) {
             JSON.send(sender, new JTextComponent(message, ChatColor.RED + "No messages file found!"));
             return;
         }
-        final String splitter = getMessage(AnnoyingPlugin.OPTIONS.splitter);
+        final String splitter = getMessage(plugin.options.splitter);
 
         // Replace %command%
         final StringBuilder command = new StringBuilder();
@@ -132,7 +135,7 @@ public class AnnoyingMessage {
         // Single component
         final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
-            message = AnnoyingPlugin.color(message);
+            message = AnnoyingUtility.color(message);
 
             // Normal message
             if (!message.contains(splitter)) {
@@ -160,13 +163,13 @@ public class AnnoyingMessage {
         for (final String subKey : section.getKeys(false)) {
             String subMessage = section.getString(subKey);
             if (subMessage == null) {
-                components.add(new JTextComponent(key + "." + subKey, AnnoyingPlugin.color("&cCheck &4" + messages.getName() + ".yml&c!")));
+                components.add(new JTextComponent(key + "." + subKey, AnnoyingUtility.color("&cCheck &4" + messages.getName() + ".yml&c!")));
                 continue;
             }
 
             // Replacements
             for (final Map.Entry<String, String> entry : replacements.entrySet()) subMessage = subMessage.replace(entry.getKey(), entry.getValue());
-            subMessage = AnnoyingPlugin.color(subMessage);
+            subMessage = AnnoyingUtility.color(subMessage);
 
             // Get component parts
             final String[] split = subMessage
@@ -220,7 +223,7 @@ public class AnnoyingMessage {
     }
 
     private String getMessage(@NotNull String msgKey) {
-        final AnnoyingResource messages = AnnoyingPlugin.OPTIONS.messages;
+        final AnnoyingResource messages = plugin.options.messages;
         if (messages == null) return msgKey;
         return messages.getString(msgKey, msgKey);
     }

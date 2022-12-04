@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.download;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.Map;
 
 
@@ -19,6 +20,6 @@ public record AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingPlat
      * @return  whether the dependency is currently installed
      */
     public boolean isInstalled() {
-        return Bukkit.getPluginManager().getPlugin(name) != null;
+        return Bukkit.getPluginManager().getPlugin(name) != null || new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar").exists();
     }
 }

@@ -31,6 +31,7 @@ import java.util.logging.Level;
  * Used for downloading {@link AnnoyingDependency}s
  */
 public class AnnoyingDownload {
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final Set<AnnoyingDependency> plugins;
     private AnnoyingDownloadFinish finish;
     private int remaining = 0;
@@ -41,7 +42,8 @@ public class AnnoyingDownload {
      * @param   plugins the plugins (represented as {@link AnnoyingDependency}) to download
      */
     @Contract(pure = true)
-    public AnnoyingDownload(@NotNull Set<AnnoyingDependency> plugins) {
+    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull Set<AnnoyingDependency> plugins) {
+        this.plugin = plugin;
         this.plugins = plugins;
     }
 
@@ -50,8 +52,8 @@ public class AnnoyingDownload {
      *
      * @param   plugin  the plugin (represented as {@link AnnoyingDependency}) to download
      */
-    public AnnoyingDownload(@NotNull AnnoyingDependency plugin) {
-        this(Set.of(plugin));
+    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull AnnoyingDependency dependency) {
+        this(plugin, Set.of(dependency));
     }
 
     /**
@@ -61,7 +63,8 @@ public class AnnoyingDownload {
      */
     public void downloadPlugins(@Nullable AnnoyingDownloadFinish finish) {
         this.finish = finish;
-        plugins.forEach(plugin -> new Thread(() -> attemptDownload(plugin)).start());
+        remaining = plugins.size();
+        plugins.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
     }
 
     /**
@@ -97,13 +100,13 @@ public class AnnoyingDownload {
 
         // Manual
         if (platforms.containsKey(AnnoyingPlatform.MANUAL)) {
-            AnnoyingPlugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(AnnoyingPlatform.MANUAL));
+            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(AnnoyingPlatform.MANUAL));
             finish();
             return;
         }
 
         // Ran out of platforms
-        AnnoyingPlugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
+        plugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
         finish();
     }
 
@@ -213,7 +216,7 @@ public class AnnoyingDownload {
 
         // Download file
         try (final BufferedInputStream in = new BufferedInputStream(url.openStream());
-             final FileOutputStream out = new FileOutputStream(new File(AnnoyingPlugin.PLUGIN_FOLDER.getParentFile(), name + ".jar"))) {
+             final FileOutputStream out = new FileOutputStream(new File(plugin.getDataFolder().getParentFile(), name + ".jar"))) {
             final byte[] buffer = new byte[1024];
             int numRead;
             while ((numRead = in.read(buffer)) != -1) out.write(buffer, 0, numRead);
@@ -222,7 +225,7 @@ public class AnnoyingDownload {
         }
 
         // Send success message
-        AnnoyingPlugin.log(Level.INFO, "&2" + name + " &8|&a Successfully downloaded from &2" + platform.name());
+        plugin.log(Level.INFO, "&2" + name + " &8|&a Successfully downloaded from &2" + platform.name());
         finish();
     }
 
@@ -232,8 +235,7 @@ public class AnnoyingDownload {
     private void finish() {
         remaining--;
         if (remaining == 0) {
-            AnnoyingPlugin.log(Level.INFO,
-                    "\n&a&lAll &2&l" + plugins.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
+            plugin.log(Level.INFO, "\n&a&lAll &2&l" + plugins.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
             if (finish != null) finish.onFinish(plugins);
         }
     }

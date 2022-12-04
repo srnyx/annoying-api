@@ -15,13 +15,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 
 
 /**
  * Represents a command that can be executed by a player or the console
  */
 public interface AnnoyingCommand extends TabExecutor {
-    // Overrides
     /**
      * Executes the given command, returning its success.
      * <br>
@@ -36,24 +36,25 @@ public interface AnnoyingCommand extends TabExecutor {
      */
     @Override
     default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+        final AnnoyingPlugin plugin = getPlugin();
         final AnnoyingSender sender = new AnnoyingSender(cmdSender, cmd, label, args);
 
         // Permission check
         final String permission = getPermission();
         if (permission != null && !cmdSender.hasPermission(getPermission())) {
-            new AnnoyingMessage(AnnoyingPlugin.OPTIONS.noPermission).send(sender);
+            new AnnoyingMessage(plugin, plugin.options.noPermission).send(sender);
             return true;
         }
 
         // Player check
         if (isPlayerOnly() && !(cmdSender instanceof Player)) {
-            new AnnoyingMessage(AnnoyingPlugin.OPTIONS.onlyPlayer).send(sender);
+            new AnnoyingMessage(plugin, plugin.options.onlyPlayer).send(sender);
             return true;
         }
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(AnnoyingPlugin.OPTIONS.invalidArguments).send(sender);
+            new AnnoyingMessage(plugin, plugin.options.invalidArguments).send(sender);
             return true;
         }
 
@@ -65,7 +66,7 @@ public interface AnnoyingCommand extends TabExecutor {
     /**
      * Requests a list of possible completions for a command argument.
      *
-     * @param   cmdSender   Source of the command.  For players tab-completing a command inside of a command block, this will be the player, not the command block.
+     * @param   cmdSender   Source of the command. For players tab-completing a command inside a command block, this will be the player, not the command block.
      * @param   cmd         Command which was executed
      * @param   label       Alias of the command which was used
      * @param   args        The arguments passed to the command, including final partial argument to be completed
@@ -87,22 +88,36 @@ public interface AnnoyingCommand extends TabExecutor {
         return results;
     }
 
-    // Methods
     /**
-     * Registers the command to the plugin
-     *
-     * @param   plugin  the plugin to register the command to
+     * Registers the command to the {@link #getPlugin()}
      */
-    default void register(@NotNull AnnoyingPlugin plugin) {
-        final PluginCommand command = plugin.getCommand(getName());
+    default void register() {
+        final PluginCommand command = getPlugin().getCommand(getName());
         if (command == null) {
-            plugin.getLogger().warning(AnnoyingPlugin.color("&cCommand &4" + getName() + "&c not found!"));
+            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found!");
             return;
         }
         command.setExecutor(this);
     }
 
-    // Settings
+    /**
+     * Unregisters the command from the {@link #getPlugin()}
+     */
+    default void unregister() {
+        final PluginCommand command = getPlugin().getCommand(getName());
+        if (command == null) return;
+        command.setExecutor(null);
+        command.setTabCompleter(null);
+    }
+
+    /**
+     * The {@link AnnoyingPlugin} that this command belongs to
+     *
+     * @return  the plugin instance
+     */
+    @NotNull
+    AnnoyingPlugin getPlugin();
+
     /**
      * <i>{@code OPTIONAL}</i> This is the name of the command
      * <p>If not specified, the lowercase class name will be used ({@code Command} will be removed)
@@ -147,7 +162,6 @@ public interface AnnoyingCommand extends TabExecutor {
         return args -> true;
     }
 
-    // Execution
     /**
      * <i>{@code REQUIRED}</i> This is everything that's executed when the command is run
      *

@@ -3,15 +3,14 @@ package xyz.srnyx.annoyingapi;
 import com.olliez4.interface4.util.json.JSON;
 
 import org.bukkit.ChatColor;
+import org.bukkit.event.Listener;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.download.AnnoyingDependency;
-import xyz.srnyx.annoyingapi.download.AnnoyingPlatform;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 
@@ -27,17 +26,11 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The secondary color used by the API (e.g. for start messages)
      */
     @NotNull public ChatColor colorDark = ChatColor.DARK_AQUA;
-
-    /**
-     * <i>{@code OPTIONAL}</i> Dependencies of the API and the plugin
-     */
-    @NotNull public Set<AnnoyingDependency> dependencies = new HashSet<>();
-
     /**
      * <i>{@code RECOMMENDED}</i> The {@link AnnoyingResource} containing the plugin's messages <i>(usually just {@code messages.yml})</i>
-     * If not specified, no messages will be loaded (plugin will still enable)
+     * <p>If not specified, no messages will be loaded (plugin will still enable)
      */
-    public AnnoyingResource messages;
+    @Nullable public AnnoyingResource messages;
     /**
      * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's prefix
      */
@@ -58,12 +51,12 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's "invalid arguments" message
      */
     @NotNull public String invalidArguments = "error.invalid-arguments";
-
     /**
-     * Default constructor for {@link AnnoyingOptions}. This will add the default dependencies for the API.
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register
      */
-    public AnnoyingOptions() {
-        // AnnoyingAPI dependencies
-        dependencies.add(new AnnoyingDependency("Interface4", Map.of(AnnoyingPlatform.SPIGOT, "102119")));
-    }
+    @NotNull public Set<AnnoyingCommand> commands = new HashSet<>();
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link Listener}s to register
+     */
+    @NotNull public Set<AnnoyingListener> listeners = new HashSet<>();
 }
