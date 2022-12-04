@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.file;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +11,8 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.Level;
 
 
 /**
@@ -61,8 +64,10 @@ public class AnnoyingData extends YamlConfiguration implements AnnoyingFile {
 
     @Override
     public void create(@Nullable AnnoyingPlugin plugin) {
+        final Path filePath = file.toPath();
         try {
-            Files.createFile(file.toPath());
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
         } catch (final IOException e) {
             warning("creating");
             e.printStackTrace();
