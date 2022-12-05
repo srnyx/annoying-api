@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,7 +39,7 @@ public class AnnoyingCooldown {
      * Starts the cooldown
      */
     public void start() {
-        plugin.cooldowns.computeIfAbsent(uuid, k -> Collections.emptyMap()).put(type, System.currentTimeMillis() + type.getDuration());
+        plugin.cooldowns.computeIfAbsent(uuid, k -> new HashMap<>()).put(type, System.currentTimeMillis() + type.getDuration());
     }
 
     /**

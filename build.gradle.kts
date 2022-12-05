@@ -1,5 +1,5 @@
 description = "AnnoyingAPI"
-version = "1.1.1"
+version = "1.1.2"
 group = "xyz.srnyx"
 
 plugins {
