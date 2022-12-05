@@ -38,13 +38,18 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Called when the plugin is enabled
+     * Called when the plugin is enabled.
+     * <p>Do not override this method! Override {@link #enable()} instead
+     *
+     * @see #enable()
      */
     @Override
-    public void onEnable() {
+    public final void onEnable() {
         // Get dependencies
         final Set<AnnoyingDependency> dependencies = new HashSet<>(getDependencies());
-        dependencies.add(new AnnoyingDependency("Interface4", Map.of(AnnoyingPlatform.SPIGOT, "102119")));
+        final Map<AnnoyingPlatform, String> interface4 = new EnumMap<>(AnnoyingPlatform.class);
+        interface4.put(AnnoyingPlatform.SPIGOT, "102119");
+        dependencies.add(new AnnoyingDependency("Interface4", interface4));
 
         // Download dependencies
         final Set<AnnoyingDependency> missing = dependencies.stream()
@@ -60,7 +65,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Start messages
         final String name = getName() + " v" + getDescription().getVersion();
         final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = "-".repeat(Math.max(name.length(), authors.length()));
+        final String line = String.join("", Collections.nCopies(Math.max(name.length(), authors.length()), "-"));
         log(Level.INFO, options.colorDark + line);
         log(Level.INFO, options.colorLight + name);
         log(Level.INFO, options.colorLight + authors);
@@ -76,9 +81,12 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Called when the plugin is disabled
+     * <p>Do not override this method! Override {@link #disable()} instead
+     *
+     * @see #disable()
      */
     @Override
-    public void onDisable() {
+    public final void onDisable() {
         disable();
     }
 

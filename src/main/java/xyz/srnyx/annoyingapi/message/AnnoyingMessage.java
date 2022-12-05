@@ -92,12 +92,18 @@ public class AnnoyingMessage {
         final AnnoyingTitle finalTitle = title;
 
         switch (type) {
-            case TITLE -> Bukkit.getOnlinePlayers().forEach(player ->
-                    player.sendTitle(message, null, finalTitle.getFadeIn(), finalTitle.getStay(), finalTitle.getFadeOut()));
-            case SUBTITLE -> Bukkit.getOnlinePlayers().forEach(player ->
-                    player.sendTitle(null, message, finalTitle.getFadeIn(), finalTitle.getStay(), finalTitle.getFadeOut()));
-            case ACTIONBAR -> Bukkit.getOnlinePlayers().forEach(player -> ActionBar.send(player, message));
-            default -> broadcast();
+            case TITLE:
+                Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(message, null, finalTitle.getFadeIn(), finalTitle.getStay(), finalTitle.getFadeOut()));
+                break;
+            case SUBTITLE:
+                Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(null, message, finalTitle.getFadeIn(), finalTitle.getStay(), finalTitle.getFadeOut()));
+                break;
+            case ACTIONBAR:
+                Bukkit.getOnlinePlayers().forEach(player -> ActionBar.send(player, message));
+                break;
+            default:
+                broadcast();
+                break;
         }
     }
 

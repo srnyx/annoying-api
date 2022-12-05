@@ -12,16 +12,11 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -55,7 +50,7 @@ public class AnnoyingDownload {
      * @param   dependency  the {@link AnnoyingDependency} to download
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull AnnoyingDependency dependency) {
-        this(plugin, Set.of(dependency));
+        this(plugin, Collections.singleton(dependency));
     }
 
     /**
@@ -73,8 +68,8 @@ public class AnnoyingDownload {
      * Retry downloading the dependency with a new {@link AnnoyingPlatform}
      */
     private void attemptDownload(@NotNull AnnoyingDependency dependency) {
-        final String name = dependency.name();
-        final Map<AnnoyingPlatform, String> platforms = dependency.platforms();
+        final String name = dependency.name;
+        final Map<AnnoyingPlatform, String> platforms = dependency.platforms;
         
         // Modrinth
         if (platforms.containsKey(AnnoyingPlatform.MODRINTH)) {
@@ -118,14 +113,14 @@ public class AnnoyingDownload {
      */
     private void modrinth(@NotNull AnnoyingDependency dependency) {
         final String[] version = Bukkit.getBukkitVersion().split("\\.");
-        final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms().get(AnnoyingPlatform.MODRINTH) + "/version" +
+        final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms.get(AnnoyingPlatform.MODRINTH) + "/version" +
                 "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                 "&game_versions=%5B%22" + version[0] + "." + version[1] + "." + version[2].split("-")[0] + "%22%5D";
         final JsonElement json = getJson(url);
 
         // Request failed
         if (json == null) {
-            dependency.platforms().remove(AnnoyingPlatform.MODRINTH);
+            dependency.platforms.remove(AnnoyingPlatform.MODRINTH);
             attemptDownload(dependency);
             return;
         }
@@ -141,7 +136,7 @@ public class AnnoyingDownload {
      * <p>This will check if the plugin is premium and/or external before attempting to download
      */
     private void spigot(@NotNull AnnoyingDependency dependency) {
-        final Map<AnnoyingPlatform, String> platforms = dependency.platforms();
+        final Map<AnnoyingPlatform, String> platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + platforms.get(AnnoyingPlatform.SPIGOT);
         final JsonElement json = getJson(url);
 
@@ -177,24 +172,26 @@ public class AnnoyingDownload {
     /**
      * Retrieves the {@link JsonElement} from the specified URL
      *
-     * @param   url the URL to retrieve the {@link JsonElement} from
+     * @param   urlString   the URL to retrieve the {@link JsonElement} from
      *
-     * @return      the {@link JsonElement} retrieved from the specified URL
+     * @return              the {@link JsonElement} retrieved from the specified URL
      */
     @Nullable
-    private JsonElement getJson(@NotNull String url) {
+    private JsonElement getJson(@NotNull String urlString) {
+        final HttpURLConnection connection;
+        final JsonElement json;
         try {
-            final HttpResponse<String> response = HttpClient.newBuilder().build().send(HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .build(), HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 404) return null;
-            return JsonParser.parseString(response.body());
+            final URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            if (connection.getResponseCode() == 404) return null;
+            json = new JsonParser().parse(new InputStreamReader(connection.getInputStream()));
         } catch (final IOException e) {
-            return null;
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
+            e.printStackTrace();
             return null;
         }
+        connection.disconnect();
+        return json;
     }
 
     /**
@@ -204,14 +201,14 @@ public class AnnoyingDownload {
      * @param   urlString   the URL of the file
      */
     private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull AnnoyingPlatform platform, @NotNull String urlString) {
-        final String name = dependency.name();
+        final String name = dependency.name;
 
         // Get URL
         final URL url;
         try {
             url = new URL(urlString);
         } catch (final MalformedURLException e) {
-            dependency.platforms().remove(platform);
+            dependency.platforms.remove(platform);
             attemptDownload(dependency);
             return;
         }

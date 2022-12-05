@@ -8,19 +8,20 @@ plugins {
 }
 
 repositories {
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // org.spigotmc:spigot-api
     mavenCentral() // org.spigotmc:spigot-api
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // org.spigotmc:spigot-api
+    maven("https://oss.sonatype.org/content/repositories/snapshots/") // org.spigotmc:spigot-api
 }
 
 dependencies {
-    compileOnly("org.spigotmc", "spigot-api", "1.19.2-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc", "spigot-api", "1.11-R0.1-SNAPSHOT")
     compileOnly("org.jetbrains", "annotations", "23.0.0")
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     withJavadocJar()
 }
 

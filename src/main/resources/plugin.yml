@@ -4,4 +4,7 @@ description: General purpose API for my plugins
 
 main: xyz.srnyx.annoyingapi.AnnoyingPlugin
 version: ${version}
-api-version: 1.19
+api-version: 1.11
+
+softdepend:
+  - Interface4
