@@ -8,6 +8,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,7 +33,21 @@ public class AnnoyingCooldown {
         this.plugin = plugin;
         this.uuid = uuid;
         this.type = type;
+    }
+
+    /**
+     * Starts the cooldown
+     */
+    public void start() {
         plugin.cooldowns.computeIfAbsent(uuid, k -> Collections.emptyMap()).put(type, System.currentTimeMillis() + type.getDuration());
+    }
+
+    /**
+     * Stops the cooldown
+     */
+    public void stop() {
+        final Map<AnnoyingCooldownType, Long> cooldowns = plugin.cooldowns.get(uuid);
+        if (cooldowns != null) cooldowns.remove(type);
     }
 
     /**
@@ -60,7 +75,7 @@ public class AnnoyingCooldown {
      * @see             AnnoyingCooldown#getRemaining()
      */
     public String getRemainingPretty(@Nullable String pattern) {
-        return AnnoyingUtility.formatMillis(getRemaining(), pattern);
+        return AnnoyingUtility.formatMillis(new Date(getRemaining()), pattern);
     }
 
     /**
@@ -87,6 +102,6 @@ public class AnnoyingCooldown {
      * If the player should no longer be on cooldown, this will remove them from {@link AnnoyingPlugin#cooldowns}
      */
     public void check() {
-        if (!isOnCooldown()) plugin.cooldowns.get(uuid).remove(type);
+        if (!isOnCooldown()) stop();
     }
 }
