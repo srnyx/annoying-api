@@ -177,5 +177,7 @@ public interface AnnoyingCommand extends TabExecutor {
      * @return          a list of suggestions for the command
      */
     @Nullable
-    List<String> onTabComplete(@NotNull AnnoyingSender sender);
+    default List<String> onTabComplete(@NotNull AnnoyingSender sender) {
+        return null;
+    }
 }
