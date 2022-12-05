@@ -70,8 +70,13 @@ plugin:
   # %prefix% can be used in any message in this file as many times as you want
   prefix: "&3&lANNOYING &8&l| &b"
 
-  # This will be what's used to split the different arguments of a component. Default: "@@"
-  splitter: "@@"
+  # These are the different splitters for messages/placeholders
+  splitters:
+    # This is the splitter for the JSON components (see above). Default: "@@"
+    json: "@@"
+    # This is the splitter for the placeholders. Default: "=="
+    placeholder: "=="
+
 
 # Error messages when a player does something wrong
 error:

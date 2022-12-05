@@ -38,7 +38,11 @@ public class AnnoyingOptions {
     /**
      * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's {@link JSON} component splitter
      */
-    @NotNull public String splitter = "plugin.splitter";
+    @NotNull public String splitterJson = "plugin.splitters.json";
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's placeholder component splitter
+     */
+    @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
     /**
      * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's "no permission" message
      */

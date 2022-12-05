@@ -19,8 +19,11 @@ import xyz.srnyx.annoyingapi.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -54,11 +57,51 @@ public class AnnoyingMessage {
      * @param   after   the {@link Object} to replace with
      *
      * @return          the updated {@link AnnoyingMessage} instance
+     * 
+     * @see             #replace(String, Object, AnnoyingReplaceType) 
      */
     public AnnoyingMessage replace(@NotNull String before, @Nullable Object after) {
-        final String afterString = String.valueOf(after);
+        String afterString = String.valueOf(after);
         message = message.replace(before, afterString);
         replacements.put(before, afterString);
+        return this;
+    }
+
+    /**
+     * {@link #replace(String, Object)} except with custom formatting
+     * 
+     * @param   before  the {@link String} to replace
+     * @param   after   the {@link Object} to replace with
+     * @param   type    the {@link AnnoyingReplaceType} to use
+     * 
+     * @return          the updated {@link AnnoyingMessage} instance
+     *
+     * @see             AnnoyingMessage#replace(String, Object)
+     * @see             AnnoyingReplaceType
+     */
+    public AnnoyingMessage replace(@NotNull String before, @Nullable Object after, @NotNull AnnoyingReplaceType type) {
+        final String splitter = plugin.options.splitterPlaceholder;
+        final String regex = "%" + Pattern.quote(before.replace("%", "") + splitter) + ".*%";
+        final Matcher matcher = Pattern.compile(regex).matcher(message);
+        final boolean found = matcher.find(); // find the placeholder (%<placeholder><splitter><custom>%) in message
+        final String match = found ? matcher.group() : before; // get the placeholder if found, otherwise use before
+        final String custom = found ? match.split(splitter)[1] : type.getDefaultCustom(); // get the custom if found, otherwise use type's default custom
+        String afterString = String.valueOf(after);
+
+        // Time placeholder
+        if (type.equals(AnnoyingReplaceType.TIME)) {
+            final long afterLong;
+            try {
+                afterLong = Long.parseLong(afterString);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return this;
+            }
+            if (matcher.find()) afterString = AnnoyingUtility.formatMillis(new Date(afterLong), custom);
+        }
+
+        message = message.replace(match, afterString);
+        replacements.put(match, afterString);
         return this;
     }
 
@@ -129,15 +172,16 @@ public class AnnoyingMessage {
             JSON.send(sender, new JTextComponent(message, ChatColor.RED + "No messages file found!"));
             return;
         }
-        final String splitter = getMessage(plugin.options.splitter);
+        final String splitter = getMessage(plugin.options.splitterJson);
 
         // Replace %command%
         final StringBuilder command = new StringBuilder();
         final String label = annoyingSender.getLabel();
-        if (label != null) command.append("/").append(label);
         final String[] args = annoyingSender.getArgs();
+        if (label != null) command.append("/").append(label);
         if (args != null) command.append(String.join(" ", args));
         replace("%command%", command.toString());
+        Bukkit.broadcastMessage(message);
 
         // Single component
         final ConfigurationSection section = messages.getConfigurationSection(key);

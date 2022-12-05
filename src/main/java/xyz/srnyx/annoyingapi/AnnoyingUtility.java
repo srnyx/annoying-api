@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 /**
@@ -35,7 +36,7 @@ public class AnnoyingUtility {
      * @return          the formatted time
      */
     @NotNull
-    public static String formatMillis(long millis, @Nullable String pattern) {
+    public static String formatMillis(@NotNull Date millis, @Nullable String pattern) {
         if (pattern == null) pattern = "mm:ss";
         return new SimpleDateFormat(pattern).format(millis);
     }
