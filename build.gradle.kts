@@ -1,5 +1,5 @@
 description = "AnnoyingAPI"
-version = "1.1.2"
+version = "1.1.3"
 group = "xyz.srnyx"
 
 plugins {
@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     compileOnly("org.spigotmc", "spigot-api", "1.11-R0.1-SNAPSHOT")
+    compileOnly("net.md-5", "bungeecord-api", "1.16-R0.4")
     compileOnly("org.jetbrains", "annotations", "23.0.0")
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }

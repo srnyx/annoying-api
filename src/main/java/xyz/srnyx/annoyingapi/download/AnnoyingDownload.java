@@ -65,39 +65,39 @@ public class AnnoyingDownload {
     }
 
     /**
-     * Retry downloading the dependency with a new {@link AnnoyingPlatform}
+     * Retry downloading the dependency with a new {@link Platform}
      */
     private void attemptDownload(@NotNull AnnoyingDependency dependency) {
         final String name = dependency.name;
-        final Map<AnnoyingPlatform, String> platforms = dependency.platforms;
+        final Map<Platform, String> platforms = dependency.platforms;
         
         // Modrinth
-        if (platforms.containsKey(AnnoyingPlatform.MODRINTH)) {
+        if (platforms.containsKey(Platform.MODRINTH)) {
             modrinth(dependency);
             return;
         }
 
         // Spigot
-        if (platforms.containsKey(AnnoyingPlatform.SPIGOT)) {
+        if (platforms.containsKey(Platform.SPIGOT)) {
             spigot(dependency);
             return;
         }
 
         // Bukkit
-        if (platforms.containsKey(AnnoyingPlatform.BUKKIT)) {
-            downloadFile(dependency, AnnoyingPlatform.BUKKIT, "https://dev.bukkit.org/projects/" + platforms.get(AnnoyingPlatform.BUKKIT) + "/files/latest");
+        if (platforms.containsKey(Platform.BUKKIT)) {
+            downloadFile(dependency, Platform.BUKKIT, "https://dev.bukkit.org/projects/" + platforms.get(Platform.BUKKIT) + "/files/latest");
             return;
         }
 
         // External
-        if (platforms.containsKey(AnnoyingPlatform.EXTERNAL)) {
-            downloadFile(dependency, AnnoyingPlatform.EXTERNAL, platforms.get(AnnoyingPlatform.EXTERNAL));
+        if (platforms.containsKey(Platform.EXTERNAL)) {
+            downloadFile(dependency, Platform.EXTERNAL, platforms.get(Platform.EXTERNAL));
             return;
         }
 
         // Manual
-        if (platforms.containsKey(AnnoyingPlatform.MANUAL)) {
-            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(AnnoyingPlatform.MANUAL));
+        if (platforms.containsKey(Platform.MANUAL)) {
+            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(Platform.MANUAL));
             finish();
             return;
         }
@@ -113,20 +113,20 @@ public class AnnoyingDownload {
      */
     private void modrinth(@NotNull AnnoyingDependency dependency) {
         final String[] version = Bukkit.getBukkitVersion().split("\\.");
-        final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms.get(AnnoyingPlatform.MODRINTH) + "/version" +
+        final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms.get(Platform.MODRINTH) + "/version" +
                 "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                 "&game_versions=%5B%22" + version[0] + "." + version[1] + "." + version[2].split("-")[0] + "%22%5D";
         final JsonElement json = getJson(url);
 
         // Request failed
         if (json == null) {
-            dependency.platforms.remove(AnnoyingPlatform.MODRINTH);
+            dependency.platforms.remove(Platform.MODRINTH);
             attemptDownload(dependency);
             return;
         }
 
         // Download file
-        downloadFile(dependency, AnnoyingPlatform.MODRINTH, json.getAsJsonArray().get(0).getAsJsonObject()
+        downloadFile(dependency, Platform.MODRINTH, json.getAsJsonArray().get(0).getAsJsonObject()
                 .getAsJsonArray("files").get(0).getAsJsonObject()
                 .get("url").getAsString());
     }
@@ -136,13 +136,13 @@ public class AnnoyingDownload {
      * <p>This will check if the plugin is premium and/or external before attempting to download
      */
     private void spigot(@NotNull AnnoyingDependency dependency) {
-        final Map<AnnoyingPlatform, String> platforms = dependency.platforms;
-        final String url = "https://api.spiget.org/v2/resources/" + platforms.get(AnnoyingPlatform.SPIGOT);
+        final Map<Platform, String> platforms = dependency.platforms;
+        final String url = "https://api.spiget.org/v2/resources/" + platforms.get(Platform.SPIGOT);
         final JsonElement json = getJson(url);
 
         // Request failed
         if (json == null) {
-            platforms.remove(AnnoyingPlatform.SPIGOT);
+            platforms.remove(Platform.SPIGOT);
             attemptDownload(dependency);
             return;
         }
@@ -150,23 +150,23 @@ public class AnnoyingDownload {
 
         // Resource is premium
         if (object.get("premium").getAsBoolean()) {
-            platforms.remove(AnnoyingPlatform.SPIGOT);
+            platforms.remove(Platform.SPIGOT);
             attemptDownload(dependency);
             return;
         }
 
         // Resource is external
         if (object.get("external").getAsBoolean()) {
-            platforms.put(AnnoyingPlatform.MANUAL, object
+            platforms.put(Platform.MANUAL, object
                     .get("file").getAsJsonObject()
                     .get("externalUrl").getAsString());
-            platforms.remove(AnnoyingPlatform.SPIGOT);
+            platforms.remove(Platform.SPIGOT);
             attemptDownload(dependency);
             return;
         }
 
         // Download file
-        downloadFile(dependency, AnnoyingPlatform.SPIGOT,  url + "/download");
+        downloadFile(dependency, Platform.SPIGOT,  url + "/download");
     }
 
     /**
@@ -200,7 +200,7 @@ public class AnnoyingDownload {
      * @param   platform    the platform of the URL
      * @param   urlString   the URL of the file
      */
-    private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull AnnoyingPlatform platform, @NotNull String urlString) {
+    private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull Platform platform, @NotNull String urlString) {
         final String name = dependency.name;
 
         // Get URL
@@ -237,5 +237,36 @@ public class AnnoyingDownload {
             plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
             if (finish != null) finish.onFinish(dependencies);
         }
+    }
+
+    /**
+     * Platforms that plugins can be downloaded from
+     */
+    public enum Platform {
+        /**
+         * <a href="https://modrinth.com">{@code https://modrinth.com}</a>
+         * <p>The project's ID <b>or</b> slug
+         * <p><b>Example:</b> {@code lzjYdd5h} <i>or</i> {@code personal-phantoms}
+         */
+        MODRINTH,
+        /**
+         * <a href="https://spigotmc.org">{@code https://spigotmc.org}</a>
+         * <p>The project's ID
+         * <p><b>Example:</b> {@code 106381}
+         */
+        SPIGOT,
+        /**
+         * <a href="https://dev.bukkit.org">{@code https://dev.bukkit.org/projects}</a>
+         * <p>The project's ID <b>or</b> slug
+         */
+        BUKKIT,
+        /**
+         * An external direct-download URL
+         */
+        EXTERNAL,
+        /**
+         * A URL that the user can manually download the plugin from
+         */
+        MANUAL
     }
 }

@@ -1,13 +1,9 @@
-package xyz.srnyx.annoyingapi.cooldown;
+package xyz.srnyx.annoyingapi;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.AnnoyingUtility;
-
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -19,17 +15,17 @@ import java.util.UUID;
 public class AnnoyingCooldown {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final UUID uuid;
-    @NotNull private final AnnoyingCooldownType type;
+    @NotNull private final CooldownType type;
 
     /**
-     * Creates and starts a cooldown of the specified {@link AnnoyingCooldownType} for the specified player
+     * Creates and starts a cooldown of the specified {@link CooldownType} for the specified player
      *
      * @param   plugin  the plugin that is creating the cooldown
      * @param   uuid    the player's UUID
      * @param   type    the cooldown type
      */
     @Contract(pure = true)
-    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull AnnoyingCooldownType type) {
+    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull CooldownType type) {
         this.plugin = plugin;
         this.uuid = uuid;
         this.type = type;
@@ -46,7 +42,7 @@ public class AnnoyingCooldown {
      * Stops the cooldown
      */
     public void stop() {
-        final Map<AnnoyingCooldownType, Long> cooldowns = plugin.cooldowns.get(uuid);
+        final Map<CooldownType, Long> cooldowns = plugin.cooldowns.get(uuid);
         if (cooldowns != null) cooldowns.remove(type);
     }
 
@@ -58,7 +54,7 @@ public class AnnoyingCooldown {
      * @see     AnnoyingCooldown#getRemainingPretty(String)
      */
     public long getRemaining() {
-        final Map<AnnoyingCooldownType, Long> map = plugin.cooldowns.get(uuid);
+        final Map<CooldownType, Long> map = plugin.cooldowns.get(uuid);
         if (map == null) return 0;
         final Long time = map.get(type);
         if (time == null) return 0;
@@ -75,15 +71,15 @@ public class AnnoyingCooldown {
      * @see             AnnoyingCooldown#getRemaining()
      */
     public String getRemainingPretty(@Nullable String pattern) {
-        return AnnoyingUtility.formatMillis(new Date(getRemaining()), pattern);
+        return AnnoyingUtility.formatMillis(getRemaining(), pattern);
     }
 
     /**
-     * The duration of the {@link AnnoyingCooldownType}
+     * The duration of the {@link CooldownType}
      *
      * @return  how long the cooldown is (in milliseconds)
      *
-     * @see     AnnoyingCooldownType#getDuration()
+     * @see     CooldownType#getDuration()
      */
     public long getDuration() {
         return type.getDuration();
@@ -103,5 +99,17 @@ public class AnnoyingCooldown {
      */
     public void check() {
         if (!isOnCooldown()) stop();
+    }
+
+    /**
+     * Implement this interface to create your own cooldown types
+     */
+    public interface CooldownType {
+        /**
+         * Returns the cooldown's duration in milliseconds
+         *
+         * @return  the duration of the cooldown in milliseconds
+         */
+        long getDuration();
     }
 }

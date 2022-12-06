@@ -59,6 +59,26 @@ key3:
   command-decline: "[Decline]@@Decline the request@@deny"
 # The name of a "text" sub-key doesn't matter since it's the default component (just don't have it start with another component's name).
 # --- END JSON COMPONENTS --- #
+#
+# --- PLACEHOLDER PARAMETERS --- #
+# *Some* placeholders will allow you to input a parameter. These parameters are used to change the output of the placeholder
+# To input a parameter, you simply put it after the placeholder name (inside the %%), separated by the "plugin.splitters.placeholder" (default: "==")
+# Example: "%placeholder==parameter%"
+# Below are the different types of parameters that can be used...
+# The examples will use "==" as the splitter, but you can change it by modifying "plugin.splitters.placeholder"
+#
+# - time: A time will be outputed in milliseconds by the plugin. The parameter will determine the format of the time.
+# Docs: https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/time/DurationFormatUtils.html
+# Examples: "%cooldown==m':'s%" -> "1:30", "%cooldown==H':'m':'s%" -> "1:30:0", "%cooldown==d'd' H'h' m'm' s's'%" -> "1h 30m 0s"
+#
+# - decimal: A number will be outputed in milliseconds by the plugin. The parameter will determine the format of the number.
+# Docs: https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html
+# Examples: "%money==#,###%" -> "8,637", "%money==#,###.##%" -> "8,637.2", "%money==#,###.00%" -> "8,637.20"
+#
+# Placeholders that support parameters will be displayed as "%name==type%" in the message's placeholder list.
+# Examples: "%cooldown=time%, %money=decimal%"
+key4: "KDR: %kdr==#.##%" # %kdr==decimal%
+# --- END PLACEHOLDER PARAMETERS --- #
 
 
 # This message can be used to test practically anything!

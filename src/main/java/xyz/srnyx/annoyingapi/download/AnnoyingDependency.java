@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.download;
 
 import org.bukkit.Bukkit;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +14,7 @@ import java.util.Map;
  */
 public class AnnoyingDependency {
     @NotNull public final String name;
-    @NotNull public final Map<AnnoyingPlatform, String> platforms;
+    @NotNull public final Map<AnnoyingDownload.Platform, String> platforms;
 
     /**
      * Creates a new dependency instance
@@ -22,7 +23,7 @@ public class AnnoyingDependency {
      * @param   platforms   the platforms the dependency can be downloaded from
      */
     @Contract(pure = true)
-    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingPlatform, String> platforms) {
+    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms) {
         this.name = name;
         this.platforms = platforms;
     }

@@ -1,16 +1,16 @@
 package xyz.srnyx.annoyingapi;
 
+import org.apache.commons.lang.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.cooldown.AnnoyingCooldownType;
 import xyz.srnyx.annoyingapi.download.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.download.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.download.AnnoyingDownloadFinish;
-import xyz.srnyx.annoyingapi.download.AnnoyingPlatform;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -28,7 +28,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Stores the cooldowns for each player/type
      */
-    @NotNull public final Map<UUID, Map<AnnoyingCooldownType, Long>> cooldowns = new HashMap<>();
+    @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
 
     /**
      * Creates a new instance of the plugin. This only exists to give the constructor a Javadoc.
@@ -47,8 +47,8 @@ public class AnnoyingPlugin extends JavaPlugin {
     public final void onEnable() {
         // Get dependencies
         final Set<AnnoyingDependency> dependencies = new HashSet<>(getDependencies());
-        final Map<AnnoyingPlatform, String> interface4 = new EnumMap<>(AnnoyingPlatform.class);
-        interface4.put(AnnoyingPlatform.SPIGOT, "102119");
+        final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
+        interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
         dependencies.add(new AnnoyingDependency("Interface4", interface4));
 
         // Download dependencies
@@ -65,7 +65,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Start messages
         final String name = getName() + " v" + getDescription().getVersion();
         final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = String.join("", Collections.nCopies(Math.max(name.length(), authors.length()), "-"));
+        final String line = StringUtils.repeat("-", Math.max(name.length(), authors.length()));
         log(Level.INFO, options.colorDark + line);
         log(Level.INFO, options.colorLight + name);
         log(Level.INFO, options.colorLight + authors);
