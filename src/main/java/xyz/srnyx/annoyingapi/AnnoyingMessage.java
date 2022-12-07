@@ -10,15 +10,12 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.apache.commons.lang.time.DurationFormatUtils;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,14 +27,11 @@ import java.util.stream.Collectors;
 
 
 /**
- * Represents a message from the {@link AnnoyingOptions#messages} file
+ * Represents a message from the {@link AnnoyingOptions#messagesFileName} file
  */
 public class AnnoyingMessage {
-    @Nullable private final AnnoyingResource messages;
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String key;
-    @NotNull private final String prefix;
-    @NotNull private final String splitterJson;
-    @NotNull private final String splitterPlaceholder;
     @NotNull private final Map<String, String> replacements = new HashMap<>();
 
     /**
@@ -47,12 +41,9 @@ public class AnnoyingMessage {
      * @param   key     the key of the message
      */
     public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
-        this.messages = plugin.options.messages;
+        this.plugin = plugin;
         this.key = key;
-        this.prefix = getString(plugin.options.prefix);
-        this.splitterJson = getString(plugin.options.splitterJson);
-        this.splitterPlaceholder = getString(plugin.options.splitterPlaceholder);
-        replace("%prefix%", prefix);
+        replace("%prefix%", plugin.options.prefix);
     }
 
     /**
@@ -83,12 +74,13 @@ public class AnnoyingMessage {
      * @see             ReplaceType
      */
     public AnnoyingMessage replace(@NotNull String before, @Nullable Object after, @NotNull ReplaceType type) {
-        final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(getMessage());
+        final String regex = "%" + Pattern.quote(before.replace("%", "") + plugin.options.splitterPlaceholder) + ".*?%";
+        final Matcher matcher = Pattern.compile(regex).matcher(getMessage());
         final String match;
         final String input;
         if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
             match = matcher.group(); // get the placeholder
-            final String split = match.split(splitterPlaceholder)[1]; // get the input part of the placeholder
+            final String split = match.split(plugin.options.splitterPlaceholder)[1]; // get the input part of the placeholder
             input = split.substring(0, split.length() - 1); // remove the closing % from the input part
         } else {
             match = before; // use the original placeholder
@@ -153,11 +145,7 @@ public class AnnoyingMessage {
      */
     @NotNull
     public List<JSONComponent> getComponents(@Nullable AnnoyingSender annoyingSender) {
-        final ArrayList<JSONComponent> components = new ArrayList<>();
-        if (messages == null) {
-            components.add(new JTextComponent(key, ChatColor.RED + "No messages file found!"));
-            return components;
-        }
+        final List<JSONComponent> components = new ArrayList<>();
 
         // Replace %command%
         final StringBuilder command = new StringBuilder();
@@ -169,9 +157,9 @@ public class AnnoyingMessage {
         }
         replace("%command%", command.toString());
 
-        final ConfigurationSection section = messages.getConfigurationSection(key);
+        final ConfigurationSection section = plugin.messages.getConfigurationSection(key);
         if (section == null) {
-            final String[] split = getString(key).split(splitterJson);
+            final String[] split = AnnoyingUtility.getString(plugin, key).split(plugin.options.splitterJson);
             String display = split[0];
 
             // Replacements
@@ -197,7 +185,7 @@ public class AnnoyingMessage {
         for (final String subKey : section.getKeys(false)) {
             String subMessage = section.getString(subKey);
             if (subMessage == null) {
-                components.add(new JTextComponent(key + "." + subKey, AnnoyingUtility.color("&cCheck &4" + messages.getName() + ".yml&c!")));
+                components.add(new JTextComponent(key + "." + subKey, AnnoyingUtility.color("&cCheck &4" + plugin.options.messagesFileName + "&c!")));
                 continue;
             }
 
@@ -207,9 +195,9 @@ public class AnnoyingMessage {
 
             // Get component parts
             final String[] split = subMessage
-                    .replace("%prefix%", prefix)
+                    .replace("%prefix%", plugin.options.prefix)
                     .replace("%command%", command)
-                    .split(splitterJson);
+                    .split(plugin.options.splitterJson);
             final String display = split[0];
             String hover = null;
             String function = null;
@@ -396,20 +384,6 @@ public class AnnoyingMessage {
      */
     public void send(@NotNull AnnoyingSender sender) {
         JSON.send(sender.getCmdSender(), new ArrayList<>(getComponents(sender)));
-    }
-
-    /**
-     * Gets a string from {@link AnnoyingOptions#messages} with the specified key
-     * <p>If the string is not found, it will return the key
-     *
-     * @param   msgKey  the key of the string
-     *
-     * @return          the string
-     */
-    @NotNull
-    private String getString(@NotNull String msgKey) {
-        if (messages == null) return msgKey;
-        return messages.getString(msgKey, msgKey);
     }
 
     /**

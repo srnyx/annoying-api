@@ -2,13 +2,11 @@ package xyz.srnyx.annoyingapi;
 
 import com.olliez4.interface4.util.json.JSON;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.Listener;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,45 +20,68 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The primary color used by the API (e.g. for start messages)
      */
     @NotNull public ChatColor colorLight = ChatColor.AQUA;
+
     /**
      * <i>{@code OPTIONAL}</i> The secondary color used by the API (e.g. for start messages)
      */
     @NotNull public ChatColor colorDark = ChatColor.DARK_AQUA;
+
     /**
-     * <i>{@code RECOMMENDED}</i> The {@link AnnoyingResource} containing the plugin's messages <i>(usually just {@code messages.yml})</i>
+     * <i>{@code RECOMMENDED}</i> The file name of the messages file <i>(usually {@code messages.yml})</i>
      * <p>If not specified, no messages will be loaded (plugin will still enable)
      */
-    @Nullable public AnnoyingResource messages;
+    @NotNull public String messagesFileName = "messages.yml";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's prefix
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's prefix
+     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String prefix = "plugin.prefix";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's {@link JSON} component splitter
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's {@link JSON} component splitter
+     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String splitterJson = "plugin.splitters.json";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's placeholder component splitter
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's placeholder component splitter
+     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's "no permission" message
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "no permission" message
      */
     @NotNull public String noPermission = "error.no-permission";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's "player-only" message
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "player-only" message
      */
-    @NotNull public String onlyPlayer = "error.only-player";
+    @NotNull public String playerOnly = "error.player-only";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link #messages} key for the plugin's "invalid arguments" message
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid arguments" message
      */
     @NotNull public String invalidArguments = "error.invalid-arguments";
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add to this {@link Set})
      */
-    @NotNull public Set<AnnoyingCommand> commands = new HashSet<>();
+    @NotNull public final Set<AnnoyingCommand> commands = new HashSet<>();
+
     /**
-     * <i>{@code OPTIONAL}</i> The {@link Listener}s to register
+     * <i>{@code OPTIONAL}</i> The {@link Listener}s to register (add to this {@link Set})
      */
-    @NotNull public Set<AnnoyingListener> listeners = new HashSet<>();
+    @NotNull public final Set<AnnoyingListener> listeners = new HashSet<>();
+
+    /**
+     * <i>{@code OPTIONAL}</i> Dependencies of the API and the plugin (add to this {@link Set})
+     */
+    @NotNull public final Set<AnnoyingDependency> dependencies = new HashSet<>();
+
+    /**
+     * <i>{@code OPTIONAL}</i> The task to run when all dependencies are downloaded
+     */
+    @NotNull public AnnoyingDownload.FinishTask dependencyFinishTask = plugins -> Bukkit.getServer().shutdown();
 }

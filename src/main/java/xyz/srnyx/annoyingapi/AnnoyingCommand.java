@@ -46,7 +46,7 @@ public interface AnnoyingCommand extends TabExecutor {
 
         // Player check
         if (isPlayerOnly() && !(cmdSender instanceof Player)) {
-            new AnnoyingMessage(plugin, plugin.options.onlyPlayer).send(sender);
+            new AnnoyingMessage(plugin, plugin.options.playerOnly).send(sender);
             return true;
         }
 

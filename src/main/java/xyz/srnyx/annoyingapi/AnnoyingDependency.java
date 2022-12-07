@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.download;
+package xyz.srnyx.annoyingapi;
 
 import org.bukkit.Bukkit;
 

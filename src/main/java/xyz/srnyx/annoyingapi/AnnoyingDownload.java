@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.download;
+package xyz.srnyx.annoyingapi;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,8 +9,6 @@ import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -28,7 +26,7 @@ import java.util.logging.Level;
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final Set<AnnoyingDependency> dependencies;
-    private AnnoyingDownloadFinish finish;
+    private FinishTask finishTask;
     private int remaining = 0;
 
     /**
@@ -56,10 +54,10 @@ public class AnnoyingDownload {
     /**
      * Downloads the plugins
      *
-     * @param   finish  the callback to run when all plugins have been processed
+     * @param   finishTask  the callback to run when all plugins have been processed
      */
-    public void downloadPlugins(@Nullable AnnoyingDownloadFinish finish) {
-        this.finish = finish;
+    public void downloadPlugins(@Nullable FinishTask finishTask) {
+        this.finishTask = finishTask;
         remaining = dependencies.size();
         dependencies.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
     }
@@ -235,7 +233,7 @@ public class AnnoyingDownload {
         remaining--;
         if (remaining == 0) {
             plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
-            if (finish != null) finish.onFinish(dependencies);
+            if (finishTask != null) finishTask.onFinish(dependencies);
         }
     }
 
@@ -268,5 +266,17 @@ public class AnnoyingDownload {
          * A URL that the user can manually download the plugin from
          */
         MANUAL
+    }
+
+    /**
+     * Used to handle the download finishTask event
+     */
+    public interface FinishTask {
+        /**
+         * This is called when all dependencies have been downloaded
+         *
+         * @param   plugins the {@link Set} of {@link AnnoyingDependency}s that were processed
+         */
+        void onFinish(@NotNull Set<AnnoyingDependency> plugins);
     }
 }

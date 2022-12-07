@@ -2,15 +2,12 @@ package xyz.srnyx.annoyingapi;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.download.AnnoyingDependency;
-import xyz.srnyx.annoyingapi.download.AnnoyingDownload;
-import xyz.srnyx.annoyingapi.download.AnnoyingDownloadFinish;
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -24,17 +21,28 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The API options for the plugin
      */
-    @NotNull public AnnoyingOptions options = new AnnoyingOptions();
+    @NotNull public final AnnoyingOptions options = new AnnoyingOptions();
+
+    /**
+     * The {@link AnnoyingResource} that contains the plugin's messages
+     */
+    @NotNull public AnnoyingResource messages;
+
     /**
      * Stores the cooldowns for each player/type
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
 
     /**
-     * Creates a new instance of the plugin. This only exists to give the constructor a Javadoc.
+     * Initializes the API, plugin, and messages
+     * <p>Create your own constructor, call {@code super()}, and set your options ({@link #options})
      */
     public AnnoyingPlugin() {
         super();
+        messages = new AnnoyingResource(this, options.messagesFileName);
+        options.prefix = AnnoyingUtility.getString(this, options.prefix);
+        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
+        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
     }
 
     /**
@@ -46,21 +54,19 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onEnable() {
         // Get dependencies
-        final Set<AnnoyingDependency> dependencies = new HashSet<>(getDependencies());
         final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
         interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
-        dependencies.add(new AnnoyingDependency("Interface4", interface4));
+        options.dependencies.add(new AnnoyingDependency("Interface4", interface4));
 
         // Download dependencies
-        final Set<AnnoyingDependency> missing = dependencies.stream()
+        final Set<AnnoyingDependency> missing = options.dependencies.stream()
                 .filter(dependency -> !dependency.isInstalled())
                 .collect(Collectors.toSet());
         if (!missing.isEmpty()) {
             log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
-            new AnnoyingDownload(this, missing).downloadPlugins(getDependencyFinish());
+            new AnnoyingDownload(this, missing).downloadPlugins(options.dependencyFinishTask);
             return;
         }
-        options = getOptions();
 
         // Start messages
         final String name = getName() + " v" + getDescription().getVersion();
@@ -104,36 +110,6 @@ public class AnnoyingPlugin extends JavaPlugin {
     @SuppressWarnings("EmptyMethod")
     public void disable() {
         // This method is meant to be overridden
-    }
-
-    /**
-     * Override this method to set plugin/API options
-     *
-     * @return  the API options for the plugin
-     */
-    @NotNull
-    public AnnoyingOptions getOptions() {
-        return new AnnoyingOptions();
-    }
-
-    /**
-     * Dependencies of the API and the plugin
-     *
-     * @return  the dependencies of the plugin
-     */
-    @NotNull
-    public Set<AnnoyingDependency> getDependencies() {
-        return new HashSet<>();
-    }
-
-    /**
-     * The task to run when all dependencies are downloaded
-     *
-     * @return  the task to run when all dependencies are downloaded
-     */
-    @NotNull
-    public AnnoyingDownloadFinish getDependencyFinish() {
-        return plugins -> Bukkit.getServer().shutdown();
     }
 
     /**

@@ -23,6 +23,20 @@ import java.text.DecimalFormat;
  */
 public class AnnoyingUtility {
     /**
+     * Gets a string from {@link AnnoyingOptions#messagesFileName} with the specified key
+     * <p>If the string is not found, it will return the key
+     *
+     * @param   plugin  the plugin to get the string from
+     * @param   key     the key of the string
+     *
+     * @return          the string
+     */
+    @NotNull
+    public static String getString(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
+        return plugin.messages.getString(key, key);
+    }
+
+    /**
      * Translates {@code &} color codes to {@link ChatColor}
      *
      * @param   message the message to translate
