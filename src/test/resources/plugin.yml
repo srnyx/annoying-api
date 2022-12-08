@@ -1,0 +1,21 @@
+name: TestPlugin
+author: srnyx
+description: Plugin to test AnnoyingAPI
+
+main: xyz.srnyx.testplugin.TestPlugin
+version: ${version}
+api-version: 1.13
+
+depend:
+  - AnnoyingAPI
+
+commands:
+  test:
+    description: Test command
+    aliases:
+      - t
+
+permissions:
+  test.command:
+    description: Permission to use test command
+    default: true

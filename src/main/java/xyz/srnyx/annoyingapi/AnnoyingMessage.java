@@ -17,6 +17,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -147,6 +149,10 @@ public class AnnoyingMessage {
     public List<JSONComponent> getComponents(@Nullable AnnoyingSender annoyingSender) {
         final List<JSONComponent> components = new ArrayList<>();
 
+        // Get messages file
+        final AnnoyingResource messages = plugin.messages;
+        if (messages == null) return components;
+
         // Replace %command%
         final StringBuilder command = new StringBuilder();
         if (annoyingSender != null) {
@@ -157,7 +163,7 @@ public class AnnoyingMessage {
         }
         replace("%command%", command.toString());
 
-        final ConfigurationSection section = plugin.messages.getConfigurationSection(key);
+        final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
             final String[] split = AnnoyingUtility.getString(plugin, key).split(plugin.options.splitterJson);
             String display = split[0];
@@ -340,6 +346,7 @@ public class AnnoyingMessage {
         if (fadeIn == null) fadeIn = 20;
         if (stay == null) stay = 20;
         if (fadeOut == null) fadeOut = 20;
+        final String message = getMessage();
         final int finalFadeIn = fadeIn;
         final int finalStay = stay;
         final int finalFadeOut = fadeOut;
@@ -347,14 +354,14 @@ public class AnnoyingMessage {
         switch (type) {
             case TITLE:
                 Bukkit.getOnlinePlayers().forEach(player ->
-                        player.sendTitle(getMessage(), null, finalFadeIn, finalStay, finalFadeOut));
+                        player.sendTitle(message, null, finalFadeIn, finalStay, finalFadeOut));
                 break;
             case SUBTITLE:
                 Bukkit.getOnlinePlayers().forEach(player ->
-                        player.sendTitle(null, getMessage(), finalFadeIn, finalStay, finalFadeOut));
+                        player.sendTitle(null, message, finalFadeIn, finalStay, finalFadeOut));
                 break;
             case ACTIONBAR:
-                Bukkit.getOnlinePlayers().forEach(player -> ActionBar.send(player, getMessage()));
+                Bukkit.getOnlinePlayers().forEach(player -> ActionBar.send(player, message));
                 break;
             default:
                 Bukkit.spigot().broadcast(getBaseComponents());

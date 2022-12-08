@@ -3,21 +3,32 @@ package xyz.srnyx.annoyingapi;
 import org.apache.commons.lang.StringUtils;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.plugin.ApiCommand;
 
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 
 /**
  * Represents a plugin using the API
  */
 public class AnnoyingPlugin extends JavaPlugin {
+    /**
+     * A {@link List} containing missing dependencies from <b>ALL</b> plugins using AnnoyingAPI
+     */
+    @NotNull private static final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
+
+    /**
+     * Instance of {@link AnnoyingCommandRegister} to register commands
+     */
+    @Nullable public static AnnoyingCommandRegister commandRegister = null;
+
     /**
      * The API options for the plugin
      */
@@ -26,7 +37,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
-    @NotNull public AnnoyingResource messages;
+    @Nullable public AnnoyingResource messages;
 
     /**
      * Stores the cooldowns for each player/type
@@ -34,15 +45,27 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
 
     /**
-     * Initializes the API, plugin, and messages
-     * <p>Create your own constructor, call {@code super()}, and set your options ({@link #options})
+     * Create your own constructor, <b>call {@code super()}</b>, and set your options ({@link #options})
      */
     public AnnoyingPlugin() {
         super();
-        messages = new AnnoyingResource(this, options.messagesFileName);
-        options.prefix = AnnoyingUtility.getString(this, options.prefix);
-        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
-        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
+        if (getName().equals("AnnoyingAPI")) {
+            // Command register
+            try {
+                Class.forName("com.mojang.brigadier.CommandDispatcher");
+                commandRegister = new AnnoyingCommandRegister();
+            } catch (final ClassNotFoundException | NoClassDefFoundError ignored) {
+                // Ignored
+            }
+
+            // Get API dependencies
+            final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
+            interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
+            options.dependencies.add(new AnnoyingDependency("Interface4", interface4, true));
+
+            // API commands
+            options.commands.add(new ApiCommand(this));
+        }
     }
 
     /**
@@ -53,19 +76,26 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onEnable() {
-        // Get dependencies
-        final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
-        interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
-        options.dependencies.add(new AnnoyingDependency("Interface4", interface4));
+        messages = new AnnoyingResource(this, options.messagesFileName);
+        options.prefix = AnnoyingUtility.getString(this, options.prefix);
+        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
+        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
 
-        // Download dependencies
-        final Set<AnnoyingDependency> missing = options.dependencies.stream()
-                .filter(dependency -> !dependency.isInstalled())
-                .collect(Collectors.toSet());
-        if (!missing.isEmpty()) {
-            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
-            new AnnoyingDownload(this, missing).downloadPlugins(options.dependencyFinishTask);
-            return;
+        // Get missing dependencies
+        for (final AnnoyingDependency dependency : options.dependencies) {
+            if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(d -> d.name.equals(dependency.name))) missingDependencies.add(dependency);
+        }
+
+        // Download missing dependencies using API
+        if (getName().equals("AnnoyingAPI")) {
+            new BukkitRunnable() {
+                public void run() {
+                    if (!missingDependencies.isEmpty()) {
+                        log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
+                        new AnnoyingDownload(AnnoyingPlugin.this, missingDependencies).downloadPlugins();
+                    }
+                }
+            }.runTaskLater(this, 1L);
         }
 
         // Start messages

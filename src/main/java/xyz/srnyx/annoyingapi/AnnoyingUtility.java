@@ -15,6 +15,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+
 import java.text.DecimalFormat;
 
 
@@ -33,7 +35,9 @@ public class AnnoyingUtility {
      */
     @NotNull
     public static String getString(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
-        return plugin.messages.getString(key, key);
+        final AnnoyingResource messages = plugin.messages;
+        if (messages == null) return key;
+        return messages.getString(key, key);
     }
 
     /**

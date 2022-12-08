@@ -8,3 +8,15 @@ api-version: 1.13
 
 softdepend:
   - Interface4
+
+commands:
+  annoying:
+    description: AnnoyingAPI commands
+    permission: annoyingapi.command
+    aliases:
+      - annoyingapi
+      - aapi
+
+permissions:
+  annoyingapi.command:
+    description: Allows access to /annoying

@@ -1,0 +1,10 @@
+prefix: "&7lTEST &8&l| &7"
+splitter:
+  json: "@@"
+  placeholder: "=="
+no-permission: "&cYou don't have permission to do that!"
+player-only: "&cYou must be a player to do that!"
+invalid-arguments: "&cInvalid arguments!"
+
+test: "&aThis is a test!@@&2%command%@@%command%"
+cooldown: "&cYou must wait %cooldown==s's'% before using this command again!@@&4%cooldown==s's'%@@%command%"

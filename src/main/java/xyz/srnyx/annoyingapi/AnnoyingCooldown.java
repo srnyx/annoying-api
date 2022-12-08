@@ -86,19 +86,14 @@ public class AnnoyingCooldown {
     }
 
     /**
-     * A {@code boolean} of whether the cooldown is active
+     * A {@code boolean} of whether the cooldown is active. If the cooldown is not active, it will be removed from {@link AnnoyingPlugin#cooldowns}
      *
      * @return  whether the player is on cooldown
      */
     public boolean isOnCooldown() {
-        return getRemaining() > 0;
-    }
-
-    /**
-     * If the player should no longer be on cooldown, this will remove them from {@link AnnoyingPlugin#cooldowns}
-     */
-    public void check() {
-        if (!isOnCooldown()) stop();
+        final boolean onCooldown = getRemaining() > 0;
+        if (!onCooldown) stop();
+        return onCooldown;
     }
 
     /**

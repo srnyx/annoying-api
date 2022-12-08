@@ -5,19 +5,28 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.InvalidDescriptionException;
+import org.bukkit.plugin.InvalidPluginException;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 
 /**
@@ -25,8 +34,7 @@ import java.util.logging.Level;
  */
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
-    @NotNull private final Set<AnnoyingDependency> dependencies;
-    private FinishTask finishTask;
+    @NotNull private final List<AnnoyingDependency> dependencies;
     private int remaining = 0;
 
     /**
@@ -36,7 +44,7 @@ public class AnnoyingDownload {
      * @param   dependencies    the {@link AnnoyingDependency}s to download
      */
     @Contract(pure = true)
-    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull Set<AnnoyingDependency> dependencies) {
+    public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
         this.dependencies = dependencies;
     }
@@ -48,16 +56,13 @@ public class AnnoyingDownload {
      * @param   dependency  the {@link AnnoyingDependency} to download
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull AnnoyingDependency dependency) {
-        this(plugin, Collections.singleton(dependency));
+        this(plugin, Collections.singletonList(dependency));
     }
 
     /**
      * Downloads the plugins
-     *
-     * @param   finishTask  the callback to run when all plugins have been processed
      */
-    public void downloadPlugins(@Nullable FinishTask finishTask) {
-        this.finishTask = finishTask;
+    public void downloadPlugins() {
         remaining = dependencies.size();
         dependencies.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
     }
@@ -96,13 +101,13 @@ public class AnnoyingDownload {
         // Manual
         if (platforms.containsKey(Platform.MANUAL)) {
             plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(Platform.MANUAL));
-            finish();
+            finish(dependency, false);
             return;
         }
 
         // Ran out of platforms
         plugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
-        finish();
+        finish(dependency, false);
     }
 
     /**
@@ -155,10 +160,19 @@ public class AnnoyingDownload {
 
         // Resource is external
         if (object.get("external").getAsBoolean()) {
-            platforms.put(Platform.MANUAL, object
-                    .get("file").getAsJsonObject()
-                    .get("externalUrl").getAsString());
             platforms.remove(Platform.SPIGOT);
+
+            // Get external URL and set new platform
+            final String externalUrl = object
+                    .get("file").getAsJsonObject()
+                    .get("externalUrl").getAsString();
+            if (externalUrl.endsWith(".jar")) {
+                platforms.putIfAbsent(Platform.EXTERNAL, externalUrl);
+            } else {
+                platforms.putIfAbsent(Platform.MANUAL, externalUrl);
+            }
+
+            // Retry download
             attemptDownload(dependency);
             return;
         }
@@ -199,8 +213,6 @@ public class AnnoyingDownload {
      * @param   urlString   the URL of the file
      */
     private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull Platform platform, @NotNull String urlString) {
-        final String name = dependency.name;
-
         // Get URL
         final URL url;
         try {
@@ -213,7 +225,7 @@ public class AnnoyingDownload {
 
         // Download file
         try (final BufferedInputStream in = new BufferedInputStream(url.openStream());
-             final FileOutputStream out = new FileOutputStream(new File(plugin.getDataFolder().getParentFile(), name + ".jar"))) {
+             final FileOutputStream out = new FileOutputStream(dependency.getFile())) {
             final byte[] buffer = new byte[1024];
             int numRead;
             while ((numRead = in.read(buffer)) != -1) out.write(buffer, 0, numRead);
@@ -222,19 +234,74 @@ public class AnnoyingDownload {
         }
 
         // Send success message
-        plugin.log(Level.INFO, "&2" + name + " &8|&a Successfully downloaded from &2" + platform.name());
-        finish();
+        plugin.log(Level.INFO, "&2" + dependency.name + " &8|&a Successfully downloaded from &2" + platform.name());
+        finish(dependency, true);
     }
 
     /**
      * Finishes the download and checks if all plugins have been processed
      */
-    private void finish() {
+    private void finish(@NotNull AnnoyingDependency dependency, boolean enable) {
+        // Load/enable plugin and register its commands
+        final PluginManager manager = Bukkit.getPluginManager();
+        if (enable && dependency.enableAfterDownload && manager.getPlugin(dependency.name) == null) {
+            // Load and enable plugin
+            Plugin dependencyPlugin = null;
+            try {
+                dependencyPlugin = manager.loadPlugin(dependency.getFile());
+                dependencyPlugin.onLoad();
+                manager.enablePlugin(dependencyPlugin);
+            } catch (final InvalidPluginException | InvalidDescriptionException e) {
+                plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
+            }
+
+            // Register commands
+            if (dependencyPlugin != null) try {
+                registerCommands(dependencyPlugin);
+            } catch (final ClassNotFoundException e) {
+                plugin.log(Level.WARNING, "&6" + dependency.name + " &8|&e Failed to register commands: &6" + e.getMessage());
+            }
+        }
+
+        // Check if all plugins have been processed
         remaining--;
         if (remaining == 0) {
             plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
-            if (finishTask != null) finishTask.onFinish(dependencies);
         }
+    }
+
+    /**
+     * Registers the commands of the specified plugin using PlugManX
+     *
+     * @param   dependency  the plugin to register the commands of
+     */
+    private void registerCommands(@NotNull Plugin dependency) throws ClassNotFoundException {
+        final AnnoyingCommandRegister register = AnnoyingPlugin.commandRegister;
+        if (register == null) throw new ClassNotFoundException("AnnoyingCommandRegister is null");
+        final String dependencyName = dependency.getName();
+        for (final Map.Entry<String, Map<String, Object>> entry : dependency.getDescription().getCommands().entrySet()) {
+            // Get command
+            final PluginCommand command = Bukkit.getPluginCommand(entry.getKey());
+            if (command == null) continue;
+
+            // Set command settings
+            command.setDescription((String) entry.getValue().get("description"));
+            command.setUsage((String) entry.getValue().get("usage"));
+            command.setPermission((String) entry.getValue().get("permission"));
+            command.setPermissionMessage((String) entry.getValue().get("permission-message"));
+            final Object aliases = entry.getValue().get("aliases");
+            if (aliases instanceof List) {
+                command.setAliases(((List<?>) aliases).stream()
+                        .map(String.class::cast)
+                        .collect(Collectors.toList()));
+            } else if (aliases instanceof String) {
+                command.setAliases(Collections.singletonList((String) aliases));
+            }
+
+            // Register command
+            register.register(command, dependencyName);
+        }
+        register.sync();
     }
 
     /**
@@ -266,17 +333,5 @@ public class AnnoyingDownload {
          * A URL that the user can manually download the plugin from
          */
         MANUAL
-    }
-
-    /**
-     * Used to handle the download finishTask event
-     */
-    public interface FinishTask {
-        /**
-         * This is called when all dependencies have been downloaded
-         *
-         * @param   plugins the {@link Set} of {@link AnnoyingDependency}s that were processed
-         */
-        void onFinish(@NotNull Set<AnnoyingDependency> plugins);
     }
 }

@@ -15,25 +15,37 @@ import java.util.Map;
 public class AnnoyingDependency {
     @NotNull public final String name;
     @NotNull public final Map<AnnoyingDownload.Platform, String> platforms;
+    public final boolean enableAfterDownload;
 
     /**
      * Creates a new dependency instance
      *
-     * @param   name        the name of the dependency (from it's {@code plugin.yml})
-     * @param   platforms   the platforms the dependency can be downloaded from
+     * @param   name                    the name of the dependency (from it's {@code plugin.yml})
+     * @param   platforms               the platforms the dependency can be downloaded from
+     * @param   enableAfterDownload     whether or not to attempt to enable the dependency after it has been downloaded
      */
     @Contract(pure = true)
-    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms) {
+    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms, boolean enableAfterDownload) {
         this.name = name;
         this.platforms = platforms;
+        this.enableAfterDownload = enableAfterDownload;
     }
 
     /**
-     * This uses {@link Bukkit#getPluginManager()} to check if the dependency is installed. So it's vital that {@link #name} is from the plugin's {@code plugin.yml}
+     * Gets the new file of the dependency
      *
-     * @return  whether the dependency is currently installed
+     * @return  the new file of the dependency ({@link #name}{@code .jar})
      */
-    public boolean isInstalled() {
-        return Bukkit.getPluginManager().getPlugin(name) != null || new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar").exists();
+    public File getFile() {
+        return new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");
+    }
+
+    /**
+     * This uses {@link Bukkit#getPluginManager()} to check if the dependency isn't installed. So it's vital that {@link #name} is from the plugin's {@code plugin.yml}
+     *
+     * @return  whether the dependency isn't currently installed
+     */
+    public boolean isNotInstalled() {
+        return Bukkit.getPluginManager().getPlugin(name) == null;
     }
 }

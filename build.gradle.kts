@@ -1,16 +1,11 @@
 description = "AnnoyingAPI"
-version = "1.1.5"
+version = "1.1.6"
 group = "xyz.srnyx"
 
-plugins {
-    java
-    `maven-publish`
-}
-
 repositories {
-    mavenCentral() // org.spigotmc:spigot-api
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // org.spigotmc:spigot-api
-    maven("https://oss.sonatype.org/content/repositories/snapshots/") // org.spigotmc:spigot-api
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // org.spigotmc:spigot
+    maven("https://oss.sonatype.org/content/repositories/snapshots/") // org.spigotmc:spigot
+    mavenCentral() // net.md-5:bungeecord-api
 }
 
 dependencies {
@@ -20,12 +15,26 @@ dependencies {
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
 
+plugins {
+    java
+    `maven-publish`
+}
+
+// Allow compileOnly dependencies to be used in tests
+configurations {
+    testCompileOnly {
+        extendsFrom(configurations.compileOnly.get())
+    }
+}
+
+// Set Java version and Javadoc
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
     withJavadocJar()
 }
 
+// Maven publishing for Jitpack
 configure<PublishingExtension> {
     publications {
         create<MavenPublication>("maven") {
@@ -36,14 +45,26 @@ configure<PublishingExtension> {
 }
 
 tasks {
+    // Text encoding
     compileJava {
         options.encoding = "UTF-8"
     }
 
-    processResources {
+    // Replace version in plugin.yml
+    @Suppress("UnstableApiUsage")
+    withType<ProcessResources> {
         inputs.property("version", project.version)
         filesMatching("**/plugin.yml") {
             expand("version" to project.version)
         }
+    }
+
+    // Create test JAR
+    assemble {
+        dependsOn("testJar")
+    }
+    register<Jar>("testJar") {
+        archiveClassifier.set("test")
+        from(sourceSets["test"].output)
     }
 }

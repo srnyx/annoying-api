@@ -2,13 +2,14 @@ package xyz.srnyx.annoyingapi;
 
 import com.olliez4.interface4.util.json.JSON;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.Listener;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -78,10 +79,5 @@ public class AnnoyingOptions {
     /**
      * <i>{@code OPTIONAL}</i> Dependencies of the API and the plugin (add to this {@link Set})
      */
-    @NotNull public final Set<AnnoyingDependency> dependencies = new HashSet<>();
-
-    /**
-     * <i>{@code OPTIONAL}</i> The task to run when all dependencies are downloaded
-     */
-    @NotNull public AnnoyingDownload.FinishTask dependencyFinishTask = plugins -> Bukkit.getServer().shutdown();
+    @NotNull public final List<AnnoyingDependency> dependencies = new ArrayList<>();
 }
