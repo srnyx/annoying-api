@@ -20,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +33,7 @@ import java.util.stream.Collectors;
  */
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
+    @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
     private int remaining = 0;
 
@@ -46,6 +46,7 @@ public class AnnoyingDownload {
     @Contract(pure = true)
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
+        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI";
         this.dependencies = dependencies;
     }
 
@@ -193,9 +194,9 @@ public class AnnoyingDownload {
         final HttpURLConnection connection;
         final JsonElement json;
         try {
-            final URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) new URL(urlString).openConnection();
             connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", userAgent);
             if (connection.getResponseCode() == 404) return null;
             json = new JsonParser().parse(new InputStreamReader(connection.getInputStream()));
         } catch (final IOException e) {
@@ -213,18 +214,21 @@ public class AnnoyingDownload {
      * @param   urlString   the URL of the file
      */
     private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull Platform platform, @NotNull String urlString) {
-        // Get URL
-        final URL url;
+        // Get URL connection
+        final HttpURLConnection connection;
         try {
-            url = new URL(urlString);
-        } catch (final MalformedURLException e) {
+            connection = (HttpURLConnection) new URL(urlString).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", userAgent);
+        } catch (final IOException e) {
+            e.printStackTrace();
             dependency.platforms.remove(platform);
             attemptDownload(dependency);
             return;
         }
 
         // Download file
-        try (final BufferedInputStream in = new BufferedInputStream(url.openStream());
+        try (final BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
              final FileOutputStream out = new FileOutputStream(dependency.getFile())) {
             final byte[] buffer = new byte[1024];
             int numRead;
