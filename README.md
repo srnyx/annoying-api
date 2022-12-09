@@ -8,7 +8,7 @@ All (or at least most) of my plugins will require you to install Annoying API. F
 
 ### Download
 
-- **Stable:** You can download the latest *(stable)* version at [releases/latest](https://github.com/srnyx/annoying-api/releases/latest)
+- **Stable:** You can download the latest *(stable)* version at [Modrinth](https://modrinth.com/plugin/annoying-api), [Spigot](https://spigotmc.org/resources/106637), [Bukkit](https://dev.bukkit.org/projects/annoying-api), or [releases/latest](https://github.com/srnyx/annoying-api/releases/latest)
 - **Snapshot:** You can download the latest *(snapshot)* version at [actions/workflows/build.yml](https://github.com/srnyx/annoying-api/actions/workflows/build.yml)
 
 ## Developers
