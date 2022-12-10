@@ -1,5 +1,5 @@
 description = "AnnoyingAPI"
-version = "1.1.9"
+version = "1.1.10"
 group = "xyz.srnyx"
 
 repositories {
@@ -13,13 +13,14 @@ repositories {
 dependencies {
     compileOnly("org.spigotmc", "spigot-api", "1.11-R0.1-SNAPSHOT")
     compileOnly("net.md-5", "bungeecord-api", "1.16-R0.4")
-    compileOnly("com.discordsrv", "discordsrv", "1.26.0")
+    compileOnlyApi("com.discordsrv", "discordsrv", "1.26.0")
     compileOnly("org.jetbrains", "annotations", "23.0.0")
     compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
 
 plugins {
     java
+    `java-library`
     `maven-publish`
 }
 

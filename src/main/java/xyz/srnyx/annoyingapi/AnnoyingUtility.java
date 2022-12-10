@@ -213,7 +213,7 @@ public class AnnoyingUtility {
      * @return  {@link Set} all YML file names in the folder
      */
     @NotNull
-    public Set<String> getFileNames(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
+    public static Set<String> getFileNames(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
         final File[] files = new File(plugin.getDataFolder(), path).listFiles();
         if (files == null) return Collections.emptySet();
         return Arrays.stream(files)
