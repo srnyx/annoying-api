@@ -9,7 +9,10 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +21,9 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -38,6 +44,71 @@ public class AnnoyingUtility {
         final AnnoyingResource messages = plugin.messages;
         if (messages == null) return key;
         return messages.getString(key, key);
+    }
+
+    /**
+     * Gets an {@link OfflinePlayer} from the specified name
+     *
+     * @param   name    the name of the player
+     *
+     * @return          the {@link OfflinePlayer}, or null if not found
+     */
+    @Nullable
+    public static OfflinePlayer getPlayer(@NotNull String name) {
+        for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
+            final String opName = offline.getName();
+            if (opName != null && opName.equalsIgnoreCase(name)) return offline;
+        }
+        return null;
+    }
+
+    /**
+     * Gets a {@link Set} of all online player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getOnlinePlayerNames() {
+        return Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all offline player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getOfflinePlayerNames() {
+        return Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(player -> !player.isOnline())
+                .map(OfflinePlayer::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getAllPlayerNames() {
+        return Arrays.stream(Bukkit.getOfflinePlayers())
+                .map(OfflinePlayer::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all world names
+     *
+     * @return  the {@link Set} of world names
+     */
+    @NotNull
+    public static Set<String> getWorldNames() {
+        return Bukkit.getWorlds().stream()
+                .map(org.bukkit.World::getName)
+                .collect(Collectors.toSet());
     }
 
     /**

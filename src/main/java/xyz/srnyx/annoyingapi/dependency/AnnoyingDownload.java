@@ -1,11 +1,11 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.dependency;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
@@ -14,6 +14,8 @@ import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
@@ -25,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 
 /**
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
  */
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
+    @NotNull private final AnnoyingCommandRegister register;
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
     private int remaining = 0;
@@ -46,6 +48,7 @@ public class AnnoyingDownload {
     @Contract(pure = true)
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
+        this.register = new AnnoyingCommandRegister();
         this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI";
         this.dependencies = dependencies;
     }
@@ -249,21 +252,17 @@ public class AnnoyingDownload {
         // Load/enable plugin and register its commands
         final PluginManager manager = Bukkit.getPluginManager();
         if (enable && dependency.enableAfterDownload && manager.getPlugin(dependency.name) == null) {
-            // Load and enable plugin
-            Plugin dependencyPlugin = null;
             try {
-                dependencyPlugin = manager.loadPlugin(dependency.getFile());
+                // Load and enable plugin
+                final Plugin dependencyPlugin = manager.loadPlugin(dependency.getFile());
                 dependencyPlugin.onLoad();
                 manager.enablePlugin(dependencyPlugin);
+
+                // Register commands
+                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> register.register(command, dependencyPlugin));
+                register.sync();
             } catch (final InvalidPluginException | InvalidDescriptionException e) {
                 plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
-            }
-
-            // Register commands
-            if (dependencyPlugin != null) try {
-                registerCommands(dependencyPlugin);
-            } catch (final ClassNotFoundException e) {
-                plugin.log(Level.WARNING, "&6" + dependency.name + " &8|&e Failed to register commands: &6" + e.getMessage());
             }
         }
 
@@ -272,40 +271,6 @@ public class AnnoyingDownload {
         if (remaining == 0) {
             plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
         }
-    }
-
-    /**
-     * Registers the commands of the specified plugin using PlugManX
-     *
-     * @param   dependency  the plugin to register the commands of
-     */
-    private void registerCommands(@NotNull Plugin dependency) throws ClassNotFoundException {
-        final AnnoyingCommandRegister register = AnnoyingPlugin.commandRegister;
-        if (register == null) throw new ClassNotFoundException("AnnoyingCommandRegister is null");
-        final String dependencyName = dependency.getName();
-        for (final Map.Entry<String, Map<String, Object>> entry : dependency.getDescription().getCommands().entrySet()) {
-            // Get command
-            final PluginCommand command = Bukkit.getPluginCommand(entry.getKey());
-            if (command == null) continue;
-
-            // Set command settings
-            command.setDescription((String) entry.getValue().get("description"));
-            command.setUsage((String) entry.getValue().get("usage"));
-            command.setPermission((String) entry.getValue().get("permission"));
-            command.setPermissionMessage((String) entry.getValue().get("permission-message"));
-            final Object aliases = entry.getValue().get("aliases");
-            if (aliases instanceof List) {
-                command.setAliases(((List<?>) aliases).stream()
-                        .map(String.class::cast)
-                        .collect(Collectors.toList()));
-            } else if (aliases instanceof String) {
-                command.setAliases(Collections.singletonList((String) aliases));
-            }
-
-            // Register command
-            register.register(command, dependencyName);
-        }
-        register.sync();
     }
 
     /**

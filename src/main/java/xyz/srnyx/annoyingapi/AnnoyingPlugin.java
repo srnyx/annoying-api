@@ -2,12 +2,17 @@ package xyz.srnyx.annoyingapi;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.plugin.ApiCommand;
 
@@ -22,12 +27,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * A {@link List} containing missing dependencies from <b>ALL</b> plugins using AnnoyingAPI
      */
-    @NotNull private static final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
-
-    /**
-     * Instance of {@link AnnoyingCommandRegister} to register commands
-     */
-    @Nullable public static AnnoyingCommandRegister commandRegister = null;
+    @NotNull private static final List<AnnoyingDependency> MISSING_DEPENDENCIES = new ArrayList<>();
 
     /**
      * The API options for the plugin
@@ -50,15 +50,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public AnnoyingPlugin() {
         super();
         if (getName().equals("AnnoyingAPI")) {
-            // Command register
-            try {
-                Class.forName("com.mojang.brigadier.CommandDispatcher");
-                commandRegister = new AnnoyingCommandRegister();
-            } catch (final ClassNotFoundException | NoClassDefFoundError ignored) {
-                // Ignored
-            }
-
-            // Get API dependencies
+            // API dependencies
             final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
             interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
             options.dependencies.add(new AnnoyingDependency("Interface4", interface4, true));
@@ -83,16 +75,16 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Get missing dependencies
         for (final AnnoyingDependency dependency : options.dependencies) {
-            if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(d -> d.name.equals(dependency.name))) missingDependencies.add(dependency);
+            if (dependency.isNotInstalled() && MISSING_DEPENDENCIES.stream().noneMatch(d -> d.name.equals(dependency.name))) MISSING_DEPENDENCIES.add(dependency);
         }
 
         // Download missing dependencies using API
         if (getName().equals("AnnoyingAPI")) {
             new BukkitRunnable() {
                 public void run() {
-                    if (!missingDependencies.isEmpty()) {
+                    if (!MISSING_DEPENDENCIES.isEmpty()) {
                         log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
-                        new AnnoyingDownload(AnnoyingPlugin.this, missingDependencies).downloadPlugins();
+                        new AnnoyingDownload(AnnoyingPlugin.this, MISSING_DEPENDENCIES).downloadPlugins();
                     }
                 }
             }.runTaskLater(this, 1L);
@@ -151,5 +143,14 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void log(@Nullable Level level, @NotNull String message) {
         if (level == null) level = Level.INFO;
         getLogger().log(level, AnnoyingUtility.color(message));
+    }
+
+    /**
+     * Reloads the plugin (calls {@link PluginManager#disablePlugin(Plugin)} and then {@link PluginManager#enablePlugin(Plugin)})
+     */
+    public void reload() {
+        final PluginManager manager = Bukkit.getPluginManager();
+        manager.disablePlugin(this);
+        manager.enablePlugin(this);
     }
 }

@@ -1,8 +1,5 @@
 package xyz.srnyx.testplugin;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,12 +48,8 @@ public class TestCommand implements AnnoyingCommand {
 
     @Override
     public void onCommand(@NotNull AnnoyingSender sender) {
-        final CommandSender cmdSender = sender.getCmdSender();
-        if (!(cmdSender instanceof Player)) return;
-        final Player player = (Player) cmdSender;
-
         // Check cooldown
-        final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, player.getUniqueId(), TestCooldown.TEST);
+        final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, sender.getPlayer().getUniqueId(), TestCooldown.TEST);
         if (cooldown.isOnCooldown()) {
             new AnnoyingMessage(plugin, "cooldown")
                     .replace("%cooldown%", cooldown.getRemaining(), AnnoyingMessage.ReplaceType.TIME)
@@ -64,7 +57,12 @@ public class TestCommand implements AnnoyingCommand {
             return;
         }
 
-        new AnnoyingMessage(plugin, "test").send(sender);
+        if (sender.argEquals(0, "test")) {
+            new AnnoyingMessage(plugin, "test").send(sender);
+        } else if (sender.argEquals(0, "reload")) {
+            plugin.reload();
+        }
+
         cooldown.start();
     }
 
@@ -72,7 +70,7 @@ public class TestCommand implements AnnoyingCommand {
     public List<String> onTabComplete(@NotNull AnnoyingSender sender) {
         final List<String> suggestions = new ArrayList<>();
         suggestions.add("test");
-        suggestions.add("tab");
+        suggestions.add("reload");
         return suggestions;
     }
 }

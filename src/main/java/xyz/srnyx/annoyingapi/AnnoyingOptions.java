@@ -7,6 +7,8 @@ import org.bukkit.event.Listener;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.dependency;
 
 import org.bukkit.Bukkit;
 

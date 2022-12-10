@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -81,5 +82,27 @@ public class AnnoyingSender {
     @Nullable
     public String[] getArgs() {
         return args;
+    }
+
+    /**
+     * Casts the {@link CommandSender} to a {@link Player}
+     *
+     * @return  the {@link Player} that was used
+     */
+    @NotNull
+    public Player getPlayer() {
+        return (Player) cmdSender;
+    }
+
+    /**
+     * Returns if the specified argument index is equal to the specified string (case-insensitive)
+     *
+     * @param   index   the argument index
+     * @param   string  the string to compare to
+     *
+     * @return          if the specified argument index is equal to the specified string (case-insensitive)
+     */
+    public boolean argEquals(int index, @Nullable String string) {
+        return args[index].equalsIgnoreCase(string);
     }
 }

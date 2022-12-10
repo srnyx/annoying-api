@@ -2,8 +2,8 @@ package xyz.srnyx.testplugin;
 
 import org.bukkit.ChatColor;
 
-import xyz.srnyx.annoyingapi.AnnoyingDependency;
-import xyz.srnyx.annoyingapi.AnnoyingDownload;
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 

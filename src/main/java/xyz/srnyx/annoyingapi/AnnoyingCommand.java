@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -40,7 +41,9 @@ public interface AnnoyingCommand extends TabExecutor {
         // Permission check
         final String permission = getPermission();
         if (permission != null && !cmdSender.hasPermission(getPermission())) {
-            new AnnoyingMessage(plugin, plugin.options.noPermission).send(sender);
+            new AnnoyingMessage(plugin, plugin.options.noPermission)
+                    .replace("%permission%", permission)
+                    .send(sender);
             return true;
         }
 
@@ -74,10 +77,10 @@ public interface AnnoyingCommand extends TabExecutor {
     default List<String> onTabComplete(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         // Permission check
         final String permission = getPermission();
-        if (permission != null && !cmdSender.hasPermission(getPermission())) return Collections.emptyList();
+        if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
 
         // Get suggestions
-        final List<String> suggestions = onTabComplete(new AnnoyingSender(cmdSender, cmd, label, args));
+        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(cmdSender, cmd, label, args));
         if (suggestions == null) return Collections.emptyList();
 
         // Filter suggestions
@@ -168,14 +171,15 @@ public interface AnnoyingCommand extends TabExecutor {
     void onCommand(@NotNull AnnoyingSender sender);
 
     /**
-     * <i>{@code REQUIRED}</i> This is the tab completion for the command
+     * <i>{@code OPTIONAL}</i> This is the tab completion for the command
+     * <p><i>{@link AnnoyingUtility} will come in handy</i>
      *
      * @param   sender  the sender of the command
      *
-     * @return          a list of suggestions for the command
+     * @return          a {@link Collection} of suggestions
      */
     @Nullable
-    default List<String> onTabComplete(@NotNull AnnoyingSender sender) {
+    default Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return null;
     }
 }
