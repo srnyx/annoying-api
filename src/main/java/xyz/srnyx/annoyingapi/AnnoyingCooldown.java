@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +50,7 @@ public class AnnoyingCooldown {
      *
      * @return  amount of time left in the cooldown (in milliseconds)
      *
-     * @see     AnnoyingCooldown#getRemainingPretty(String)
+     * @see     AnnoyingUtility#formatMillis(long, String, boolean)
      */
     public long getRemaining() {
         final Map<CooldownType, Long> map = plugin.cooldowns.get(uuid);
@@ -59,19 +58,6 @@ public class AnnoyingCooldown {
         final Long time = map.get(type);
         if (time == null) return 0;
         return time - System.currentTimeMillis();
-    }
-
-    /**
-     * {@link #getRemaining()} but pretty
-     *
-     * @param   pattern the pattern to format the time with
-     *
-     * @return          the formatted time left in the cooldown
-     *
-     * @see             AnnoyingCooldown#getRemaining()
-     */
-    public String getRemainingPretty(@Nullable String pattern) {
-        return AnnoyingUtility.formatMillis(getRemaining(), pattern);
     }
 
     /**

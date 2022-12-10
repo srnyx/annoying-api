@@ -102,7 +102,7 @@ error:
   # Player doesn't have permission to use a command
   no-permission: "%prefix%&cYou must have &4%permission%&c to use this!@@&c%command%@@%command%" # %permission%
   # Console tries to use a command that can only be used by players
-  only-player: "%prefix%&cYou must be a player to run this command!@@&c%command%@@%command%"
+  player-only: "%prefix%&cYou must be a player to run this command!@@&c%command%@@%command%"
   # Command is used with invalid/incorrect arguments
   invalid-arguments: "%prefix%&cInvalid arguments!@@&c%command%@@%command%"
 

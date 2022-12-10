@@ -20,8 +20,10 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -127,15 +129,16 @@ public class AnnoyingUtility {
     /**
      * Formats a millisecond long using the given pattern
      *
-     * @param   value   the milliseconds to format
-     * @param   pattern the pattern to use
+     * @param   value           the milliseconds to format
+     * @param   pattern         the way in which to format the milliseconds
+     * @param   padWithZeros    whether to pad the left hand side of numbers with 0's
      *
-     * @return          the formatted time
+     * @return                  the formatted milliseconds
      */
     @NotNull
-    public static String formatMillis(long value, @Nullable String pattern) {
+    public static String formatMillis(long value, @Nullable String pattern, boolean padWithZeros) {
         if (pattern == null) pattern = "m':'s";
-        return DurationFormatUtils.formatDuration(value, pattern);
+        return DurationFormatUtils.formatDuration(value, pattern, padWithZeros);
     }
 
     /**
@@ -199,5 +202,24 @@ public class AnnoyingUtility {
         }
 
         return textComponent;
+    }
+
+    /**
+     * Gets a {@link Set} of all YML file names in a folder. If the path is not a folder, an empty {@link Set} is returned
+     *
+     * @param   plugin  the {@link AnnoyingPlugin} to get the folder from
+     * @param   path    the path to the folder
+     *
+     * @return  {@link Set} all YML file names in the folder
+     */
+    @NotNull
+    public Set<String> getFileNames(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
+        final File[] files = new File(plugin.getDataFolder(), path).listFiles();
+        if (files == null) return Collections.emptySet();
+        return Arrays.stream(files)
+                .map(File::getName)
+                .filter(name -> name.endsWith(".yml"))
+                .map(name -> name.substring(0, name.length() - 4))
+                .collect(Collectors.toSet());
     }
 }

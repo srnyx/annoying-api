@@ -4,12 +4,16 @@ import com.olliez4.interface4.util.ActionBar;
 import com.olliez4.interface4.util.json.JSON;
 import com.olliez4.interface4.util.json.components.*;
 
+import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.util.DiscordUtil;
+
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 
 import org.apache.commons.lang.time.DurationFormatUtils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -105,7 +109,7 @@ public class AnnoyingMessage {
                 e.printStackTrace();
                 return value;
             }
-            return AnnoyingUtility.formatMillis(afterLong, input);
+            return AnnoyingUtility.formatMillis(afterLong, input, false);
         }
 
         // Decimal parameter
@@ -367,6 +371,15 @@ public class AnnoyingMessage {
                 Bukkit.spigot().broadcast(getBaseComponents());
                 break;
         }
+    }
+
+    /**
+     * Sends the message to a Discord {@link TextChannel}
+     *
+     * @param   channel the {@link TextChannel} to send the message to
+     */
+    public void send(@NotNull TextChannel channel) {
+        DiscordUtil.sendMessage(channel, ChatColor.stripColor(getMessage()));
     }
 
     /**
