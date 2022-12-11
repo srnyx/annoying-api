@@ -31,7 +31,7 @@ public class TestPlugin extends AnnoyingPlugin {
         // Dependencies
         final Map<AnnoyingDownload.Platform, String> viaVersion = new EnumMap<>(AnnoyingDownload.Platform.class);
         viaVersion.put(AnnoyingDownload.Platform.SPIGOT, "19254");
-        options.dependencies.add(new AnnoyingDependency("ViaVersion", viaVersion, true));
+        options.dependencies.add(new AnnoyingDependency("ViaVersion", viaVersion, true, true));
     }
 
     @Override

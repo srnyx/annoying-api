@@ -15,6 +15,7 @@ import java.util.Map;
 public class AnnoyingDependency {
     @NotNull public final String name;
     @NotNull public final Map<AnnoyingDownload.Platform, String> platforms;
+    public final boolean required;
     public final boolean enableAfterDownload;
 
     /**
@@ -22,12 +23,14 @@ public class AnnoyingDependency {
      *
      * @param   name                    the name of the dependency (from it's {@code plugin.yml})
      * @param   platforms               the platforms the dependency can be downloaded from
+     * @param   required                whether the dependency is required to be installed
      * @param   enableAfterDownload     whether or not to attempt to enable the dependency after it has been downloaded
      */
     @Contract(pure = true)
-    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms, boolean enableAfterDownload) {
+    public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms, boolean required, boolean enableAfterDownload) {
         this.name = name;
         this.platforms = platforms;
+        this.required = required;
         this.enableAfterDownload = enableAfterDownload;
     }
 
