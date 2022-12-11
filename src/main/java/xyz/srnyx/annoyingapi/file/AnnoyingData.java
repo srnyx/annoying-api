@@ -29,7 +29,7 @@ public class AnnoyingData extends YamlConfiguration implements AnnoyingFile {
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, boolean canBeEmpty) {
         this.path = path;
-        this.file = new File(new File(plugin.getDataFolder(), "data"), path);
+        this.file = new File(plugin.getDataFolder(), "data/" + path);
         this.canBeEmpty = canBeEmpty;
         load();
     }

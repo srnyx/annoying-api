@@ -51,10 +51,18 @@ public interface AnnoyingFile {
      */
     default void load() {
         final File file = getFile();
-        if (!file.exists()) create();
+
+        // Create the file if it doesn't exist and it can be empty
+        if (canBeEmpty() && !file.exists()) {
+            create();
+        } else if (!file.exists()) {
+            return;
+        }
+
+        // Load
         try {
             getYaml().load(file);
-        } catch (IOException | InvalidConfigurationException e) {
+        } catch (final IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }
