@@ -10,6 +10,7 @@ import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,7 @@ public class AnnoyingDownload {
     @NotNull private final AnnoyingCommandRegister register;
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
+    @Nullable private Runnable finishRunnable;
     private int remaining = 0;
 
     /**
@@ -65,10 +67,14 @@ public class AnnoyingDownload {
 
     /**
      * Downloads the plugins
+     *
+     * @param   finishRunnable  the {@link Runnable} to run when all plugins have been downloaded
      */
-    public void downloadPlugins() {
-        remaining = dependencies.size();
-        dependencies.forEach(dependency -> new Thread(() -> attemptDownload(dependency)).start());
+    public void downloadPlugins(@Nullable Runnable finishRunnable) {
+        this.finishRunnable = finishRunnable;
+        this.remaining = dependencies.size();
+        final BukkitScheduler scheduler = Bukkit.getScheduler();
+        dependencies.forEach(dependency -> scheduler.runTaskAsynchronously(plugin, () -> attemptDownload(dependency)));
     }
 
     /**
@@ -247,6 +253,9 @@ public class AnnoyingDownload {
 
     /**
      * Finishes the download and checks if all plugins have been processed
+     *
+     * @param   dependency  the dependency that was just processed
+     * @param   enable      whether or not to enable the dependency
      */
     private void finish(@NotNull AnnoyingDependency dependency, boolean enable) {
         // Load/enable plugin and register its commands
@@ -269,7 +278,11 @@ public class AnnoyingDownload {
         // Check if all plugins have been processed
         remaining--;
         if (remaining == 0) {
-            plugin.log(Level.INFO, "\n&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed!\n&aPlease resolve any errors and then restart the server.");
+            Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+                plugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
+                if (finishRunnable != null) finishRunnable.run();
+                return null;
+            });
         }
     }
 

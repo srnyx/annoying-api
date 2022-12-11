@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +15,9 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.plugin.ApiCommand;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -25,9 +27,9 @@ import java.util.logging.Level;
  */
 public class AnnoyingPlugin extends JavaPlugin {
     /**
-     * A {@link List} containing missing dependencies from <b>ALL</b> plugins using AnnoyingAPI
+     * A {@link List} containing missing dependency names from <b>ALL</b> plugins using AnnoyingAPI
      */
-    @NotNull private static final List<AnnoyingDependency> MISSING_DEPENDENCIES = new ArrayList<>();
+    @NotNull private static final Set<String> MISSING_DEPENDENCIES = new HashSet<>();
 
     /**
      * The API options for the plugin
@@ -53,11 +55,22 @@ public class AnnoyingPlugin extends JavaPlugin {
             // API dependencies
             final Map<AnnoyingDownload.Platform, String> interface4 = new EnumMap<>(AnnoyingDownload.Platform.class);
             interface4.put(AnnoyingDownload.Platform.SPIGOT, "102119");
-            options.dependencies.add(new AnnoyingDependency("Interface4", interface4, true));
+            options.dependencies.add(new AnnoyingDependency("Interface4", interface4, true, true));
 
             // API commands
             options.commands.add(new ApiCommand(this));
         }
+    }
+
+    @Override
+    public final void onLoad() {
+        messages = new AnnoyingResource(this, options.messagesFileName);
+        options.prefix = AnnoyingUtility.getString(this, options.prefix);
+        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
+        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
+
+        // Custom onLoad
+        load();
     }
 
     /**
@@ -68,26 +81,39 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onEnable() {
-        messages = new AnnoyingResource(this, options.messagesFileName);
-        options.prefix = AnnoyingUtility.getString(this, options.prefix);
-        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
-        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
-
         // Get missing dependencies
+        final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
         for (final AnnoyingDependency dependency : options.dependencies) {
-            if (dependency.isNotInstalled() && MISSING_DEPENDENCIES.stream().noneMatch(d -> d.name.equals(dependency.name))) MISSING_DEPENDENCIES.add(dependency);
+            if (dependency.isNotInstalled() && MISSING_DEPENDENCIES.stream().noneMatch(name -> name.equals(dependency.name))) {
+                missingDependencies.add(dependency);
+                MISSING_DEPENDENCIES.add(dependency.name);
+            }
         }
 
-        // Download missing dependencies using API
-        if (getName().equals("AnnoyingAPI")) {
-            new BukkitRunnable() {
-                public void run() {
-                    if (!MISSING_DEPENDENCIES.isEmpty()) {
-                        log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
-                        new AnnoyingDownload(AnnoyingPlugin.this, MISSING_DEPENDENCIES).downloadPlugins();
-                    }
-                }
-            }.runTaskLater(this, 1L);
+        // Download missing dependencies then enable the plugin
+        if (!missingDependencies.isEmpty()) {
+            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
+            new AnnoyingDownload(AnnoyingPlugin.this, missingDependencies).downloadPlugins(this::enablePlugin);
+            return;
+        }
+
+        // Enable the plugin immediately if there are no missing dependencies
+        enablePlugin();
+    }
+
+    /**
+     * Plugin enabling stuff
+     *
+     * @see #onEnable()
+     */
+    private void enablePlugin() {
+        // Check if required dependencies are installed
+        for (final AnnoyingDependency dependency : options.dependencies) {
+            if (dependency.required && dependency.isNotInstalled()) {
+                log(Level.SEVERE, "&cMissing dependency, &4" + dependency.name + "&c is required! Unloading plugin...");
+                unload();
+                return;
+            }
         }
 
         // Start messages
@@ -119,6 +145,14 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Called when the plugin is loaded
+     */
+    @SuppressWarnings("EmptyMethod")
+    public void load() {
+        // This method is meant to be overridden
+    }
+
+    /**
      * Called after dependency checks, start-up messages, and command/listener registration.
      */
     @SuppressWarnings("EmptyMethod")
@@ -146,7 +180,49 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Unloads the plugin
+     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
+     */
+    public final void unload() {
+        // Unregister commands listeners, cancel tasks, and disable the plugin
+        options.commands.forEach(AnnoyingCommand::unregister);
+        options.listeners.forEach(AnnoyingListener::unregister);
+        Bukkit.getScheduler().cancelTasks(this);
+        Bukkit.getPluginManager().disablePlugin(this);
+
+        // Close classloader
+        final ClassLoader classLoader = getClass().getClassLoader();
+        if (classLoader instanceof URLClassLoader) {
+            try {
+                // plugin field
+                final Field pluginField = classLoader.getClass().getDeclaredField("plugin");
+                pluginField.setAccessible(true);
+                pluginField.set(classLoader, null);
+
+                // pluginInit field
+                final Field pluginInitField = classLoader.getClass().getDeclaredField("pluginInit");
+                pluginInitField.setAccessible(true);
+                pluginInitField.set(classLoader, null);
+            } catch (final IllegalAccessException | NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+
+            // Close URLClassLoader
+            try {
+                ((URLClassLoader) classLoader).close();
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Will not work on processes started with the -XX:+DisableExplicitGC flag
+        // This tries to get around the issue where Windows refuses to unlock jar files that were previously loaded into the JVM
+        System.gc();
+    }
+
+    /**
      * Reloads the plugin (calls {@link PluginManager#disablePlugin(Plugin)} and then {@link PluginManager#enablePlugin(Plugin)})
+     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
     public void reload() {
         final PluginManager manager = Bukkit.getPluginManager();
