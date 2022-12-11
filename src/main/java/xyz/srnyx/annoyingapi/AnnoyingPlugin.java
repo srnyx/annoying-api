@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi;
 import org.apache.commons.lang.StringUtils;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,15 +10,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingCommandRegister;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.plugin.ApiCommand;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -32,6 +29,8 @@ public class AnnoyingPlugin extends JavaPlugin {
      * A {@link List} containing missing dependency names from <b>ALL</b> plugins using AnnoyingAPI
      */
     @NotNull private static final Set<String> MISSING_DEPENDENCIES = new HashSet<>();
+
+    @NotNull public final AnnoyingCommandRegister commandRegister = new AnnoyingCommandRegister();
 
     /**
      * The API options for the plugin
@@ -113,7 +112,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         for (final AnnoyingDependency dependency : options.dependencies) {
             if (dependency.required && dependency.isNotInstalled()) {
                 log(Level.SEVERE, "&cMissing dependency, &4" + dependency.name + "&c is required! Unloading plugin...");
-                unload();
+                if (!getName().equals("AnnoyingAPI")) unload();
                 return;
             }
         }
@@ -191,39 +190,6 @@ public class AnnoyingPlugin extends JavaPlugin {
         options.listeners.forEach(AnnoyingListener::unregister);
         Bukkit.getScheduler().cancelTasks(this);
         Bukkit.getPluginManager().disablePlugin(this);
-
-        // Remove commands from the command map
-        final AnnoyingCommandRegister register = new AnnoyingCommandRegister();
-        PluginCommandYamlParser.parse(this).forEach(register::unregister);
-
-        // Close classloader
-        final ClassLoader classLoader = getClass().getClassLoader();
-        if (classLoader instanceof URLClassLoader) {
-            try {
-                // plugin field
-                final Field pluginField = classLoader.getClass().getDeclaredField("plugin");
-                pluginField.setAccessible(true);
-                pluginField.set(classLoader, null);
-
-                // pluginInit field
-                final Field pluginInitField = classLoader.getClass().getDeclaredField("pluginInit");
-                pluginInitField.setAccessible(true);
-                pluginInitField.set(classLoader, null);
-            } catch (final IllegalAccessException | NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-
-            // Close URLClassLoader
-            try {
-                ((URLClassLoader) classLoader).close();
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Will not work on processes started with the -XX:+DisableExplicitGC flag
-        // This tries to get around the issue where Windows refuses to unlock jar files that were previously loaded into the JVM
-        System.gc();
     }
 
     /**

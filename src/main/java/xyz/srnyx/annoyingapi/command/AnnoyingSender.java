@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.command;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

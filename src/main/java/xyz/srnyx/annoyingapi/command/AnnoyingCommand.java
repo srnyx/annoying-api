@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.command;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -8,6 +8,10 @@ import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import xyz.srnyx.annoyingapi.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,9 +110,7 @@ public interface AnnoyingCommand extends TabExecutor {
      */
     default void unregister() {
         final PluginCommand command = getPlugin().getCommand(getName());
-        if (command == null) return;
-        command.setExecutor(null);
-        command.setTabCompleter(null);
+        if (command != null) command.setExecutor(new DisabledCommand(getPlugin()));
     }
 
     /**

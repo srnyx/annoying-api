@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 
 import java.util.ArrayList;
@@ -67,6 +68,11 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid arguments" message
      */
     @NotNull public String invalidArguments = "error.invalid-arguments";
+
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "disabled command" message
+     */
+    @NotNull public String disabledCommand = "error.disabled-command";
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add to this {@link Set})

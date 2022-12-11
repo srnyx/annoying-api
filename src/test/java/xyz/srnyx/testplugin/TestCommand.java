@@ -3,10 +3,10 @@ package xyz.srnyx.testplugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.AnnoyingCommand;
+import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
-import xyz.srnyx.annoyingapi.AnnoyingSender;
+import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 
 import java.util.ArrayList;
 import java.util.List;

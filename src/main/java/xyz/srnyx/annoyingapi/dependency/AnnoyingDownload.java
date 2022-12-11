@@ -35,7 +35,6 @@ import java.util.logging.Level;
  */
 public class AnnoyingDownload {
     @NotNull private final AnnoyingPlugin plugin;
-    @NotNull private final AnnoyingCommandRegister register;
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
     @Nullable private Runnable finishRunnable;
@@ -50,7 +49,6 @@ public class AnnoyingDownload {
     @Contract(pure = true)
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
-        this.register = new AnnoyingCommandRegister();
         this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI";
         this.dependencies = dependencies;
     }
@@ -268,8 +266,8 @@ public class AnnoyingDownload {
                 manager.enablePlugin(dependencyPlugin);
 
                 // Register commands
-                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> register.register(command, dependencyPlugin));
-                register.sync();
+                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> plugin.commandRegister.register(command, dependencyPlugin));
+                plugin.commandRegister.sync();
             } catch (final InvalidPluginException | InvalidDescriptionException e) {
                 plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
             }

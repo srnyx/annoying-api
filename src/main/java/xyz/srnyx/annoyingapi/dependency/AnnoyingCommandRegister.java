@@ -1,9 +1,5 @@
 package xyz.srnyx.annoyingapi.dependency;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.CommandNode;
-import com.mojang.brigadier.tree.RootCommandNode;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.plugin.Plugin;
@@ -29,8 +25,6 @@ public class AnnoyingCommandRegister {
     private Method registerMethod;
     private Method syncCommandsMethod;
     private Method aMethod;
-    private Field bField;
-    private Method removeCommandMethod;
 
     /**
      * Initialize the command register
@@ -103,34 +97,6 @@ public class AnnoyingCommandRegister {
             return;
         }
 
-        // bField
-        try {
-            this.bField = Class.forName("net.minecraft.server." + nmsVersion + ".CommandDispatcher").getDeclaredField("b");
-            this.bField.setAccessible(true);
-        } catch (NoSuchFieldException | ClassNotFoundException e) {
-            try {
-                this.bField = Class.forName("net.minecraft.commands.CommandDispatcher").getDeclaredField("g");
-                this.bField.setAccessible(true);
-            } catch (final NoSuchFieldException | ClassNotFoundException ex) {
-                ex.addSuppressed(e);
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        // removeCommandMethod
-        try {
-            this.removeCommandMethod = RootCommandNode.class.getDeclaredMethod("removeCommand", String.class);
-        } catch (final NoSuchMethodException | NoSuchMethodError e) {
-            try {
-                this.removeCommandMethod = CommandNode.class.getDeclaredMethod("removeCommand", String.class);
-            } catch (final NoSuchMethodException | NoSuchMethodError ex) {
-                ex.addSuppressed(e);
-                e.printStackTrace();
-                return;
-            }
-        }
-
         initialized = true;
     }
 
@@ -169,21 +135,11 @@ public class AnnoyingCommandRegister {
         }
     }
 
-    public void unregister(@NotNull Command command) {
-        if (initialized) try {
-            this.removeCommandMethod.invoke(((CommandDispatcher) this.bField.get(this.vanillaCommandDispatcherField.get(this.getServerMethod.invoke(this.minecraftServerClass)))).getRoot(), command);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Refreshes the command list
      */
     public void sync() {
-        if (!initialized) return;
-
-        try {
+        if (initialized) try {
             this.syncCommandsMethod.invoke(Bukkit.getServer());
         } catch (final IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();

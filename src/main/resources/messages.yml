@@ -105,6 +105,8 @@ error:
   player-only: "%prefix%&cYou must be a player to run this command!@@&c%command%@@%command%"
   # Command is used with invalid/incorrect arguments
   invalid-arguments: "%prefix%&cInvalid arguments!@@&c%command%@@%command%"
+  # Command is used when it's disabled
+  disabled-command: "%prefix%&cThat command is disabled!"
 
 # Message sent when using /annoying version
 version: "%prefix%You are running AnnoyingAPI &3v%version%@@&b%command%@@%command%" # %version%
