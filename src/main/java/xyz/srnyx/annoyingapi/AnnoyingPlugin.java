@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi;
 import org.apache.commons.lang.StringUtils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.dependency.AnnoyingCommandRegister;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
@@ -189,6 +191,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         options.listeners.forEach(AnnoyingListener::unregister);
         Bukkit.getScheduler().cancelTasks(this);
         Bukkit.getPluginManager().disablePlugin(this);
+
+        // Remove commands from the command map
+        final AnnoyingCommandRegister register = new AnnoyingCommandRegister();
+        PluginCommandYamlParser.parse(this).forEach(register::unregister);
 
         // Close classloader
         final ClassLoader classLoader = getClass().getClassLoader();
