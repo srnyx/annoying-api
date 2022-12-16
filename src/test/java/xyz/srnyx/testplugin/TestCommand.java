@@ -60,7 +60,7 @@ public class TestCommand implements AnnoyingCommand {
         if (sender.argEquals(0, "test")) {
             new AnnoyingMessage(plugin, "test").send(sender);
         } else if (sender.argEquals(0, "reload")) {
-            plugin.reload();
+            plugin.reloadPlugin();
         }
 
         cooldown.start();

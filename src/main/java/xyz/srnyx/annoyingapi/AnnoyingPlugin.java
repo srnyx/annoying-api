@@ -30,6 +30,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull private static final Set<String> MISSING_DEPENDENCIES = new HashSet<>();
 
+    /**
+     * Instance of {@link AnnoyingCommandRegister}, used to other plugins' register commands
+     */
     @NotNull public final AnnoyingCommandRegister commandRegister = new AnnoyingCommandRegister();
 
     /**
@@ -63,6 +66,13 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Called after a plugin is loaded but before it has been enabled.
+     * When multiple plugins are loaded, the onLoad() for all plugins is called before any onEnable() is called.
+     * <p>Do not try to override this method! Override {@link #load()} instead
+     *
+     * @see #load()
+     */
     @Override
     public final void onLoad() {
         messages = new AnnoyingResource(this, options.messagesFileName);
@@ -76,7 +86,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Called when the plugin is enabled.
-     * <p>Do not override this method! Override {@link #enable()} instead
+     * <p>Do not try to override this method! Override {@link #enable()} instead
      *
      * @see #enable()
      */
@@ -112,7 +122,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         for (final AnnoyingDependency dependency : options.dependencies) {
             if (dependency.required && dependency.isNotInstalled()) {
                 log(Level.SEVERE, "&cMissing dependency, &4" + dependency.name + "&c is required! Unloading plugin...");
-                if (!getName().equals("AnnoyingAPI")) unload();
+                if (!getName().equals("AnnoyingAPI")) unloadPlugin();
                 return;
             }
         }
@@ -136,7 +146,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Called when the plugin is disabled
-     * <p>Do not override this method! Override {@link #disable()} instead
+     * <p>Do not try to override this method! Override {@link #disable()} instead
      *
      * @see #disable()
      */
@@ -181,10 +191,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Unloads the plugin
-     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
+     * Unloads the plugin (not the API)
      */
-    public final void unload() {
+    public final void unloadPlugin() {
         // Unregister commands listeners, cancel tasks, and disable the plugin
         options.commands.forEach(AnnoyingCommand::unregister);
         options.listeners.forEach(AnnoyingListener::unregister);
@@ -196,7 +205,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Reloads the plugin (calls {@link PluginManager#disablePlugin(Plugin)} and then {@link PluginManager#enablePlugin(Plugin)})
      * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
-    public void reload() {
+    public void reloadPlugin() {
         final PluginManager manager = Bukkit.getPluginManager();
         manager.disablePlugin(this);
         manager.enablePlugin(this);
