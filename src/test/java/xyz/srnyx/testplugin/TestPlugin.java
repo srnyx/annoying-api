@@ -25,6 +25,7 @@ public class TestPlugin extends AnnoyingPlugin {
         options.noPermission = "no-permission";
         options.playerOnly = "player-only";
         options.invalidArguments = "invalid-arguments";
+        options.disabledCommand = "disabled-command";
         options.commands.add(new TestCommand(this));
         options.listeners.add(new TestListener(this));
 

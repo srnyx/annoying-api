@@ -99,7 +99,7 @@ public interface AnnoyingCommand extends TabExecutor {
     default void register() {
         final PluginCommand command = getPlugin().getCommand(getName());
         if (command == null) {
-            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found!");
+            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
             return;
         }
         command.setExecutor(this);

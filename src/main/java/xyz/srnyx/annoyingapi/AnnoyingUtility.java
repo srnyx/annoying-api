@@ -34,22 +34,6 @@ import java.util.stream.Collectors;
  */
 public class AnnoyingUtility {
     /**
-     * Gets a string from {@link AnnoyingOptions#messagesFileName} with the specified key
-     * <p>If the string is not found, it will return the key
-     *
-     * @param   plugin  the plugin to get the string from
-     * @param   key     the key of the string
-     *
-     * @return          the string
-     */
-    @NotNull
-    public static String getString(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
-        final AnnoyingResource messages = plugin.messages;
-        if (messages == null) return key;
-        return messages.getString(key, key);
-    }
-
-    /**
      * Gets an {@link OfflinePlayer} from the specified name
      *
      * @param   name    the name of the player

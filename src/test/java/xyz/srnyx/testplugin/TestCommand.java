@@ -56,14 +56,22 @@ public class TestCommand implements AnnoyingCommand {
                     .send(sender);
             return;
         }
+        cooldown.start();
 
+        // test
         if (sender.argEquals(0, "test")) {
             new AnnoyingMessage(plugin, "test").send(sender);
-        } else if (sender.argEquals(0, "reload")) {
-            plugin.reloadPlugin();
+            return;
         }
 
-        cooldown.start();
+        // reload
+        if (sender.argEquals(0, "reload")) {
+            plugin.reloadPlugin();
+            return;
+        }
+
+        // disable
+        if (sender.argEquals(0, "disable")) unregister();
     }
 
     @Override
@@ -71,6 +79,7 @@ public class TestCommand implements AnnoyingCommand {
         final List<String> suggestions = new ArrayList<>();
         suggestions.add("test");
         suggestions.add("reload");
+        suggestions.add("disable");
         return suggestions;
     }
 }

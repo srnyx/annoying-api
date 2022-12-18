@@ -19,6 +19,7 @@ import xyz.srnyx.annoyingapi.plugin.ApiCommand;
 
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 
 /**
@@ -76,9 +77,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         messages = new AnnoyingResource(this, options.messagesFileName);
-        options.prefix = AnnoyingUtility.getString(this, options.prefix);
-        options.splitterJson = AnnoyingUtility.getString(this, options.splitterJson);
-        options.splitterPlaceholder = AnnoyingUtility.getString(this, options.splitterPlaceholder);
+        options.prefix = getMessagesString(options.prefix);
+        options.splitterJson = getMessagesString(options.splitterJson);
+        options.splitterPlaceholder = getMessagesString(options.splitterPlaceholder);
 
         // Custom onLoad
         load();
@@ -103,8 +104,8 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Download missing dependencies then enable the plugin
         if (!missingDependencies.isEmpty()) {
-            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to automatically download them...");
-            new AnnoyingDownload(AnnoyingPlugin.this, missingDependencies).downloadPlugins(this::enablePlugin);
+            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to download/install them...");
+            new AnnoyingDownload(this, missingDependencies).downloadPlugins(this::enablePlugin);
             return;
         }
 
@@ -119,12 +120,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     private void enablePlugin() {
         // Check if required dependencies are installed
-        for (final AnnoyingDependency dependency : options.dependencies) {
-            if (dependency.required && dependency.isNotInstalled()) {
-                log(Level.SEVERE, "&cMissing dependency, &4" + dependency.name + "&c is required! Unloading plugin...");
-                if (!getName().equals("AnnoyingAPI")) unloadPlugin();
-                return;
-            }
+        final Set<AnnoyingDependency> missing = options.dependencies.stream()
+                .filter(dependency -> dependency.required && dependency.isNotInstalled())
+                .collect(Collectors.toSet());
+        if (!missing.isEmpty()) {
+            log(Level.SEVERE, "&cDisabling " + getName() + "because it's missing required dependencies: &4" + missing);
+            if (!getName().equals("AnnoyingAPI")) disablePlugin();
+            return;
         }
 
         // Start messages
@@ -180,21 +182,11 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Logs a message to the console
-     *
-     * @param   level   the level of the message
-     * @param   message the message to log
+     * Disables the plugin (not the API)
+     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
-    public void log(@Nullable Level level, @NotNull String message) {
-        if (level == null) level = Level.INFO;
-        getLogger().log(level, AnnoyingUtility.color(message));
-    }
-
-    /**
-     * Unloads the plugin (not the API)
-     */
-    public final void unloadPlugin() {
-        // Unregister commands listeners, cancel tasks, and disable the plugin
+    public void disablePlugin() {
+        // Unregister commands & listeners, cancel tasks, and disable the plugin
         options.commands.forEach(AnnoyingCommand::unregister);
         options.listeners.forEach(AnnoyingListener::unregister);
         Bukkit.getScheduler().cancelTasks(this);
@@ -209,5 +201,30 @@ public class AnnoyingPlugin extends JavaPlugin {
         final PluginManager manager = Bukkit.getPluginManager();
         manager.disablePlugin(this);
         manager.enablePlugin(this);
+    }
+
+    /**
+     * Logs a message to the console
+     *
+     * @param   level   the level of the message
+     * @param   message the message to log
+     */
+    public void log(@Nullable Level level, @NotNull String message) {
+        if (level == null) level = Level.INFO;
+        getLogger().log(level, AnnoyingUtility.color(message));
+    }
+
+    /**
+     * Gets a string from {@link AnnoyingOptions#messagesFileName} with the specified key
+     * <p>If the string is not found, it will return the key
+     *
+     * @param   key the key of the string
+     *
+     * @return      the string
+     */
+    @NotNull
+    public String getMessagesString(@NotNull String key) {
+        if (messages == null) return key;
+        return messages.getString(key, key);
     }
 }

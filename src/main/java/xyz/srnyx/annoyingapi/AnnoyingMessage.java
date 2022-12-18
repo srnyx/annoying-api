@@ -166,7 +166,7 @@ public class AnnoyingMessage {
 
         final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
-            final String[] split = AnnoyingUtility.getString(plugin, key).split(plugin.options.splitterJson);
+            final String[] split = messages.getString(key, key).split(plugin.options.splitterJson);
             String display = split[0];
 
             // Replacements
