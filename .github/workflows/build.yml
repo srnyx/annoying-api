@@ -40,5 +40,5 @@ jobs:
         with:
           name: AnnoyingAPI
           path: |
-            api/build/libs
-            example-plugin/build/libs
+            api/build/libs/*.jar
+            example-plugin/build/libs/*.jar
