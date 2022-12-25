@@ -1,0 +1,19 @@
+name: ${name}
+author: srnyx
+description: General purpose API for my plugins
+website: https://srnyx.xyz
+
+main: xyz.srnyx.annoyingapi.AnnoyingPlugin
+version: ${version}
+
+commands:
+  annoying:
+    description: AnnoyingAPI commands
+    permission: annoyingapi.command
+    aliases:
+      - annoyingapi
+      - aapi
+
+permissions:
+  annoyingapi.command:
+    description: Allows access to /annoying

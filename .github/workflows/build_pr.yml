@@ -6,10 +6,9 @@ on:
   pull_request:
     paths:
       - 'gradle/**'
-      - 'src/**'
-      - 'build.gradle'
+      - 'api/**'
+      - 'example-plugin/**'
       - 'build.gradle.kts'
-      - 'settings.gradle'
       - 'settings.gradle.kts'
       - 'gradlew'
       - 'gradlew.bat'
@@ -26,7 +25,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 8
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -34,8 +33,13 @@ jobs:
         run: ./gradlew test
       - name: Build jar with Gradle
         run: ./gradlew build
-      - name: Upload artifacts
+      - name: Upload API artifacts
         uses: "actions/upload-artifact@v3.1.1"
         with:
           name: AnnoyingAPI
-          path: build/libs
+          path: api/build/libs
+      - name: Upload Example artifacts
+        uses: "actions/upload-artifact@v3.1.1"
+        with:
+          name: AnnoyingExample
+          path: example-plugin/build/libs
