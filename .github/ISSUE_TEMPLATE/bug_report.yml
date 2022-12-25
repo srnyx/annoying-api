@@ -28,7 +28,7 @@ body:
     validations:
       required: true
   - type: input
-    id: version-os
+    id: version
     attributes:
       label: Version
       description: "Unless the problem is a completely different one, please specify the version you're using of the project."
