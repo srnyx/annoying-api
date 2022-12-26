@@ -110,8 +110,8 @@ public class AnnoyingPlugin extends JavaPlugin {
             final Set<String> missingNames = missing.stream()
                     .map(dependency -> dependency.name)
                     .collect(Collectors.toSet());
-            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + missingNames);
-            if (!getName().equals("AnnoyingAPI")) disablePlugin();
+            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + StringUtils.join(missingNames, "&c, &4"));
+            disablePlugin();
             return;
         }
 
