@@ -155,7 +155,7 @@ public class AnnoyingMessage {
             final String label = sender.getLabel();
             final String[] args = sender.getArgs();
             if (label != null) command.append("/").append(label);
-            if (args != null) command.append(String.join(" ", args));
+            if (args != null) command.append(" ").append(String.join(" ", args));
         }
         replace("%command%", command.toString());
 
