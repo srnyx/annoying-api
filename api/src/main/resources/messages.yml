@@ -99,6 +99,3 @@ error:
   invalid-arguments: "%prefix%&cInvalid arguments!@@&c%command%@@%command%"
   # Command is used when it's disabled
   disabled-command: "%prefix%&4%command%&c is disabled!@@&c%command%@@%command%"
-
-# Message sent when using /annoying version
-version: "%prefix%You are running AnnoyingAPI &3v%version%@@&b%command%@@%command%" # %version%
