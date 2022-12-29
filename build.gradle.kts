@@ -41,7 +41,7 @@ subprojects {
             options.encoding = "UTF-8"
         }
 
-        // Replace '${name}', '${version}', and '${website}' in 'plugin.yml'
+        // Replace '${name}' and '${version}' in 'plugin.yml'
         processResources {
             filesMatching("**/plugin.yml") {
                 expand("name" to project.name, "version" to project.version)
