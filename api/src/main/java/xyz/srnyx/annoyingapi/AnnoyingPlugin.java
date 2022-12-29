@@ -182,6 +182,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Reloads the plugin (calls {@link PluginManager#disablePlugin(Plugin)} and then {@link PluginManager#enablePlugin(Plugin)})
      * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
+     * <p><b>This is known to break stuff with the plugin, it's highly unrecommended to use this!</b>
      */
     public void reloadPlugin() {
         final PluginManager manager = Bukkit.getPluginManager();

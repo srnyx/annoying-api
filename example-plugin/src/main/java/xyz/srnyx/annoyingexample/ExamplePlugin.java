@@ -11,7 +11,13 @@ import java.util.EnumMap;
 import java.util.Map;
 
 
+/**
+ * Example of a {@link AnnoyingPlugin} implementation
+ */
 public class ExamplePlugin extends AnnoyingPlugin {
+    /**
+     * Constructor for the {@link ExamplePlugin} class
+     */
     public ExamplePlugin() {
         super();
 

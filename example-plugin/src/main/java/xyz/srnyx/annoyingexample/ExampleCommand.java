@@ -13,9 +13,20 @@ import java.util.List;
 import java.util.function.Predicate;
 
 
+/**
+ * Example of a {@link AnnoyingCommand} implementation
+ */
 public class ExampleCommand implements AnnoyingCommand {
+    /**
+     * {@link ExamplePlugin} instance
+     */
     private final ExamplePlugin plugin;
 
+    /**
+     * Constructor for the {@link ExampleCommand} class
+     *
+     * @param   plugin  the {@link ExamplePlugin} instance
+     */
     @Contract(pure = true)
     public ExampleCommand(@NotNull ExamplePlugin plugin) {
         this.plugin = plugin;
@@ -52,7 +63,7 @@ public class ExampleCommand implements AnnoyingCommand {
         final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, sender.getPlayer().getUniqueId(), ExampleCooldown.EXAMPLE);
         if (cooldown.isOnCooldown()) {
             new AnnoyingMessage(plugin, "cooldown")
-                    .replace("%cooldown%", cooldown.getRemaining(), AnnoyingMessage.ReplaceType.TIME)
+                    .replace("%cooldown%", cooldown.getRemaining(), AnnoyingMessage.DefaultReplaceType.TIME)
                     .send(sender);
             return;
         }

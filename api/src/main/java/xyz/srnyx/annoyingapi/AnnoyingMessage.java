@@ -18,6 +18,7 @@ import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,7 +64,7 @@ public class AnnoyingMessage {
      * 
      * @param   before  the {@link String} to replace
      * @param   after   the {@link Object} to replace with
-     * @param   type    the {@link ReplaceType} to use
+     * @param   type    the {@link DefaultReplaceType} to use
      * 
      * @return          the updated {@link AnnoyingMessage} instance
      *
@@ -84,39 +85,8 @@ public class AnnoyingMessage {
             match = before; // use the original placeholder
             input = type.getDefaultInput(); // use the default input
         }
-        replacements.put(match, replaceParameter(after, input, type)); // replace the placeholder with the formatted value
+        replacements.put(match, type.getOutputOperator().apply(input, String.valueOf(after))); // replace the placeholder with the formatted value
         return this;
-    }
-
-    @NotNull
-    private String replaceParameter(@Nullable Object after, @NotNull String input, @NotNull ReplaceType type) {
-        final String value = String.valueOf(after);
-
-        // Time parameter
-        if (type == ReplaceType.TIME) {
-            final long afterLong;
-            try {
-                afterLong = Long.parseLong(value);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                return value;
-            }
-            return AnnoyingUtility.formatMillis(afterLong, input, false);
-        }
-
-        // Decimal parameter
-        if (type == ReplaceType.DECIMAL) {
-            final double afterDouble;
-            try {
-                afterDouble = Double.parseDouble(value);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                return value;
-            }
-            return AnnoyingUtility.formatDouble(afterDouble, input);
-        }
-
-        return value;
     }
 
     /**
@@ -155,7 +125,7 @@ public class AnnoyingMessage {
             final String label = sender.getLabel();
             final String[] args = sender.getArgs();
             if (label != null) command.append("/").append(label);
-            if (args != null) command.append(" ").append(String.join(" ", args));
+            if (args != null && args.length != 0) command.append(" ").append(String.join(" ", args));
         }
         replace("%command%", command.toString());
 
@@ -306,34 +276,49 @@ public class AnnoyingMessage {
      * @see             #broadcast(BroadcastType)
      */
     public void broadcast(@NotNull BroadcastType type, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
-        if (fadeIn == null) fadeIn = 20;
-        if (stay == null) stay = 20;
-        if (fadeOut == null) fadeOut = 20;
-        final String message = toString();
-        final BaseComponent[] components = getComponents();
-        final int finalFadeIn = fadeIn;
-        final int finalStay = stay;
-        final int finalFadeOut = fadeOut;
+        // Title/subtitle/full title
+        if (type.isTitle()) {
+            if (fadeIn == null) fadeIn = 10;
+            if (stay == null) stay = 70;
+            if (fadeOut == null) fadeOut = 20;
 
-        switch (type) {
-            case TITLE:
-                Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(message, null, finalFadeIn, finalStay, finalFadeOut));
-                break;
-            case SUBTITLE:
-                Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(null, message, finalFadeIn, finalStay, finalFadeOut));
-                break;
-            case FULL_TITLE:
-                final String title = new AnnoyingMessage(plugin, key + ".title").toString();
-                final String subtitle = new AnnoyingMessage(plugin, key + ".subtitle").toString();
-                Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(title, subtitle, finalFadeIn, finalStay, finalFadeOut));
-                break;
-            case ACTIONBAR:
-                Bukkit.getOnlinePlayers().forEach(player -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, components));
-                break;
-            default:
-                Bukkit.spigot().broadcast(components);
-                break;
+            // Title/subtitle
+            if (type.equals(BroadcastType.TITLE) || type.equals(BroadcastType.SUBTITLE)) {
+                final String message = toString();
+
+                // Title
+                if (type.equals(BroadcastType.TITLE)) {
+                    for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle(message, "", fadeIn, stay, fadeOut);
+                    return;
+                }
+
+                // Subtitle
+                for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle("", message, fadeIn, stay, fadeOut);
+                return;
+            }
+
+            // Title and subtitle (full title)
+            final AnnoyingMessage titleMessage = new AnnoyingMessage(plugin, key + ".title");
+            final AnnoyingMessage subtitleMessage = new AnnoyingMessage(plugin, key + ".subtitle");
+            for (final Map.Entry<String, String> entry : replacements.entrySet()) {
+                titleMessage.replace(entry.getKey(), entry.getValue());
+                subtitleMessage.replace(entry.getKey(), entry.getValue());
+            }
+            final String titleString = titleMessage.toString();
+            final String subtitleString = subtitleMessage.toString();
+            for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle(titleString, subtitleString, fadeIn, stay, fadeOut);
+            return;
         }
+        final BaseComponent[] components = getComponents();
+
+        // Action bar
+        if (type.equals(BroadcastType.ACTIONBAR)) {
+            Bukkit.getOnlinePlayers().forEach(player -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, components));
+            return;
+        }
+
+        // Chat
+        Bukkit.spigot().broadcast(components);
     }
 
     /**
@@ -370,28 +355,63 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Different replace types for {@link #replace(String, Object, ReplaceType)}
+     * Used in {@link #replace(String, Object, ReplaceType)}
+     * <p>Implement this into your own enum to create your own {@link ReplaceType}s for {@link #replace(String, Object, ReplaceType)}
+     *
+     * @see DefaultReplaceType
+     * @see #replace(String, Object, ReplaceType)
      */
-    public enum ReplaceType {
+    public interface ReplaceType {
+        /**
+         * If no input is provided, this will be used
+         *
+         * @return  the default input
+         */
+        @NotNull
+        String getDefaultInput();
+
+        /**
+         * The action done with the input and value
+         * <p>The input comes first, then the value (for the operands)
+         *
+         * @return  the {@link BinaryOperator} to use on the input and value
+         */
+        @NotNull
+        BinaryOperator<String> getOutputOperator();
+    }
+
+    /**
+     * Default replace types for {@link #replace(String, Object, ReplaceType)}
+     */
+    public enum DefaultReplaceType implements ReplaceType {
         /**
          * Input is used as the format for {@link AnnoyingUtility#formatMillis(long, String, boolean)}
          */
-        TIME("hh:ss"),
+        TIME("hh:ss", (input, value) -> AnnoyingUtility.formatMillis(Long.parseLong(value), input, false)),
         /**
          * Input is used as the format for {@link AnnoyingUtility#formatDouble(double, String)}
          */
-        DECIMAL("#,###.##");
-
-        @NotNull private final String defaultInput;
+        DECIMAL("#,###.##", (input, value) -> AnnoyingUtility.formatDouble(Double.parseDouble(value), input));
 
         /**
-         * Constructs a new {@link ReplaceType}
+         * The default input for this {@link ReplaceType}
+         */
+        @NotNull private final String defaultInput;
+        /**
+         * The {@link BinaryOperator<String>} for this {@link ReplaceType}
+         */
+        @NotNull private final BinaryOperator<String> outputOperator;
+
+        /**
+         * Constructs a new {@link DefaultReplaceType}
          *
          * @param   defaultInput    the default input value
+         * @param   outputOperator  the {@link BinaryOperator<String>} to use on the input and value
          */
         @Contract(pure = true)
-        ReplaceType(@NotNull String defaultInput) {
+        DefaultReplaceType(@NotNull String defaultInput, @NotNull BinaryOperator<String> outputOperator) {
             this.defaultInput = defaultInput;
+            this.outputOperator = outputOperator;
         }
 
         /**
@@ -400,9 +420,19 @@ public class AnnoyingMessage {
          *
          * @return  the default input
          */
-        @NotNull @Contract(pure = true)
+        @Override @NotNull @Contract(pure = true)
         public String getDefaultInput() {
             return defaultInput;
+        }
+
+        /**
+         * Gets the {@link BinaryOperator} to use on the input and value
+         *
+         * @return  the {@link BinaryOperator} to use on the input and value
+         */
+        @Override @NotNull @Contract(pure = true)
+        public BinaryOperator<String> getOutputOperator() {
+            return outputOperator;
         }
     }
 
@@ -415,6 +445,10 @@ public class AnnoyingMessage {
          */
         CHAT,
         /**
+         * Message will be displayed in the action bar
+         */
+        ACTIONBAR,
+        /**
          * Message will be sent as a title
          */
         TITLE,
@@ -426,10 +460,16 @@ public class AnnoyingMessage {
          * Only use this if the key has 2 children, "title" and "subtitle"
          * <p>The "title" child will be sent as the title and the "subtitle" child will be sent as the subtitle
          */
-        FULL_TITLE,
+        FULL_TITLE;
+
         /**
-         * Message will be displayed in the action bar
+         * Whether the broadcast type is a title ({@link #TITLE}, {@link #SUBTITLE}, or {@link #FULL_TITLE}), aka anything that has a {@code fadeIn}, {@code stay}, and {@code fadeOut}
+         *
+         * @return  true if the broadcast type is a title
          */
-        ACTIONBAR
+        @Contract(pure = true)
+        public boolean isTitle() {
+            return this == TITLE || this == SUBTITLE || this == FULL_TITLE;
+        }
     }
 }
