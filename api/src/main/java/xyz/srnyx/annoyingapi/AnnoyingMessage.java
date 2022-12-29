@@ -330,7 +330,7 @@ public class AnnoyingMessage {
      * @see             #send(AnnoyingSender)
      */
     public void send(@NotNull CommandSender sender) {
-        send(new AnnoyingSender(sender));
+        send(new AnnoyingSender(plugin, sender));
     }
 
     /**

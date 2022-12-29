@@ -40,7 +40,7 @@ public interface AnnoyingCommand extends TabExecutor {
     @Override
     default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         final AnnoyingPlugin plugin = getPlugin();
-        final AnnoyingSender sender = new AnnoyingSender(cmdSender, cmd, label, args);
+        final AnnoyingSender sender = new AnnoyingSender(plugin, cmdSender, cmd, label, args);
 
         // Permission check
         final String permission = getPermission();
@@ -84,7 +84,7 @@ public interface AnnoyingCommand extends TabExecutor {
         if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
 
         // Get suggestions
-        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(cmdSender, cmd, label, args));
+        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
         if (suggestions == null) return Collections.emptyList();
 
         // Filter suggestions

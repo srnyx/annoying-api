@@ -8,11 +8,16 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.AnnoyingOptions;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+
 
 /**
  * This class is typically used in conjunction with {@link AnnoyingCommand}
  */
 public class AnnoyingSender {
+    @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final CommandSender cmdSender;
     @Nullable private Command cmd;
     @Nullable private String label;
@@ -21,13 +26,15 @@ public class AnnoyingSender {
     /**
      * Constructs a new {@link AnnoyingSender}
      *
+     * @param   plugin      the {@link AnnoyingPlugin} instance
      * @param   cmdSender   the {@link CommandSender} to be used
      * @param   cmd         the {@link Command} that was used
      * @param   label       the {@link Command}'s label that was used
      * @param   args        the {@link Command}'s arguments that were used
      */
     @Contract(pure = true)
-    public AnnoyingSender(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+        this.plugin = plugin;
         this.cmdSender = cmdSender;
         this.cmd = cmd;
         this.label = label;
@@ -37,10 +44,12 @@ public class AnnoyingSender {
     /**
      * Constructs a new {@link AnnoyingSender} without a {@link Command}
      *
+     * @param   plugin      the {@link AnnoyingPlugin} instance
      * @param   cmdSender   the {@link CommandSender} to be used
      */
     @Contract(pure = true)
-    public AnnoyingSender(@NotNull CommandSender cmdSender) {
+    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender) {
+        this.plugin = plugin;
         this.cmdSender = cmdSender;
     }
 
@@ -105,5 +114,31 @@ public class AnnoyingSender {
      */
     public boolean argEquals(int index, @Nullable String string) {
         return args[index].equalsIgnoreCase(string);
+    }
+
+    /**
+     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link AnnoyingOptions#playerOnly} message
+     *
+     * @return  whether the {@link CommandSender} is a {@link Player}
+     */
+    public boolean checkPlayer() {
+        final boolean isPlayer = cmdSender instanceof Player;
+        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.playerOnly).send(this);
+        return isPlayer;
+    }
+
+    /**
+     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link AnnoyingOptions#noPermission} message
+     *
+     * @param   permission  the permission to check
+     *
+     * @return              if the {@link CommandSender} has the specified permission
+     */
+    public boolean checkPermission(@NotNull String permission) {
+        final boolean hasPermission = cmdSender.hasPermission(permission);
+        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.noPermission)
+                .replace("%permission%", permission)
+                .send(this);
+        return hasPermission;
     }
 }
