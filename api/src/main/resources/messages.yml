@@ -59,17 +59,21 @@ key3:
 # Below are the different types of parameters that can be used...
 # The examples will use "==" as the splitter, but you can change it by modifying "plugin.splitters.placeholder"
 #
-# - time: A time will be outputed in milliseconds by the plugin. The parameter will determine the format of the time.
+# - time: A time (milliseconds) will be inputted by the plugin. The parameter will determine the format of the time.
 # Docs: https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/time/DurationFormatUtils.html
-# Examples: "%cooldown==m':'s%" -> "1:30", "%cooldown==H':'m':'s%" -> "1:30:0", "%cooldown==d'd' H'h' m'm' s's'%" -> "1h 30m 0s"
+# Examples (5400000): "%cooldown==m':'s%" -> "1:30", "%cooldown==H':'m':'s%" -> "1:30:0", "%cooldown==d'd' H'h' m'm' s's'%" -> "1h 30m 0s"
 #
-# - decimal: A number will be outputed in milliseconds by the plugin. The parameter will determine the format of the number.
+# - number: A number will be inputted by the plugin. The parameter will determine the format of the number.
 # Docs: https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html
-# Examples: "%money==#,###%" -> "8,637", "%money==#,###.##%" -> "8,637.2", "%money==#,###.00%" -> "8,637.20"
+# Examples (8637.2): "%money==#,###%" -> "8,637", "%money==#,###.##%" -> "8,637.2", "%money==#,###.00%" -> "8,637.20"
+#
+# - boolean: A boolean (true/false) will be inputted by the plugin. The parameter will determine the output of the boolean.
+# Docs: You must use '//' to split the true and false outputs. If you don't, the placeholder will be replaced with "true" or "false".
+# Examples (true): "%state==enabled//disabled%" -> "enabled", "%state==yes//no%" -> "yes", "%state==on//off%" -> "on"
 #
 # Placeholders that support parameters will be displayed as "%name==type%" in the message's placeholder list.
-# Examples: "%cooldown=time%, %money=decimal%"
-key4: "KDR: %kdr==#.##%" # %kdr==decimal%
+# Examples: "%cooldown=time%, %money=number%", "%state=boolean%"
+key4: "KDR: %kdr==#.##%" # %kdr==number%
 # --- END PLACEHOLDER PARAMETERS --- #
 
 

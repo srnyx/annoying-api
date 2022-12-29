@@ -389,9 +389,17 @@ public class AnnoyingMessage {
          */
         TIME("hh:ss", (input, value) -> AnnoyingUtility.formatMillis(Long.parseLong(value), input, false)),
         /**
-         * Input is used as the format for {@link AnnoyingUtility#formatDouble(double, String)}
+         * Input is used as the format for {@link AnnoyingUtility#formatNumber(Number, String)}
          */
-        DECIMAL("#,###.##", (input, value) -> AnnoyingUtility.formatDouble(Double.parseDouble(value), input));
+        NUMBER("#,###.##", (input, value) -> AnnoyingUtility.formatNumber(Double.parseDouble(value), input)),
+        /**
+         * Input is used to turn 'true' or 'false' into the specified value
+         */
+        BOOLEAN("true//false", (input, value) -> {
+            String[] split = input.split("//", 2);
+            if (split.length != 2) split = new String[]{"true", "false"};
+            return Boolean.parseBoolean(value) ? split[0] : split[1];
+        });
 
         /**
          * The default input for this {@link ReplaceType}

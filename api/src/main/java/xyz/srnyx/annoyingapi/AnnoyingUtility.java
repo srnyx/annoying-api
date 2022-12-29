@@ -127,13 +127,13 @@ public class AnnoyingUtility {
     /**
      * Formats a {@link Double} value using the given pattern
      *
-     * @param   value   the {@link Double} to format
+     * @param   value   the {@link Number} to format
      * @param   pattern the pattern to use
      *
      * @return          the formatted value
      */
     @NotNull
-    public static String formatDouble(double value, @Nullable String pattern) {
+    public static String formatNumber(@NotNull Number value, @Nullable String pattern) {
         if (pattern == null) pattern = "#,###.##";
         return new DecimalFormat(pattern).format(value);
     }
