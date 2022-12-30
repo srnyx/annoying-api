@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a plugin using the API
  */
+@SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Instance of {@link AnnoyingCommandRegister}, used to other plugins' register commands
@@ -62,17 +63,8 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
-        // Load messages
         loadMessages();
-        // Custom onLoad
         load();
-    }
-
-    /**
-     * Loads the messages.yml file
-     */
-    public void loadMessages() {
-        messages = new AnnoyingResource(this, options.messagesFileName);
     }
 
     /**
@@ -146,9 +138,20 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
+     * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
+     * <p>Do not try to override this method! Override {@link #reload()} instead
+     *
+     * @see #reload()
+     */
+    public final void reloadPlugin() {
+        loadMessages();
+        reload();
+    }
+
+    /**
      * Called when the plugin is loaded
      */
-    @SuppressWarnings("EmptyMethod")
     public void load() {
         // This method is meant to be overridden
     }
@@ -156,7 +159,6 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Called after dependency checks, start-up messages, and command/listener registration.
      */
-    @SuppressWarnings("EmptyMethod")
     public void enable() {
         // This method is meant to be overridden
     }
@@ -164,17 +166,31 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Called when the plugin is disabled
      */
-    @SuppressWarnings("EmptyMethod")
     public void disable() {
         // This method is meant to be overridden
     }
 
     /**
-     * Disables the plugin (not the API)
+     * Called when the plugin is reloaded
+     *
+     * @see #reloadPlugin()
+     */
+    public void reload() {
+        // This method is meant to be overridden
+    }
+
+    /**
+     * Loads the messages.yml file to {@link #messages}
+     */
+    public void loadMessages() {
+        messages = new AnnoyingResource(this, options.messagesFileName);
+    }
+
+    /**
+     * Disables the plugin. Unregisters commands/listeners, cancels tasks, and then runs {@link PluginManager#disablePlugin(Plugin)}
      * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
     public void disablePlugin() {
-        // Unregister commands & listeners, cancel tasks, and disable the plugin
         options.commands.forEach(AnnoyingCommand::unregister);
         options.listeners.forEach(AnnoyingListener::unregister);
         Bukkit.getScheduler().cancelTasks(this);
@@ -182,20 +198,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Reloads the plugin (calls {@link PluginManager#disablePlugin(Plugin)} and then {@link PluginManager#enablePlugin(Plugin)})
-     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
-     * <p><b>This is known to break stuff with the plugin, it's highly unrecommended to use this!</b>
-     */
-    public void reloadPlugin() {
-        final PluginManager manager = Bukkit.getPluginManager();
-        manager.disablePlugin(this);
-        manager.enablePlugin(this);
-    }
-
-    /**
      * Logs a message to the console
      *
-     * @param   level   the level of the message
+     * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message the message to log
      */
     public void log(@Nullable Level level, @NotNull String message) {
@@ -204,12 +209,11 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Gets a string from {@link AnnoyingOptions#messagesFileName} with the specified key
-     * <p>If the string is not found, it will return the key
+     * Gets a string from {@link #messages} with the specified key
      *
      * @param   key the key of the string
      *
-     * @return      the string
+     * @return      the string, or the {@code key} if {@link #messages} is {@code null} or the string is not found
      */
     @NotNull
     public String getMessagesString(@NotNull String key) {
