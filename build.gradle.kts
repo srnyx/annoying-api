@@ -43,8 +43,10 @@ subprojects {
 
         // Replace '${name}' and '${version}' in 'plugin.yml'
         processResources {
+            inputs.property("name", project.name)
+            inputs.property("version", version)
             filesMatching("**/plugin.yml") {
-                expand("name" to project.name, "version" to project.version)
+                expand("name" to project.name, "version" to version)
             }
         }
     }
