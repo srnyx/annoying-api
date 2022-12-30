@@ -105,15 +105,17 @@ public class AnnoyingSender {
     }
 
     /**
-     * Returns if the specified argument index is equal to the specified string (case-insensitive)
+     * Returns if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
      *
      * @param   index   the argument index
-     * @param   string  the string to compare to
+     * @param   strings the strings to compare to
      *
-     * @return          if the specified argument index is equal to the specified string (case-insensitive)
+     * @return          {@code true} if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
      */
-    public boolean argEquals(int index, @Nullable String string) {
-        return args[index].equalsIgnoreCase(string);
+    public boolean argEquals(int index, @Nullable String... strings) {
+        final String arg = args[index];
+        for (final String string : strings) if (arg.equalsIgnoreCase(string)) return true;
+        return false;
     }
 
     /**
