@@ -62,13 +62,17 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
-        messages = new AnnoyingResource(this, options.messagesFileName);
-        options.prefix = getMessagesString(options.prefix);
-        options.splitterJson = getMessagesString(options.splitterJson);
-        options.splitterPlaceholder = getMessagesString(options.splitterPlaceholder);
-
+        // Load messages
+        loadMessages();
         // Custom onLoad
         load();
+    }
+
+    /**
+     * Loads the messages.yml file
+     */
+    public void loadMessages() {
+        messages = new AnnoyingResource(this, options.messagesFileName);
     }
 
     /**
@@ -103,14 +107,12 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     private void enablePlugin() {
         // Check if required dependencies are installed
-        final Set<AnnoyingDependency> missing = options.dependencies.stream()
+        final String missing = options.dependencies.stream()
                 .filter(dependency -> dependency.required && dependency.isNotInstalled())
-                .collect(Collectors.toSet());
-        if (!missing.isEmpty()) {
-            final Set<String> missingNames = missing.stream()
-                    .map(dependency -> dependency.name)
-                    .collect(Collectors.toSet());
-            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + StringUtils.join(missingNames, "&c, &4"));
+                .map(dependency -> dependency.name)
+                .collect(Collectors.joining("&c, &4"));
+        if (missing.length() != 0) {
+            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + missing);
             disablePlugin();
             return;
         }
@@ -118,11 +120,11 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Start messages
         final String name = getName() + " v" + getDescription().getVersion();
         final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = StringUtils.repeat("-", Math.max(name.length(), authors.length()));
-        log(Level.INFO, options.colorDark + line);
+        final String line = options.colorDark + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
+        log(Level.INFO, line);
         log(Level.INFO, options.colorLight + name);
         log(Level.INFO, options.colorLight + authors);
-        log(Level.INFO, options.colorDark + line);
+        log(Level.INFO, line);
 
         // Register commands/events
         options.commands.forEach(AnnoyingCommand::register);
