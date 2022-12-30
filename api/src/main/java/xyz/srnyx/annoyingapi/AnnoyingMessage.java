@@ -16,8 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,7 +29,8 @@ import java.util.regex.Pattern;
 public class AnnoyingMessage {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String key;
-    @NotNull private final Map<String, String> replacements = new HashMap<>();
+    @Nullable private String splitterPlaceholder;
+    @NotNull private final Set<Replacement> replacements = new HashSet<>();
 
     /**
      * Constructs a new {@link AnnoyingMessage} with the specified key
@@ -40,7 +41,25 @@ public class AnnoyingMessage {
     public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
         this.plugin = plugin;
         this.key = key;
-        replace("%prefix%", plugin.options.prefix);
+        replace("%prefix%", plugin.getMessagesString(plugin.options.prefix));
+    }
+
+    /**
+     * {@link #replace(String, Object)} except using parameter placeholders
+     * 
+     * @param   placeholder the placeholder to replace (must have {@code %} on both sides)
+     * @param   value       the {@link Object} to replace with
+     * @param   type        the {@link DefaultReplaceType} to use. If {@code null}, the replacement will be treated normally
+     * 
+     * @return              the updated {@link AnnoyingMessage} instance
+     *
+     * @see                 AnnoyingMessage#replace(String, Object)
+     * @see                 ReplaceType
+     */
+    @NotNull
+    public AnnoyingMessage replace(@NotNull String placeholder, @Nullable Object value, @Nullable ReplaceType type) {
+        replacements.add(new Replacement(placeholder, value, type));
+        return this;
     }
 
     /**
@@ -50,56 +69,12 @@ public class AnnoyingMessage {
      * @param   after   the {@link Object} to replace with
      *
      * @return          the updated {@link AnnoyingMessage} instance
-     * 
+     *
      * @see             #replace(String, Object, ReplaceType)
      */
     @NotNull
     public AnnoyingMessage replace(@NotNull String before, @Nullable Object after) {
-        replacements.put(before, String.valueOf(after));
-        return this;
-    }
-
-    /**
-     * {@link #replace(String, Object)} except with custom formatting
-     * 
-     * @param   before  the {@link String} to replace
-     * @param   after   the {@link Object} to replace with
-     * @param   type    the {@link DefaultReplaceType} to use
-     * 
-     * @return          the updated {@link AnnoyingMessage} instance
-     *
-     * @see             AnnoyingMessage#replace(String, Object)
-     * @see             ReplaceType
-     */
-    @NotNull
-    public AnnoyingMessage replace(@NotNull String before, @Nullable Object after, @NotNull ReplaceType type) {
-        final String regex = "%" + Pattern.quote(before.replace("%", "") + plugin.options.splitterPlaceholder) + ".*?%";
-        final Matcher matcher = Pattern.compile(regex).matcher(toString());
-        final String match;
-        final String input;
-        if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
-            match = matcher.group(); // get the placeholder
-            final String split = match.split(plugin.options.splitterPlaceholder)[1]; // get the input part of the placeholder
-            input = split.substring(0, split.length() - 1); // remove the closing % from the input part
-        } else {
-            match = before; // use the original placeholder
-            input = type.getDefaultInput(); // use the default input
-        }
-        replacements.put(match, type.getOutputOperator().apply(input, String.valueOf(after))); // replace the placeholder with the formatted value
-        return this;
-    }
-
-    /**
-     * Runs {@link #getComponents(AnnoyingSender)} using {@code null}
-     *
-     * @return  the message in {@link BaseComponent}s
-     *
-     * @see     #send(AnnoyingSender)
-     * @see     #getComponents(AnnoyingSender)
-     */
-    @NotNull
-    public BaseComponent[] getComponents() {
-        return getComponents(null);
+        return replace(before, after, null);
     }
 
     /**
@@ -129,26 +104,25 @@ public class AnnoyingMessage {
         }
         replace("%command%", command.toString());
 
+        final String splitterJson = plugin.getMessagesString(plugin.options.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
-            final String[] split = messages.getString(key, key).split(plugin.options.splitterJson, 3);
+            final String[] split = messages.getString(key, key).split(splitterJson, 3);
             String display = split[0];
 
             // Message
             if (split.length == 1) {
-                for (final Map.Entry<String, String> entry : replacements.entrySet()) display = display.replace(entry.getKey(), entry.getValue());
+                for (final Replacement replacement : replacements) display = replacement.process(display);
                 json.append(display);
                 return json.build();
             }
-            String hover = split[1];
 
             // Message with hover
+            String hover = split[1];
             if (split.length == 2) {
-                for (final Map.Entry<String, String> entry : replacements.entrySet()) {
-                    final String before = entry.getKey();
-                    final String after = entry.getValue();
-                    display = display.replace(before, after);
-                    hover = hover.replace(before, after);
+                for (final Replacement replacement : replacements) {
+                    display = replacement.process(display);
+                    hover = replacement.process(hover);
                 }
                 json.append(display, hover);
                 return json.build();
@@ -156,12 +130,10 @@ public class AnnoyingMessage {
 
             // Message with hover and click
             String click = split[2];
-            for (final Map.Entry<String, String> entry : replacements.entrySet()) {
-                final String before = entry.getKey();
-                final String after = entry.getValue();
-                display = display.replace(before, after);
-                hover = hover.replace(before, after);
-                click = click.replace(before, after);
+            for (final Replacement replacement : replacements) {
+                display = replacement.process(display);
+                hover = replacement.process(hover);
+                click = replacement.process(click);
             }
             json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, click);
             return json.build();
@@ -176,21 +148,14 @@ public class AnnoyingMessage {
             }
 
             // Replacements
-            for (final Map.Entry<String, String> entry : replacements.entrySet()) subMessage = subMessage.replace(entry.getKey(), entry.getValue());
+            for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
             subMessage = AnnoyingUtility.color(subMessage);
 
             // Get component parts
-            final String[] split = subMessage
-                    .replace("%prefix%", plugin.options.prefix)
-                    .replace("%command%", command)
-                    .split(plugin.options.splitterJson);
+            final String[] split = subMessage.split(splitterJson, 3);
             final String display = split[0];
-            String hover = null;
-            String function = null;
-            if (split.length == 2 || split.length == 3) {
-                hover = split[1];
-                if (split.length == 3) function = split[2];
-            }
+            String hover = split.length == 2 ? split[1] : null;
+            String function = split.length == 3 ? split[2] : null;
 
             // Prompt component
             if (subKey.startsWith("suggest")) {
@@ -223,17 +188,16 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Runs {@link #toString(AnnoyingSender)} using {@code null}
-     * <p>This will only have the display text of the components, use {@link #getComponents()} for all parts
+     * Runs {@link #getComponents(AnnoyingSender)} using {@code null}
      *
-     * @return  the message
+     * @return  the message in {@link BaseComponent}s
      *
-     * @see     #getComponents()
-     * @see     #toString(AnnoyingSender)
+     * @see     #send(AnnoyingSender)
+     * @see     #getComponents(AnnoyingSender)
      */
-    @Override @NotNull
-    public String toString() {
-        return toString(null);
+    @NotNull
+    public BaseComponent[] getComponents() {
+        return getComponents(null);
     }
 
     /**
@@ -254,15 +218,17 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Broadcasts the message with the specified {@link BroadcastType} and default title parameters
-     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, Integer, Integer, Integer)} with {@code null} for all title parameters
+     * Runs {@link #toString(AnnoyingSender)} using {@code null}
+     * <p>This will only have the display text of the components, use {@link #getComponents()} for all parts
      *
-     * @param   type    the {@link BroadcastType} to broadcast with
+     * @return  the message
      *
-     * @see             #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see     #getComponents()
+     * @see     #toString(AnnoyingSender)
      */
-    public void broadcast(@NotNull BroadcastType type) {
-        broadcast(type, null, null, null);
+    @Override @NotNull
+    public String toString() {
+        return toString(null);
     }
 
     /**
@@ -300,10 +266,8 @@ public class AnnoyingMessage {
             // Title and subtitle (full title)
             final AnnoyingMessage titleMessage = new AnnoyingMessage(plugin, key + ".title");
             final AnnoyingMessage subtitleMessage = new AnnoyingMessage(plugin, key + ".subtitle");
-            for (final Map.Entry<String, String> entry : replacements.entrySet()) {
-                titleMessage.replace(entry.getKey(), entry.getValue());
-                subtitleMessage.replace(entry.getKey(), entry.getValue());
-            }
+            titleMessage.replacements.addAll(replacements);
+            subtitleMessage.replacements.addAll(replacements);
             final String titleString = titleMessage.toString();
             final String subtitleString = subtitleMessage.toString();
             for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle(titleString, subtitleString, fadeIn, stay, fadeOut);
@@ -322,15 +286,15 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Sends the message to the specified {@link CommandSender}
-     * <p>This will convert the {@link CommandSender} to a {@link AnnoyingSender} and then run {@link #send(AnnoyingSender)}
+     * Broadcasts the message with the specified {@link BroadcastType} and default title parameters
+     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, Integer, Integer, Integer)} with {@code null} for all title parameters
      *
-     * @param   sender  the {@link CommandSender} to send the message to
+     * @param   type    the {@link BroadcastType} to broadcast with
      *
-     * @see             #send(AnnoyingSender)
+     * @see             #broadcast(BroadcastType, Integer, Integer, Integer)
      */
-    public void send(@NotNull CommandSender sender) {
-        send(new AnnoyingSender(plugin, sender));
+    public void broadcast(@NotNull BroadcastType type) {
+        broadcast(type, null, null, null);
     }
 
     /**
@@ -352,6 +316,18 @@ public class AnnoyingMessage {
 
         // Console/non-player (normal)
         cmdSender.sendMessage(toString(sender));
+    }
+
+    /**
+     * Sends the message to the specified {@link CommandSender}
+     * <p>This will convert the {@link CommandSender} to a {@link AnnoyingSender} and then run {@link #send(AnnoyingSender)}
+     *
+     * @param   sender  the {@link CommandSender} to send the message to
+     *
+     * @see             #send(AnnoyingSender)
+     */
+    public void send(@NotNull CommandSender sender) {
+        send(new AnnoyingSender(plugin, sender));
     }
 
     /**
@@ -441,6 +417,57 @@ public class AnnoyingMessage {
         @Override @NotNull @Contract(pure = true)
         public BinaryOperator<String> getOutputOperator() {
             return outputOperator;
+        }
+    }
+
+    /**
+     * Used in {@link #replace(String, Object, ReplaceType)} and {@link #replace(String, Object)}
+     */
+    private class Replacement {
+        @NotNull private final String before;
+        @NotNull private final String value;
+        @Nullable private final ReplaceType type;
+
+        /**
+         * Constructs a new {@link Replacement}
+         *
+         * @param   before  the text to replace. If {@code type} isn't {@code null}, this should be a placeholder ({@code %} around it)
+         * @param   value   the value to replace the text with
+         * @param   type    the {@link ReplaceType} to use on the value, if {@code null}, the {@code value} will be used as-is
+         */
+        @Contract(pure = true)
+        public Replacement(@NotNull String before, @Nullable Object value, @Nullable ReplaceType type) {
+            this.before = before;
+            this.value = String.valueOf(value);
+            this.type = type;
+        }
+
+        /**
+         * Performs the replacement on the specified {@link String}
+         *
+         * @param   input   the {@link String} to perform the replacement on
+         *
+         * @return          the {@link String} with the replacement performed
+         */
+        @NotNull
+        public String process(@NotNull String input) {
+            // Normal placeholder
+            if (type == null) return input.replace(before, value);
+
+            // Parameter placeholder
+            if (splitterPlaceholder == null) splitterPlaceholder = plugin.getMessagesString(plugin.options.splitterPlaceholder);
+            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(input);
+            final String match;
+            final String parameter;
+            if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
+                match = matcher.group(); // get the placeholder
+                final String split = match.split(splitterPlaceholder, 2)[1]; // get the input part of the placeholder
+                parameter = split.substring(0, split.length() - 1); // remove the closing % from the input part
+            } else {
+                match = before; // use the original placeholder
+                parameter = type.getDefaultInput(); // use the default input
+            }
+            return input.replace(match, type.getOutputOperator().apply(parameter, value)); // replace the placeholder with the formatted value
         }
     }
 
