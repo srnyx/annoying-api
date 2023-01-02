@@ -81,7 +81,7 @@ key4: "KDR: %kdr==#.##%" # %kdr==decimal%
 # --- END PLACEHOLDER PARAMETERS --- #
 
 
-# This message can be used to test practically anything!
+# This message can be used to test practically anything! FOR PLUGIN DEVELOPERS!
 test: "%prefix%This is a test message!"
 
 # This will be what %prefix% is in all the other messages

@@ -27,6 +27,7 @@ public class AnnoyingUtility {
      * Constructs a new {@link AnnoyingUtility} instance
      * <p><i>Only exists to give the constructor a Javadoc</i>
      */
+    @Contract(pure = true)
     public AnnoyingUtility() {
         // Only exists to give the constructor a Javadoc
     }
@@ -103,7 +104,7 @@ public class AnnoyingUtility {
      *
      * @return          the translated message
      */
-    @NotNull @Contract("_ -> new")
+    @NotNull
     public static String color(@Nullable String message) {
         if (message == null) return "null";
         return ChatColor.translateAlternateColorCodes('&', message);

@@ -77,7 +77,7 @@ key4: "KDR: %kdr==#.##%" # %kdr==number%
 # --- END PLACEHOLDER PARAMETERS --- #
 
 
-# This message can be used to test practically anything!
+# This message can be used to test practically anything! FOR PLUGIN DEVELOPERS!
 test: "%prefix%This is a test message!"
 
 # Messages for general plugin usage
