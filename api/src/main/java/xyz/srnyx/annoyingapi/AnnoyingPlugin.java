@@ -14,6 +14,7 @@ import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingCommandRegister;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
+import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.*;
@@ -47,11 +48,10 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
 
     /**
-     * Constructs a new {@link AnnoyingPlugin} instance
-     * <p><i>Only exists to give the constructor a Javadoc</i>
+     * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
      */
     public AnnoyingPlugin() {
-        // Only exists to give the constructor a Javadoc
+        options.listeners.add(new EventHandlers(this));
     }
 
     /**
