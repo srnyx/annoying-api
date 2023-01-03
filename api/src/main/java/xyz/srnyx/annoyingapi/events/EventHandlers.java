@@ -13,10 +13,21 @@ import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 
+/**
+ * Class for handling events for the API
+ */
 public class EventHandlers implements AnnoyingListener {
+    /**
+     * The plugin instance
+     */
     @NotNull
     private final AnnoyingPlugin plugin;
 
+    /**
+     * Instantiates a new {@link EventHandlers} for handling API events
+     *
+     * @param   plugin  the plugin instance
+     */
     @Contract(pure = true)
     public EventHandlers(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
@@ -27,6 +38,13 @@ public class EventHandlers implements AnnoyingListener {
         return plugin;
     }
 
+    /**
+     * Called when an entity is damaged by an entity
+     *
+     * @param   event   the event
+     *
+     * @see             PlayerDamageByPlayerEvent
+     */
     @EventHandler
     public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         final Entity damager = event.getDamager();
