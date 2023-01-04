@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 
 
 /**
@@ -45,7 +46,11 @@ public class ExampleListener implements AnnoyingListener {
      * @param   event   the {@link PlayerJoinEvent} event
      */
     @EventHandler
-    public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
-        new AnnoyingMessage(plugin, "join").send(event.getPlayer());
+    public void onPlayerDamageByPlayer(@NotNull PlayerDamageByPlayerEvent event) {
+        new AnnoyingMessage(plugin, "attack")
+                .replace("%damager%", event.getDamager().getName())
+                .replace("%damagee%", event.getDamagee().getName())
+                .replace("%damage%", event.getDamage())
+                .broadcast(AnnoyingMessage.BroadcastType.CHAT);
     }
 }
