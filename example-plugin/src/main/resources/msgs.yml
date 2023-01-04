@@ -107,4 +107,5 @@ disabled-command: "%prefix%&cThat command is disabled!"
 # Message sent when using /annoying version
 version: "%prefix%You are running AnnoyingAPI &3v%version%@@&b%command%@@%command%" # %version%
 
-cooldown: "%prefix%&cYou must wait %cooldown==s's'% before using this command again!@@&4%cooldown==s's'%@@%command%"
+attack: "%prefix%&l%damager% &7attacked &l%victim% &7for &l%damage% &7damage!@@&7%command%@@%command%" # %damager%, %victim%, %damage%
+cooldown: "%prefix%&cYou must wait %cooldown==s's'% before using this command again!@@&4%cooldown==s's'%@@%command%" # %cooldown==time%
