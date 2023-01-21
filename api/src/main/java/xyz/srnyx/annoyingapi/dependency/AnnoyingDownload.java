@@ -236,7 +236,7 @@ public class AnnoyingDownload {
 
         // Download file
         try (final BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
-             final FileOutputStream out = new FileOutputStream(dependency.getFile())) {
+             final FileOutputStream out = new FileOutputStream(dependency.file)) {
             final byte[] buffer = new byte[1024];
             int numRead;
             while ((numRead = in.read(buffer)) != -1) out.write(buffer, 0, numRead);
@@ -261,12 +261,12 @@ public class AnnoyingDownload {
         if (enable && dependency.enableAfterDownload && manager.getPlugin(dependency.name) == null) {
             try {
                 // Load and enable plugin
-                final Plugin dependencyPlugin = manager.loadPlugin(dependency.getFile());
+                final Plugin dependencyPlugin = manager.loadPlugin(dependency.file);
                 dependencyPlugin.onLoad();
                 manager.enablePlugin(dependencyPlugin);
 
                 // Register commands
-                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> plugin.commandRegister.register(command, dependencyPlugin));
+                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> plugin.commandRegister.register(dependencyPlugin, command));
                 plugin.commandRegister.sync();
             } catch (final InvalidPluginException | InvalidDescriptionException e) {
                 plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
@@ -276,8 +276,8 @@ public class AnnoyingDownload {
         // Check if all plugins have been processed
         remaining--;
         if (remaining == 0) {
+            plugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
             Bukkit.getScheduler().callSyncMethod(plugin, () -> {
-                plugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
                 if (finishRunnable != null) finishRunnable.run();
                 return null;
             });

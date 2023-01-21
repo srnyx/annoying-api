@@ -8,8 +8,8 @@ import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.Predicate;
 
 
@@ -86,11 +86,7 @@ public class ExampleCommand implements AnnoyingCommand {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull AnnoyingSender sender) {
-        final List<String> suggestions = new ArrayList<>();
-        suggestions.add("test");
-        suggestions.add("reload");
-        suggestions.add("disable");
-        return suggestions;
+    public Collection<Object> onTabComplete(@NotNull AnnoyingSender sender) {
+        return Arrays.asList("test", "reload", "disable");
     }
 }

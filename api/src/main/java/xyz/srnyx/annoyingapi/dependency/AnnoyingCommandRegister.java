@@ -18,33 +18,42 @@ import java.lang.reflect.Method;
  */
 public class AnnoyingCommandRegister {
     private boolean initialized = false;
-    private Class<?> minecraftServerClass;
-    private Method getServerMethod;
-    private Field vanillaCommandDispatcherField;
     private Constructor<?> bukkitcommandWrapperConstructor;
     private Method registerMethod;
     private Method syncCommandsMethod;
     private Method aMethod;
+    private Object commandDispatcher;
 
     /**
      * Initialize the command register
      */
     public AnnoyingCommandRegister() {
-        // nmsVersion
+        // Get nmsVersion, bukkitcommandWrapperConstructor, registerMethod, & syncCommandsMethod
         final String nmsVersion;
         try {
+            // nmsVersion
             nmsVersion = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-        } catch (final ArrayIndexOutOfBoundsException e) {
+            // bukkitcommandWrapperConstructor
+            this.bukkitcommandWrapperConstructor = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getDeclaredConstructor(Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".CraftServer"), Command.class);
+            this.bukkitcommandWrapperConstructor.setAccessible(true);
+            // registerMethod
+            this.registerMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getMethod("register", com.mojang.brigadier.CommandDispatcher.class, String.class);
+            this.registerMethod.setAccessible(true);
+            // syncCommandsMethod
+            this.syncCommandsMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".CraftServer").getDeclaredMethod("syncCommands");
+            this.syncCommandsMethod.setAccessible(true);
+        } catch (final ArrayIndexOutOfBoundsException | ClassNotFoundException | NoSuchMethodException e) {
             e.printStackTrace();
             return;
         }
 
-        // minecraftServerClass
+        // Get minecraftServerClass
+        Class<?> minecraftServerClass;
         try {
-            this.minecraftServerClass = Class.forName("net.minecraft.server." + nmsVersion + ".MinecraftServer");
+            minecraftServerClass = Class.forName("net.minecraft.server." + nmsVersion + ".MinecraftServer");
         } catch (final ClassNotFoundException e) {
             try {
-                this.minecraftServerClass = Class.forName("net.minecraft.server.MinecraftServer");
+                minecraftServerClass = Class.forName("net.minecraft.server.MinecraftServer");
             } catch (final ClassNotFoundException e2) {
                 e2.addSuppressed(e);
                 e2.printStackTrace();
@@ -52,47 +61,20 @@ public class AnnoyingCommandRegister {
             }
         }
 
-        // getServerMethod
+        // Get vanillaCommandDispatcherField, getServerMethod, commandDispatcher, & aMethod
         try {
-            this.getServerMethod = this.minecraftServerClass.getMethod("getServer");
-            this.getServerMethod.setAccessible(true);
-        } catch (final NoSuchMethodException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // vanillaCommandDispatcherField
-        try {
-            this.vanillaCommandDispatcherField = this.minecraftServerClass.getDeclaredField("vanillaCommandDispatcher");
-            this.vanillaCommandDispatcherField.setAccessible(true);
-        } catch (final NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // bukkitcommandWrapperConstructor
-        try {
-            this.bukkitcommandWrapperConstructor = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getDeclaredConstructor(Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".CraftServer"), Command.class);
-            this.bukkitcommandWrapperConstructor.setAccessible(true);
-        } catch (final NoSuchMethodException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // registerMethod
-        try {
-            this.registerMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getMethod("register", com.mojang.brigadier.CommandDispatcher.class, String.class);
-            this.registerMethod.setAccessible(true);
-        } catch (final NoSuchMethodException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // syncCommandsMethod
-        try {
-            this.syncCommandsMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".CraftServer").getDeclaredMethod("syncCommands");
-            this.syncCommandsMethod.setAccessible(true);
-        } catch (final NoSuchMethodException | ClassNotFoundException e) {
+            // vanillaCommandDispatcherField
+            final Field vanillaCommandDispatcherField = minecraftServerClass.getDeclaredField("vanillaCommandDispatcher");
+            vanillaCommandDispatcherField.setAccessible(true);
+            // getServerMethod
+            final Method getServerMethod = minecraftServerClass.getMethod("getServer");
+            getServerMethod.setAccessible(true);
+            // commandDispatcher
+            this.commandDispatcher = vanillaCommandDispatcherField.get(getServerMethod.invoke(minecraftServerClass));
+            // aMethod
+            this.aMethod = commandDispatcher.getClass().getDeclaredMethod("a");
+            this.aMethod.setAccessible(true);
+        } catch (final NoSuchFieldException | InvocationTargetException | RuntimeException | NoSuchMethodException | IllegalAccessException e) {
             e.printStackTrace();
             return;
         }
@@ -106,29 +88,8 @@ public class AnnoyingCommandRegister {
      * @param   command the command to register
      * @param   plugin  the plugin that owns the command
      */
-    public void register(@NotNull Command command, @NotNull Plugin plugin) {
-        if (!initialized) return;
-
-        // Get commandDispatcher
-        final Object commandDispatcher;
-        try {
-            commandDispatcher = this.vanillaCommandDispatcherField.get(this.getServerMethod.invoke(this.minecraftServerClass));
-        } catch (final IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Get aMethod
-        if (this.aMethod == null) try {
-            this.aMethod = commandDispatcher.getClass().getDeclaredMethod("a");
-            this.aMethod.setAccessible(true);
-        } catch (final NoSuchMethodException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Register command
-        try {
+    public void register(@NotNull Plugin plugin, @NotNull Command command) {
+        if (initialized) try {
             this.registerMethod.invoke(this.bukkitcommandWrapperConstructor.newInstance(Bukkit.getServer(), command), this.aMethod.invoke(commandDispatcher), plugin.getName());
         } catch (final IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();

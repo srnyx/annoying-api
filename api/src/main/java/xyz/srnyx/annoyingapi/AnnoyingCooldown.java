@@ -9,7 +9,7 @@ import java.util.UUID;
 
 
 /**
- * This class is used to create and manage cooldowns for players
+ * This class is used to create and manage cooldowns for anything with a {@link UUID}
  */
 public class AnnoyingCooldown {
     @NotNull private final AnnoyingPlugin plugin;
@@ -17,11 +17,11 @@ public class AnnoyingCooldown {
     @NotNull private final CooldownType type;
 
     /**
-     * Creates and starts a cooldown of the specified {@link CooldownType} for the specified player
+     * Creates and starts a cooldown of the specified {@link CooldownType} for the specified {@link UUID}
      *
      * @param   plugin  the plugin that is creating the cooldown
-     * @param   uuid    the player's UUID
-     * @param   type    the cooldown type
+     * @param   uuid    the UUID of the thing that is being cooled down
+     * @param   type    the {@link CooldownType} to use
      */
     @Contract(pure = true)
     public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull CooldownType type) {
@@ -74,7 +74,7 @@ public class AnnoyingCooldown {
     /**
      * A {@code boolean} of whether the cooldown is active. If the cooldown is not active, it will be removed from {@link AnnoyingPlugin#cooldowns}
      *
-     * @return  whether the player is on cooldown
+     * @return  whether the cooldown is active
      */
     public boolean isOnCooldown() {
         final boolean onCooldown = getRemaining() > 0;

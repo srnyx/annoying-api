@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +33,19 @@ public class AnnoyingUtility {
     }
 
     /**
+     * Translates {@code &} color codes to {@link ChatColor}
+     *
+     * @param   message the message to translate
+     *
+     * @return          the translated message
+     */
+    @NotNull
+    public static String color(@Nullable String message) {
+        if (message == null) return "null";
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    /**
      * Gets an {@link OfflinePlayer} from the specified name
      *
      * @param   name    the name of the player
@@ -40,12 +53,41 @@ public class AnnoyingUtility {
      * @return          the {@link OfflinePlayer}, or null if not found
      */
     @Nullable
-    public static OfflinePlayer getPlayer(@NotNull String name) {
+    public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
         for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
             final String opName = offline.getName();
             if (opName != null && opName.equalsIgnoreCase(name)) return offline;
         }
         return null;
+    }
+
+    /**
+     * Formats a millisecond long using the given pattern
+     *
+     * @param   value           the milliseconds to format
+     * @param   pattern         the way in which to format the milliseconds
+     * @param   padWithZeros    whether to pad the left hand side of numbers with 0's
+     *
+     * @return                  the formatted milliseconds
+     */
+    @NotNull
+    public static String formatMillis(long value, @Nullable String pattern, boolean padWithZeros) {
+        if (pattern == null) pattern = "m':'s";
+        return DurationFormatUtils.formatDuration(value, pattern, padWithZeros);
+    }
+
+    /**
+     * Formats a {@link Double} value using the given pattern
+     *
+     * @param   value   the {@link Number} to format
+     * @param   pattern the pattern to use
+     *
+     * @return          the formatted value
+     */
+    @NotNull
+    public static String formatNumber(@NotNull Number value, @Nullable String pattern) {
+        if (pattern == null) pattern = "#,###.##";
+        return new DecimalFormat(pattern).format(value);
     }
 
     /**
@@ -98,45 +140,15 @@ public class AnnoyingUtility {
     }
 
     /**
-     * Translates {@code &} color codes to {@link ChatColor}
+     * Gets a {@link Set} of all the enum's value's names
      *
-     * @param   message the message to translate
-     *
-     * @return          the translated message
+     * @return  the {@link Set} of the enum's value's names
      */
     @NotNull
-    public static String color(@Nullable String message) {
-        if (message == null) return "null";
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
-    /**
-     * Formats a millisecond long using the given pattern
-     *
-     * @param   value           the milliseconds to format
-     * @param   pattern         the way in which to format the milliseconds
-     * @param   padWithZeros    whether to pad the left hand side of numbers with 0's
-     *
-     * @return                  the formatted milliseconds
-     */
-    @NotNull
-    public static String formatMillis(long value, @Nullable String pattern, boolean padWithZeros) {
-        if (pattern == null) pattern = "m':'s";
-        return DurationFormatUtils.formatDuration(value, pattern, padWithZeros);
-    }
-
-    /**
-     * Formats a {@link Double} value using the given pattern
-     *
-     * @param   value   the {@link Number} to format
-     * @param   pattern the pattern to use
-     *
-     * @return          the formatted value
-     */
-    @NotNull
-    public static String formatNumber(@NotNull Number value, @Nullable String pattern) {
-        if (pattern == null) pattern = "#,###.##";
-        return new DecimalFormat(pattern).format(value);
+    public static Set<String> getEnumNames(@NotNull Class<? extends Enum<?>> enumClass) {
+        return Arrays.stream(enumClass.getEnumConstants())
+                .map(Enum::name)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -150,7 +162,7 @@ public class AnnoyingUtility {
     @NotNull
     public static Set<String> getFileNames(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
         final File[] files = new File(plugin.getDataFolder(), path).listFiles();
-        if (files == null) return Collections.emptySet();
+        if (files == null) return new HashSet<>();
         return Arrays.stream(files)
                 .map(File::getName)
                 .filter(name -> name.endsWith(".yml"))

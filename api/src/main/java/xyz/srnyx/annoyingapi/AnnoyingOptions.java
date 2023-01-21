@@ -1,8 +1,5 @@
 package xyz.srnyx.annoyingapi;
 
-import org.bukkit.ChatColor;
-import org.bukkit.event.Listener;
-
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
@@ -19,16 +16,6 @@ import java.util.Set;
  */
 public class AnnoyingOptions {
     /**
-     * <i>{@code OPTIONAL}</i> The primary color used by the API (e.g. for start messages)
-     */
-    @NotNull public ChatColor colorLight = ChatColor.AQUA;
-
-    /**
-     * <i>{@code OPTIONAL}</i> The secondary color used by the API (e.g. for start messages)
-     */
-    @NotNull public ChatColor colorDark = ChatColor.DARK_AQUA;
-
-    /**
      * <i>{@code RECOMMENDED}</i> The file name of the messages file <i>(usually {@code messages.yml})</i>
      * <p>If not specified, no messages will be loaded (plugin will still enable)
      */
@@ -36,19 +23,23 @@ public class AnnoyingOptions {
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's prefix
-     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String prefix = "plugin.prefix";
 
     /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
+     *
+     * @see AnnoyingPlugin#globalPlaceholders
+     */
+    @NotNull public String globalPlaceholders = "plugin.global-placeholders";
+
+    /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's JSON component splitter
-     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String splitterJson = "plugin.splitters.json";
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's placeholder component splitter
-     * <p>AnnoyingAPI will turn this into the message from the resource file
      */
     @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
 
@@ -73,17 +64,20 @@ public class AnnoyingOptions {
     @NotNull public String disabledCommand = "error.disabled-command";
 
     /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add to this {@link Set})
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add commands to this in the plugin's constructor)
+     * <p>If you add a command to this OUTSIDE the constructor, it will not be registered
      */
-    @NotNull public final Set<AnnoyingCommand> commands = new HashSet<>();
+    @NotNull public final Set<AnnoyingCommand> commandsToRegister = new HashSet<>();
 
     /**
-     * <i>{@code OPTIONAL}</i> The {@link Listener}s to register (add to this {@link Set})
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingListener}s to register (add listeners to this in the plugin's constructor)
+     * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered
      */
-    @NotNull public final Set<AnnoyingListener> listeners = new HashSet<>();
+    @NotNull public final Set<AnnoyingListener> listenersToRegister = new HashSet<>();
 
     /**
-     * <i>{@code OPTIONAL}</i> Dependencies of the API and the plugin (add to this {@link Set})
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency}s to check for (add dependencies to this in the plugin's constructor)
+     * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
      */
     @NotNull public final List<AnnoyingDependency> dependencies = new ArrayList<>();
 

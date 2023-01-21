@@ -14,46 +14,36 @@ import java.nio.file.Files;
 /**
  * Represents a file in the plugin's folder
  */
-public interface AnnoyingFile {
+public abstract class AnnoyingFile extends YamlConfiguration {
+    @NotNull public final String path;
+    @NotNull public final File file;
+    public final boolean canBeEmpty;
+
     /**
-     * Every {@link AnnoyingFile} should extend {@link YamlConfiguration}
+     * Constructs a new {@link AnnoyingFile}
      *
-     * @return  the {@link YamlConfiguration} for this file
+     * @param   path        the path is from the plugin's folder, not the server/root folder (unless otherwise specified)
+     * @param   file        the file is constructed using the {@code path}
+     * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
      */
-    @NotNull
-    YamlConfiguration getYaml();
+    protected AnnoyingFile(@NotNull String path, @NotNull File file, boolean canBeEmpty) {
+        this.path = path;
+        this.file = file;
+        this.canBeEmpty = canBeEmpty;
+        load();
+    }
 
     /**
-     * The path is from the plugin's folder, not the server/root folder (unless otherwise specified)
-     *
-     * @return  the path to this file
+     * Creates the {@link #file}
      */
-    @NotNull
-    String getPath();
+    public abstract void create();
 
     /**
-     * The file is constructed using {@link #getPath()}
-     *
-     * @return  the {@link File}
+     * Loads the YAML from the path
      */
-    @NotNull
-    File getFile();
-
-    /**
-     * This {@code boolean} is used by {@link #save()}
-     *
-     * @return  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
-     */
-    boolean canBeEmpty();
-
-    /**
-     * Loads the {@link #getYaml()} from the path
-     */
-    default void load() {
-        final File file = getFile();
-
+    public void load() {
         // Create the file if it doesn't exist and it can be empty
-        if (canBeEmpty() && !file.exists()) {
+        if (canBeEmpty && !file.exists()) {
             create();
         } else if (!file.exists()) {
             return;
@@ -61,59 +51,52 @@ public interface AnnoyingFile {
 
         // Load
         try {
-            getYaml().load(file);
+            this.load(file);
         } catch (final IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Creates the {@link #getFile()}
+     * Deletes the {@link #file}
      */
-    void create();
-
-    /**
-     * Deletes the {@link #getFile()}
-     */
-    default void delete() {
+    public void delete() {
         try {
-            Files.delete(getFile().toPath());
+            Files.delete(file.toPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Sets a value in the {@link #getYaml()}
+     * Sets a value in the YAML
      *
      * @param   path    the path to the value
      * @param   value   the value to set
      * @param   save    whether to save the file after setting the value
      */
-    default void set(@NotNull String path, @Nullable Object value, boolean save) {
-        getYaml().set(path, value);
+    public void set(@NotNull String path, @Nullable Object value, boolean save) {
+        this.set(path, value);
         if (save) save();
     }
 
     /**
-     * Saves the {@link #getYaml()} to the {@link #getFile()}
+     * Saves the YAML to the {@link #file}
      */
-    default void save() {
-        final File file = getFile();
-        final YamlConfiguration yaml = getYaml();
-
-        // Delete file if it can't be empty and file is empty
-        if (!canBeEmpty() && file.exists() && yaml.getKeys(true).isEmpty()) {
-            delete();
+    public void save() {
+        // Stop process if it's empty when it can't be
+        if (!canBeEmpty && this.getKeys(true).isEmpty()) {
+            // Delete file if it exists
+            if (file.exists()) delete();
             return;
         }
 
         // Create file if it can be empty and doesn't exist
-        if (canBeEmpty() && !file.exists()) create();
+        if (canBeEmpty && !file.exists()) create();
 
         // Save file
         try {
-            yaml.save(file);
+            this.save(file);
         } catch (final IOException e) {
             e.printStackTrace();
         }

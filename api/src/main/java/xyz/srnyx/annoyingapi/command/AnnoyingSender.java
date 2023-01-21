@@ -19,9 +19,10 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 public class AnnoyingSender {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final CommandSender cmdSender;
-    @Nullable private Command cmd;
-    @Nullable private String label;
-    @Nullable private String[] args;
+    @Nullable private final Command cmd;
+    @Nullable private final String label;
+    @Nullable private final String[] args;
+    public final boolean isPlayer;
 
     /**
      * Constructs a new {@link AnnoyingSender}
@@ -33,12 +34,13 @@ public class AnnoyingSender {
      * @param   args        the {@link Command}'s arguments that were used
      */
     @Contract(pure = true)
-    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @Nullable Command cmd, @Nullable String label, @Nullable String[] args) {
         this.plugin = plugin;
         this.cmdSender = cmdSender;
         this.cmd = cmd;
         this.label = label;
         this.args = args;
+        this.isPlayer = cmdSender instanceof Player;
     }
 
     /**
@@ -49,8 +51,7 @@ public class AnnoyingSender {
      */
     @Contract(pure = true)
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender) {
-        this.plugin = plugin;
-        this.cmdSender = cmdSender;
+        this(plugin, cmdSender, null, null, null);
     }
 
     /**
@@ -101,6 +102,7 @@ public class AnnoyingSender {
      */
     @NotNull
     public Player getPlayer() {
+        if (!isPlayer) throw new IllegalStateException("CommandSender is not a Player");
         return (Player) cmdSender;
     }
 
@@ -124,7 +126,6 @@ public class AnnoyingSender {
      * @return  whether the {@link CommandSender} is a {@link Player}
      */
     public boolean checkPlayer() {
-        final boolean isPlayer = cmdSender instanceof Player;
         if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.playerOnly).send(this);
         return isPlayer;
     }

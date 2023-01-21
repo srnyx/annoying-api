@@ -4,7 +4,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
-import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,106 +12,18 @@ import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 
 /**
  * Represents a command that can be executed by a player or the console
  */
 public interface AnnoyingCommand extends TabExecutor {
-    /**
-     * Executes the given command, returning its success.
-     * <br>
-     * If false is returned, then the "usage" plugin.yml entry for this command
-     * (if defined) will be sent to the player.
-     *
-     * @param   cmdSender   Source of the command
-     * @param   cmd         Command which was executed
-     * @param   label       Alias of the command which was used
-     * @param   args        Passed command arguments
-     * @return              true if a valid command, otherwise false
-     */
-    @Override
-    default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
-        final AnnoyingPlugin plugin = getPlugin();
-        final AnnoyingSender sender = new AnnoyingSender(plugin, cmdSender, cmd, label, args);
-
-        // Permission check
-        final String permission = getPermission();
-        if (permission != null && !cmdSender.hasPermission(getPermission())) {
-            new AnnoyingMessage(plugin, plugin.options.noPermission)
-                    .replace("%permission%", permission)
-                    .send(sender);
-            return true;
-        }
-
-        // Player check
-        if (isPlayerOnly() && !(cmdSender instanceof Player)) {
-            new AnnoyingMessage(plugin, plugin.options.playerOnly).send(sender);
-            return true;
-        }
-
-        // Argument check
-        if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(plugin, plugin.options.invalidArguments).send(sender);
-            return true;
-        }
-
-        // Run command
-        onCommand(sender);
-        return true;
-    }
-
-    /**
-     * Requests a list of possible completions for a command argument.
-     *
-     * @param   cmdSender   Source of the command. For players tab-completing a command inside a command block, this will be the player, not the command block.
-     * @param   cmd         Command which was executed
-     * @param   label       Alias of the command which was used
-     * @param   args        The arguments passed to the command, including final partial argument to be completed
-     * @return              A List of possible completions for the final argument, or null to default to the command executor
-     */
-    @Override
-    default List<String> onTabComplete(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
-        // Permission check
-        final String permission = getPermission();
-        if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
-
-        // Get suggestions
-        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
-        if (suggestions == null) return Collections.emptyList();
-
-        // Filter suggestions
-        final List<String> results = new ArrayList<>();
-        for (final String suggestion : suggestions) if (suggestion.toLowerCase().startsWith(args[args.length - 1].toLowerCase())) results.add(suggestion);
-        return results;
-    }
-
-    /**
-     * Registers the command to the {@link #getPlugin()}
-     */
-    default void register() {
-        final PluginCommand command = getPlugin().getCommand(getName());
-        if (command == null) {
-            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
-            return;
-        }
-        command.setExecutor(this);
-    }
-
-    /**
-     * Unregisters the command from the {@link #getPlugin()}
-     */
-    default void unregister() {
-        final PluginCommand command = getPlugin().getCommand(getName());
-        if (command != null) command.setExecutor(new DisabledCommand(getPlugin()));
-    }
-
     /**
      * The {@link AnnoyingPlugin} that this command belongs to
      *
@@ -181,7 +92,86 @@ public interface AnnoyingCommand extends TabExecutor {
      * @return          a {@link Collection} of suggestions
      */
     @Nullable
-    default Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
+    default Collection<Object> onTabComplete(@NotNull AnnoyingSender sender) {
         return null;
+    }
+
+    /**
+     * Registers the command to the {@link #getPlugin()}
+     */
+    default void register() {
+        final PluginCommand command = getPlugin().getCommand(getName());
+        if (command == null) {
+            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
+            return;
+        }
+        command.setExecutor(this);
+        getPlugin().registeredCommands.add(this);
+    }
+
+    /**
+     * Unregisters the command from the {@link #getPlugin()}
+     */
+    default void unregister() {
+        final PluginCommand command = getPlugin().getCommand(getName());
+        if (command != null) command.setExecutor(new DisabledCommand(getPlugin()));
+        getPlugin().registeredCommands.remove(this);
+    }
+
+    /**
+     * Executes the given command, returning its success.
+     * <br>
+     * If false is returned, then the "usage" plugin.yml entry for this command
+     * (if defined) will be sent to the player.
+     *
+     * @param   cmdSender   Source of the command
+     * @param   cmd         Command which was executed
+     * @param   label       Alias of the command which was used
+     * @param   args        Passed command arguments
+     * @return              true if a valid command, otherwise false
+     */
+    @Override
+    default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+        final AnnoyingSender sender = new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args);
+
+        // Permission & player check
+        final String permission = getPermission();
+        if ((permission != null && !sender.checkPermission(permission)) || (isPlayerOnly() && !sender.checkPlayer())) return true;
+
+        // Argument check
+        if (!getArgsPredicate().test(args)) {
+            new AnnoyingMessage(getPlugin(), getPlugin().options.invalidArguments).send(sender);
+            return true;
+        }
+
+        // Run command
+        onCommand(sender);
+        return true;
+    }
+
+    /**
+     * Requests a list of possible completions for a command argument.
+     *
+     * @param   cmdSender   Source of the command. For players tab-completing a command inside a command block, this will be the player, not the command block.
+     * @param   cmd         Command which was executed
+     * @param   label       Alias of the command which was used
+     * @param   args        The arguments passed to the command, including final partial argument to be completed
+     * @return              A List of possible completions for the final argument, or null to default to the command executor
+     */
+    @Override
+    default List<String> onTabComplete(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+        // Permission check
+        final String permission = getPermission();
+        if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
+
+        // Get suggestions
+        final Collection<Object> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
+        if (suggestions == null) return Collections.emptyList();
+
+        // Filter suggestions
+        return suggestions.stream()
+                .map(String::valueOf)
+                .filter(string -> string.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
+                .collect(Collectors.toList());
     }
 }

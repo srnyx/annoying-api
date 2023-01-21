@@ -29,6 +29,10 @@ public class AnnoyingDependency {
      * Whether to attempt to enable the dependency after it has been downloaded
      */
     public final boolean enableAfterDownload;
+    /**
+     * The new file of the dependency ({@link #name}{@code .jar})
+     */
+    @NotNull public final File file;
 
     /**
      * Creates a new dependency instance
@@ -44,16 +48,7 @@ public class AnnoyingDependency {
         this.platforms = platforms;
         this.required = required;
         this.enableAfterDownload = enableAfterDownload;
-    }
-
-    /**
-     * Gets the new file of the dependency
-     *
-     * @return  the new file of the dependency ({@link #name}{@code .jar})
-     */
-    @NotNull
-    public File getFile() {
-        return new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");
+        this.file = new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");
     }
 
     /**

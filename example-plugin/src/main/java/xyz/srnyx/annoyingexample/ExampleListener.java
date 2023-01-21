@@ -30,11 +30,6 @@ public class ExampleListener implements AnnoyingListener {
         this.plugin = plugin;
     }
 
-    /**
-     * Get the plugin instance
-     *
-     * @return  the {@link ExamplePlugin} instance
-     */
     @Override @NotNull
     public ExamplePlugin getPlugin() {
         return plugin;

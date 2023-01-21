@@ -12,10 +12,25 @@ public enum ExampleCooldown implements AnnoyingCooldown.CooldownType {
     /**
      * Example cooldown
      */
-    EXAMPLE;
+    EXAMPLE(3000);
+
+    /**
+     * Cooldown duration in milliseconds
+     */
+    private final long duration;
+
+    /**
+     * Constructor for the {@link AnnoyingCooldown.CooldownType}
+     *
+     * @param   duration  cooldown duration in milliseconds
+     */
+    @Contract(pure = true)
+    ExampleCooldown(long duration) {
+        this.duration = duration;
+    }
 
     @Override @Contract(pure = true)
     public long getDuration() {
-        return 3000;
+        return duration;
     }
 }

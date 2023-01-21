@@ -42,6 +42,7 @@ public class AnnoyingMessage {
         this.plugin = plugin;
         this.key = key;
         replace("%prefix%", plugin.getMessagesString(plugin.options.prefix));
+        plugin.globalPlaceholders.forEach(this::replace);
     }
 
     /**

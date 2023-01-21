@@ -3,6 +3,8 @@ package xyz.srnyx.annoyingapi;
 import org.apache.commons.lang.StringUtils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,6 +45,23 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Nullable public AnnoyingResource messages;
 
     /**
+     * {@link ChatColor} aliases for the plugin from the messages file ({@link AnnoyingOptions#globalPlaceholders})
+     *
+     * @see AnnoyingOptions#globalPlaceholders
+     */
+    @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
+
+    /**
+     * Set of registered {@link AnnoyingCommand}s by the plugin
+     */
+    @NotNull public final Set<AnnoyingCommand> registeredCommands = new HashSet<>();
+
+    /**
+     * Set of registered {@link AnnoyingListener}s by the plugin
+     */
+    @NotNull public final Set<AnnoyingListener> registeredListeners = new HashSet<>();
+
+    /**
      * Stores the cooldowns for each player/type
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
@@ -51,7 +70,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
      */
     public AnnoyingPlugin() {
-        options.listeners.add(new EventHandlers(this));
+        options.listenersToRegister.add(new EventHandlers(this));
     }
 
     /**
@@ -109,18 +128,24 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
-        // Start messages
+        // Get start message colors
+        final String primaryColorString = globalPlaceholders.get("p");
+        final String primaryColor = primaryColorString != null ? AnnoyingUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColor = secondaryColorString != null ? AnnoyingUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+
+        // Send start messages
         final String name = getName() + " v" + getDescription().getVersion();
         final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = options.colorDark + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
+        final String line = secondaryColor + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
         log(Level.INFO, line);
-        log(Level.INFO, options.colorLight + name);
-        log(Level.INFO, options.colorLight + authors);
+        log(Level.INFO, primaryColor + name);
+        log(Level.INFO, primaryColor + authors);
         log(Level.INFO, line);
 
         // Register commands/events
-        options.commands.forEach(AnnoyingCommand::register);
-        options.listeners.forEach(AnnoyingListener::register);
+        options.commandsToRegister.forEach(AnnoyingCommand::register);
+        options.listenersToRegister.forEach(AnnoyingListener::register);
 
         // Custom onEnable
         enable();
@@ -184,6 +209,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void loadMessages() {
         messages = new AnnoyingResource(this, options.messagesFileName);
+        // globalPlaceholders
+        globalPlaceholders.clear();
+        final ConfigurationSection section = messages.getConfigurationSection(options.globalPlaceholders);
+        if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
     }
 
     /**
@@ -191,8 +220,8 @@ public class AnnoyingPlugin extends JavaPlugin {
      * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
     public void disablePlugin() {
-        options.commands.forEach(AnnoyingCommand::unregister);
-        options.listeners.forEach(AnnoyingListener::unregister);
+        options.commandsToRegister.forEach(AnnoyingCommand::unregister);
+        options.listenersToRegister.forEach(AnnoyingListener::unregister);
         Bukkit.getScheduler().cancelTasks(this);
         Bukkit.getPluginManager().disablePlugin(this);
     }
@@ -219,5 +248,19 @@ public class AnnoyingPlugin extends JavaPlugin {
     public String getMessagesString(@NotNull String key) {
         if (messages == null) return key;
         return messages.getString(key, key);
+    }
+
+    /**
+     * Unregisters all {@link AnnoyingListener}s in {@link #registeredListeners}
+     */
+    public void unregisterListeners() {
+        new HashSet<>(registeredListeners).forEach(AnnoyingListener::unregister);
+    }
+
+    /**
+     * Unregisters all {@link AnnoyingCommand}s in {@link #registeredCommands}
+     */
+    public void unregisterCommands() {
+        new HashSet<>(registeredCommands).forEach(AnnoyingCommand::unregister);
     }
 }
