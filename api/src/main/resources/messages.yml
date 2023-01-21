@@ -89,9 +89,9 @@ plugin:
   global-placeholders: # It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)
     prefix: "&3&lANNOYING &8&l| &b" # Prefix for the plugin, typically used in the beginning of most messages
     p: "&b" # Base color for non-error messages
-    s: "&3" # Used to highlight important parts of non-error messages
+    s: "&3" # Highlight color for non-error messages
     pe: "&c" # Base color for error messages
-    se: "&4" # Used to highlight important parts of error messages
+    se: "&4" # Highlight color for error messages
 
   # These are the different splitters for messages/placeholders
   splitters:
