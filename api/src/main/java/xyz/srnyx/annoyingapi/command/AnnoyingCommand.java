@@ -92,7 +92,7 @@ public interface AnnoyingCommand extends TabExecutor {
      * @return          a {@link Collection} of suggestions
      */
     @Nullable
-    default Collection<Object> onTabComplete(@NotNull AnnoyingSender sender) {
+    default Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return null;
     }
 
@@ -165,12 +165,11 @@ public interface AnnoyingCommand extends TabExecutor {
         if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
 
         // Get suggestions
-        final Collection<Object> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
+        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
         if (suggestions == null) return Collections.emptyList();
 
         // Filter suggestions
         return suggestions.stream()
-                .map(String::valueOf)
                 .filter(string -> string.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
                 .collect(Collectors.toList());
     }

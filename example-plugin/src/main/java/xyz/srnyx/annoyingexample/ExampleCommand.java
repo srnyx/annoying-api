@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingexample;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
@@ -85,8 +86,8 @@ public class ExampleCommand implements AnnoyingCommand {
         if (sender.argEquals(0, "disable")) unregister();
     }
 
-    @Override
-    public Collection<Object> onTabComplete(@NotNull AnnoyingSender sender) {
+    @Override @Nullable
+    public Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return Arrays.asList("test", "reload", "disable");
     }
 }
