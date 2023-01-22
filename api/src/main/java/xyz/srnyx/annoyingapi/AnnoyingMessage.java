@@ -41,7 +41,6 @@ public class AnnoyingMessage {
     public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
         this.plugin = plugin;
         this.key = key;
-        replace("%prefix%", plugin.getMessagesString(plugin.options.prefix));
         plugin.globalPlaceholders.forEach((placeholder, value) -> replace("%" + placeholder + "%", value));
     }
 

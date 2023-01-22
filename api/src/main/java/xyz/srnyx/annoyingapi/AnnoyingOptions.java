@@ -22,11 +22,6 @@ public class AnnoyingOptions {
     @NotNull public String messagesFileName = "messages.yml";
 
     /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's prefix
-     */
-    @NotNull public String prefix = "plugin.prefix";
-
-    /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
      *
      * @see AnnoyingPlugin#globalPlaceholders

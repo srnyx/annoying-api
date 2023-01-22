@@ -19,7 +19,7 @@ You can find the Javadocs at [jitpack.io/com/github/srnyx/annoying-api/latest/ja
 
 ### Importing
 
-You can import the API using [Jitpack](https://jitpack.io/#xyz.srnyx/annoying-api). It's **HIGHLY** recommended to implement the API, all of the examples below will implement it. Make sure to replace `VERSION` with the version you want.
+You can import the API using [Jitpack](https://jitpack.io/#xyz.srnyx/annoying-api). It's **HIGHLY** recommended to implement the API, all the examples below will implement it. Make sure to replace `VERSION` with the version you want.
 
 - **Gradle Kotlin** (`build.gradle.kts`)**:**
 ```kotlin

@@ -21,7 +21,6 @@ public class ExamplePlugin extends AnnoyingPlugin {
 
         // Options
         options.messagesFileName = "msgs.yml";
-        options.prefix = "prefix";
         options.splitterJson = "splitter.json";
         options.splitterPlaceholder = "splitter.placeholder";
         options.noPermission = "no-permission";
