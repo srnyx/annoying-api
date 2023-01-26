@@ -17,11 +17,29 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
  * This class is typically used in conjunction with {@link AnnoyingCommand}
  */
 public class AnnoyingSender {
-    @NotNull private final AnnoyingPlugin plugin;
-    @NotNull private final CommandSender cmdSender;
-    @Nullable private final Command cmd;
-    @Nullable private final String label;
-    @Nullable private final String[] args;
+    /**
+     * The {@link AnnoyingPlugin} instance
+     */
+    @NotNull public final AnnoyingPlugin plugin;
+    /**
+     * The {@link CommandSender} that was used to initialize this {@link AnnoyingSender}
+     */
+    @NotNull public final CommandSender cmdSender;
+    /**
+     * The {@link Command} that was used
+     */
+    @Nullable public final Command cmd;
+    /**
+     * The {@link Command}'s label that was used
+     */
+    @Nullable public final String label;
+    /**
+     * The {@link Command}'s arguments that were used
+     */
+    @Nullable public final String[] args;
+    /**
+     * Whether the {@link #cmdSender} is a {@link Player}
+     */
     public final boolean isPlayer;
 
     /**
@@ -52,46 +70,6 @@ public class AnnoyingSender {
     @Contract(pure = true)
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender) {
         this(plugin, cmdSender, null, null, null);
-    }
-
-    /**
-     * Returns the {@link CommandSender} that was used
-     *
-     * @return  the {@link CommandSender} used
-     */
-    @NotNull
-    public CommandSender getCmdSender() {
-        return cmdSender;
-    }
-
-    /**
-     * Returns the {@link Command} that was used
-     *
-     * @return  the {@link Command} that was used
-     */
-    @Nullable
-    public Command getCmd() {
-        return cmd;
-    }
-
-    /**
-     * Returns the {@link Command}'s label that was used
-     *
-     * @return  the {@link Command}'s label that was used
-     */
-    @Nullable
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * Returns the {@link Command}'s arguments that were used
-     *
-     * @return  the {@link Command}'s arguments that were used
-     */
-    @Nullable
-    public String[] getArgs() {
-        return args;
     }
 
     /**

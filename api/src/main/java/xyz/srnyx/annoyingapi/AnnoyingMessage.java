@@ -97,8 +97,8 @@ public class AnnoyingMessage {
         // Replace %command%
         final StringBuilder command = new StringBuilder();
         if (sender != null) {
-            final String label = sender.getLabel();
-            final String[] args = sender.getArgs();
+            final String label = sender.label;
+            final String[] args = sender.args;
             if (label != null) command.append("/").append(label);
             if (args != null && args.length != 0) command.append(" ").append(String.join(" ", args));
         }
@@ -306,7 +306,7 @@ public class AnnoyingMessage {
      * @see             #getComponents(AnnoyingSender)
      */
     public void send(@NotNull AnnoyingSender sender) {
-        final CommandSender cmdSender = sender.getCmdSender();
+        final CommandSender cmdSender = sender.cmdSender;
 
         // Player (JSON)
         if (cmdSender instanceof Player) {
