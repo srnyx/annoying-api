@@ -142,7 +142,9 @@ public class AnnoyingUtility {
     /**
      * Gets a {@link Set} of all the enum's value's names
      *
-     * @return  the {@link Set} of the enum's value's names
+     * @param   enumClass   the enum class to get the names from
+     *
+     * @return              the {@link Set} of the enum's value's names
      */
     @NotNull
     public static Set<String> getEnumNames(@NotNull Class<? extends Enum<?>> enumClass) {
