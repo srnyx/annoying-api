@@ -4,15 +4,11 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.io.File;
-
 
 /**
  * Represents a file in the plugin's folder (usually a config file)
  */
 public class AnnoyingResource extends AnnoyingFile {
-    @NotNull private final AnnoyingPlugin plugin;
-
     /**
      * Constructs and loads a new {@link AnnoyingResource} from the path
      *
@@ -21,8 +17,7 @@ public class AnnoyingResource extends AnnoyingFile {
      * @param   plugin      the {@link AnnoyingPlugin} instance (used in {@link #load()})
      */
     public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path, boolean canBeEmpty) {
-        super(path, new File(plugin.getDataFolder(), path), canBeEmpty);
-        this.plugin = plugin;
+        super(plugin, path, "", canBeEmpty);
     }
 
     /**
@@ -37,6 +32,6 @@ public class AnnoyingResource extends AnnoyingFile {
 
     @Override
     public void create() {
-        plugin.saveResource(super.path, false);
+        plugin.saveResource(path, false);
     }
 }

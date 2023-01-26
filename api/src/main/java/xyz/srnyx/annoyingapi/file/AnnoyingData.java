@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,11 +21,11 @@ public class AnnoyingData extends AnnoyingFile {
      * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, boolean canBeEmpty) {
-        super(path, new File(plugin.getDataFolder(), "data/" + path), canBeEmpty);
+        super(plugin, path, "data/", canBeEmpty);
     }
 
     /**
-     * Constructs and loads a new {@link AnnoyingData} from the path
+     * Constructs and loads a new {@link AnnoyingData} from the path with {@code canBeEmpty} set to {@code true}
      *
      * @param   plugin  the plugin that is creating the file
      * @param   path    the path to the file (inside {@code /data/})

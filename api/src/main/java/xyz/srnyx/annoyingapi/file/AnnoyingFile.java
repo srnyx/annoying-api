@@ -6,6 +6,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,20 +17,35 @@ import java.nio.file.Files;
  * Represents a file in the plugin's folder
  */
 public abstract class AnnoyingFile extends YamlConfiguration {
+    /**
+     * The {@link AnnoyingPlugin} instance
+     */
+    @NotNull public final AnnoyingPlugin plugin;
+    /**
+     * The path to the file
+     */
     @NotNull public final String path;
+    /**
+     * The file constructed using the {@link #path}
+     */
     @NotNull public final File file;
+    /**
+     * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     */
     public final boolean canBeEmpty;
 
     /**
      * Constructs a new {@link AnnoyingFile}
      *
-     * @param   path        the path is from the plugin's folder, not the server/root folder (unless otherwise specified)
-     * @param   file        the file is constructed using the {@code path}
-     * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     * @param   plugin          the {@link AnnoyingPlugin} that is managing the file
+     * @param   path            the path to the file
+     * @param   subFolderPath   the path to prepend to the file path when constructing the {@link #file}
+     * @param   canBeEmpty      whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
      */
-    protected AnnoyingFile(@NotNull String path, @NotNull File file, boolean canBeEmpty) {
+    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @NotNull String subFolderPath, boolean canBeEmpty) {
+        this.plugin = plugin;
         this.path = path;
-        this.file = file;
+        this.file = new File(plugin.getDataFolder(), subFolderPath + path);
         this.canBeEmpty = canBeEmpty;
         load();
     }
