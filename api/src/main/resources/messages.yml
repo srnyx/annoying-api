@@ -106,7 +106,9 @@ error:
   no-permission: "%prefix%%pe%You must have %se%%permission%%pe% to use this!@@%pe%%command%@@%command%" # %permission%
   # Console tries to use a command that can only be used by players
   player-only: "%prefix%%pe%You must be a player to run this command!@@%pe%%command%@@%command%"
-  # Command is used with invalid/incorrect arguments
+  # Command is used with an invalid/incorrect argument
+  invalid-argument: "%prefix%%se%%argument%%pe% is an invalid argument!@@%pe%%command%@@%command%" # %argument%
+  # Command is used with multiple invalid/incorrect arguments
   invalid-arguments: "%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%"
   # Command is used when it's disabled
   disabled-command: "%prefix%%se%%command%%pe% is disabled!@@%pe%%command%@@%command%"
