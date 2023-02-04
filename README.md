@@ -63,5 +63,62 @@ shadowJar {
     relocate 'xyz.srnyx.annoyingapi', 'YOUR.PACKAGE.annoyingapi'
 }
 ```
-- **Maven** (`pom.xml`)**:**
-I don't use Maven, so I don't know how to shade it. If you know how, please [open a PR](https://github.com/srnyx/annoying-api/pull/new).
+* **Maven** (`pom.xml`)**:**
+    * Shade plugin
+  ```xml
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.4.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+        <!-- Exclude resources to avoid conflicts -->
+          <filters>
+            <filter>
+              <artifact>xyz.srnyx:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.MF</exclude>
+                <exclude>plugin.yml</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <relocations>
+          <!-- It's recommended to relocate the API to avoid conflicts -->
+            <relocation>
+                <pattern>xyz.srnyx.annoyingapi</pattern>
+                <shadedPattern>YOUR.PACKAGE.annoyingapi</shadedPattern>
+            </relocation>
+          </relocations>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  ```
+    * Jitpack repository
+  ```xml
+   <repositories>
+        <repository>
+            <id>jitpack</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+  ```
+    * AnnoyingAPI dependency declaration
+  ```xml
+    <dependencies>
+        <dependency>
+            <groupId>xyz.srnyx</groupId>
+            <artifactId>annoying-api</artifactId>
+            <version>VERSION</version>
+        </dependency>
+    </dependencies>
+  ```
