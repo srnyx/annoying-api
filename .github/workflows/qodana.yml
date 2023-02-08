@@ -12,7 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Qodana Scan'
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Qodana scan
         uses: JetBrains/qodana-action@main
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
