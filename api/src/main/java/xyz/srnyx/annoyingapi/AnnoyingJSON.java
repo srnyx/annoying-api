@@ -15,7 +15,6 @@ public class AnnoyingJSON {
 
     /**
      * Constructs a new {@link AnnoyingJSON} instance
-     * <p><i>Only exists to give the constructor a Javadoc</i>
      */
     public AnnoyingJSON() {
         // Only exists to give the constructor a Javadoc

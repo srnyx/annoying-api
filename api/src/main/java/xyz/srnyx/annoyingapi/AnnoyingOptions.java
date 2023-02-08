@@ -78,7 +78,6 @@ public class AnnoyingOptions {
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance
-     * <p><i>Only exists to give the constructor a Javadoc</i>
      */
     public AnnoyingOptions() {
         // Only exists to give the constructor a Javadoc

@@ -28,7 +28,7 @@ public class AnnoyingUtility {
      * <p><i>Only exists to give the constructor a Javadoc</i>
      */
     @Contract(pure = true)
-    public AnnoyingUtility() {
+    private AnnoyingUtility() {
         // Only exists to give the constructor a Javadoc
     }
 
