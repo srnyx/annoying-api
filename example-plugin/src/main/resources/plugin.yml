@@ -1,6 +1,6 @@
 name: ${name}
 author: srnyx
-description: Plugin to test/give an example of AnnoyingAPI
+description: Plugin to test/give an example use of AnnoyingAPI
 website: https://srnyx.xyz
 
 main: xyz.srnyx.annoyingexample.ExamplePlugin
