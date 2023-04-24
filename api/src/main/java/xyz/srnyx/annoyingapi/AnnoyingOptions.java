@@ -1,14 +1,13 @@
 package xyz.srnyx.annoyingapi;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -16,10 +15,35 @@ import java.util.Set;
  */
 public class AnnoyingOptions {
     /**
-     * <i>{@code RECOMMENDED}</i> The file name of the messages file <i>(usually {@code messages.yml})</i>
+     * <i>{@code RECOMMENDED}</i> The ID of the plugin on <a href="https://bstats.org">bStats</a>
+     * <p>If not specified, bStats metrics will not be enabled
+     */
+    @Nullable public Integer bStatsId = null;
+
+    /**
+     * <i>{@code REQUIRED}</i> The name of the file to use for the <a href="https://bstats.org">bStats</a> toggle
+     * <p>This is required as bStats requires a way to disable metrics. Tampering with this in such a way that removes the ability to disable metrics will result in your plugin being banned from bStats
+     * <p><b>IF YOU CHANGE THIS:</b> The file MUST have an {@code enabled} key for a {@code boolean} to toggle bStats. If it doesn't, bStats will always be disabled
+     */
+    @NotNull public String bStatsFileName = "bstats.yml";
+
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingResource.ResourceOptions options} for the {@link #bStatsFileName bStats} file
+     * <p>If not specified, the default options will be used
+     */
+    @Nullable public AnnoyingResource.ResourceOptions bStatsOptions = null;
+
+    /**
+     * <i>{@code OPTIONAL}</i>  The file name of the messages file <i>(usually {@code messages.yml})</i>
      * <p>If not specified, no messages will be loaded (plugin will still enable)
      */
     @NotNull public String messagesFileName = "messages.yml";
+
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingResource.ResourceOptions options} for the {@link #messagesFileName messages} file
+     * <p>If not specified, the default options will be used
+     */
+    @Nullable public AnnoyingResource.ResourceOptions messagesOptions = null;
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
@@ -37,6 +61,11 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's placeholder component splitter
      */
     @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
+
+    /**
+     * <i>{@code OPTIONAL}</i> The key for the message sent in the console when an update is available for the plugin
+     */
+    @NotNull public String updateAvailable = "plugin.update-available";
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "no permission" message
@@ -75,6 +104,12 @@ public class AnnoyingOptions {
      * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
      */
     @NotNull public final List<AnnoyingDependency> dependencies = new ArrayList<>();
+
+    /**
+     * <i>{@code RECOMMENDED}</i> The different {@link xyz.srnyx.annoyingapi.AnnoyingUpdate.Platform platforms} the plugin is available on
+     * <p>If not specified, the plugin will not be able to check for updates
+     */
+    @NotNull public Map<AnnoyingUpdate.Platform, String> updatePlatforms = new EnumMap<>(AnnoyingUpdate.Platform.class);
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance

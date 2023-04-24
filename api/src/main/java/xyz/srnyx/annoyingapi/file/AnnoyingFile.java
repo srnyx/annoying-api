@@ -30,24 +30,33 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      */
     @NotNull public final File file;
     /**
-     * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     * The {@link FileOptions} for the file
      */
-    public final boolean canBeEmpty;
+    @NotNull protected final FileOptions fileOptions;
 
     /**
      * Constructs a new {@link AnnoyingFile}
      *
-     * @param   plugin          the {@link AnnoyingPlugin} that is managing the file
-     * @param   path            the path to the file
-     * @param   subFolderPath   the path to prepend to the file path when constructing the {@link #file}
-     * @param   canBeEmpty      whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     * @param   plugin          {@link #plugin}
+     * @param   path            {@link #path}
+     * @param   fileOptions     {@link #fileOptions}
      */
-    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @NotNull String subFolderPath, boolean canBeEmpty) {
+    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable FileOptions fileOptions) {
         this.plugin = plugin;
         this.path = path;
-        this.file = new File(plugin.getDataFolder(), subFolderPath + path);
-        this.canBeEmpty = canBeEmpty;
+        this.file = new File(plugin.getDataFolder(), path);
+        this.fileOptions = fileOptions == null ? new FileOptions() : fileOptions;
         load();
+    }
+
+    /**
+     * Constructs a new {@link AnnoyingFile}
+     *
+     * @param   plugin          {@link #plugin}
+     * @param   path            {@link #path}
+     */
+    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
+        this(plugin, path, null);
     }
 
     /**
@@ -59,10 +68,11 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * Loads the YAML from the path
      */
     public void load() {
-        // Create the file if it doesn't exist and it can be empty
-        if (canBeEmpty && !file.exists()) {
+        // Create the file if it doesn't exist and can be empty
+        final boolean doesntExist = !file.exists();
+        if (fileOptions.canBeEmpty && doesntExist) {
             create();
-        } else if (!file.exists()) {
+        } else if (doesntExist) {
             return;
         }
 
@@ -86,15 +96,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Sets a value in the YAML
+     * Sets a value in the YAML and then {@link #save() saves} the file
      *
-     * @param   path    the path to the value
-     * @param   value   the value to set
-     * @param   save    whether to save the file after setting the value
+     * @param   key     the key to set
+     * @param   value   the value to set the key to
      */
-    public void set(@NotNull String path, @Nullable Object value, boolean save) {
-        this.set(path, value);
-        if (save) save();
+    public void setSave(@Nullable String key, @NotNull Object value) {
+        set(key, value);
+        save();
     }
 
     /**
@@ -102,20 +111,43 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      */
     public void save() {
         // Stop process if it's empty when it can't be
-        if (!canBeEmpty && this.getKeys(true).isEmpty()) {
+        if (!fileOptions.canBeEmpty && getKeys(true).isEmpty()) {
             // Delete file if it exists
             if (file.exists()) delete();
             return;
         }
 
         // Create file if it can be empty and doesn't exist
-        if (canBeEmpty && !file.exists()) create();
+        if (fileOptions.canBeEmpty && !file.exists()) create();
 
         // Save file
         try {
-            this.save(file);
+            save(file);
         } catch (final IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * A class to hold the options for a file
+     */
+    public static class FileOptions {
+        /**
+         * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+         */
+        public boolean canBeEmpty = true;
+
+        /**
+         * Sets the {@link #canBeEmpty}
+         *
+         * @param   canBeEmpty  {@link #canBeEmpty}
+         *
+         * @return              the {@link FileOptions} instance
+         */
+        @NotNull
+        public FileOptions canBeEmpty(boolean canBeEmpty) {
+            this.canBeEmpty = canBeEmpty;
+            return this;
         }
     }
 }

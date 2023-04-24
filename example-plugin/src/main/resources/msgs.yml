@@ -1,111 +1,29 @@
-# --- JSON COMPONENTS --- #
-# There are 6 different types of JSON components that can be used to send messages (each one can have hover text):
-# - "text"      A string of text that when hovered over, shows text.
-# - "prompt"    A string of text that when clicked, will put text into the player's chat box.
-# - "clipboard" A string of text that when clicked, will copy the text to the player's clipboard.
-# - "chat"      A string of text that when clicked, will force the player to send a chat message.
-# - "command"   A string of text that when clicked, will force the player to run a command.
-# - "web"       A string of text that when clicked, will open a web page.
-#
-# The characters you put in plugin.splitter are used to split the message into the component arguments.
-# By default, the splitter is "@@", which is what will be used in the examples below.
-#
-# This is the format of a single message, all single messages are "prompt" components:
-key1: "display1@@hover1@@prompt1"
-# Sent to player: "display1"
-# Shown on hover: "hover1"
-# Put in player's chat bar when clicked: "prompt1"
-#
-# "display1" cannot be empty. If it is, the key name will be sent.
-# "hover1" can be empty. If it is, a normal (non-JSON) message will be sent.
-# "prompt1" can be empty. If it is, a "text" message will be sent.
-#
-# These are the formats of an advanced message, all advanced message components depend on what they're sub-key start with:
-key2:
-  text: "display2@@hover2"
-  # Sent to player: "display3"
-  # Shown on hover: "hover3"
-  prompt: "display3@@hover3@@prompt2"
-  # Sent to player: "display4"
-  # Shown on hover: "hover4"
-  # Put in player's chat bar when clicked: "prompt2"
-  clipboard: "display4@@hover4@@clipboard1"
-  # Sent to player: "display5"
-  # Shown on hover: "hover5"
-  # Copied to player's clipboard when clicked: "clipboard1"
-  chat: "display5@@hover5@@chat1"
-  # Sent to player: "display6"
-  # Shown on hover: "hover6"
-  # Chat message sent by player when clicked: "chat1"
-  command: "display6@@hover6@@command1"
-  # Sent to player: "display7"
-  # Shown on hover: "hover7"
-  # Command sent by player when clicked: "command1"
-  web: "display7@@hover7@@web1"
-  # Sent to player: "display8"
-  # Shown on hover: "hover8"
-  # Website prompted to open when clicked: "web1"
-#
-# "display" cannot be empty. If it is, the message will not be sent.
-# "hover" can be empty. If it is, a normal (non-JSON) message will be sent.
-# "prompt", "clipboard", "chat", "command", and "web" can be empty. If they are, a "text" message will be sent.
-#
-# All the messages in the above example will be strung together into a single message, "display1display2display3display4display5display6display7"
-# This way you can create something like this: "[Accept][Decline]". When clicking on one of the options, it can run different functions/commands.
-#
-# To have multiple of the same components in a message, you simply have to put any text after the component's name:
-key3:
-  command-accept: "[Accept]@@Accept the request@@accept"
-  command-decline: "[Decline]@@Decline the request@@deny"
-# The name of a "text" sub-key doesn't matter since it's the default component (just don't have it start with another component's name).
-# --- END JSON COMPONENTS --- #
-#
-# --- PLACEHOLDER PARAMETERS --- #
-# *Some* placeholders will allow you to input a parameter. These parameters are used to change the output of the placeholder
-# To input a parameter, you simply put it after the placeholder name (inside the %%), separated by the "plugin.splitters.placeholder" (default: "==")
-# Example: "%placeholder==parameter%"
-# Below are the different types of parameters that can be used...
-# The examples will use "==" as the splitter, but you can change it by modifying "plugin.splitters.placeholder"
-#
-# - time: A time will be outputed in milliseconds by the plugin. The parameter will determine the format of the time.
-# Docs: https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/time/DurationFormatUtils.html
-# Examples: "%cooldown==m':'s%" -> "1:30", "%cooldown==H':'m':'s%" -> "1:30:0", "%cooldown==d'd' H'h' m'm' s's'%" -> "1h 30m 0s"
-#
-# - decimal: A number will be outputed in milliseconds by the plugin. The parameter will determine the format of the number.
-# Docs: https://docs.oracle.com/javase/7/docs/api/java/text/DecimalFormat.html
-# Examples: "%money==#,###%" -> "8,637", "%money==#,###.##%" -> "8,637.2", "%money==#,###.00%" -> "8,637.20"
-#
-# Placeholders that support parameters will be displayed as "%name==type%" in the message's placeholder list.
-# Examples: "%cooldown=time%, %money=decimal%"
-key4: "KDR: %kdr==#.##%" # %kdr==decimal%
-# --- END PLACEHOLDER PARAMETERS --- #
+DOCUMENTATION: https://api.srnyx.com/wiki/messages-file
 
 
-# This message can be used to test practically anything! FOR PLUGIN DEVELOPERS!
-test: "%prefix%This is a test message!"
+# These are placeholders that can be used in any message in this file
+# This is extremely useful for things like prefixes, color schemes, and more
+# Using a global placeholder is just like any other placeholder! Simply surround the placeholder name with "%" (ex: "%prefix%")
+# WARNING: Global placeholders can conflict with local placeholders! Please be wary when creating your own global placeholder(s)!
+placeholders: # It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)
+  prefix: "&7&lTEST &8&l| &7" # Prefix for the plugin, typically used in the beginning of most messages
+  p: "&b" # Base color for non-error messages
+  s: "&3" # Highlight color for non-error messages
+  pe: "&c" # Base color for error messages
+  se: "&4" # Highlight color for error messages
 
-# This will be what %prefix% is in all the other messages
-# %prefix% can be used in any message in this file as many times as you want
-prefix: "&7&lTEST &8&l| &7"
-
-# These are the different splitters for messages/placeholders
 splitter:
   # This is the splitter for the JSON components (see above). Default: "@@"
   json: "@@"
   # This is the splitter for the placeholders. Default: "=="
   placeholder: "=="
 
-# Player doesn't have permission to use a command
-no-permission: "%prefix%&cYou must have &4%permission%&c to use this!@@&c%command%@@%command%" # %permission%
-# Console tries to use a command that can only be used by players
-player-only: "%prefix%&cYou must be a player to run this command!@@&c%command%@@%command%"
-# Command is used with invalid/incorrect arguments
-invalid-arguments: "%prefix%&cInvalid arguments!@@&c%command%@@%command%"
-# Command is used when it's disabled
-disabled-command: "%prefix%&cThat command is disabled!"
+no-permission: "%prefix%%pe%You must have %se%%permission%%pe% to use this!@@%pe%%command%@@%command%" # %permission%
+player-only: "%prefix%%pe%You must be a player to run this command!@@%pe%%command%@@%command%"
+invalid-arguments: "%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%"
+disabled-command: "%prefix%%pe%That command is disabled!"
 
-# Message sent when using /annoying version
-version: "%prefix%You are running AnnoyingAPI &3v%version%@@&b%command%@@%command%" # %version%
+test: "%prefix%This is a test message!"
 
-attack: "%prefix%&l%damager% &7attacked &l%victim% &7for &l%damage% &7damage!@@&7%command%@@%command%" # %damager%, %victim%, %damage%
-cooldown: "%prefix%&cYou must wait %cooldown==s's'% before using this command again!@@&4%cooldown==s's'%@@%command%" # %cooldown==time%
+attack: "%prefix%&l%damager% &7attacked &l%damagee% &7with &l%damage% &7damage!@@&7%command%@@%command%" # %damager%, %victim%, %damage%
+cooldown: "%prefix%%pe%You must wait %cooldown==s's'% before using this command again!@@%se%%cooldown==s's'%@@%command%" # %cooldown==time%

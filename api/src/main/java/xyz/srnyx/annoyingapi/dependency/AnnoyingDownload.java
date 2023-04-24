@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.dependency;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommandYamlParser;
@@ -12,16 +11,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.AnnoyingUtility;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -46,10 +44,9 @@ public class AnnoyingDownload {
      * @param   plugin          the plugin that is downloading the dependencies
      * @param   dependencies    the {@link AnnoyingDependency}s to download
      */
-    @Contract(pure = true)
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
-        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI";
+        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI (dependency)";
         this.dependencies = dependencies;
     }
 
@@ -127,7 +124,7 @@ public class AnnoyingDownload {
         final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms.get(Platform.MODRINTH) + "/version" +
                 "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                 "&game_versions=%5B%22" + version[0] + "." + version[1] + "." + version[2].split("-")[0] + "%22%5D";
-        final JsonElement json = getJson(url);
+        final JsonElement json = AnnoyingUtility.getJson(userAgent, url);
 
         // Request failed
         if (json == null) {
@@ -149,7 +146,7 @@ public class AnnoyingDownload {
     private void spigot(@NotNull AnnoyingDependency dependency) {
         final Map<Platform, String> platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + platforms.get(Platform.SPIGOT);
-        final JsonElement json = getJson(url);
+        final JsonElement json = AnnoyingUtility.getJson(userAgent, url);
 
         // Request failed
         if (json == null) {
@@ -187,31 +184,6 @@ public class AnnoyingDownload {
 
         // Download file
         downloadFile(dependency, Platform.SPIGOT,  url + "/download");
-    }
-
-    /**
-     * Retrieves the {@link JsonElement} from the specified URL
-     *
-     * @param   urlString   the URL to retrieve the {@link JsonElement} from
-     *
-     * @return              the {@link JsonElement} retrieved from the specified URL
-     */
-    @Nullable
-    private JsonElement getJson(@NotNull String urlString) {
-        final HttpURLConnection connection;
-        final JsonElement json;
-        try {
-            connection = (HttpURLConnection) new URL(urlString).openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", userAgent);
-            if (connection.getResponseCode() == 404) return null;
-            json = new JsonParser().parse(new InputStreamReader(connection.getInputStream()));
-        } catch (final IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-        connection.disconnect();
-        return json;
     }
 
     /**
@@ -253,7 +225,7 @@ public class AnnoyingDownload {
      * Finishes the download and checks if all plugins have been processed
      *
      * @param   dependency  the dependency that was just processed
-     * @param   enable      whether or not to enable the dependency
+     * @param   enable      whether to enable the dependency
      */
     private void finish(@NotNull AnnoyingDependency dependency, boolean enable) {
         // Load/enable plugin and register its commands

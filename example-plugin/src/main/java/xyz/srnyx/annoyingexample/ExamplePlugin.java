@@ -4,6 +4,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -20,7 +21,11 @@ public class ExamplePlugin extends AnnoyingPlugin {
         super();
 
         // Options
+        options.bStatsId = 12345;
+        options.bStatsFileName = "stats.yml";
+        options.bStatsOptions = new AnnoyingResource.ResourceOptions().createDefaultFile(false);
         options.messagesFileName = "msgs.yml";
+        options.globalPlaceholders = "placeholders";
         options.splitterJson = "splitter.json";
         options.splitterPlaceholder = "splitter.placeholder";
         options.noPermission = "no-permission";
@@ -40,6 +45,6 @@ public class ExamplePlugin extends AnnoyingPlugin {
     public void enable() {
         final AnnoyingData data = new AnnoyingData(this, "data.yml");
         data.set("super.cool.test", 105);
-        data.set("hello", "world!", true);
+        data.setSave("hello", "world!");
     }
 }

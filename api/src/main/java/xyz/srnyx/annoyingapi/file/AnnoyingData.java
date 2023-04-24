@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.file;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
@@ -16,22 +17,22 @@ public class AnnoyingData extends AnnoyingFile {
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path
      *
-     * @param   plugin      the plugin that is creating the file
+     * @param   plugin      {@link #plugin}
      * @param   path        the path to the file (relative to {@code data} folder in the plugin's folder)
-     * @param   canBeEmpty  whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
+     * @param   fileOptions {@link #fileOptions}
      */
-    public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, boolean canBeEmpty) {
-        super(plugin, path, "data/", canBeEmpty);
+    public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.FileOptions fileOptions) {
+        super(plugin, "data/" + path, fileOptions);
     }
 
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path with {@code canBeEmpty} set to {@code true}
      *
-     * @param   plugin  the plugin that is creating the file
-     * @param   path    the path to the file (inside {@code /data/})
+     * @param   plugin  {@link #plugin}
+     * @param   path    the path to the file (relative to {@code data} folder in the plugin's folder)
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
-        this(plugin, path, true);
+        this(plugin, path, null);
     }
 
     @Override

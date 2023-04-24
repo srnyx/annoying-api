@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     compileOnly("net.md-5", "bungeecord-api", "1.16-R0.4")
-    compileOnlyApi("org.jetbrains:annotations:23.1.0")
+    api("org.bstats", "bstats-bukkit", "3.0.0")
 }
 
 // Javadoc JAR task
@@ -20,5 +20,12 @@ configure<PublishingExtension> {
             groupId = "com.github.srnyx"
             from(components["java"])
         }
+    }
+}
+
+// Relocate the bStats package
+tasks {
+    shadowJar {
+        relocate("org.bstats", "xyz.srnyx.annoyingapi.bstats")
     }
 }

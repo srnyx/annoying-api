@@ -2,6 +2,9 @@ package xyz.srnyx.annoyingapi;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -13,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
-import xyz.srnyx.annoyingapi.dependency.AnnoyingCommandRegister;
+import xyz.srnyx.annoyingapi.dependency.CommandRegister;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
@@ -30,14 +33,16 @@ import java.util.stream.Collectors;
 @SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
-     * Instance of {@link AnnoyingCommandRegister}, used to other plugins' register commands
-     */
-    @NotNull public final AnnoyingCommandRegister commandRegister = new AnnoyingCommandRegister();
-
-    /**
      * The API options for the plugin
      */
     @NotNull public final AnnoyingOptions options = new AnnoyingOptions();
+
+    @Nullable public Metrics bStats;
+
+    /**
+     * Instance of {@link CommandRegister}, used to other plugins' register commands
+     */
+    @NotNull public final CommandRegister commandRegister = new CommandRegister();
 
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
@@ -76,7 +81,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Called after a plugin is loaded but before it has been enabled.
      * When multiple plugins are loaded, the onLoad() for all plugins is called before any onEnable() is called.
-     * <p>Do not try to override this method! Override {@link #load()} instead
+     * <p><b>Do not try to override this method! Override {@link #load()} instead</b>
      *
      * @see #load()
      */
@@ -88,7 +93,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Called when the plugin is enabled.
-     * <p>Do not try to override this method! Override {@link #enable()} instead
+     * <p><b>Do not try to override this method! Override {@link #enable()} instead</b>
      *
      * @see #enable()
      */
@@ -112,66 +117,14 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Plugin enabling stuff
-     *
-     * @see #onEnable()
-     */
-    private void enablePlugin() {
-        // Check if required dependencies are installed
-        final String missing = options.dependencies.stream()
-                .filter(dependency -> dependency.required && dependency.isNotInstalled())
-                .map(dependency -> dependency.name)
-                .collect(Collectors.joining("&c, &4"));
-        if (missing.length() != 0) {
-            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + missing);
-            disablePlugin();
-            return;
-        }
-
-        // Get start message colors
-        final String primaryColorString = globalPlaceholders.get("p");
-        final String primaryColor = primaryColorString != null ? AnnoyingUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = globalPlaceholders.get("s");
-        final String secondaryColor = secondaryColorString != null ? AnnoyingUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
-
-        // Send start messages
-        final String name = getName() + " v" + getDescription().getVersion();
-        final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = secondaryColor + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
-        log(Level.INFO, line);
-        log(Level.INFO, primaryColor + name);
-        log(Level.INFO, primaryColor + authors);
-        log(Level.INFO, line);
-
-        // Register commands/events
-        options.commandsToRegister.forEach(AnnoyingCommand::register);
-        options.listenersToRegister.forEach(AnnoyingListener::register);
-
-        // Custom onEnable
-        enable();
-    }
-
-    /**
      * Called when the plugin is disabled
-     * <p>Do not try to override this method! Override {@link #disable()} instead
+     * <p><b>Do not try to override this method! Override {@link #disable()} instead</b>
      *
      * @see #disable()
      */
     @Override
     public final void onDisable() {
         disable();
-    }
-
-    /**
-     * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
-     * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
-     * <p>Do not try to override this method! Override {@link #reload()} instead
-     *
-     * @see #reload()
-     */
-    public final void reloadPlugin() {
-        loadMessages();
-        reload();
     }
 
     /**
@@ -205,10 +158,79 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Loads the messages.yml file to {@link #messages}
+     * Plugin enabling stuff
+     * <b><p>Do not try to override this method! Override {@link #enable()} instead</b>
+     *
+     * @see #enable()
+     */
+    private void enablePlugin() {
+        // Check if required dependencies are installed
+        final String missing = options.dependencies.stream()
+                .filter(dependency -> dependency.required && dependency.isNotInstalled())
+                .map(dependency -> dependency.name)
+                .collect(Collectors.joining("&c, &4"));
+        if (missing.length() != 0) {
+            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + missing);
+            disablePlugin();
+            return;
+        }
+
+        // Enable bStats
+        if (new AnnoyingResource(this, options.bStatsFileName, options.bStatsOptions).getBoolean("enabled")) {
+            log(Level.SEVERE, "bstats enabled");
+            // API
+            final Metrics bstatsApi = new Metrics(this, 18281);
+            bstatsApi.addCustomChart(new SimplePie("command_count", () -> String.valueOf(registeredCommands.size())));
+            bstatsApi.addCustomChart(new SimplePie("listener_count", () -> String.valueOf(registeredListeners.size())));
+            bstatsApi.addCustomChart(new SimplePie("dependency_count", () -> String.valueOf(options.dependencies.size())));
+            bstatsApi.addCustomChart(new SimplePie("update_platform_count", () -> String.valueOf(options.updatePlatforms.size())));
+            // Plugin
+            if (options.bStatsId != null) bStats = new Metrics(this, options.bStatsId);
+        }
+
+        // Get start message colors
+        final String primaryColorString = globalPlaceholders.get("p");
+        final String primaryColor = primaryColorString != null ? AnnoyingUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColor = secondaryColorString != null ? AnnoyingUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+
+        // Send start messages
+        final String name = getName() + " v" + getDescription().getVersion();
+        final String authors = "By " + String.join(", ", getDescription().getAuthors());
+        final String line = secondaryColor + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
+        log(Level.INFO, line);
+        log(Level.INFO, primaryColor + name);
+        log(Level.INFO, primaryColor + authors);
+        log(Level.INFO, line);
+
+        // Check for updates
+        checkUpdate();
+
+        // Register commands/events
+        options.commandsToRegister.forEach(AnnoyingCommand::register);
+        options.listenersToRegister.forEach(AnnoyingListener::register);
+
+        // Custom onEnable
+        enable();
+    }
+
+    /**
+     * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
+     * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
+     * <p><b>Do not try to override this method! Override {@link #reload()} instead</b>
+     *
+     * @see #reload()
+     */
+    public final void reloadPlugin() {
+        loadMessages();
+        reload();
+    }
+
+    /**
+     * Loads the messages.yml file to {@link #messages} and {@link #globalPlaceholders}
      */
     public void loadMessages() {
-        messages = new AnnoyingResource(this, options.messagesFileName);
+        messages = new AnnoyingResource(this, options.messagesFileName, options.messagesOptions);
         // globalPlaceholders
         globalPlaceholders.clear();
         final ConfigurationSection section = messages.getConfigurationSection(options.globalPlaceholders);
@@ -262,5 +284,23 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void unregisterCommands() {
         new HashSet<>(registeredCommands).forEach(AnnoyingCommand::unregister);
+    }
+
+    /**
+     * <b>This is not done, this won't do anything until it's completed!</b>
+     * <p>Checks if an update is available for the plugin
+     * <p>If an update is available, a message will be sent to the console
+     *
+     * @see AnnoyingUpdate
+     */
+    public void checkUpdate() {
+        final String name = getName();
+        final AnnoyingUpdate update = new AnnoyingUpdate(this, name, getDescription().getVersion(), options.updatePlatforms);
+        final AnnoyingUpdate.Version latestVersion = update.latestVersion;
+        if (latestVersion != null && update.isUpdateAvailable()) log(Level.WARNING, new AnnoyingMessage(this, options.updateAvailable)
+                .replace("%plugin%", name)
+                .replace("%current%", getDescription().getVersion())
+                .replace("%new%", latestVersion.versionString)
+                .toString());
     }
 }

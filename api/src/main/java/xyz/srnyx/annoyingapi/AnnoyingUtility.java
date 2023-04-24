@@ -1,5 +1,8 @@
 package xyz.srnyx.annoyingapi;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import org.apache.commons.lang.time.DurationFormatUtils;
 
 import org.bukkit.Bukkit;
@@ -7,11 +10,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -27,7 +33,6 @@ public class AnnoyingUtility {
      * Constructs a new {@link AnnoyingUtility} instance
      * <p><i>Only exists to give the constructor a Javadoc</i>
      */
-    @Contract(pure = true)
     private AnnoyingUtility() {
         // Only exists to give the constructor a Javadoc
     }
@@ -170,5 +175,31 @@ public class AnnoyingUtility {
                 .filter(name -> name.endsWith(".yml"))
                 .map(name -> name.substring(0, name.length() - 4))
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Retrieves the {@link JsonElement} from the specified URL
+     *
+     * @param   userAgent   the user agent to use when retrieving the {@link JsonElement}
+     * @param   urlString   the URL to retrieve the {@link JsonElement} from
+     *
+     * @return              the {@link JsonElement} retrieved from the specified URL
+     */
+    @Nullable
+    public static JsonElement getJson(@NotNull String userAgent, @NotNull String urlString) {
+        final HttpURLConnection connection;
+        final JsonElement json;
+        try {
+            connection = (HttpURLConnection) new URL(urlString).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", userAgent);
+            if (connection.getResponseCode() == 404) return null;
+            json = new JsonParser().parse(new InputStreamReader(connection.getInputStream()));
+        } catch (final IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        connection.disconnect();
+        return json;
     }
 }
