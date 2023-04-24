@@ -18,7 +18,8 @@ configure<PublishingExtension> {
     publications {
         create<MavenPublication>("maven") {
             groupId = "com.github.srnyx"
-            from(components["java"])
+            artifact(tasks["shadowJar"])
+            artifact(tasks["javadocJar"])
         }
     }
 }
