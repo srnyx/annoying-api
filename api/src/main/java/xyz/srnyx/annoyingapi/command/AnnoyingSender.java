@@ -4,7 +4,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,7 +50,6 @@ public class AnnoyingSender {
      * @param   label       the {@link Command}'s label that was used
      * @param   args        the {@link Command}'s arguments that were used
      */
-    @Contract(pure = true)
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @Nullable Command cmd, @Nullable String label, @Nullable String[] args) {
         this.plugin = plugin;
         this.cmdSender = cmdSender;
@@ -67,7 +65,6 @@ public class AnnoyingSender {
      * @param   plugin      the {@link AnnoyingPlugin} instance
      * @param   cmdSender   the {@link CommandSender} to be used
      */
-    @Contract(pure = true)
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender) {
         this(plugin, cmdSender, null, null, null);
     }

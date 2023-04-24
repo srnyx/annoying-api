@@ -1,9 +1,8 @@
 package xyz.srnyx.annoyingexample;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import org.jetbrains.annotations.Nullable;
+
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
@@ -28,7 +27,6 @@ public class ExampleCommand implements AnnoyingCommand {
      *
      * @param   plugin  the {@link ExamplePlugin} instance
      */
-    @Contract(pure = true)
     public ExampleCommand(@NotNull ExamplePlugin plugin) {
         this.plugin = plugin;
     }

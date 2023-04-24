@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingexample;
 
-import org.jetbrains.annotations.Contract;
-
 import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 
 
@@ -24,12 +22,11 @@ public enum ExampleCooldown implements AnnoyingCooldown.CooldownType {
      *
      * @param   duration  cooldown duration in milliseconds
      */
-    @Contract(pure = true)
-    ExampleCooldown(long duration) {
+    ExampleCooldown(@SuppressWarnings("SameParameterValue") long duration) {
         this.duration = duration;
     }
 
-    @Override @Contract(pure = true)
+    @Override
     public long getDuration() {
         return duration;
     }

@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.dependency;
 
 import org.bukkit.Bukkit;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -42,7 +41,6 @@ public class AnnoyingDependency {
      * @param   required                whether the dependency is required to be installed
      * @param   enableAfterDownload     whether to attempt to enable the dependency after it has been downloaded
      */
-    @Contract(pure = true)
     public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms, boolean required, boolean enableAfterDownload) {
         this.name = name;
         this.platforms = platforms;

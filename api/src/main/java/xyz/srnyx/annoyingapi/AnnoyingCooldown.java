@@ -1,6 +1,5 @@
 package xyz.srnyx.annoyingapi;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -23,7 +22,6 @@ public class AnnoyingCooldown {
      * @param   uuid    the UUID of the thing that is being cooled down
      * @param   type    the {@link CooldownType} to use
      */
-    @Contract(pure = true)
     public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull CooldownType type) {
         this.plugin = plugin;
         this.uuid = uuid;
@@ -87,7 +85,7 @@ public class AnnoyingCooldown {
      */
     public interface CooldownType {
         /**
-         * Returns the cooldown's duration in milliseconds
+         * Returns the cooldowns duration in milliseconds
          *
          * @return  the duration of the cooldown in milliseconds
          */

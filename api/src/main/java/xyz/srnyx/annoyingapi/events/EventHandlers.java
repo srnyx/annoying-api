@@ -6,7 +6,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
@@ -28,7 +27,6 @@ public class EventHandlers implements AnnoyingListener {
      *
      * @param   plugin  the plugin instance
      */
-    @Contract(pure = true)
     public EventHandlers(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
     }

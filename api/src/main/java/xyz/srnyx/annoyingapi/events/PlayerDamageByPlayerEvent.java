@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -27,6 +26,7 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
      * @param   damage  the amount of damage dealt
      */
     public PlayerDamageByPlayerEvent(@NotNull Player damager, @NotNull Player damagee, @NotNull DamageCause cause, double damage) {
+        //noinspection deprecation
         super(damager, damagee, cause, damage);
     }
 
@@ -35,7 +35,7 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
      *
      * @return  {@link #HANDLERS}
      */
-    @NotNull @Contract(pure = true)
+    @NotNull
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
@@ -47,7 +47,7 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
      */
     @Override @NotNull
     public HandlerList getHandlers() {
-        return HANDLERS;
+        return getHandlerList();
     }
 
     /**

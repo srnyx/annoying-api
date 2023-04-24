@@ -1,6 +1,5 @@
 package xyz.srnyx.annoyingapi.command;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
@@ -21,7 +20,6 @@ public class DisabledCommand implements AnnoyingCommand {
      *
      * @param   plugin  the {@link AnnoyingPlugin} instance
      */
-    @Contract(pure = true)
     public DisabledCommand(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
     }

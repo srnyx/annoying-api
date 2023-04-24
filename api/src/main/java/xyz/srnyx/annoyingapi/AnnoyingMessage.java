@@ -9,7 +9,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -392,7 +391,6 @@ public class AnnoyingMessage {
          * @param   defaultInput    the default input value
          * @param   outputOperator  the {@link BinaryOperator<String>} to use on the input and value
          */
-        @Contract(pure = true)
         DefaultReplaceType(@NotNull String defaultInput, @NotNull BinaryOperator<String> outputOperator) {
             this.defaultInput = defaultInput;
             this.outputOperator = outputOperator;
@@ -404,7 +402,7 @@ public class AnnoyingMessage {
          *
          * @return  the default input
          */
-        @Override @NotNull @Contract(pure = true)
+        @Override @NotNull
         public String getDefaultInput() {
             return defaultInput;
         }
@@ -414,7 +412,7 @@ public class AnnoyingMessage {
          *
          * @return  the {@link BinaryOperator} to use on the input and value
          */
-        @Override @NotNull @Contract(pure = true)
+        @Override @NotNull
         public BinaryOperator<String> getOutputOperator() {
             return outputOperator;
         }
@@ -435,7 +433,6 @@ public class AnnoyingMessage {
          * @param   value   the value to replace the text with
          * @param   type    the {@link ReplaceType} to use on the value, if {@code null}, the {@code value} will be used as-is
          */
-        @Contract(pure = true)
         public Replacement(@NotNull String before, @Nullable Object value, @Nullable ReplaceType type) {
             this.before = before;
             this.value = String.valueOf(value);
@@ -502,7 +499,6 @@ public class AnnoyingMessage {
          *
          * @return  true if the broadcast type is a title
          */
-        @Contract(pure = true)
         public boolean isTitle() {
             return this == TITLE || this == SUBTITLE || this == FULL_TITLE;
         }

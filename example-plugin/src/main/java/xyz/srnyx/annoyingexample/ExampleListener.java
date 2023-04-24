@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingexample;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
@@ -25,7 +24,6 @@ public class ExampleListener implements AnnoyingListener {
      *
      * @param   plugin  the {@link ExamplePlugin} instance
      */
-    @Contract(pure = true)
     public ExampleListener(@NotNull ExamplePlugin plugin) {
         this.plugin = plugin;
     }
