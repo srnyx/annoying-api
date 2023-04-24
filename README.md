@@ -2,6 +2,8 @@
 
 General purpose API for my plugins. Just contains some utility classes and methods. *[Okay... it contains a tad bit more than that...](#developers)*
 
+It's technically a framework, but I didn't know the difference when I was naming it, so oh well!
+
 ## Server Owners
 
 All of my plugins use AnnoyingAPI, however, they all come pre-packaged with it. **So, you don't need to install it separately.**
@@ -10,16 +12,20 @@ This may be different for other plugins that **aren't** mine, though. Just check
 
 ### Download (read above)
 
-- **Stable:** You can download the latest **stable** version at [Modrinth](https://modrinth.com/plugin/annoying-api), [Polymart](https://polymart.org/resource/3238), [Spigot](https://spigotmc.org/resources/106637), [Bukkit](https://dev.bukkit.org/projects/annoying-api), or [releases/latest](https://github.com/srnyx/annoying-api/releases/latest)
-- **Snapshot:** You can download the latest **snapshot** version at [actions/workflows/build.yml](https://github.com/srnyx/annoying-api/actions/workflows/build.yml)
+- **Stable:** You can download the latest **stable** version at [Modrinth](https://api.srnyx.com/modrinth), [Polymart](https://api.srnyx.com/polymart), [BuiltByBit](https://api.srnyx.com/builtbybit), [Spigot](https://api.srnyx.com/spigot), [Bukkit](https://api.srnyx.com/bukkit), or [GitHub](https://api.srnyx.com/releases/latest)
+- **Snapshot:** You can download the latest **snapshot** version at [GitHub Actions](https://api.srnyx.com/snapshot)
+
+### Wiki
+
+You can find the wiki at [api.srnyx.com/wiki](https://api.srnyx.com/wiki) which will contain important information about the API and the plugins that use it
 
 ## Developers
 
-You can find the Javadocs at [jitpack.io/com/github/srnyx/annoying-api/latest/javadoc/](https://jitpack.io/com/github/srnyx/annoying-api/latest/javadoc/) (wiki coming soon, hopefully)
+You can find the Javadocs at [api.srnyx.com/javadocs](https://api.srnyx.com/javadocs). The wiki above may also contain some helpful information
 
 ### Importing
 
-You can import the API using [Jitpack](https://jitpack.io/#xyz.srnyx/annoying-api). It's **HIGHLY** recommended to implement the API, all the examples below will implement it. Make sure to replace `VERSION` with the version you want.
+You can import the API using [Jitpack](https://api.srnyx.com/jitpack). It's **HIGHLY** recommended to implement the API, all the examples below will implement it. Make sure to replace `VERSION` with the version you want.
 
 - **Gradle Kotlin** (`build.gradle.kts`)**:**
 ```kotlin
