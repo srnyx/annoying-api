@@ -1,11 +1,16 @@
 package xyz.srnyx.annoyingapi.events;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.EnumMap;
 
 
 /**
@@ -16,6 +21,8 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
      * The {@link HandlerList} for this event.
      */
     @NotNull private static final HandlerList HANDLERS = new HandlerList();
+    @SuppressWarnings("Guava")
+    @NotNull private static final Function<? super Double, Double> ZERO = o -> -0.0;
 
     /**
      * Instantiates a new {@link PlayerDamageByPlayerEvent}
@@ -26,8 +33,7 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
      * @param   damage  the amount of damage dealt
      */
     public PlayerDamageByPlayerEvent(@NotNull Player damager, @NotNull Player damagee, @NotNull DamageCause cause, double damage) {
-        //noinspection deprecation
-        super(damager, damagee, cause, damage);
+        super(damager, damagee, cause, new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, damage)), new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, ZERO)));
     }
 
     /**
