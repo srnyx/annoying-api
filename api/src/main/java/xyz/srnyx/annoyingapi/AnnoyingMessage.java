@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -96,46 +98,32 @@ public class AnnoyingMessage {
         // Replace %command%
         final StringBuilder command = new StringBuilder();
         if (sender != null) {
-            final String label = sender.label;
-            final String[] args = sender.args;
-            if (label != null) command.append("/").append(label);
-            if (args != null && args.length != 0) command.append(" ").append(String.join(" ", args));
+            if (sender.label != null) command.append("/").append(sender.label);
+            if (sender.args != null && sender.args.length != 0) command.append(" ").append(String.join(" ", sender.args));
         }
         replace("%command%", command.toString());
 
+        // Single component
+        final Player player = sender == null ? null : sender.getPlayer();
         final String splitterJson = plugin.getMessagesString(plugin.options.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
-            final String[] split = messages.getString(key, key).split(splitterJson, 3);
-            String display = split[0];
+            String string = messages.getString(key);
+            if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesFileName + "&c!").build();
+            for (final Replacement replacement : replacements) string = replacement.process(string);
+            if (plugin.papiInstalled) string = PlaceholderAPI.setPlaceholders(player, string);
+            final String[] split = string.split(splitterJson, 3);
 
             // Message
-            if (split.length == 1) {
-                for (final Replacement replacement : replacements) display = replacement.process(display);
-                json.append(display);
-                return json.build();
-            }
+            final String display = split[0];
+            if (split.length == 1) return json.append(display).build();
 
             // Message with hover
-            String hover = split[1];
-            if (split.length == 2) {
-                for (final Replacement replacement : replacements) {
-                    display = replacement.process(display);
-                    hover = replacement.process(hover);
-                }
-                json.append(display, hover);
-                return json.build();
-            }
+            final String hover = split[1];
+            if (split.length == 2) return json.append(display, hover).build();
 
             // Message with hover and click
-            String click = split[2];
-            for (final Replacement replacement : replacements) {
-                display = replacement.process(display);
-                hover = replacement.process(hover);
-                click = replacement.process(click);
-            }
-            json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, click);
-            return json.build();
+            return json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, split[2]).build();
         }
 
         // Multiple components
@@ -145,16 +133,14 @@ public class AnnoyingMessage {
                 json.append(key + "." + subKey, "&cCheck &4" + plugin.options.messagesFileName + "&c!");
                 continue;
             }
-
-            // Replacements
             for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
-            subMessage = AnnoyingUtility.color(subMessage);
+            if (plugin.papiInstalled) subMessage = PlaceholderAPI.setPlaceholders(player, subMessage);
 
             // Get component parts
-            final String[] split = subMessage.split(splitterJson, 3);
+            final String[] split = AnnoyingUtility.color(subMessage).split(splitterJson, 3);
             final String display = split[0];
-            String hover = split.length == 2 ? split[1] : null;
-            String function = split.length == 3 ? split[2] : null;
+            final String hover = split.length == 2 ? split[1] : null;
+            final String function = split.length == 3 ? split[2] : null;
 
             // Prompt component
             if (subKey.startsWith("suggest")) {
@@ -250,15 +236,13 @@ public class AnnoyingMessage {
             // Title/subtitle
             if (type.equals(BroadcastType.TITLE) || type.equals(BroadcastType.SUBTITLE)) {
                 final String message = toString();
-
                 // Title
                 if (type.equals(BroadcastType.TITLE)) {
-                    for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle(message, "", fadeIn, stay, fadeOut);
+                    broadcastTitle(message, "", fadeIn, stay, fadeOut);
                     return;
                 }
-
                 // Subtitle
-                for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle("", message, fadeIn, stay, fadeOut);
+                broadcastTitle("", message, fadeIn, stay, fadeOut);
                 return;
             }
 
@@ -267,9 +251,7 @@ public class AnnoyingMessage {
             final AnnoyingMessage subtitleMessage = new AnnoyingMessage(plugin, key + ".subtitle");
             titleMessage.replacements.addAll(replacements);
             subtitleMessage.replacements.addAll(replacements);
-            final String titleString = titleMessage.toString();
-            final String subtitleString = subtitleMessage.toString();
-            for (final Player online : Bukkit.getOnlinePlayers()) online.sendTitle(titleString, subtitleString, fadeIn, stay, fadeOut);
+            broadcastTitle(titleMessage.toString(), subtitleMessage.toString(), fadeIn, stay, fadeOut);
             return;
         }
         final BaseComponent[] components = getComponents();
@@ -327,6 +309,10 @@ public class AnnoyingMessage {
      */
     public void send(@NotNull CommandSender sender) {
         send(new AnnoyingSender(plugin, sender));
+    }
+
+    public static void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(title, subtitle, fadeIn, stay, fadeOut));
     }
 
     /**

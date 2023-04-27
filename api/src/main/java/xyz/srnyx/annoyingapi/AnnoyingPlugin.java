@@ -36,40 +36,40 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The API options for the plugin
      */
     @NotNull public final AnnoyingOptions options = new AnnoyingOptions();
-
+    /**
+     * The {@link Metrics bStats} instance for the plugin
+     */
     @Nullable public Metrics bStats;
-
     /**
      * Instance of {@link CommandRegister}, used to other plugins' register commands
      */
     @NotNull public final CommandRegister commandRegister = new CommandRegister();
-
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
     @Nullable public AnnoyingResource messages;
-
     /**
      * {@link ChatColor} aliases for the plugin from the messages file ({@link AnnoyingOptions#globalPlaceholders})
      *
      * @see AnnoyingOptions#globalPlaceholders
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
-
     /**
      * Set of registered {@link AnnoyingCommand}s by the plugin
      */
     @NotNull public final Set<AnnoyingCommand> registeredCommands = new HashSet<>();
-
     /**
      * Set of registered {@link AnnoyingListener}s by the plugin
      */
     @NotNull public final Set<AnnoyingListener> registeredListeners = new HashSet<>();
-
     /**
      * Stores the cooldowns for each player/type
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
+    /**
+     * Whether PlaceholderAPI is installed
+     */
+    public boolean papiInstalled = false;
 
     /**
      * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
@@ -177,7 +177,6 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsFileName, options.bStatsOptions).getBoolean("enabled")) {
-            log(Level.SEVERE, "bstats enabled");
             // API
             final Metrics bstatsApi = new Metrics(this, 18281);
             bstatsApi.addCustomChart(new SimplePie("command_count", () -> String.valueOf(registeredCommands.size())));
@@ -206,9 +205,11 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Check for updates
         checkUpdate();
 
-        // Register commands/events
+        // Register commands/events/PAPI expansion
         options.commandsToRegister.forEach(AnnoyingCommand::register);
         options.listenersToRegister.forEach(AnnoyingListener::register);
+        papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+        if (papiInstalled && options.papiExpansionToRegister != null) options.papiExpansionToRegister.register();
 
         // Custom onEnable
         enable();

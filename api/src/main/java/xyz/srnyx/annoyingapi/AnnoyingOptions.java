@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,6 +100,12 @@ public class AnnoyingOptions {
      * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered
      */
     @NotNull public final Set<AnnoyingListener> listenersToRegister = new HashSet<>();
+
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
+     * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>
+     */
+    @Nullable public PlaceholderExpansion papiExpansionToRegister;
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency}s to check for (add dependencies to this in the plugin's constructor)

@@ -6,3 +6,6 @@ website: https://srnyx.xyz
 
 main: xyz.srnyx.annoyingapi.AnnoyingPlugin
 version: ${version}
+
+softdepend:
+  - PlaceholderAPI
