@@ -14,7 +14,7 @@ tasks {
 }
 
 subprojects {
-    version = "2.1.1"
+    version = "2.1.2"
     group = "xyz.srnyx"
 
     apply(plugin = "java")
