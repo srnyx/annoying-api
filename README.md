@@ -12,7 +12,7 @@ This may be different for other plugins that **aren't** mine, though. Just check
 
 ### Download (read above)
 
-- **Stable:** You can download the latest **stable** version at [Modrinth](https://api.srnyx.com/modrinth), [Polymart](https://api.srnyx.com/polymart), [BuiltByBit](https://api.srnyx.com/builtbybit), [Spigot](https://api.srnyx.com/spigot), [Bukkit](https://api.srnyx.com/bukkit), or [GitHub](https://api.srnyx.com/releases/latest)
+- **Stable:** You can download the latest **stable** version at [Modrinth](https://api.srnyx.com/modrinth), [Hangar](https://hangar.papermc.io/srnyx/AnnoyingAPI), [Polymart](https://api.srnyx.com/polymart), [BuiltByBit](https://api.srnyx.com/builtbybit), [Spigot](https://api.srnyx.com/spigot), [Bukkit](https://api.srnyx.com/bukkit), or [GitHub](https://api.srnyx.com/releases/latest)
 - **Snapshot:** You can download the latest **snapshot** version at [GitHub Actions](https://api.srnyx.com/snapshot)
 
 ### Wiki
