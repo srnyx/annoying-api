@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+
 import org.apache.commons.lang.StringUtils;
 
 import org.bstats.bukkit.Metrics;
@@ -7,6 +9,7 @@ import org.bstats.charts.SimplePie;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
@@ -271,6 +274,21 @@ public class AnnoyingPlugin extends JavaPlugin {
     public String getMessagesString(@NotNull String key) {
         if (messages == null) return key;
         return messages.getString(key, key);
+    }
+
+    /**
+     * Parses all PlaceholderAPI placeholders in a message
+     *
+     * @param   player  the {@link OfflinePlayer} to parse the placeholders for (or {@code null} if none)
+     * @param   message the message to parse
+     *
+     * @return          the parsed message
+     */
+    @NotNull
+    public String parsePapiPlaceholders(@Nullable OfflinePlayer player, @Nullable String message) {
+        if (message == null) return "null";
+        if (!papiInstalled) return message;
+        return PlaceholderAPI.setPlaceholders(player, message);
     }
 
     /**

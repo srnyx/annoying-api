@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi;
 
-import me.clip.placeholderapi.PlaceholderAPI;
-
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -111,8 +109,7 @@ public class AnnoyingMessage {
             String string = messages.getString(key);
             if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesFileName + "&c!").build();
             for (final Replacement replacement : replacements) string = replacement.process(string);
-            if (plugin.papiInstalled) string = PlaceholderAPI.setPlaceholders(player, string);
-            final String[] split = string.split(splitterJson, 3);
+            final String[] split = plugin.parsePapiPlaceholders(player, string).split(splitterJson, 3);
 
             // Message
             final String display = split[0];
@@ -134,10 +131,9 @@ public class AnnoyingMessage {
                 continue;
             }
             for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
-            if (plugin.papiInstalled) subMessage = PlaceholderAPI.setPlaceholders(player, subMessage);
 
             // Get component parts
-            final String[] split = AnnoyingUtility.color(subMessage).split(splitterJson, 3);
+            final String[] split = AnnoyingUtility.color(plugin.parsePapiPlaceholders(player, subMessage)).split(splitterJson, 3);
             final String display = split[0];
             final String hover = split.length == 2 ? split[1] : null;
             final String function = split.length == 3 ? split[2] : null;
@@ -279,6 +275,22 @@ public class AnnoyingMessage {
     }
 
     /**
+     * Broadcasts the specified title and subtitle to all online players
+     *
+     * @param   title       the title to broadcast
+     * @param   subtitle    the subtitle to broadcast
+     * @param   fadeIn      the fade in time for the title
+     * @param   stay        the stay time for the title
+     * @param   fadeOut     the fade out time for the title
+     *
+     * @see                 #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see                 #broadcast(BroadcastType)
+     */
+    private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(title, subtitle, fadeIn, stay, fadeOut));
+    }
+
+    /**
      * Sends the message to the specified {@link AnnoyingSender}
      *
      * @param   sender  the {@link AnnoyingSender} to send the message to
@@ -309,10 +321,6 @@ public class AnnoyingMessage {
      */
     public void send(@NotNull CommandSender sender) {
         send(new AnnoyingSender(plugin, sender));
-    }
-
-    public static void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
-        Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(title, subtitle, fadeIn, stay, fadeOut));
     }
 
     /**
