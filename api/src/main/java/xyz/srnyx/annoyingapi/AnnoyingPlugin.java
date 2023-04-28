@@ -5,7 +5,6 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import org.apache.commons.lang.StringUtils;
 
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -180,14 +179,8 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsFileName, options.bStatsOptions).getBoolean("enabled")) {
-            // API
-            final Metrics bstatsApi = new Metrics(this, 18281);
-            bstatsApi.addCustomChart(new SimplePie("command_count", () -> String.valueOf(registeredCommands.size())));
-            bstatsApi.addCustomChart(new SimplePie("listener_count", () -> String.valueOf(registeredListeners.size())));
-            bstatsApi.addCustomChart(new SimplePie("dependency_count", () -> String.valueOf(options.dependencies.size())));
-            bstatsApi.addCustomChart(new SimplePie("update_platform_count", () -> String.valueOf(options.updatePlatforms.size())));
-            // Plugin
-            if (options.bStatsId != null) bStats = new Metrics(this, options.bStatsId);
+            new Metrics(this, 18281); // API
+            if (options.bStatsId != null) bStats = new Metrics(this, options.bStatsId); // Plugin
         }
 
         // Get start message colors
