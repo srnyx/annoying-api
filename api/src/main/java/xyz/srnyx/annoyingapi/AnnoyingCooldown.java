@@ -13,14 +13,17 @@ import java.util.UUID;
 public class AnnoyingCooldown {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final UUID uuid;
-    @NotNull private final CooldownType type;
+    /**
+     * The {@link CooldownType} that was used to create this cooldown
+     */
+    @NotNull public final CooldownType type;
 
     /**
      * Creates and starts a cooldown of the specified {@link CooldownType} for the specified {@link UUID}
      *
      * @param   plugin  the plugin that is creating the cooldown
      * @param   uuid    the UUID of the thing that is being cooled down
-     * @param   type    the {@link CooldownType} to use
+     * @param   type    {@link #type}
      */
     public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull UUID uuid, @NotNull CooldownType type) {
         this.plugin = plugin;
@@ -59,18 +62,7 @@ public class AnnoyingCooldown {
     }
 
     /**
-     * The duration of the {@link CooldownType}
-     *
-     * @return  how long the cooldown is (in milliseconds)
-     *
-     * @see     CooldownType#getDuration()
-     */
-    public long getDuration() {
-        return type.getDuration();
-    }
-
-    /**
-     * A {@code boolean} of whether the cooldown is active. If the cooldown is not active, it will be removed from {@link AnnoyingPlugin#cooldowns}
+     * A {@code boolean} of whether the cooldown is active. If the cooldown is not active, it will be {@link #stop() stopped}
      *
      * @return  whether the cooldown is active
      */
@@ -81,7 +73,7 @@ public class AnnoyingCooldown {
     }
 
     /**
-     * Implement this interface to create your own cooldown types
+     * Implement this interface to create your own cooldown types (enums are recommended)
      */
     public interface CooldownType {
         /**
