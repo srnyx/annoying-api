@@ -80,6 +80,12 @@ public class AnnoyingOptions {
     @NotNull public String playerOnly = "error.player-only";
 
     /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid argument" message
+     * <p>This should contain {@code %argument%} for the invalid argument
+     */
+    @NotNull public String invalidArgument = "error.invalid-argument";
+
+    /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid arguments" message
      */
     @NotNull public String invalidArguments = "error.invalid-arguments";

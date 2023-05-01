@@ -119,4 +119,22 @@ public class AnnoyingSender {
                 .send(this);
         return hasPermission;
     }
+
+    /**
+     * Sends the invalid argument message, replacing {@code %argument%} with the specified argument
+     *
+     * @param   argument    the argument to replace {@code %argument%} with
+     */
+    public void invalidArgument(@Nullable Object argument) {
+        new AnnoyingMessage(plugin, plugin.options.invalidArgument)
+                .replace("%argument%", String.valueOf(argument))
+                .send(this);
+    }
+
+    /**
+     * Sends the invalid arguments message
+     */
+    public void invalidArguments() {
+        new AnnoyingMessage(plugin, plugin.options.invalidArguments).send(this);
+    }
 }

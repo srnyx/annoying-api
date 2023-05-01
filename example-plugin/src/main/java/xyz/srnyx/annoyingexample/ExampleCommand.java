@@ -81,7 +81,12 @@ public class ExampleCommand implements AnnoyingCommand {
         }
 
         // disable
-        if (sender.argEquals(0, "disable")) unregister();
+        if (sender.argEquals(0, "disable")) {
+            unregister();
+            return;
+        }
+
+        sender.invalidArguments();
     }
 
     @Override @Nullable
