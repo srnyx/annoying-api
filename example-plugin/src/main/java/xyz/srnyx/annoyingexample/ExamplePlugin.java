@@ -34,6 +34,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.disabledCommand = "disabled-command";
         options.commandsToRegister.add(new ExampleCommand(this));
         options.listenersToRegister.add(new ExampleListener(this));
+        options.papiExpansionToRegister = new ExamplePlaceholders(this);
 
         // Dependencies
         final Map<AnnoyingDownload.Platform, String> viaVersion = new EnumMap<>(AnnoyingDownload.Platform.class);

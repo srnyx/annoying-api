@@ -24,10 +24,12 @@ subprojects {
         mavenCentral() // org.spigotmc:spigot, net.md-5:bungeecord-api (api)
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots") // org.spigotmc:spigot-api
         maven("https://oss.sonatype.org/content/repositories/snapshots") // org.spigotmc:spigot-api
+        maven("https://repo.extendedclip.com/content/repositories/placeholderapi") // me.clip:placeholderapi
     }
 
     dependencies {
         compileOnly("org.spigotmc", "spigot-api", "1.11-R0.1-SNAPSHOT")
+        compileOnly("me.clip", "placeholderapi", "2.11.3")
         compileOnly("org.jetbrains", "annotations", "24.0.0")
     }
 

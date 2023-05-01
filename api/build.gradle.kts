@@ -3,13 +3,8 @@ plugins {
     `maven-publish`
 }
 
-repositories {
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi") // me.clip:placeholderapi
-}
-
 dependencies {
     compileOnly("net.md-5", "bungeecord-api", "1.16-R0.4")
-    compileOnly("me.clip", "placeholderapi", "2.11.3")
     api("org.bstats", "bstats-bukkit", "3.0.0")
 }
 
