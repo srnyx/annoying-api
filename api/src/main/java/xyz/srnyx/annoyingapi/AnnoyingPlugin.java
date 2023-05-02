@@ -23,6 +23,8 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.MapUtility;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -89,6 +91,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        if (options.papiExpansionToRegister != null) options.dependencies.add(new AnnoyingDependency("PlaceholderAPI", MapUtility.mapOf(AnnoyingDownload.Platform.SPIGOT, "6245"), false, false));
         loadMessages();
         load();
     }
@@ -103,9 +106,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public final void onEnable() {
         // Get missing dependencies
         final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
-        for (final AnnoyingDependency dependency : options.dependencies) {
-            if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(dep -> dep.name.equals(dependency.name))) missingDependencies.add(dependency);
-        }
+        for (final AnnoyingDependency dependency : options.dependencies) if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(dep -> dep.name.equals(dependency.name))) missingDependencies.add(dependency);
 
         // Download missing dependencies then enable the plugin
         if (!missingDependencies.isEmpty()) {
@@ -218,7 +219,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      *
      * @see #reload()
      */
-    public final void reloadPlugin() {
+    public void reloadPlugin() {
         loadMessages();
         reload();
     }

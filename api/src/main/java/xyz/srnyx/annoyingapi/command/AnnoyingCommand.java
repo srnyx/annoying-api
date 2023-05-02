@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.util.Collection;
 import java.util.Collections;

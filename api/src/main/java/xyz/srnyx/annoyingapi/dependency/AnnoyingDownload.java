@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;

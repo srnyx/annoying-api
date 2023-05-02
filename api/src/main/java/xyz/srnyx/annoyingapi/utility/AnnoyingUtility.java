@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.utility;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -12,6 +12,8 @@ import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,22 +53,6 @@ public class AnnoyingUtility {
     }
 
     /**
-     * Gets an {@link OfflinePlayer} from the specified name
-     *
-     * @param   name    the name of the player
-     *
-     * @return          the {@link OfflinePlayer}, or null if not found
-     */
-    @Nullable
-    public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
-        for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
-            final String opName = offline.getName();
-            if (opName != null && opName.equalsIgnoreCase(name)) return offline;
-        }
-        return null;
-    }
-
-    /**
      * Formats a millisecond long using the given pattern
      *
      * @param   value           the milliseconds to format
@@ -93,6 +79,22 @@ public class AnnoyingUtility {
     public static String formatNumber(@NotNull Number value, @Nullable String pattern) {
         if (pattern == null) pattern = "#,###.##";
         return new DecimalFormat(pattern).format(value);
+    }
+
+    /**
+     * Gets an {@link OfflinePlayer} from the specified name
+     *
+     * @param   name    the name of the player
+     *
+     * @return          the {@link OfflinePlayer}, or null if not found
+     */
+    @Nullable
+    public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
+        for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
+            final String offlineName = offline.getName();
+            if (offlineName != null && offlineName.equalsIgnoreCase(name)) return offline;
+        }
+        return null;
     }
 
     /**

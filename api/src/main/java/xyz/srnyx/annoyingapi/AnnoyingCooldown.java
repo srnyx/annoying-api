@@ -2,6 +2,8 @@ package xyz.srnyx.annoyingapi;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
