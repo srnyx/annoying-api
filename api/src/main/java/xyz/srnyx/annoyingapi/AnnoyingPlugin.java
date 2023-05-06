@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -204,7 +205,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         options.commandsToRegister.forEach(AnnoyingCommand::register);
         options.listenersToRegister.forEach(AnnoyingListener::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
-        if (papiInstalled && options.papiExpansionToRegister != null) options.papiExpansionToRegister.register();
+        if (papiInstalled) {
+            final PlaceholderExpansion expansion = options.getPapiExpansionToRegister();
+            if (expansion != null) expansion.register();
+        }
 
         // Custom onEnable
         enable();

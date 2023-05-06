@@ -10,6 +10,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 
 /**
@@ -111,7 +112,7 @@ public class AnnoyingOptions {
      * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>
      */
-    @Nullable public PlaceholderExpansion papiExpansionToRegister;
+    @Nullable public Supplier<Object> papiExpansionToRegister;
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency}s to check for (add dependencies to this in the plugin's constructor)
@@ -131,5 +132,15 @@ public class AnnoyingOptions {
      */
     public AnnoyingOptions() {
         // Only exists to give the constructor a Javadoc
+    }
+
+    /**
+     * Casts the {@link #papiExpansionToRegister} to a {@link PlaceholderExpansion} and returns it
+     *
+     * @return  the {@link #papiExpansionToRegister} as a {@link PlaceholderExpansion} or {@code null} if it is not a {@link PlaceholderExpansion}
+     */
+    @Nullable
+    public PlaceholderExpansion getPapiExpansionToRegister() {
+        return papiExpansionToRegister instanceof PlaceholderExpansion ? (PlaceholderExpansion) papiExpansionToRegister.get() : null;
     }
 }

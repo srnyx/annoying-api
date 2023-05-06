@@ -32,7 +32,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.disabledCommand = "disabled-command";
         options.commandsToRegister.add(new ExampleCommand(this));
         options.listenersToRegister.add(new ExampleListener(this));
-        options.papiExpansionToRegister = new ExamplePlaceholders(this);
+        options.papiExpansionToRegister = () -> new ExamplePlaceholders(this);
 
         // Dependencies
         options.dependencies.add(new AnnoyingDependency("ViaVersion", MapUtility.mapOf(AnnoyingDownload.Platform.SPIGOT, "19254"), true, true));
