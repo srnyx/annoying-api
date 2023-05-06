@@ -5,9 +5,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-
-import java.util.EnumMap;
-import java.util.Map;
+import xyz.srnyx.annoyingapi.utility.MapUtility;
 
 
 /**
@@ -37,9 +35,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.papiExpansionToRegister = new ExamplePlaceholders(this);
 
         // Dependencies
-        final Map<AnnoyingDownload.Platform, String> viaVersion = new EnumMap<>(AnnoyingDownload.Platform.class);
-        viaVersion.put(AnnoyingDownload.Platform.SPIGOT, "19254");
-        options.dependencies.add(new AnnoyingDependency("ViaVersion", viaVersion, true, true));
+        options.dependencies.add(new AnnoyingDependency("ViaVersion", MapUtility.mapOf(AnnoyingDownload.Platform.SPIGOT, "19254"), true, true));
     }
 
     @Override
