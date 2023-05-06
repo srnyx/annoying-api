@@ -21,7 +21,8 @@ public class AnnoyingDependency {
      */
     @NotNull public final Map<AnnoyingDownload.Platform, String> platforms;
     /**
-     * Whether the dependency is required to be installed
+     * Whether the dependency is required to be installed. If the download fails and this is true, the plugin will not enable
+     * <p><i>This does <b>NOT</b> stop the dependency from being downloaded/installed</i>
      */
     public final boolean required;
     /**
@@ -36,10 +37,10 @@ public class AnnoyingDependency {
     /**
      * Creates a new dependency instance
      *
-     * @param   name                    the name of the dependency (from it's {@code plugin.yml})
-     * @param   platforms               the platforms the dependency can be downloaded from
-     * @param   required                whether the dependency is required to be installed
-     * @param   enableAfterDownload     whether to attempt to enable the dependency after it has been downloaded
+     * @param   name                    {@link #name}
+     * @param   platforms               {@link #platforms}
+     * @param   required                {@link #required}
+     * @param   enableAfterDownload     {@link #enableAfterDownload}
      */
     public AnnoyingDependency(@NotNull String name, @NotNull Map<AnnoyingDownload.Platform, String> platforms, boolean required, boolean enableAfterDownload) {
         this.name = name;

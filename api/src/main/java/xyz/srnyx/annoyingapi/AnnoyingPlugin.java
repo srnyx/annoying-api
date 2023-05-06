@@ -24,7 +24,6 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
-import xyz.srnyx.annoyingapi.utility.MapUtility;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -91,7 +90,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
-        if (options.papiExpansionToRegister != null) options.dependencies.add(new AnnoyingDependency("PlaceholderAPI", MapUtility.mapOf(AnnoyingDownload.Platform.SPIGOT, "6245"), false, false));
         loadMessages();
         load();
     }

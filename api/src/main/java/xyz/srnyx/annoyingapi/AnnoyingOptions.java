@@ -116,6 +116,7 @@ public class AnnoyingOptions {
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency}s to check for (add dependencies to this in the plugin's constructor)
      * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
+     * <p><i>This is <b>NOT</b> meant for optional dependencies, all of these dependencies will be downloaded/installed (even if {@link AnnoyingDependency#required} is {@code false})</i>
      */
     @NotNull public final List<AnnoyingDependency> dependencies = new ArrayList<>();
 
