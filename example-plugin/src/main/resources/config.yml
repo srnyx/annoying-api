@@ -1,0 +1,9 @@
+recipe:
+  ingredients:
+    A: APPLE
+    D: DIAMOND
+  shapeless: true
+  shape:
+    - " D "
+    - "DAD"
+    - " D "

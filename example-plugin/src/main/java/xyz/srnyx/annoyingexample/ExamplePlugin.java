@@ -1,5 +1,10 @@
 package xyz.srnyx.annoyingexample;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Recipe;
+
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
@@ -40,6 +45,11 @@ public class ExamplePlugin extends AnnoyingPlugin {
 
     @Override
     public void enable() {
+        // Recipe YML example
+        final Recipe recipe = new AnnoyingResource(this, "config.yml").getRecipe("recipe", null, new ItemStack(Material.GOLDEN_APPLE));
+        if (recipe != null) Bukkit.addRecipe(recipe);
+
+        // Data example
         final AnnoyingData data = new AnnoyingData(this, "data.yml");
         data.set("super.cool.test", 105);
         data.setSave("hello", "world!");
