@@ -261,7 +261,18 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Material, amount, and durability
         final ItemStack item = new ItemStack(material, section.getInt("amount", 1), (short) section.getInt("damage", 0));
 
-        // Name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
+        // Enchantments
+        final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
+        if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
+            final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
+            if (enchantment == null) {
+                log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
+                continue;
+            }
+            item.addUnsafeEnchantment(enchantment, enchantmentsSection.getInt(enchantmentKey));
+        }
+
+        // Name, lore, unbreakable, flags, attribute modifiers, and custom model data
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             // Name
@@ -269,20 +280,12 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (name != null) meta.setDisplayName(AnnoyingUtility.color(name));
 
             // Lore
-            final List<String> lore = section.getStringList("lore");
-            if (lore != null) meta.setLore(lore.stream()
+            meta.setLore(section.getStringList("lore").stream()
                     .map(AnnoyingUtility::color)
                     .collect(Collectors.toList()));
 
             // Unbreakable
             meta.setUnbreakable(section.getBoolean("unbreakable", false));
-
-            // Enchantments
-            final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
-            if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
-                if (enchantment != null) item.addUnsafeEnchantment(enchantment, enchantmentsSection.getInt(enchantmentKey));
-            }
 
             // Flags
             section.getStringList("flags").stream()
