@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
-import xyz.srnyx.annoyingapi.dependency.CommandRegister;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
@@ -49,10 +48,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link Metrics bStats} instance for the plugin
      */
     @Nullable public Metrics bStats;
-    /**
-     * Instance of {@link CommandRegister}, used to other plugins' register commands
-     */
-    @NotNull public final CommandRegister commandRegister = new CommandRegister();
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
