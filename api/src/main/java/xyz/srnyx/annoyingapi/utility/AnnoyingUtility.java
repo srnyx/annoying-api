@@ -32,14 +32,6 @@ import java.util.stream.Collectors;
  */
 public class AnnoyingUtility {
     /**
-     * Constructs a new {@link AnnoyingUtility} instance
-     * <p><i>Only exists to give the constructor a Javadoc</i>
-     */
-    private AnnoyingUtility() {
-        // Only exists to give the constructor a Javadoc
-    }
-
-    /**
      * Translates {@code &} color codes to {@link ChatColor}
      *
      * @param   message the message to translate
@@ -204,4 +196,14 @@ public class AnnoyingUtility {
         connection.disconnect();
         return json;
     }
+
+    /**
+     * Constructs a new {@link AnnoyingUtility} instance (illegal)
+     *
+     * @throws  UnsupportedOperationException   if this class is instantiated
+     */
+    private AnnoyingUtility() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
 }
