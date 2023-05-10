@@ -32,6 +32,8 @@ import java.util.logging.Level;
  * Used for downloading {@link AnnoyingDependency}s
  */
 public class AnnoyingDownload {
+    @NotNull private static final CommandRegister COMMAND_REGISTER = new CommandRegister();
+
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
@@ -230,17 +232,16 @@ public class AnnoyingDownload {
     private void finish(@NotNull AnnoyingDependency dependency, boolean enable) {
         // Load/enable plugin and register its commands
         final PluginManager manager = Bukkit.getPluginManager();
-        if (enable && dependency.enableAfterDownload && manager.getPlugin(dependency.name) == null) {
+        if (enable && dependency.enableAfterDownload && dependency.isNotInstalled()) {
             try {
                 // Load and enable plugin
                 final Plugin dependencyPlugin = manager.loadPlugin(dependency.file);
                 dependencyPlugin.onLoad();
                 manager.enablePlugin(dependencyPlugin);
-
                 // Register commands
-                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> plugin.commandRegister.register(dependencyPlugin, command));
-                plugin.commandRegister.sync();
-            } catch (final InvalidPluginException | InvalidDescriptionException e) {
+                PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> COMMAND_REGISTER.register(dependencyPlugin, command));
+                COMMAND_REGISTER.sync();
+            } catch (final IllegalArgumentException | InvalidPluginException | InvalidDescriptionException e) {
                 plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
             }
         }
