@@ -12,6 +12,7 @@ import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 
 /**
@@ -19,17 +20,17 @@ import java.util.Map;
  */
 public class AnnoyingUpdate {
     /**
-     * The user agent to use when making requests
+     * The {@link AnnoyingPlugin plugin} instance
      */
-    @NotNull private final String userAgent;
-    /**
-     * The name of the plugin
-     */
-    @NotNull private final String name;
+    @NotNull private final AnnoyingPlugin plugin;
     /**
      * The current version of the plugin
      */
     @NotNull private final Version currentVersion;
+    /**
+     * The user agent to use when making requests
+     */
+    @NotNull private final String userAgent;
     /**
      * The platforms the plugin is available on
      */
@@ -42,17 +43,33 @@ public class AnnoyingUpdate {
     /**
      * Creates a new {@link AnnoyingUpdate} object
      *
-     * @param   plugin          the {@link AnnoyingPlugin plugin} instance
-     * @param   name            {@link #name}
-     * @param   currentVersion  {@link #currentVersion}
+     * @param   plugin          {@link #plugin}
      * @param   platforms       {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull String name, @NotNull String currentVersion, @NotNull Map<Platform, String> platforms) {
-        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI (update)";
-        this.name = name;
-        this.currentVersion = new Version(currentVersion);
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull Map<Platform, String> platforms) {
+        this.plugin = plugin;
+        this.currentVersion = new Version(plugin.getDescription().getVersion());
+        this.userAgent = plugin.getName() + "/" + currentVersion.versionString + " via AnnoyingAPI (update)";
         this.platforms = platforms;
         this.latestVersion = getLatestVersion();
+    }
+
+    /**
+     * Checks if an update is available and sends {@link AnnoyingOptions#updateAvailable a message} to the console if it is
+     *
+     * @return  {@code true} if an update is available, {@code false} otherwise
+     */
+    public boolean checkUpdate() {
+        final boolean update = isUpdateAvailable();
+        if (update) {
+            assert latestVersion != null;
+            plugin.log(Level.WARNING, new AnnoyingMessage(plugin, plugin.options.updateAvailable)
+                    .replace("%plugin%", plugin.getName())
+                    .replace("%current%", plugin.getDescription().getVersion())
+                    .replace("%new%", latestVersion.versionString)
+                    .toString());
+        }
+        return update;
     }
 
     /**

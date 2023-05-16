@@ -302,20 +302,11 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * <b>This is not done, this won't do anything until it's completed!</b>
-     * <p>Checks if an update is available for the plugin
-     * <p>If an update is available, a message will be sent to the console
+     * Runs {@link AnnoyingUpdate#checkUpdate()} with {@link AnnoyingOptions#updatePlatforms}
      *
      * @see AnnoyingUpdate
      */
     public void checkUpdate() {
-        final String name = getName();
-        final AnnoyingUpdate update = new AnnoyingUpdate(this, name, getDescription().getVersion(), options.updatePlatforms);
-        final AnnoyingUpdate.Version latestVersion = update.latestVersion;
-        if (latestVersion != null && update.isUpdateAvailable()) log(Level.WARNING, new AnnoyingMessage(this, options.updateAvailable)
-                .replace("%plugin%", name)
-                .replace("%current%", getDescription().getVersion())
-                .replace("%new%", latestVersion.versionString)
-                .toString());
+        new AnnoyingUpdate(this, options.updatePlatforms).checkUpdate();
     }
 }
