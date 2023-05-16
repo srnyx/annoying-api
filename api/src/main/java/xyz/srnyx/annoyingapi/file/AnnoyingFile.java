@@ -299,42 +299,41 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                     })
                     .forEach(meta::addItemFlags);
 
-            // Attribute modifiers
+            // 1.13.2+ (attribute modifiers)
             if (ReflectionUtility.addAttributeModifierMethod != null) {
                 final ConfigurationSection attributeModifiersSection = section.getConfigurationSection("attribute-modifiers");
-                if (attributeModifiersSection != null)
-                    for (final String attributeKey : attributeModifiersSection.getKeys(false)) {
-                        final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
+                if (attributeModifiersSection != null) for (final String attributeKey : attributeModifiersSection.getKeys(false)) {
+                    final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
 
-                        // Get attribute
-                        final Attribute attribute;
-                        try {
-                            attribute = Attribute.valueOf(attributeKey);
-                        } catch (final IllegalArgumentException e) {
-                            log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
-                            continue;
-                        }
-
-                        // Get attribute modifier
-                        final AttributeModifier attributeModifier = getAttributeModifier(pathString);
-                        if (attributeModifier == null) continue;
-
-                        // Add attribute modifier
-                        try {
-                            ReflectionUtility.addAttributeModifierMethod.invoke(meta, attribute, attributeModifier);
-                        } catch (final IllegalAccessException | InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
+                    // Get attribute
+                    final Attribute attribute;
+                    try {
+                        attribute = Attribute.valueOf(attributeKey.toUpperCase());
+                    } catch (final IllegalArgumentException e) {
+                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
+                        continue;
                     }
-            }
 
-            // Custom model data
-            if (ReflectionUtility.setCustomModelDataMethod != null) {
-                final int customModelData = section.getInt("custom-model-data");
-                if (customModelData != 0) try {
-                    ReflectionUtility.setCustomModelDataMethod.invoke(meta, customModelData);
-                } catch (final IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    // Get attribute modifier
+                    final AttributeModifier attributeModifier = getAttributeModifier(pathString);
+                    if (attributeModifier == null) continue;
+
+                    // Add attribute modifier
+                    try {
+                        ReflectionUtility.addAttributeModifierMethod.invoke(meta, attribute, attributeModifier);
+                    } catch (final IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // 1.14+ (custom model data)
+                if (ReflectionUtility.setCustomModelDataMethod != null) {
+                    final int customModelData = section.getInt("custom-model-data");
+                    if (customModelData != 0) try {
+                        ReflectionUtility.setCustomModelDataMethod.invoke(meta, customModelData);
+                    } catch (final IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
