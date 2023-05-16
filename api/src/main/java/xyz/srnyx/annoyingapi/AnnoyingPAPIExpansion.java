@@ -10,6 +10,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class AnnoyingPAPIExpansion extends PlaceholderExpansion {
     /**
+     * Constructor for the {@link AnnoyingPAPIExpansion} class
+     */
+    public AnnoyingPAPIExpansion() {
+        // Only exists to provide a Javadoc
+    }
+
+    /**
      * The {@link AnnoyingPlugin plugin} that this expansion is for
      *
      * @return  the {@link AnnoyingPlugin plugin} that this expansion is for

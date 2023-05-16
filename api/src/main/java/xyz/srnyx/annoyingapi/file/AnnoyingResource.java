@@ -67,6 +67,13 @@ public class AnnoyingResource extends AnnoyingFile {
         public boolean createDefaultFile = true;
 
         /**
+         * Constructs a new {@link ResourceOptions} with the default values
+         */
+        public ResourceOptions() {
+            // Only exists to provide a Javadoc
+        }
+
+        /**
          * Sets {@link #createDefaultFile}
          *
          * @param   createDefaultFile   the new value

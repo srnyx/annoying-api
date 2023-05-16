@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 /**
  * Represents the options for the API
  */
+@SuppressWarnings("CanBeFinal")
 public class AnnoyingOptions {
     /**
      * <i>{@code RECOMMENDED}</i> The ID of the plugin on <a href="https://bstats.org">bStats</a>

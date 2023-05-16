@@ -157,7 +157,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link AttributeModifier} from the path
+     * Gets an {@link AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
@@ -170,7 +170,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link AttributeModifier} from the path
+     * Gets an {@link AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -229,7 +229,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link ItemStack} from the path
+     * Gets an {@link ItemStack} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
@@ -242,12 +242,12 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link ItemStack} from the path
+     * Gets an {@link ItemStack} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
      *
-     * @return          the {@link ItemStack} or {@code def} if it's invalid
+     * @return the {@link ItemStack} or {@code def} if it's invalid
      */
     @Override @Nullable
     public ItemStack getItemStack(@NotNull String path, @Nullable ItemStack def) {
@@ -347,7 +347,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML
+     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to get the recipe from
      * @param   name    the name of the recipe (only used in 1.12+ for the {@code NamespacedKey})
@@ -361,7 +361,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML
+     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to get the recipe from
      * @param   name    the name of the recipe (only used in 1.12+ for the {@code NamespacedKey})
@@ -448,6 +448,13 @@ public abstract class AnnoyingFile extends YamlConfiguration {
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
         public boolean canBeEmpty = true;
+
+        /**
+         * Creates a new {@link FileOptions} instance
+         */
+        public FileOptions() {
+            // Only exists to provide a Javadoc
+        }
 
         /**
          * Sets the {@link #canBeEmpty}

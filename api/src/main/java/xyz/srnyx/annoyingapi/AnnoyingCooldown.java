@@ -83,6 +83,7 @@ public class AnnoyingCooldown {
          *
          * @return  the duration of the cooldown in milliseconds
          */
+        @SuppressWarnings("SameReturnValue")
         long getDuration();
     }
 }

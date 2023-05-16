@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * A utility class for quickly generating {@link Map maps}
+ */
+@SuppressWarnings("DuplicatedCode")
 public class MapUtility {
     /**
      * Generates a map from a list of keys and a list of values
