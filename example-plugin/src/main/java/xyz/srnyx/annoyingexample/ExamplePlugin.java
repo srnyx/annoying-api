@@ -1,7 +1,10 @@
 package xyz.srnyx.annoyingexample;
 
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
@@ -15,6 +18,8 @@ import xyz.srnyx.annoyingapi.utility.MapUtility;
  * Example of a {@link AnnoyingPlugin} implementation
  */
 public class ExamplePlugin extends AnnoyingPlugin {
+    @Nullable public ItemStack item;
+
     /**
      * Constructor for the {@link ExamplePlugin} class
      */
@@ -44,7 +49,9 @@ public class ExamplePlugin extends AnnoyingPlugin {
     @Override
     public void enable() {
         // Recipe YML example
-        final Recipe recipe = new AnnoyingResource(this, "config.yml").getRecipe("recipe", null);
+        final AnnoyingResource config = new AnnoyingResource(this, "config.yml");
+        this.item = config.getItemStack("recipe.result");
+        final Recipe recipe = config.getRecipe("recipe", null);
         if (recipe != null) Bukkit.addRecipe(recipe);
 
         // Data example

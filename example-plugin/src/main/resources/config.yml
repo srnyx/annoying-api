@@ -7,3 +7,5 @@ recipe:
     - " D "
     - "DAD"
     - " D "
+  result:
+    material: GOLDEN_APPLE

@@ -27,3 +27,5 @@ test: "%prefix%This is a test message!"
 
 attack: "%prefix%&l%damager% &7attacked &l%damagee% &7with &l%damage% &7damage!@@&7%command%@@%command%" # %damager%, %victim%, %damage%
 cooldown: "%prefix%%pe%You must wait %cooldown==s's'% before using this command again!@@%se%%cooldown==s's'%@@%command%" # %cooldown==time%
+consume: "&c&l%player%&c just ate their apple!" # %player%
+

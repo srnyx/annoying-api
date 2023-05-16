@@ -46,6 +46,6 @@ public class MinecraftVersion {
         } catch (final IndexOutOfBoundsException | NumberFormatException e) {
             throw new IllegalArgumentException("Invalid version: " + version, e);
         }
-        this.value = major * 100 + minor * 10 + (patch == null ? 0 : patch);
+        this.value = major * 10000 + minor * 10 + (patch == null ? 0 : patch);
     }
 }

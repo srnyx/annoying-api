@@ -80,6 +80,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         options.listenersToRegister.add(new EventHandlers(this));
+        if (MINECRAFT_VERSION.value == 10130 || MINECRAFT_VERSION.value == 10131) log(Level.WARNING, "&cYou are running a semi-supported Minecraft version (&4" + MINECRAFT_VERSION.version + "&c)! Please update to a newer version (1.13.2+)");
     }
 
     /**
