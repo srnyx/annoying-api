@@ -107,7 +107,7 @@ public class AnnoyingMessage {
         replace("%command%", command.toString());
 
         // Single component
-        final Player player = sender == null ? null : sender.getPlayer();
+        final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
         final String splitterJson = plugin.getMessagesString(plugin.options.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
         if (section == null) {
@@ -322,16 +322,14 @@ public class AnnoyingMessage {
      * @see             #getComponents(AnnoyingSender)
      */
     public void send(@NotNull AnnoyingSender sender) {
-        final CommandSender cmdSender = sender.cmdSender;
-
         // Player (JSON)
-        if (cmdSender instanceof Player) {
+        if (sender.isPlayer) {
             sender.getPlayer().spigot().sendMessage(getComponents(sender));
             return;
         }
 
         // Console/non-player (normal)
-        cmdSender.sendMessage(toString(sender));
+        sender.cmdSender.sendMessage(toString(sender));
     }
 
     /**
