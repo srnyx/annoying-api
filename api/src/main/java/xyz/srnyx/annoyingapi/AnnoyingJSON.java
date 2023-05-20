@@ -1,19 +1,24 @@
 package xyz.srnyx.annoyingapi;
 
 import net.md_5.bungee.api.chat.*;
-import net.md_5.bungee.api.chat.hover.content.Text;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Class to manage and build JSON messages ({@link BaseComponent}[])
  */
 public class AnnoyingJSON {
-    @NotNull private final ComponentBuilder builder = new ComponentBuilder();
+    /**
+     * The {@link ComponentBuilder} to build the JSON message with
+     */
+    @NotNull private final List<BaseComponent> components = new ArrayList<>();
 
     /**
      * Constructs a new {@link AnnoyingJSON} instance
@@ -23,48 +28,45 @@ public class AnnoyingJSON {
     }
 
     /**
-     * Gets the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
+     * Converts the {@link #components} to a {@link BaseComponent} array and returns it
      *
-     * @return  the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
-     */
-    @NotNull
-    public ComponentBuilder getBuilder() {
-        return builder;
-    }
-
-    /**
-     * Runs {@link ComponentBuilder#create()} and returns the result ({@link BaseComponent}[])
-     *
-     * @return  the result of {@link ComponentBuilder#create()} ({@link BaseComponent}[])
+     * @return  the {@link #components} as an array
      */
     @NotNull
     public BaseComponent[] build() {
-        return builder.create();
+        return components.toArray(new BaseComponent[0]);
     }
 
     /**
-     * Runs {@link ComponentBuilder#append(BaseComponent)} on the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
+     * Appends a {@link BaseComponent} to the message
      *
-     * @param   component   the component to append
+     * @param   component   the {@link BaseComponent} to append
      *
      * @return              the {@link AnnoyingJSON} instance
      */
     @NotNull
     public AnnoyingJSON append(@NotNull BaseComponent component) {
-        builder.append(component);
+        components.add(component);
         return this;
     }
 
     /**
      * Appends a {@link String} (ChatColors translated) to the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
+     * <p>Also sets the {@link HoverEvent} and {@link ClickEvent} of the appended {@link TextComponent}
      *
-     * @param   display the {@link String} to append
+     * @param  display      the {@link String} to append
+     * @param  hover        the {@link HoverEvent} value to set
+     * @param  clickAction  the {@link ClickEvent.Action} to set
+     * @param  clickValue   the {@link ClickEvent} value to set
      *
-     * @return          the {@link AnnoyingJSON} instance
+     * @return              the {@link AnnoyingJSON} instance
      */
     @NotNull
-    public AnnoyingJSON append(@NotNull String display) {
-        return append(new TextComponent(AnnoyingUtility.color(display)));
+    public AnnoyingJSON append(@NotNull String display, @Nullable String hover, @Nullable ClickEvent.Action clickAction, @Nullable String clickValue) {
+        final TextComponent component = new TextComponent(AnnoyingUtility.color(display));
+        if (hover != null) component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(AnnoyingUtility.color(hover)).create()));
+        if (clickAction != null && clickValue != null) component.setClickEvent(new ClickEvent(clickAction, AnnoyingUtility.color(clickValue)));
+        return append(component);
     }
 
     /**
@@ -78,26 +80,18 @@ public class AnnoyingJSON {
      */
     @NotNull
     public AnnoyingJSON append(@NotNull String display, @Nullable String hover) {
-        append(display);
-        if (hover != null) builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(AnnoyingUtility.color(hover))));
-        return this;
+        return append(display, hover, null, null);
     }
 
     /**
      * Appends a {@link String} (ChatColors translated) to the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
-     * <p>Also sets the {@link HoverEvent} and {@link ClickEvent} of the appended {@link TextComponent}
      *
-     * @param  display  the {@link String} to append
-     * @param  hover    the {@link HoverEvent} text to set
-     * @param  action   the {@link ClickEvent} action to set
-     * @param  value    the {@link ClickEvent} value to set
+     * @param   display the {@link String} to append
      *
-     * @return  the {@link AnnoyingJSON} instance
+     * @return          the {@link AnnoyingJSON} instance
      */
     @NotNull
-    public AnnoyingJSON append(@NotNull String display, @Nullable String hover, @Nullable ClickEvent.Action action, @Nullable String value) {
-        append(display, hover);
-        if (action != null && value != null) builder.event(new ClickEvent(action, AnnoyingUtility.color(value)));
-        return this;
+    public AnnoyingJSON append(@NotNull String display) {
+        return append(display, null);
     }
 }

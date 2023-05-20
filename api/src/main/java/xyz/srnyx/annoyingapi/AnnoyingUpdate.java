@@ -61,14 +61,11 @@ public class AnnoyingUpdate {
      */
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update) {
-            assert latestVersion != null;
-            plugin.log(Level.WARNING, new AnnoyingMessage(plugin, plugin.options.updateAvailable)
-                    .replace("%plugin%", plugin.getName())
-                    .replace("%current%", plugin.getDescription().getVersion())
-                    .replace("%new%", latestVersion.versionString)
-                    .toString());
-        }
+        if (update && latestVersion != null) plugin.log(Level.WARNING, new AnnoyingMessage(plugin, plugin.options.updateAvailable)
+                .replace("%plugin%", plugin.getName())
+                .replace("%current%", plugin.getDescription().getVersion())
+                .replace("%new%", latestVersion.versionString)
+                .toString());
         return update;
     }
 

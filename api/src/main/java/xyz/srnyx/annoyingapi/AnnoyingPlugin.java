@@ -80,7 +80,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         options.listenersToRegister.add(new EventHandlers(this));
-        if (MINECRAFT_VERSION.value == 10130 || MINECRAFT_VERSION.value == 10131) log(Level.WARNING, "&cYou are running a semi-supported Minecraft version (&4" + MINECRAFT_VERSION.version + "&c)! Please update to a newer version (1.13.2+)");
     }
 
     /**
@@ -258,6 +257,15 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void log(@Nullable Level level, @NotNull String message) {
         if (level == null) level = Level.INFO;
         getLogger().log(level, AnnoyingUtility.color(message));
+    }
+
+    /**
+     * Calls {@link #log(Level, String)} with {@code null} as the {@link Level level}
+     *
+     * @param   message the message to log
+     */
+    public void log(@NotNull String message) {
+        log(null, message);
     }
 
     /**

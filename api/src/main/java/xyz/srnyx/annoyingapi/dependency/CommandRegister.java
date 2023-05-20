@@ -51,7 +51,7 @@ public class CommandRegister {
             bukkitcommandWrapperConstructor = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getDeclaredConstructor(Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".CraftServer"), Command.class);
             bukkitcommandWrapperConstructor.setAccessible(true);
             // registerMethod
-            registerMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getMethod("register", com.mojang.brigadier.CommandDispatcher.class, String.class);
+            registerMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".command.BukkitCommandWrapper").getMethod("register", Class.forName("com.mojang.brigadier.CommandDispatcher"), String.class);
             registerMethod.setAccessible(true);
         } catch (final ArrayIndexOutOfBoundsException | ClassNotFoundException | NoSuchMethodException e) {
             e.printStackTrace();

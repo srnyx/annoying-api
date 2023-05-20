@@ -4,8 +4,8 @@ plugins {
 }
 
 dependencies {
-    compileOnly("net.md-5", "bungeecord-api", "1.16-R0.4")
     api("org.bstats", "bstats-bukkit", "3.0.0")
+    api("de.tr7zw", "item-nbt-api", "2.11.2")
 }
 
 // Javadoc JAR task
@@ -28,5 +28,6 @@ configure<PublishingExtension> {
 tasks {
     shadowJar {
         relocate("org.bstats", "xyz.srnyx.annoyingapi.bstats")
+        relocate("de.tr7zw", "xyz.srnyx.annoyingapi.nbt")
     }
 }

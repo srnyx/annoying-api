@@ -2,8 +2,6 @@ package xyz.srnyx.annoyingapi.file;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
-import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
+import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +27,13 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
+
 
 /**
  * Represents a file in the plugin's folder
  */
+@SuppressWarnings("unchecked")
 public abstract class AnnoyingFile extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
@@ -157,28 +158,32 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
-     * @return          the {@link AttributeModifier} or {@code null} if it's invalid
+     * @return          the {@code AttributeModifier} or {@code null} if it's invalid
      */
     @Nullable
-    public AttributeModifier getAttributeModifier(@NotNull String path) {
+    public Object getAttributeModifier(@NotNull String path) {
         final Object def = getDefault(path);
-        return getAttributeModifier(path, def instanceof AttributeModifier ? (AttributeModifier) def : null);
+        return getAttributeModifier(path, attributeModifierClass != null && attributeModifierClass.isInstance(def) ? def : null);
     }
 
     /**
-     * Gets an {@link AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
      *
-     * @return          the {@link AttributeModifier} or {@code def} if it's invalid
+     * @param   <T>     the {@code AttributeModifier} class
+     *
+     * @return          the {@code AttributeModifier} or {@code def} if it's invalid
      */
     @Nullable
-    public AttributeModifier getAttributeModifier(@NotNull String path, @Nullable AttributeModifier def) {
+    public <T> T getAttributeModifier(@NotNull String path, @Nullable T def) {
+        if (attributeModifierOperationEnum == null) return def;
+
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) {
             log(Level.WARNING, path, "&cInvalid attribute modifier");
@@ -193,9 +198,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // operation
-        final AttributeModifier.Operation operation;
+        final Object operation;
         try {
-            operation = AttributeModifier.Operation.valueOf(operationString);
+            operation = Enum.valueOf(attributeModifierOperationEnum, operationString);
         } catch (final IllegalArgumentException e) {
             log(Level.WARNING, path, "&cInvalid operation: &4" + operationString);
             return def;
@@ -205,7 +210,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final double amount = section.getDouble("amount");
 
         // 1.13.2+
-        if (ReflectionUtility.attributeModifierConstructor != null) {
+        if (attributeModifierConstructor5 != null) {
             // slot
             EquipmentSlot slot = null;
             final String equipmentSlotString = section.getString("slot");
@@ -217,7 +222,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
             // Return
             try {
-                return ReflectionUtility.attributeModifierConstructor.newInstance(UUID.randomUUID(), name, amount, operation, slot);
+                return (T) attributeModifierConstructor5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -225,7 +230,12 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Return
-        return new AttributeModifier(name, amount, operation);
+        if (attributeModifierConstructor3 != null) try {
+            return (T) attributeModifierConstructor3.newInstance(name, amount, operation);
+        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return def;
     }
 
     /**
@@ -257,13 +267,23 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         if (materialString == null) return def;
         final Material material = Material.matchMaterial(materialString);
         if (material == null) return def;
+        final int amount = section.getInt("amount", 1);
+        final int damage = section.getInt("damage", 0);
 
-        // Material, amount, and durability
-        final ItemStack item = new ItemStack(material, section.getInt("amount", 1), (short) section.getInt("damage", 0));
+        // Material, amount, and durability (1.12.2-)
+        final ItemStack item = AnnoyingPlugin.MINECRAFT_VERSION.value >= 10130 ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
 
-        // Name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
+        // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
+            //TODO Durability (1.13+)
+            if (damageableClass != null && damageableSetDamageMethod != null && damageableClass.isInstance(meta)) try {
+                plugin.log("Setting damage to " + damage + " for " + path);
+                damageableSetDamageMethod.invoke(meta, damage);
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+
             // Name
             final String name = section.getString("name");
             if (name != null) meta.setDisplayName(AnnoyingUtility.color(name));
@@ -272,9 +292,6 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             meta.setLore(section.getStringList("lore").stream()
                     .map(AnnoyingUtility::color)
                     .collect(Collectors.toList()));
-
-            // Unbreakable
-            meta.setUnbreakable(section.getBoolean("unbreakable", false));
 
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
@@ -299,38 +316,45 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                     })
                     .forEach(meta::addItemFlags);
 
+            // 1.11+ (unbreakable)
+            if (setUnbreakableMethod != null) try {
+                setUnbreakableMethod.invoke(meta, section.getBoolean("unbreakable"));
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+
             // 1.13.2+ (attribute modifiers)
-            if (ReflectionUtility.addAttributeModifierMethod != null) {
+            if (attributeEnum != null && addAttributeModifierMethod != null) {
                 final ConfigurationSection attributeModifiersSection = section.getConfigurationSection("attribute-modifiers");
                 if (attributeModifiersSection != null) for (final String attributeKey : attributeModifiersSection.getKeys(false)) {
                     final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
 
                     // Get attribute
-                    final Attribute attribute;
+                    final Object attribute;
                     try {
-                        attribute = Attribute.valueOf(attributeKey.toUpperCase());
+                        attribute = Enum.valueOf(attributeEnum, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
                         log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
 
                     // Get attribute modifier
-                    final AttributeModifier attributeModifier = getAttributeModifier(pathString);
+                    final Object attributeModifier = getAttributeModifier(pathString);
                     if (attributeModifier == null) continue;
 
                     // Add attribute modifier
                     try {
-                        ReflectionUtility.addAttributeModifierMethod.invoke(meta, attribute, attributeModifier);
+                        addAttributeModifierMethod.invoke(meta, attribute, attributeModifier);
                     } catch (final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }
 
                 // 1.14+ (custom model data)
-                if (ReflectionUtility.setCustomModelDataMethod != null) {
+                if (setCustomModelDataMethod != null) {
                     final int customModelData = section.getInt("custom-model-data");
                     if (customModelData != 0) try {
-                        ReflectionUtility.setCustomModelDataMethod.invoke(meta, customModelData);
+                        setCustomModelDataMethod.invoke(meta, customModelData);
                     } catch (final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -341,8 +365,13 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             item.setItemMeta(meta);
         }
 
+        // Data
+        final ItemDataUtility dataUtility = new ItemDataUtility(plugin, item);
+        final ConfigurationSection dataSection = section.getConfigurationSection("data");
+        for (final String key : dataSection.getKeys(false)) dataUtility.set(key, dataSection.getString(key));
+
         // Return
-        return item;
+        return dataUtility.item;
     }
 
     /**
@@ -400,10 +429,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Shapeless
         if (section.getBoolean("shapeless")) {
             ShapelessRecipe shapeless;
-            if (ReflectionUtility.shapelessRecipeConstructor != null && ReflectionUtility.namespacedKeyConstructor != null) {
+            if (shapelessRecipeConstructor != null && namespacedKeyConstructor != null) {
                 try {
                     // 1.12+
-                    shapeless = ReflectionUtility.shapelessRecipeConstructor.newInstance(ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, name), result);
+                    shapeless = shapelessRecipeConstructor.newInstance(namespacedKeyConstructor.newInstance(plugin, name), result);
                 } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     // 1.11-
                     shapeless = new ShapelessRecipe(result);
@@ -420,10 +449,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
         // Shaped
         ShapedRecipe shaped;
-        if (ReflectionUtility.shapedRecipeConstructor != null && ReflectionUtility.namespacedKeyConstructor != null) {
+        if (shapedRecipeConstructor != null && namespacedKeyConstructor != null) {
             try {
                 // 1.12+
-                shaped = ReflectionUtility.shapedRecipeConstructor.newInstance(ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, name), result);
+                shaped = shapedRecipeConstructor.newInstance(namespacedKeyConstructor.newInstance(plugin, name), result);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 // 1.11-
                 shaped = new ShapedRecipe(result);

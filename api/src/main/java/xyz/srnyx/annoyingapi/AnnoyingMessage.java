@@ -16,11 +16,15 @@ import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
 
 
 /**
@@ -146,8 +150,8 @@ public class AnnoyingMessage {
             }
 
             // Clipboard component
-            if (subKey.startsWith("copy")) {
-                json.append(display, hover, ClickEvent.Action.COPY_TO_CLIPBOARD, function);
+            if (clickEventActionCopyToClipboardEnum != null && subKey.startsWith("copy")) {
+                json.append(display, hover, clickEventActionCopyToClipboardEnum, function);
                 continue;
             }
 
@@ -214,7 +218,7 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Broadcasts the message with the specified {@link BroadcastType} and title parameters
+     * Broadcasts the message with the specified {@link BroadcastType} and title parameters. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
      *
      * @param   type    the {@link BroadcastType} to broadcast with
      * @param   fadeIn  the fade in time for the title
@@ -254,8 +258,14 @@ public class AnnoyingMessage {
         final BaseComponent[] components = getComponents();
 
         // Action bar
-        if (type.equals(BroadcastType.ACTIONBAR)) {
-            Bukkit.getOnlinePlayers().forEach(player -> player.spigot().sendMessage(ChatMessageType.ACTION_BAR, components));
+        if (type.equals(BroadcastType.ACTIONBAR) && sendMessageMethod != null) {
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                try {
+                    sendMessageMethod.invoke(player.spigot(), ChatMessageType.ACTION_BAR, components);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
             return;
         }
 
@@ -276,7 +286,7 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Broadcasts the specified title and subtitle to all online players
+     * Broadcasts the specified title and subtitle to all online players. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
      *
      * @param   title       the title to broadcast
      * @param   subtitle    the subtitle to broadcast
@@ -288,7 +298,19 @@ public class AnnoyingMessage {
      * @see                 #broadcast(BroadcastType)
      */
     private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
-        Bukkit.getOnlinePlayers().forEach(player -> player.sendTitle(title, subtitle, fadeIn, stay, fadeOut));
+        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        if (sendTitleMethod != null) {
+            players.forEach(player -> {
+                try {
+                    sendTitleMethod.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
+            return;
+        }
+        //noinspection deprecation
+        players.forEach(player -> player.sendTitle(title, subtitle));
     }
 
     /**
@@ -472,7 +494,7 @@ public class AnnoyingMessage {
          */
         CHAT,
         /**
-         * Message will be displayed in the action bar
+         * Message will be displayed in the action bar (1.11+ only, {@link #CHAT} will be used for older versions)
          */
         ACTIONBAR,
         /**

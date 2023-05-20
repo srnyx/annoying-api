@@ -2,7 +2,7 @@ name: ${name}
 description: General purpose API with tons of features
 authors:
   - srnyx
-website: https://srnyx.xyz
+website: https://srnyx.com
 
 main: xyz.srnyx.annoyingapi.AnnoyingPlugin
 version: ${version}

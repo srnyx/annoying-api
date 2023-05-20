@@ -1,24 +1,23 @@
 package xyz.srnyx.annoyingapi.utility;
 
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.enchantments.EnchantmentTarget;
+import de.tr7zw.changeme.nbtapi.NBTItem;
+
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Level;
+
+import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
 
 
 /**
  * Utility class for adding and getting data from item stacks
  */
-@SuppressWarnings("deprecation")
 public class ItemDataUtility {
     /**
      * The {@link AnnoyingPlugin plugin} instance
@@ -27,7 +26,7 @@ public class ItemDataUtility {
     /**
      * The {@link ItemStack} to manage data for
      */
-    @NotNull public final ItemStack item;
+    @NotNull public ItemStack item;
 
     /**
      * Construct a new {@link ItemDataUtility} for the given item stack and key
@@ -37,7 +36,7 @@ public class ItemDataUtility {
      */
     public ItemDataUtility(@NotNull AnnoyingPlugin plugin, @NotNull ItemStack item) {
         this.plugin = plugin;
-        this.item = item;
+        this.item = new ItemStack(item);
     }
 
     /**
@@ -49,41 +48,32 @@ public class ItemDataUtility {
      */
     @Nullable
     public String get(@NotNull String key) {
-        // 1.13+ (persistent data container, custom item tag container, or lore)
-        if (ReflectionUtility.namespacedKeyConstructor != null) {
+        // 1.13.2+ (persistent data container, custom item tag container, or lore)
+        if (namespacedKeyConstructor != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
             // 1.14+ (persistent data container)
-            if (ReflectionUtility.getPdcMethod != null && ReflectionUtility.pdcGetMethod != null && ReflectionUtility.pdtStringField != null) try {
-                return (String) ReflectionUtility.pdcGetMethod.invoke(ReflectionUtility.getPdcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key), ReflectionUtility.pdtStringField);
+            if (getPdcMethod != null && pdcGetMethod != null && pdtStringField != null) try {
+                return (String) pdcGetMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), pdtStringField);
             } catch (final ReflectiveOperationException e) {
+                sendError("get");
                 e.printStackTrace();
                 return null;
             }
 
             // 1.13.2 (custom item tag container)
-            if (ReflectionUtility.getCtcMethod != null && ReflectionUtility.ctcGetCustomTagMethod != null) try {
-                return (String) ReflectionUtility.ctcGetCustomTagMethod.invoke(ReflectionUtility.getCtcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key), ReflectionUtility.ittStringClass);
+            if (getCtcMethod != null && ctcGetCustomTagMethod != null) try {
+                return (String) ctcGetCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), ittStringClass);
             } catch (final ReflectiveOperationException e) {
+                sendError("get");
                 e.printStackTrace();
                 return null;
             }
-
-            // 1.13-1.13.1 (lore)
-            if (!meta.hasLore()) return null;
-            final List<String> lore = meta.getLore();
-            for (int i = lore.size() - 1; i >= 0; i--) { // Reverse search because it's more likely to be at the end
-                final String line = lore.get(i);
-                if (line.startsWith(key + ": ")) return line.substring(key.length() + 2);
-            }
-            return null;
         }
 
-        // 1.12- (enchantment with ID)
-        final int hashCode = key.hashCode();
-        for (final Enchantment enchantment : item.getEnchantments().keySet()) if (enchantment.getId() == hashCode) return enchantment.getName();
-        return null;
+        // 1.13.1- (NBT API)
+        return new NBTItem(item).getString(key);
     }
 
     /**
@@ -95,44 +85,41 @@ public class ItemDataUtility {
      * @return          this {@link ItemDataUtility} instance
      */
     @NotNull
-    public ItemDataUtility set(@NotNull String key, @NotNull String value) {
-        // 1.13+ (persistent data container, custom item tag container, or lore)
-        if (ReflectionUtility.namespacedKeyConstructor != null) {
+    public ItemDataUtility set(@NotNull String key, @Nullable String value) {
+        if (value == null) return remove(key); // Remove the value if it's null
+
+        // 1.13.2+ (persistent data container or custom item tag container)
+        if (namespacedKeyConstructor != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return this;
 
             // 1.14+ (persistent data container)
-            if (ReflectionUtility.getPdcMethod != null && ReflectionUtility.pdcSetMethod != null) try {
-                ReflectionUtility.pdcSetMethod.invoke(ReflectionUtility.getPdcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key), ReflectionUtility.pdtStringField, value);
+            if (getPdcMethod != null && pdcSetMethod != null) try {
+                pdcSetMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), pdtStringField, value);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
+                sendError("set");
                 e.printStackTrace();
                 return this;
             }
 
             // 1.13.2 (custom item tag container)
-            if (ReflectionUtility.getCtcMethod != null && ReflectionUtility.ctcSetCustomTagMethod != null) try {
-                ReflectionUtility.ctcSetCustomTagMethod.invoke(ReflectionUtility.getCtcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key), ReflectionUtility.ittStringClass, value);
+            if (getCtcMethod != null && ctcSetCustomTagMethod != null) try {
+                ctcSetCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), ittStringClass, value);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
+                sendError("set");
                 e.printStackTrace();
                 return this;
             }
-
-            // 1.13-1.13.1 (lore)
-            if (get(key) != null) remove(key); // Check if the key already exists
-            final List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-            lore.add(key + ": " + value);
-            meta.setLore(lore);
-            item.setItemMeta(meta);
-            return this;
         }
 
-        // 1.12- (enchantment with ID)
-        if (get(key) != null) remove(key); // Check if the key already exists
-        item.addUnsafeEnchantment(createEnchantment(key, value), 1);
+        // 1.13.1- (NBT API)
+        final NBTItem nbt = new NBTItem(item);
+        nbt.setString(key, value);
+        item = nbt.getItem();
         return this;
     }
 
@@ -145,95 +132,47 @@ public class ItemDataUtility {
      */
     @NotNull @SuppressWarnings("UnusedReturnValue")
     public ItemDataUtility remove(@NotNull String key) {
-        // 1.13+ (persistent data container, custom item tag container, or lore)
-        if (ReflectionUtility.namespacedKeyConstructor != null) {
+        // 1.13.2+ (persistent data container or custom item tag container)
+        if (namespacedKeyConstructor != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return this;
 
             // 1.14+ (persistent data container)
-            if (ReflectionUtility.getPdcMethod != null && ReflectionUtility.pdcRemoveMethod != null) try {
-                ReflectionUtility.pdcRemoveMethod.invoke(ReflectionUtility.getPdcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key));
+            if (getPdcMethod != null && pdcRemoveMethod != null) try {
+                pdcRemoveMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key));
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
+                sendError("remove");
                 e.printStackTrace();
                 return this;
             }
 
             // 1.13.2 (custom item tag container)
-            if (ReflectionUtility.getCtcMethod != null && ReflectionUtility.ctcRemoveCustomTagMethod != null) try {
-                ReflectionUtility.ctcRemoveCustomTagMethod.invoke(ReflectionUtility.getCtcMethod.invoke(meta), ReflectionUtility.namespacedKeyConstructor.newInstance(plugin, key));
+            if (getCtcMethod != null && ctcRemoveCustomTagMethod != null) try {
+                ctcRemoveCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key));
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
+                sendError("remove");
                 e.printStackTrace();
                 return this;
             }
-
-            // 1.13-1.13.1 (lore)
-            if (!meta.hasLore()) return this;
-            final List<String> lore = meta.getLore();
-            for (int i = lore.size() - 1; i >= 0; i--) if (lore.get(i).startsWith(key + ": ")) { // Reverse search because it's more likely to be at the end
-                lore.remove(i);
-                meta.setLore(lore);
-                break;
-            }
-            item.setItemMeta(meta);
-            return this;
         }
 
-        // 1.12- (enchantment with ID)
-        final int hashCode = key.hashCode();
-        for (final Enchantment enchantment : item.getEnchantments().keySet()) if (enchantment.getId() == hashCode) {
-            item.removeEnchantment(enchantment);
-            break;
-        }
+        // 1.13.1- (NBT API)
+        final NBTItem nbt = new NBTItem(item);
+        nbt.removeKey(key);
+        item = nbt.getItem();
         return this;
     }
 
     /**
-     * Create an enchantment with the given name
+     * Send an error message to the console
      *
-     * @param   key     the key of the enchantment (will be hashed using {@link String#hashCode()})
-     * @param   value   the name of the enchantment
-     *
-     * @return          the newly created {@link Enchantment}
+     * @param   action  the action that failed
      */
-    @NotNull @Contract("_, _ -> new")
-    private Enchantment createEnchantment(@NotNull String key, @NotNull String value) {
-        return new Enchantment(key.hashCode()) {
-            @Override @NotNull
-            public String getName() {
-                return value;
-            }
-            @Override
-            public int getMaxLevel() {
-                return 1;
-            }
-            @Override
-            public int getStartLevel() {
-                return 1;
-            }
-            @Override @NotNull
-            public EnchantmentTarget getItemTarget() {
-                return EnchantmentTarget.ALL;
-            }
-            @Override
-            public boolean isTreasure() {
-                return false;
-            }
-            @Override
-            public boolean isCursed() {
-                return false;
-            }
-            @Override
-            public boolean conflictsWith(@NotNull Enchantment enchantment) {
-                return false;
-            }
-            @Override
-            public boolean canEnchantItem(@NotNull ItemStack itemStack) {
-                return true;
-            }
-        };
+    private void sendError(@NotNull String action) {
+        plugin.log(Level.WARNING, "&cFailed to " + action + " item data for &4" + item.getType() + "&c!");
     }
 }
