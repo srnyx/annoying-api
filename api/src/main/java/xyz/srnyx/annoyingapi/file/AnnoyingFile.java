@@ -119,7 +119,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   path    the path to the node
      * @param   value   the value to set the node to
      */
-    public void setSave(@Nullable String path, @NotNull Object value) {
+    public void setSave(@Nullable String path, @Nullable Object value) {
         set(path, value);
         save();
     }
