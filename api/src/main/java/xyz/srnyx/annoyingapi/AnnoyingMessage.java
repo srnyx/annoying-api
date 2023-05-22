@@ -24,7 +24,9 @@ import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.ClickEvent.Action.COPY_TO_CLIPBOARD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.Player.PLAYER_SEND_TITLE_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.Player.Spigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
 
 
 /**
@@ -150,8 +152,8 @@ public class AnnoyingMessage {
             }
 
             // Clipboard component
-            if (clickEventActionCopyToClipboardEnum != null && subKey.startsWith("copy")) {
-                json.append(display, hover, clickEventActionCopyToClipboardEnum, function);
+            if (COPY_TO_CLIPBOARD != null && subKey.startsWith("copy")) {
+                json.append(display, hover, COPY_TO_CLIPBOARD, function);
                 continue;
             }
 
@@ -258,10 +260,10 @@ public class AnnoyingMessage {
         final BaseComponent[] components = getComponents();
 
         // Action bar
-        if (type.equals(BroadcastType.ACTIONBAR) && sendMessageMethod != null) {
+        if (type.equals(BroadcastType.ACTIONBAR) && PLAYER_SPIGOT_SEND_MESSAGE_METHOD != null) {
             Bukkit.getOnlinePlayers().forEach(player -> {
                 try {
-                    sendMessageMethod.invoke(player.spigot(), ChatMessageType.ACTION_BAR, components);
+                    PLAYER_SPIGOT_SEND_MESSAGE_METHOD.invoke(player.spigot(), ChatMessageType.ACTION_BAR, components);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -299,14 +301,12 @@ public class AnnoyingMessage {
      */
     private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
         final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if (sendTitleMethod != null) {
-            players.forEach(player -> {
-                try {
-                    sendTitleMethod.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
-                } catch (final IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            });
+        if (PLAYER_SEND_TITLE_METHOD != null) {
+            try {
+                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
             return;
         }
         //noinspection deprecation

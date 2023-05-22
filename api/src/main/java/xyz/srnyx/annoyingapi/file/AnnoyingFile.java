@@ -27,13 +27,19 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.NamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.Attribute.ATTRIBUTE_ENUM;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.AttributeModifier.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.AttributeModifier.Operation.ATTRIBUTE_MODIFIER_OPERATION_ENUM;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.ShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.ShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.Damageable.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.ItemMeta.*;
 
 
 /**
  * Represents a file in the plugin's folder
  */
-@SuppressWarnings("unchecked")
 public abstract class AnnoyingFile extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
@@ -167,7 +173,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     @Nullable
     public Object getAttributeModifier(@NotNull String path) {
         final Object def = getDefault(path);
-        return getAttributeModifier(path, attributeModifierClass != null && attributeModifierClass.isInstance(def) ? def : null);
+        return getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? def : null);
     }
 
     /**
@@ -180,9 +186,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or {@code def} if it's invalid
      */
-    @Nullable
+    @Nullable @SuppressWarnings("unchecked")
     public <T> T getAttributeModifier(@NotNull String path, @Nullable T def) {
-        if (attributeModifierOperationEnum == null) return def;
+        if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
 
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) {
@@ -200,7 +206,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // operation
         final Object operation;
         try {
-            operation = Enum.valueOf(attributeModifierOperationEnum, operationString);
+            operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
             log(Level.WARNING, path, "&cInvalid operation: &4" + operationString);
             return def;
@@ -210,7 +216,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final double amount = section.getDouble("amount");
 
         // 1.13.2+
-        if (attributeModifierConstructor5 != null) {
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_5 != null) {
             // slot
             EquipmentSlot slot = null;
             final String equipmentSlotString = section.getString("slot");
@@ -222,7 +228,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
             // Return
             try {
-                return (T) attributeModifierConstructor5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
+                return (T) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -230,8 +236,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Return
-        if (attributeModifierConstructor3 != null) try {
-            return (T) attributeModifierConstructor3.newInstance(name, amount, operation);
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 != null) try {
+            return (T) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation);
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -277,9 +283,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             //TODO Durability (1.13+)
-            if (damageableClass != null && damageableSetDamageMethod != null && damageableClass.isInstance(meta)) try {
+            if (DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null && DAMAGEABLE_CLASS.isInstance(meta)) try {
                 plugin.log("Setting damage to " + damage + " for " + path);
-                damageableSetDamageMethod.invoke(meta, damage);
+                DAMAGEABLE_SET_DAMAGE_METHOD.invoke(meta, damage);
             } catch (final IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
@@ -317,14 +323,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                     .forEach(meta::addItemFlags);
 
             // 1.11+ (unbreakable)
-            if (setUnbreakableMethod != null) try {
-                setUnbreakableMethod.invoke(meta, section.getBoolean("unbreakable"));
+            if (ITEM_META_SET_UNBREAKABLE != null) try {
+                ITEM_META_SET_UNBREAKABLE.invoke(meta, section.getBoolean("unbreakable"));
             } catch (final IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
 
             // 1.13.2+ (attribute modifiers)
-            if (attributeEnum != null && addAttributeModifierMethod != null) {
+            if (ATTRIBUTE_ENUM != null && ITEM_META_ADD_ATTRIBUTE_MODIFIER != null) {
                 final ConfigurationSection attributeModifiersSection = section.getConfigurationSection("attribute-modifiers");
                 if (attributeModifiersSection != null) for (final String attributeKey : attributeModifiersSection.getKeys(false)) {
                     final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
@@ -332,7 +338,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                     // Get attribute
                     final Object attribute;
                     try {
-                        attribute = Enum.valueOf(attributeEnum, attributeKey.toUpperCase());
+                        //noinspection unchecked
+                        attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
                         log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
@@ -344,17 +351,17 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
                     // Add attribute modifier
                     try {
-                        addAttributeModifierMethod.invoke(meta, attribute, attributeModifier);
+                        ITEM_META_ADD_ATTRIBUTE_MODIFIER.invoke(meta, attribute, attributeModifier);
                     } catch (final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }
 
                 // 1.14+ (custom model data)
-                if (setCustomModelDataMethod != null) {
+                if (ITEM_META_SET_CUSTOM_MODEL_DATA != null) {
                     final int customModelData = section.getInt("custom-model-data");
                     if (customModelData != 0) try {
-                        setCustomModelDataMethod.invoke(meta, customModelData);
+                        ITEM_META_SET_CUSTOM_MODEL_DATA.invoke(meta, customModelData);
                     } catch (final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -429,10 +436,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Shapeless
         if (section.getBoolean("shapeless")) {
             ShapelessRecipe shapeless;
-            if (shapelessRecipeConstructor != null && namespacedKeyConstructor != null) {
+            if (SHAPELESS_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
                 try {
                     // 1.12+
-                    shapeless = shapelessRecipeConstructor.newInstance(namespacedKeyConstructor.newInstance(plugin, name), result);
+                    shapeless = SHAPELESS_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
                 } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     // 1.11-
                     shapeless = new ShapelessRecipe(result);
@@ -449,10 +456,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
         // Shaped
         ShapedRecipe shaped;
-        if (shapedRecipeConstructor != null && namespacedKeyConstructor != null) {
+        if (SHAPED_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
             try {
                 // 1.12+
-                shaped = shapedRecipeConstructor.newInstance(namespacedKeyConstructor.newInstance(plugin, name), result);
+                shaped = SHAPED_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 // 1.11-
                 shaped = new ShapedRecipe(result);

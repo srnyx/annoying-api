@@ -1,243 +1,175 @@
 package xyz.srnyx.annoyingapi.utility;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
-
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.UUID;
 
 
 /**
  * Utility class for managing reflected objects
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ReflectionUtility {
-    // 1.9+
     /**
-     * org.bukkit.attribute.Attribute
+     * Returns a {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   className       the class name
+     *
+     * @return                  the class if the version is greater than or equal to the minimum version, otherwise null
      */
-    @Nullable public static Class<? extends Enum> attributeEnum;
-    /**
-     * org.bukkit.attribute.AttributeModifier
-     */
-    @Nullable public static Class<?> attributeModifierClass;
-    /**
-     * org.bukkit.attribute.AttributeModifier.Operation
-     */
-    @Nullable public static Class<? extends Enum> attributeModifierOperationEnum;
-    /**
-     * org.bukkit.attribute.AttributeModifier#AttributeModifier(String, double, AttributeModifier.Operation)
-     */
-    @Nullable public static Constructor<?> attributeModifierConstructor3;
-
-    // 1.11+
-    /**
-     * org.bukkit.inventory.meta.ItemMeta#setUnbreakable(boolean)
-     */
-    @Nullable public static Method setUnbreakableMethod;
-    /**
-     * org.bukkit.entity.Player.Spigot#sendMessage(ChatMessageType, BaseComponent...)
-     */
-    @Nullable public static Method sendMessageMethod;
-    /**
-     * org.bukkit.entity.Player#sendTitle(String, String, int, int, int)
-     */
-    @Nullable public static Method sendTitleMethod;
-
-    // 1.12+
-    /**
-     * org.bukkit.NamespacedKey
-     */
-    @Nullable private static Class<?> namespacedKeyClass;
-    /**
-     * org.bukkit.NamespacedKey#NamespacedKey(Plugin, String)
-     */
-    @Nullable public static Constructor<?> namespacedKeyConstructor;
-    /**
-     * org.bukkit.inventory.ShapelessRecipe#ShapelessRecipe(NamespacedKey, ItemStack)
-     */
-    @Nullable public static Constructor<ShapelessRecipe> shapelessRecipeConstructor;
-    /**
-     * org.bukkit.inventory.ShapedRecipe#ShapedRecipe(NamespacedKey, ItemStack)
-     */
-    @Nullable public static Constructor<ShapedRecipe> shapedRecipeConstructor;
-
-    // 1.13+
-    /**
-     * org.bukkit.inventory.meta.Damageable
-     */
-    @Nullable public static Class<?> damageableClass;
-    /**
-     * org.bukkit.inventory.meta.Damageable#setDamage(int)
-     */
-    @Nullable public static Method damageableSetDamageMethod;
-
-    // 1.13.2+
-    /**
-     * org.bukkit.attribute.AttributeModifier#AttributeModifier(UUID, String, double, AttributeModifier.Operation, EquipmentSlot)
-     */
-    @Nullable public static Constructor<?> attributeModifierConstructor5;
-    /**
-     * org.bukkit.inventory.meta.ItemMeta#addAttributeModifier(Attribute, AttributeModifier)
-     */
-    @Nullable public static Method addAttributeModifierMethod;
-    /**
-     * org.bukkit.inventory.meta.ItemMeta#getCustomTagContainer(NamespacedKey, ItemTagType)
-     */
-    @Nullable public static Method getCtcMethod;
-    /**
-     * org.bukkit.inventory.meta.tags.ItemTagType#STRING
-     */
-    @Nullable public static Object ittStringClass;
-    /**
-     * org.bukkit.inventory.meta.tags.CustomItemTagContainer#getCustomTag(NamespacedKey, ItemTagType)
-     */
-    @Nullable public static Method ctcGetCustomTagMethod;
-    /**
-     * org.bukkit.inventory.meta.tags.CustomItemTagContainer#setCustomTag(NamespacedKey, ItemTagType, Object)
-     */
-    @Nullable public static Method ctcSetCustomTagMethod;
-    /**
-     * org.bukkit.inventory.meta.tags.CustomItemTagContainer#setCustomTag(NamespacedKey, ItemTagType, Object)
-     */
-    @Nullable public static Method ctcRemoveCustomTagMethod;
-
-    // 1.14+
-    /**
-     * org.bukkit.inventory.meta.ItemMeta#setCustomModelData(Integer)
-     */
-    @Nullable public static Method setCustomModelDataMethod;
-    /**
-     * org.bukkit.inventory.meta.ItemMeta#getPersistentDataContainer()
-     */
-    @Nullable public static Method getPdcMethod;
-    /**
-     * org.bukkit.persistence.PersistentDataType#STRING
-     */
-    @Nullable public static Object pdtStringField;
-    /**
-     * org.bukkit.persistence.PersistentDataContainer#get(NamespacedKey, PersistentDataType)
-     */
-    @Nullable public static Method pdcGetMethod;
-    /**
-     * org.bukkit.persistence.PersistentDataContainer#set(NamespacedKey, PersistentDataType, Object)
-     */
-    @Nullable public static Method pdcSetMethod;
-    /**
-     * org.bukkit.persistence.PersistentDataContainer#remove(NamespacedKey)
-     */
-    @Nullable public static Method pdcRemoveMethod;
-
-    // 1.15+
-    /**
-     * net.md_5.bungee.ap.chat.ClickEvent.Action#COPY_TO_CLIPBOARD
-     */
-    @Nullable public static ClickEvent.Action clickEventActionCopyToClipboardEnum;
-
-    static {
-        init();
+    @Nullable
+    public static Class<?> getClass(int minimumVersion, @NotNull String className) {
+        if (checkVersion(minimumVersion)) return null;
+        try {
+            return Class.forName(className);
+        } catch (final ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
-     * Initializes the reflection utility. A method is used to allow use of guard clauses
+     * Returns an {@link Enum} {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   enumClassName   the enum class name
+     *
+     * @return                  the enum if the version is greater than or equal to the minimum version, otherwise null
      */
-    @SuppressWarnings({"JavaReflectionMemberAccess", "unchecked"})
-    private static void init() {
-        // 1.9+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10090) return;
+    @Nullable
+    public static Class<? extends Enum> getEnum(int minimumVersion, @NotNull String enumClassName) {
+        if (checkVersion(minimumVersion)) return null;
         try {
-            attributeEnum = (Class<? extends Enum>) Class.forName("org.bukkit.attribute.Attribute");
-            attributeModifierClass = Class.forName("org.bukkit.attribute.AttributeModifier");
-            attributeModifierOperationEnum = (Class<? extends Enum>) Class.forName("org.bukkit.attribute.AttributeModifier$Operation");
-            attributeModifierConstructor3 = attributeModifierClass.getConstructor(String.class, double.class, attributeModifierOperationEnum);
-        } catch (final ClassNotFoundException | NoSuchMethodException e) {
+            return (Class<? extends Enum>) Class.forName(enumClassName);
+        } catch (final ClassNotFoundException e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        // 1.11+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10110) return;
-        final Class<ItemMeta> itemMetaClass = ItemMeta.class;
+    /**
+     * Returns a {@link Constructor} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   clazz           the class to get the constructor from
+     * @param   parameterTypes  the parameter types of the constructor
+     *
+     * @return                  the constructor if the version is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null, otherwise null
+     *
+     * @param   <T>             the type of the class
+     */
+    @Nullable
+    public static <T> Constructor<T> getConstructor(int minimumVersion, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
+        if (clazz == null || parameterTypes == null || checkVersion(minimumVersion)) return null;
         try {
-            setUnbreakableMethod = itemMetaClass.getMethod("setUnbreakable", boolean.class);
-            sendMessageMethod = Player.Spigot.class.getMethod("sendMessage", ChatMessageType.class, BaseComponent[].class);
-            sendTitleMethod = Player.class.getMethod("sendTitle", String.class, String.class, int.class, int.class, int.class);
+            return clazz.getConstructor(parameterTypes);
         } catch (final NoSuchMethodException e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        // 1.12+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10120) return;
-        final Class<ItemStack> itemStackClass = ItemStack.class;
+    /**
+     * Returns a {@link Method} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   clazz           the class to get the method from
+     * @param   methodName      the name of the method
+     * @param   parameterTypes  the parameter types of the method
+     *
+     * @return                  the method if the version is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null, otherwise null
+     *
+     * @param   <T>             the type of the class
+     */
+    @Nullable
+    public static <T> Method getMethod(int minimumVersion, @Nullable Class<T> clazz, @NotNull String methodName, @Nullable Class<?>... parameterTypes) {
+        if (clazz == null || parameterTypes == null || checkVersion(minimumVersion)) return null;
         try {
-            namespacedKeyClass = Class.forName("org.bukkit.NamespacedKey");
-            namespacedKeyConstructor = namespacedKeyClass.getConstructor(Plugin.class, String.class);
-            shapelessRecipeConstructor = ShapelessRecipe.class.getConstructor(namespacedKeyClass, itemStackClass);
-            shapedRecipeConstructor = ShapedRecipe.class.getConstructor(namespacedKeyClass, itemStackClass);
-        } catch (final ClassNotFoundException | NoSuchMethodException e) {
+            return clazz.getMethod(methodName, parameterTypes);
+        } catch (final NoSuchMethodException e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        // 1.13+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10130) return;
+    /**
+     * Returns a {@link Field} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   clazz           the class to get the field from
+     * @param   fieldName       the name of the field
+     *
+     * @return                  the field if the version is greater than or equal to the minimum version, otherwise null
+     */
+    @Nullable
+    public static Field getField(int minimumVersion, @Nullable Class<?> clazz, @NotNull String fieldName) {
+        if (clazz == null || checkVersion(minimumVersion)) return null;
         try {
-            damageableClass = Class.forName("org.bukkit.inventory.meta.Damageable");
-            damageableSetDamageMethod = damageableClass.getMethod("setDamage", int.class);
-        } catch (final ClassNotFoundException | NoSuchMethodException e) {
+            return clazz.getField(fieldName);
+        } catch (final NoSuchFieldException e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        // 1.13.2+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10132) return;
+    /**
+     * Returns the value of a <b>static</b> {@link Field} if the result of {@link #getField(int, Class, String)} is not null
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   clazz           the class to get the field from
+     * @param   fieldName       the name of the field
+     *
+     * @return                  the value of the field if the result of {@link #getField(int, Class, String)} is not null, otherwise null
+     */
+    @Nullable
+    public static Object getStaticFieldValue(int minimumVersion, @Nullable Class<?> clazz, @NotNull String fieldName) {
+        final Field field = getField(minimumVersion, clazz, fieldName);
+        if (field == null) return null;
         try {
-            if (attributeModifierClass != null) attributeModifierConstructor5 = attributeModifierClass.getConstructor(UUID.class, String.class, double.class, attributeModifierOperationEnum, EquipmentSlot.class);
-            addAttributeModifierMethod = itemMetaClass.getMethod("addAttributeModifier", attributeEnum, attributeModifierClass);
-            getCtcMethod = itemMetaClass.getMethod("getCustomTagContainer");
-            final Class<?> itemTagTypeClass = Class.forName("org.bukkit.inventory.meta.tags.ItemTagType");
-            ittStringClass = itemTagTypeClass.getField("STRING").get(itemTagTypeClass);
-            final Class<?> customItemTagContainerClass = Class.forName("org.bukkit.inventory.meta.tags.CustomItemTagContainer");
-            ctcGetCustomTagMethod = customItemTagContainerClass.getMethod("getCustomTag", namespacedKeyClass, itemTagTypeClass);
-            ctcSetCustomTagMethod = customItemTagContainerClass.getMethod("setCustomTag", namespacedKeyClass, itemTagTypeClass, Object.class);
-            ctcRemoveCustomTagMethod = customItemTagContainerClass.getMethod("removeCustomTag", namespacedKeyClass);
-        } catch (final NoSuchMethodException | ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            return field.get(null);
+        } catch (final IllegalAccessException e) {
             e.printStackTrace();
+            return null;
         }
+    }
 
-        // 1.14+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10140) return;
+    /**
+     * Returns an {@link Enum} value if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   enumClass       the enum class
+     * @param   enumName        the name of the enum
+     *
+     * @return                  the enum value if the version is greater than or equal to the minimum version, otherwise null
+     *
+     * @param   <T>             the type of the enum
+     */
+    @Nullable
+    public static <T extends Enum> T getEnumValue(int minimumVersion, @Nullable Class<T> enumClass, @NotNull String enumName) {
+        if (enumClass == null || checkVersion(minimumVersion)) return null;
         try {
-            setCustomModelDataMethod = itemMetaClass.getMethod("setCustomModelData", Integer.class);
-            getPdcMethod = Class.forName("org.bukkit.persistence.PersistentDataHolder").getMethod("getPersistentDataContainer");
-            final Class<?> persistentDataTypeClass = Class.forName("org.bukkit.persistence.PersistentDataType");
-            pdtStringField = persistentDataTypeClass.getField("STRING").get(persistentDataTypeClass);
-            final Class<?> persistentDataContainerClass = Class.forName("org.bukkit.persistence.PersistentDataContainer");
-            pdcGetMethod = persistentDataContainerClass.getMethod("get", namespacedKeyClass, persistentDataTypeClass);
-            pdcSetMethod = persistentDataContainerClass.getMethod("set", namespacedKeyClass, persistentDataTypeClass, Object.class);
-            pdcRemoveMethod = persistentDataContainerClass.getMethod("remove", namespacedKeyClass);
-        } catch (final NoSuchMethodException | ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        // 1.15+
-        if (AnnoyingPlugin.MINECRAFT_VERSION.value < 10150) return;
-        try {
-            clickEventActionCopyToClipboardEnum = ClickEvent.Action.valueOf("COPY_TO_CLIPBOARD");
+            return (T) Enum.valueOf(enumClass, enumName);
         } catch (final IllegalArgumentException e) {
             e.printStackTrace();
+            return null;
         }
+    }
+
+    /**
+     * Checks if {@link AnnoyingPlugin#MINECRAFT_VERSION} is less than the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     *
+     * @return                  true if the version is less than the minimum version, otherwise false
+     */
+    private static boolean checkVersion(int minimumVersion) {
+    	return AnnoyingPlugin.MINECRAFT_VERSION.value < minimumVersion;
     }
 
     /**

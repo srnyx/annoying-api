@@ -12,7 +12,13 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.util.logging.Level;
 
-import static xyz.srnyx.annoyingapi.utility.ReflectionUtility.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.NamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.ItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.CustomItemTagContainer.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.ItemTagType.ITEM_TAG_TYPE_STRING;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataContainer.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataHolder.PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataType.PERSISTENT_DATA_TYPE_STRING;
 
 
 /**
@@ -49,13 +55,13 @@ public class ItemDataUtility {
     @Nullable
     public String get(@NotNull String key) {
         // 1.13.2+ (persistent data container, custom item tag container, or lore)
-        if (namespacedKeyConstructor != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
             // 1.14+ (persistent data container)
-            if (getPdcMethod != null && pdcGetMethod != null && pdtStringField != null) try {
-                return (String) pdcGetMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), pdtStringField);
+            if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null) try {
+                return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
                 sendError("get");
                 e.printStackTrace();
@@ -63,8 +69,8 @@ public class ItemDataUtility {
             }
 
             // 1.13.2 (custom item tag container)
-            if (getCtcMethod != null && ctcGetCustomTagMethod != null) try {
-                return (String) ctcGetCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), ittStringClass);
+            if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD != null) try {
+                return (String) CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
                 sendError("get");
                 e.printStackTrace();
@@ -89,13 +95,13 @@ public class ItemDataUtility {
         if (value == null) return remove(key); // Remove the value if it's null
 
         // 1.13.2+ (persistent data container or custom item tag container)
-        if (namespacedKeyConstructor != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return this;
 
             // 1.14+ (persistent data container)
-            if (getPdcMethod != null && pdcSetMethod != null) try {
-                pdcSetMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), pdtStringField, value);
+            if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
+                PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
@@ -105,8 +111,8 @@ public class ItemDataUtility {
             }
 
             // 1.13.2 (custom item tag container)
-            if (getCtcMethod != null && ctcSetCustomTagMethod != null) try {
-                ctcSetCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key), ittStringClass, value);
+            if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD != null) try {
+                CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, value);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
@@ -133,13 +139,13 @@ public class ItemDataUtility {
     @NotNull @SuppressWarnings("UnusedReturnValue")
     public ItemDataUtility remove(@NotNull String key) {
         // 1.13.2+ (persistent data container or custom item tag container)
-        if (namespacedKeyConstructor != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return this;
 
             // 1.14+ (persistent data container)
-            if (getPdcMethod != null && pdcRemoveMethod != null) try {
-                pdcRemoveMethod.invoke(getPdcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key));
+            if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null) try {
+                PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
@@ -149,8 +155,8 @@ public class ItemDataUtility {
             }
 
             // 1.13.2 (custom item tag container)
-            if (getCtcMethod != null && ctcRemoveCustomTagMethod != null) try {
-                ctcRemoveCustomTagMethod.invoke(getCtcMethod.invoke(meta), namespacedKeyConstructor.newInstance(plugin, key));
+            if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD != null) try {
+                CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
