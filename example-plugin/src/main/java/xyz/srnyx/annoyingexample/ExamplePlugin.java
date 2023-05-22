@@ -18,6 +18,9 @@ import xyz.srnyx.annoyingapi.utility.MapUtility;
  * Example of a {@link AnnoyingPlugin} implementation
  */
 public class ExamplePlugin extends AnnoyingPlugin {
+    /**
+     * Example item generated from the {@code config.yml} file
+     */
     @Nullable public ItemStack item;
 
     /**

@@ -9,9 +9,17 @@ import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 
 
+/**
+ * An example of a placeholder expansion using {@link AnnoyingPAPIExpansion}
+ */
 public class ExamplePlaceholders extends AnnoyingPAPIExpansion {
     @NotNull private final ExamplePlugin plugin;
 
+    /**
+     * Constructor for the ExamplePlaceholders class
+     *
+     * @param   plugin  the {@link ExamplePlugin plugin} instance
+     */
     public ExamplePlaceholders(@NotNull ExamplePlugin plugin) {
         this.plugin = plugin;
     }
