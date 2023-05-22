@@ -41,7 +41,7 @@ public interface AnnoyingCommand extends TabExecutor {
      */
     @NotNull
     default String getName() {
-        return getClass().getSimpleName().replace("Command", "").toLowerCase();
+        return getClass().getSimpleName().toLowerCase().replace("command", "").replace("cmd", "");
     }
 
     /**
