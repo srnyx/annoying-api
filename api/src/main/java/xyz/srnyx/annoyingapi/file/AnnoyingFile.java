@@ -284,7 +284,6 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         if (meta != null) {
             //TODO Durability (1.13+)
             if (DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null && DAMAGEABLE_CLASS.isInstance(meta)) try {
-                plugin.log("Setting damage to " + damage + " for " + path);
                 DAMAGEABLE_SET_DAMAGE_METHOD.invoke(meta, damage);
             } catch (final IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
@@ -295,9 +294,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (name != null) meta.setDisplayName(AnnoyingUtility.color(name));
 
             // Lore
-            meta.setLore(section.getStringList("lore").stream()
-                    .map(AnnoyingUtility::color)
-                    .collect(Collectors.toList()));
+            meta.setLore(AnnoyingUtility.colorCollection(section.getStringList("lore")));
 
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");

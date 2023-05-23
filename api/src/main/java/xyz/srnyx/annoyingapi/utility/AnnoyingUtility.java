@@ -21,9 +21,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -34,14 +32,29 @@ public class AnnoyingUtility {
     /**
      * Translates {@code &} color codes to {@link ChatColor}
      *
-     * @param   message the message to translate
+     * @param   object  the object/message to translate
      *
-     * @return          the translated message
+     * @return          the translated object/message
      */
     @NotNull
-    public static String color(@Nullable String message) {
-        if (message == null) return "null";
-        return ChatColor.translateAlternateColorCodes('&', message);
+    public static String color(@Nullable Object object) {
+        if (object == null) return "null";
+        return ChatColor.translateAlternateColorCodes('&', String.valueOf(object));
+    }
+
+    /**
+     * Translates {@code &} color codes to {@link ChatColor} for a {@link Collection} of messages
+     *
+     * @param   objects the objects/messages to translate
+     *
+     * @return          the translated objects/messages
+     */
+    @NotNull
+    public static List<String> colorCollection(@Nullable Collection<?> objects) {
+        if (objects == null) return new ArrayList<>();
+        return objects.stream()
+                .map(AnnoyingUtility::color)
+                .collect(Collectors.toList());
     }
 
     /**
