@@ -6,8 +6,8 @@ import org.bukkit.inventory.Recipe;
 
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
-import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
@@ -27,8 +27,6 @@ public class ExamplePlugin extends AnnoyingPlugin {
      * Constructor for the {@link ExamplePlugin} class
      */
     public ExamplePlugin() {
-        super();
-
         // Options
         options.bStatsId = 12345;
         options.bStatsFileName = "stats.yml";
@@ -46,7 +44,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.papiExpansionToRegister = () -> new ExamplePlaceholders(this);
 
         // Dependencies
-        options.dependencies.add(new AnnoyingDependency("ViaVersion", MapUtility.mapOf(AnnoyingDownload.Platform.SPIGOT, "19254"), true, true));
+        options.dependencies.add(new AnnoyingDependency("ViaVersion", MapUtility.mapOf(PluginPlatform.SPIGOT, "19254"), true, true));
     }
 
     @Override

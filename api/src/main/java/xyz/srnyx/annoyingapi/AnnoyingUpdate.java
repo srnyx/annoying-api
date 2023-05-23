@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi;
 import com.google.gson.JsonElement;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +23,11 @@ public class AnnoyingUpdate {
     /**
      * The {@link AnnoyingPlugin plugin} instance
      */
-    @NotNull private final AnnoyingPlugin plugin;
+    @NotNull private final AnnoyingPlugin annoyingPlugin;
+    /**
+     * The {@link JavaPlugin plugin} to check for updates
+     */
+    @NotNull private final JavaPlugin plugin;
     /**
      * The current version of the plugin
      */
@@ -32,9 +37,9 @@ public class AnnoyingUpdate {
      */
     @NotNull private final String userAgent;
     /**
-     * The platforms the plugin is available on
+     * The platforms the plugin is available on. Currently only {@link PluginPlatform#MODRINTH} and {@link PluginPlatform#SPIGOT} are supported
      */
-    @NotNull private final Map<Platform, String> platforms;
+    @NotNull private final Map<PluginPlatform, String> platforms;
     /**
      * The latest version of the plugin
      */
@@ -43,15 +48,27 @@ public class AnnoyingUpdate {
     /**
      * Creates a new {@link AnnoyingUpdate} object
      *
+     * @param   annoyingPlugin  {@link #annoyingPlugin}
      * @param   plugin          {@link #plugin}
      * @param   platforms       {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull Map<Platform, String> platforms) {
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull JavaPlugin plugin, @NotNull Map<PluginPlatform, String> platforms) {
+        this.annoyingPlugin = annoyingPlugin;
         this.plugin = plugin;
         this.currentVersion = new Version(plugin.getDescription().getVersion());
-        this.userAgent = plugin.getName() + "/" + currentVersion.versionString + " via AnnoyingAPI (update)";
+        this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via AnnoyingAPI (update)";
         this.platforms = platforms;
         this.latestVersion = getLatestVersion();
+    }
+
+    /**
+     * Creates a new {@link AnnoyingUpdate} object
+     *
+     * @param   plugin      {@link #annoyingPlugin} and {@link #plugin}
+     * @param   platforms   {@link #platforms}
+     */
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull Map<PluginPlatform, String> platforms) {
+        this(plugin, plugin, platforms);
     }
 
     /**
@@ -61,10 +78,10 @@ public class AnnoyingUpdate {
      */
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) plugin.log(Level.WARNING, new AnnoyingMessage(plugin, plugin.options.updateAvailable)
+        if (update && latestVersion != null) annoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.updateAvailable)
                 .replace("%plugin%", plugin.getName())
-                .replace("%current%", plugin.getDescription().getVersion())
-                .replace("%new%", latestVersion.versionString)
+                .replace("%current%", currentVersion.string)
+                .replace("%new%", latestVersion.string)
                 .toString());
         return update;
     }
@@ -82,13 +99,13 @@ public class AnnoyingUpdate {
     @Nullable
     private Version getLatestVersion() {
         // Modrinth
-        if (platforms.containsKey(Platform.MODRINTH)) {
+        if (platforms.containsKey(PluginPlatform.MODRINTH)) {
             final Version modrinth = modrinth();
             if (modrinth != null) return modrinth;
         }
 
         // Spigot
-        if (platforms.containsKey(Platform.SPIGOT)) return spigot();
+        if (platforms.containsKey(PluginPlatform.SPIGOT)) return spigot();
 
         return null;
     }
@@ -102,13 +119,13 @@ public class AnnoyingUpdate {
     private Version modrinth() {
         final String[] version = Bukkit.getBukkitVersion().split("\\.");
         final JsonElement json = AnnoyingUtility.getJson(userAgent,
-                "https://api.modrinth.com/v2/project/" + platforms.get(Platform.MODRINTH) + "/version" +
+                "https://api.modrinth.com/v2/project/" + platforms.get(PluginPlatform.MODRINTH) + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + version[0] + "." + version[1] + "." + version[2].split("-")[0] + "%22%5D");
 
         // Request failed
         if (json == null) {
-            platforms.remove(Platform.MODRINTH);
+            platforms.remove(PluginPlatform.MODRINTH);
             return getLatestVersion();
         }
 
@@ -123,34 +140,16 @@ public class AnnoyingUpdate {
      */
     @Nullable
     private Version spigot() {
-        final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + platforms.get(Platform.SPIGOT) + "/versions/latest");
+        final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + platforms.get(PluginPlatform.SPIGOT) + "/versions/latest");
 
         // Request failed
         if (json == null) {
-            platforms.remove(Platform.SPIGOT);
+            platforms.remove(PluginPlatform.SPIGOT);
             return getLatestVersion();
         }
 
         // Return the latest version
         return new Version(json.getAsJsonObject().get("name").getAsString());
-    }
-
-    /**
-     * Platforms that plugins are available on
-     */
-    public enum Platform {
-        /**
-         * <a href="https://modrinth.com/plugins">{@code https://modrinth.com/plugins}</a>
-         * <p>Project ID <i>or</i> slug
-         * <p><b>Example:</b> {@code gzktm9GG} <i>or</i> {@code annoying-api}
-         */
-        MODRINTH,
-        /**
-         * <a href="https://spigotmc.org/resources">{@code https://spigotmc.org/resources}</a>
-         * <p>Project ID
-         * <p><b>Example:</b> {@code 106637}
-         */
-        SPIGOT
     }
 
     /**
@@ -161,7 +160,7 @@ public class AnnoyingUpdate {
         /**
          * The version as a {@link String}
          */
-        @NotNull public final String versionString;
+        @NotNull public final String string;
         /**
          * The value of the version
          * <p>Do NOT modify this value
@@ -171,17 +170,17 @@ public class AnnoyingUpdate {
         /**
          * Creates a new {@link Version} object
          *
-         * @param   versionString   {@link #versionString}
+         * @param   string  {@link #string}
          */
-        public Version(@NotNull String versionString) {
-            this.versionString = versionString;
+        public Version(@NotNull String string) {
+            this.string = string;
 
             // Set value
             final List<Integer> values = new ArrayList<>();
             int length = 0;
-            for (final String string : versionString.split("\\.")) {
+            for (final String subString : string.split("\\.")) {
                 try {
-                    values.add(Integer.parseInt(string));
+                    values.add(Integer.parseInt(subString));
                 } catch (final NumberFormatException e) {
                     break;
                 }

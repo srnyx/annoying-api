@@ -123,10 +123,10 @@ public class AnnoyingOptions {
     @NotNull public final List<AnnoyingDependency> dependencies = new ArrayList<>();
 
     /**
-     * <i>{@code RECOMMENDED}</i> The different {@link xyz.srnyx.annoyingapi.AnnoyingUpdate.Platform platforms} the plugin is available on
+     * <i>{@code RECOMMENDED}</i> The different {@link PluginPlatform platforms} the plugin is available on
      * <p>If not specified, the plugin will not be able to check for updates
      */
-    @NotNull public Map<AnnoyingUpdate.Platform, String> updatePlatforms = new EnumMap<>(AnnoyingUpdate.Platform.class);
+    @NotNull public Map<PluginPlatform, String> updatePlatforms = new EnumMap<>(PluginPlatform.class);
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance
