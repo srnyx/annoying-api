@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 /**
  * org.bukkit.persistence.PersistentDataHolder
  */
-public class PersistentDataHolder {
+public class RefPersistentDataHolder {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataHolder
      */
@@ -26,7 +26,7 @@ public class PersistentDataHolder {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private PersistentDataHolder() {
+    private RefPersistentDataHolder() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

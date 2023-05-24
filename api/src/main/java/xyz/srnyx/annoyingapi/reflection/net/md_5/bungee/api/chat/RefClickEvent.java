@@ -8,20 +8,20 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 /**
  * net.md_5.bungee.api.chat.ClickEvent
  */
-public class ClickEvent {
+public class RefClickEvent {
     /**
      * This class cannot be instantiated
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private ClickEvent() {
+    private RefClickEvent() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 
     /**
      * net.md_5.bungee.api.chat.ClickEvent.Action
      */
-    public enum Action {
+    public enum RefAction {
         ;
 
         /**

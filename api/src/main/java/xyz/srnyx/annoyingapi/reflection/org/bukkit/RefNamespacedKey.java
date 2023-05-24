@@ -12,7 +12,7 @@ import java.lang.reflect.Constructor;
 /**
  * org.bukkit.NamespacedKey
  */
-public class NamespacedKey {
+public class RefNamespacedKey {
     /**
      * 1.12+ org.bukkit.NamespacedKey
      */
@@ -28,7 +28,7 @@ public class NamespacedKey {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private NamespacedKey() {
+    private RefNamespacedKey() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

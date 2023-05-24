@@ -27,14 +27,14 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.NamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.Attribute.ATTRIBUTE_ENUM;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.AttributeModifier.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.AttributeModifier.Operation.ATTRIBUTE_MODIFIER_OPERATION_ENUM;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.ShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.ShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.Damageable.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.ItemMeta.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute.ATTRIBUTE_ENUM;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefDamageable.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.*;
 
 
 /**

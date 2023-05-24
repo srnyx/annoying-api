@@ -2,7 +2,7 @@ package xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence;
 
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.NamespacedKey;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Method;
@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 /**
  * org.bukkit.persistence.PersistentDataContainer
  */
-public class PersistentDataContainer {
+public class RefPersistentDataContainer {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer
      */
@@ -20,24 +20,24 @@ public class PersistentDataContainer {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#get(org.bukkit.NamespacedKey, org.bukkit.persistence.PersistentDataType)
      */
-    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_GET_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "get", NamespacedKey.NAMESPACED_KEY_CLASS, PersistentDataType.PERSISTENT_DATA_TYPE_CLASS);
+    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_GET_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "get", RefNamespacedKey.NAMESPACED_KEY_CLASS, RefPersistentDataType.PERSISTENT_DATA_TYPE_CLASS);
 
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#get(org.bukkit.NamespacedKey, org.bukkit.persistence.PersistentDataType, Object)
      */
-    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_SET_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "set", NamespacedKey.NAMESPACED_KEY_CLASS, PersistentDataType.PERSISTENT_DATA_TYPE_CLASS, Object.class);
+    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_SET_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "set", RefNamespacedKey.NAMESPACED_KEY_CLASS, RefPersistentDataType.PERSISTENT_DATA_TYPE_CLASS, Object.class);
 
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#remove(org.bukkit.NamespacedKey)
      */
-    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_REMOVE_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "remove", NamespacedKey.NAMESPACED_KEY_CLASS);
+    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_REMOVE_METHOD = ReflectionUtility.getMethod(10140, PERSISTENT_DATA_CONTAINER_CLASS, "remove", RefNamespacedKey.NAMESPACED_KEY_CLASS);
 
     /**
      * This class cannot be instantiated
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private PersistentDataContainer() {
+    private RefPersistentDataContainer() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

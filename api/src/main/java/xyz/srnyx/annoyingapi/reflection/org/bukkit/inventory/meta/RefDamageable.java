@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 /**
  * org.bukkit.inventory.meta.Damageable
  */
-public class Damageable {
+public class RefDamageable {
     /**
      * 1.13+ org.bukkit.inventory.meta.Damageable
      */
@@ -26,7 +26,7 @@ public class Damageable {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private Damageable() {
+    private RefDamageable() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

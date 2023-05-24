@@ -8,7 +8,7 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 /**
  * org.bukkit.persistence.PersistentDataType
  */
-public class PersistentDataType {
+public class RefPersistentDataType {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataType
      */
@@ -24,7 +24,7 @@ public class PersistentDataType {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private PersistentDataType() {
+    private RefPersistentDataType() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

@@ -12,13 +12,13 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.util.logging.Level;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.NamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.ItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.CustomItemTagContainer.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.ItemTagType.ITEM_TAG_TYPE_STRING;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataContainer.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataHolder.PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.PersistentDataType.PERSISTENT_DATA_TYPE_STRING;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.RefCustomItemTagContainer.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.RefItemTagType.ITEM_TAG_TYPE_STRING;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataContainer.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataHolder.PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataType.PERSISTENT_DATA_TYPE_STRING;
 
 
 /**

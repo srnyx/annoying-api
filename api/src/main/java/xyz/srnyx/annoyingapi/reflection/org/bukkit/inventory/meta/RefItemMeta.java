@@ -2,8 +2,8 @@ package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta;
 
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.Attribute;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.AttributeModifier;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Method;
@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 /**
  * org.bukkit.inventory.meta.ItemMeta
  */
-public class ItemMeta {
+public class RefItemMeta {
     /**
      * 1.11+ org.bukkit.inventory.meta.ItemMeta#setUnbreakable(boolean)
      */
@@ -21,7 +21,7 @@ public class ItemMeta {
     /**
      * 1.13.2+ org.bukkit.inventory.meta.ItemMeta#addAttributeModifier(org.bukkit.attribute.Attribute, org.bukkit.attribute.AttributeModifier)
      */
-    @Nullable public static final Method ITEM_META_ADD_ATTRIBUTE_MODIFIER = ReflectionUtility.getMethod(10132, org.bukkit.inventory.meta.ItemMeta.class, "addAttributeModifier", Attribute.ATTRIBUTE_ENUM, AttributeModifier.ATTRIBUTE_MODIFIER_CLASS);
+    @Nullable public static final Method ITEM_META_ADD_ATTRIBUTE_MODIFIER = ReflectionUtility.getMethod(10132, org.bukkit.inventory.meta.ItemMeta.class, "addAttributeModifier", RefAttribute.ATTRIBUTE_ENUM, RefAttributeModifier.ATTRIBUTE_MODIFIER_CLASS);
 
     /**
      * 1.13.2+ org.bukkit.inventory.meta.ItemMeta#getCustomTagContainer()
@@ -38,7 +38,7 @@ public class ItemMeta {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private ItemMeta() {
+    private RefItemMeta() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

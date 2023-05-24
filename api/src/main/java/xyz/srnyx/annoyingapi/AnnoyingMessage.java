@@ -24,9 +24,9 @@ import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.ClickEvent.Action.COPY_TO_CLIPBOARD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.Player.PLAYER_SEND_TITLE_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.Player.Spigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_SEND_TITLE_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSpigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
 
 
 /**

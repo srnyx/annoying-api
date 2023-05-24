@@ -8,7 +8,7 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 /**
  * org.bukkit.inventory.meta.tags.ItemTagType
  */
-public class ItemTagType {
+public class RefItemTagType {
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.ItemTagType
      */
@@ -24,7 +24,7 @@ public class ItemTagType {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private ItemTagType() {
+    private RefItemTagType() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

@@ -8,7 +8,7 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 /**
  * org.bukkit.attribute.Attribute
  */
-public enum Attribute {
+public enum RefAttribute {
     ;
 
     /**

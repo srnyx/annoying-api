@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 /**
  * org.bukkit.entity.Player
  */
-public class Player {
+public class RefPlayer {
     /**
      * 1.11+ org.bukkit.entity.Player#sendTitle(String, String, int, int, int)
      */
@@ -24,14 +24,14 @@ public class Player {
      *
      * @throws  UnsupportedOperationException   if this class is instantiated
      */
-    private Player() {
+    private RefPlayer() {
         throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 
     /**
      * org.bukkit.entity.Player.Spigot
      */
-    public static class Spigot {
+    public static class RefSpigot {
         /**
          * 1.11+ org.bukkit.entity.Player.Spigot#sendMessage(net.md_5.bungee.api.ChatMessageType, net.md_5.bungee.api.chat.BaseComponent...)
          */
@@ -42,7 +42,7 @@ public class Player {
          *
          * @throws  UnsupportedOperationException   if this class is instantiated
          */
-        private Spigot() {
+        private RefSpigot() {
             throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
         }
     }
