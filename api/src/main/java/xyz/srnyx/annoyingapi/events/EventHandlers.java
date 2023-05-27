@@ -49,6 +49,7 @@ public class EventHandlers implements AnnoyingListener {
         final Entity damagee = event.getEntity();
         if (!(damager instanceof Player) || !(damagee instanceof Player)) return;
         final PlayerDamageByPlayerEvent newEvent = new PlayerDamageByPlayerEvent((Player) damager, (Player) damagee, event.getCause(), event.getDamage());
+        newEvent.setCancelled(event.isCancelled());
         Bukkit.getPluginManager().callEvent(newEvent);
         event.setCancelled(newEvent.isCancelled());
     }
