@@ -20,8 +20,7 @@ recipe:
       LOOT_BONUS_MOBS: 2
     flags:
       - HIDE_ENCHANTS
-      - HIDE_UNBREAKABLE
-    unbreakable: true
+    unbreakable: false
     attribute-modifiers:
       GENERIC_ATTACK_DAMAGE:
         name: attack_boost

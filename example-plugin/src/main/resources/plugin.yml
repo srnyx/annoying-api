@@ -6,7 +6,7 @@ website: https://srnyx.com
 
 main: xyz.srnyx.annoyingexample.ExamplePlugin
 version: ${version}
-api-version: 1.13 # TODO is this necessary? MaterialX?
+api-version: 1.13
 
 softdepend:
   - PlaceholderAPI

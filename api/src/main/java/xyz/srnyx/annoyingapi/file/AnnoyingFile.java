@@ -282,7 +282,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            //TODO Durability (1.13+)
+            // Durability (1.13+)
             if (DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null && DAMAGEABLE_CLASS.isInstance(meta)) try {
                 DAMAGEABLE_SET_DAMAGE_METHOD.invoke(meta, damage);
             } catch (final IllegalAccessException | InvocationTargetException e) {
