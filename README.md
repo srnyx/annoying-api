@@ -1,4 +1,4 @@
-# Annoying API [![Release](https://jitpack.io/v/srnyx/annoying-api.svg)](https://jitpack.io/#xyz.srnyx/annoying-api)
+# Annoying API [![Release](https://jitpack.io/v/srnyx/annoying-api.svg)](https://annoying-api.srnyx.com/jitpack)
 
 General purpose API for my plugins. Just contains some utility classes and methods. *[Okay... it contains a tad bit more than that...](#developers)*
 
@@ -12,20 +12,20 @@ This may be different for other plugins that **aren't** mine, though. Just check
 
 ### Download (read above)
 
-- **Stable:** You can download the latest **stable** version at [Modrinth](https://api.srnyx.com/modrinth), [Hangar](https://hangar.papermc.io/srnyx/AnnoyingAPI), [Polymart](https://api.srnyx.com/polymart), [BuiltByBit](https://api.srnyx.com/builtbybit), [Spigot](https://api.srnyx.com/spigot), [Bukkit](https://api.srnyx.com/bukkit), or [GitHub](https://api.srnyx.com/releases/latest)
-- **Snapshot:** You can download the latest **snapshot** version at [GitHub Actions](https://api.srnyx.com/snapshot)
+- **Stable:** You can download the latest **stable** version at [Modrinth](https://annoying-api.srnyx.com/modrinth), [Hangar](https://annoying-api.srnyx.com/hangar), [Polymart](https://annoying-api.srnyx.com/polymart), [BuiltByBit](https://annoying-api.srnyx.com/builtbybit), [Spigot](https://annoying-api.srnyx.com/spigot), [Bukkit](https://annoying-api.srnyx.com/bukkit), or [GitHub](https://annoying-api.srnyx.com/releases/latest)
+- **Snapshot:** You can download the latest **snapshot** version at [GitHub Actions](https://annoying-api.srnyx.com/snapshot)
 
 ### Wiki
 
-You can find the wiki at [api.srnyx.com/wiki](https://api.srnyx.com/wiki) which will contain important information about the API and the plugins that use it
+You can find the wiki at [annoying-api.srnyx.com/wiki](https://annoying-api.srnyx.com/wiki) which will contain important information about the API and the plugins that use it
 
 ## Developers
 
-You can find the Javadocs at [api.srnyx.com/javadocs](https://api.srnyx.com/javadocs). The wiki above may also contain some helpful information
+You can find the Javadocs at [annoying-api.srnyx.com/javadocs](https://annoying-api.srnyx.com/javadocs). The wiki above may also contain some helpful information
 
 ### Importing
 
-You can import the API using [Jitpack](https://api.srnyx.com/jitpack). It's **HIGHLY** recommended to implement the API, all the examples below will implement it. Make sure to replace `VERSION` with the version you want.
+You can import the API using [Jitpack](https://annoying-api.srnyx.com/jitpack). It's **HIGHLY** recommended to implement the API, all the examples below will implement it. Make sure to replace `VERSION` with the version you want.
 
 - **Gradle Kotlin** (`build.gradle.kts`)**:**
 ```kotlin
