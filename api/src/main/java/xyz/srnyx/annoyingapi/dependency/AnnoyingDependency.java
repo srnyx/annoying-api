@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 
 import java.io.File;
-import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -21,7 +21,7 @@ public class AnnoyingDependency {
     /**
      * The platforms the dependency can be downloaded from
      */
-    @NotNull public final Map<PluginPlatform, String> platforms;
+    @NotNull public final PluginPlatform.Multi platforms;
     /**
      * Whether the dependency is required to be installed. If the download fails and this is true, the plugin will not enable
      * <p><i>This does <b>NOT</b> stop the dependency from being downloaded/installed</i>
@@ -44,9 +44,9 @@ public class AnnoyingDependency {
      * @param   required                {@link #required}
      * @param   enableAfterDownload     {@link #enableAfterDownload}
      */
-    public AnnoyingDependency(@NotNull String name, @NotNull Map<PluginPlatform, String> platforms, boolean required, boolean enableAfterDownload) {
+    public AnnoyingDependency(@NotNull String name, @NotNull Set<PluginPlatform> platforms, boolean required, boolean enableAfterDownload) {
         this.name = name;
-        this.platforms = platforms;
+        this.platforms = new PluginPlatform.Multi(platforms);
         this.required = required;
         this.enableAfterDownload = enableAfterDownload;
         this.file = new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");

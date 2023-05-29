@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingexample;
 
+import com.google.common.collect.Sets;
+
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
@@ -11,7 +13,6 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.utility.MapUtility;
 
 
 /**
@@ -44,7 +45,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.papiExpansionToRegister = () -> new ExamplePlaceholders(this);
 
         // Dependencies
-        options.dependencies.add(new AnnoyingDependency("ViaVersion", MapUtility.mapOf(PluginPlatform.SPIGOT, "19254"), true, true));
+        options.dependencies.add(new AnnoyingDependency("ViaVersion", Sets.newHashSet(PluginPlatform.spigot("19254")), true, true));
     }
 
     @Override

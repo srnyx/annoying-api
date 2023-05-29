@@ -25,7 +25,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 
 
@@ -80,35 +79,47 @@ public class AnnoyingDownload {
      */
     private void attemptDownload(@NotNull AnnoyingDependency dependency) {
         final String name = dependency.name;
-        final Map<PluginPlatform, String> platforms = dependency.platforms;
+        final PluginPlatform.Multi platforms = dependency.platforms;
         
         // Modrinth
-        if (platforms.containsKey(PluginPlatform.MODRINTH)) {
-            modrinth(dependency);
+        final String modrinth = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
+        if (modrinth != null) {
+            modrinth(dependency, modrinth);
+            return;
+        }
+
+        // Hangar
+        final PluginPlatform hangar = platforms.get(PluginPlatform.Platform.HANGAR);
+        if (hangar != null) {
+            hangar(dependency, hangar);
             return;
         }
 
         // Spigot
-        if (platforms.containsKey(PluginPlatform.SPIGOT)) {
-            spigot(dependency);
+        final String spigot = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
+        if (spigot != null) {
+            spigot(dependency, spigot);
             return;
         }
 
         // Bukkit
-        if (platforms.containsKey(PluginPlatform.BUKKIT)) {
-            downloadFile(dependency, PluginPlatform.BUKKIT, "https://dev.bukkit.org/projects/" + platforms.get(PluginPlatform.BUKKIT) + "/files/latest");
+        final String bukkit = platforms.getIdentifier(PluginPlatform.Platform.BUKKIT);
+        if (bukkit != null) {
+            downloadFile(dependency, PluginPlatform.Platform.BUKKIT, "https://dev.bukkit.org/projects/" + bukkit + "/files/latest");
             return;
         }
 
         // External
-        if (platforms.containsKey(PluginPlatform.EXTERNAL)) {
-            downloadFile(dependency, PluginPlatform.EXTERNAL, platforms.get(PluginPlatform.EXTERNAL));
+        final String external = platforms.getIdentifier(PluginPlatform.Platform.EXTERNAL);
+        if (external != null) {
+            downloadFile(dependency, PluginPlatform.Platform.EXTERNAL, external);
             return;
         }
 
         // Manual
-        if (platforms.containsKey(PluginPlatform.MANUAL)) {
-            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + platforms.get(PluginPlatform.MANUAL));
+        final String manual = platforms.getIdentifier(PluginPlatform.Platform.MANUAL);
+        if (manual != null) {
+            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual);
             finish(dependency, false);
             return;
         }
@@ -121,39 +132,74 @@ public class AnnoyingDownload {
     /**
      * Downloads the plugin from Modrinth using their Labrinth API
      * <p>This will download the appropriate Minecraft version of the plugin
+     *
+     * @param   dependency  the {@link AnnoyingDependency} to download
+     * @param   identifier  the identifier of the plugin on Modrinth
      */
-    private void modrinth(@NotNull AnnoyingDependency dependency) {
-        final String[] version = Bukkit.getBukkitVersion().split("\\.");
-        final String url = "https://api.modrinth.com/v2/project/" + dependency.platforms.get(PluginPlatform.MODRINTH) + "/version" +
-                "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                "&game_versions=%5B%22" + version[0] + "." + version[1] + "." + version[2].split("-")[0] + "%22%5D";
-        final JsonElement json = AnnoyingUtility.getJson(userAgent, url);
+    private void modrinth(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
+        final JsonElement json = AnnoyingUtility.getJson(userAgent,
+                "https://api.modrinth.com/v2/project/" + identifier + "/version" +
+                        "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
+                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
 
         // Request failed
         if (json == null) {
-            dependency.platforms.remove(PluginPlatform.MODRINTH);
+            dependency.platforms.remove(PluginPlatform.Platform.MODRINTH);
             attemptDownload(dependency);
             return;
         }
 
         // Download file
-        downloadFile(dependency, PluginPlatform.MODRINTH, json.getAsJsonArray().get(0).getAsJsonObject()
+        downloadFile(dependency, PluginPlatform.Platform.MODRINTH, json.getAsJsonArray().get(0).getAsJsonObject()
                 .getAsJsonArray("files").get(0).getAsJsonObject()
                 .get("url").getAsString());
     }
 
     /**
+     * Downloads the plugin from Spigot using their API
+     * <p>This will download the appropriate Minecraft version of the plugin
+     *
+     * @param   dependency  the {@link AnnoyingDependency} to download
+     * @param   platform    the {@link PluginPlatform} containing the plugin information
+     */
+    private void hangar(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform platform) {
+        final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
+
+        final JsonElement latestJson = AnnoyingUtility.getJson(userAgent, url + "latestrelease");
+        // Request failed
+        if (latestJson == null) {
+            dependency.platforms.remove(platform.platform);
+            attemptDownload(dependency);
+            return;
+        }
+
+        final JsonElement downloadJson = AnnoyingUtility.getJson(userAgent, url + "versions/" + latestJson.getAsString() + "/PAPER/download");
+        // Request failed
+        if (downloadJson == null) {
+            dependency.platforms.remove(platform.platform);
+            attemptDownload(dependency);
+            return;
+        }
+
+        // Download file
+        downloadFile(dependency, platform.platform, downloadJson.getAsString());
+    }
+
+    /**
      * Downloads the plugin from Spigot using Spiget API
      * <p>This will check if the plugin is premium and/or external before attempting to download
+     *
+     * @param   dependency  the {@link AnnoyingDependency} to download
+     * @param   identifier  the identifier of the plugin on Spigot
      */
-    private void spigot(@NotNull AnnoyingDependency dependency) {
-        final Map<PluginPlatform, String> platforms = dependency.platforms;
-        final String url = "https://api.spiget.org/v2/resources/" + platforms.get(PluginPlatform.SPIGOT);
+    private void spigot(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
+        final PluginPlatform.Multi platforms = dependency.platforms;
+        final String url = "https://api.spiget.org/v2/resources/" + identifier;
         final JsonElement json = AnnoyingUtility.getJson(userAgent, url);
 
         // Request failed
         if (json == null) {
-            platforms.remove(PluginPlatform.SPIGOT);
+            platforms.remove(PluginPlatform.Platform.SPIGOT);
             attemptDownload(dependency);
             return;
         }
@@ -161,23 +207,23 @@ public class AnnoyingDownload {
 
         // Resource is premium
         if (object.get("premium").getAsBoolean()) {
-            platforms.remove(PluginPlatform.SPIGOT);
+            platforms.remove(PluginPlatform.Platform.SPIGOT);
             attemptDownload(dependency);
             return;
         }
 
         // Resource is external
         if (object.get("external").getAsBoolean()) {
-            platforms.remove(PluginPlatform.SPIGOT);
+            platforms.remove(PluginPlatform.Platform.SPIGOT);
 
             // Get external URL and set new platform
             final String externalUrl = object
                     .get("file").getAsJsonObject()
                     .get("externalUrl").getAsString();
             if (externalUrl.endsWith(".jar")) {
-                platforms.putIfAbsent(PluginPlatform.EXTERNAL, externalUrl);
+                platforms.putIfAbsent(PluginPlatform.external(externalUrl));
             } else {
-                platforms.putIfAbsent(PluginPlatform.MANUAL, externalUrl);
+                platforms.putIfAbsent(PluginPlatform.manual(externalUrl));
             }
 
             // Retry download
@@ -186,16 +232,17 @@ public class AnnoyingDownload {
         }
 
         // Download file
-        downloadFile(dependency, PluginPlatform.SPIGOT,  url + "/download");
+        downloadFile(dependency, PluginPlatform.Platform.SPIGOT,  url + "/download");
     }
 
     /**
      * Downloads a file from a URL
      *
+     * @param   dependency  the {@link AnnoyingDependency} to download
      * @param   platform    the platform of the URL
      * @param   urlString   the URL of the file
      */
-    private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform platform, @NotNull String urlString) {
+    private void downloadFile(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform.Platform platform, @NotNull String urlString) {
         // Get URL connection
         final HttpURLConnection connection;
         try {

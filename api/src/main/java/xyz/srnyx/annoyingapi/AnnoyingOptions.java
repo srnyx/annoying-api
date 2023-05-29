@@ -9,7 +9,10 @@ import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 
@@ -126,7 +129,7 @@ public class AnnoyingOptions {
      * <i>{@code RECOMMENDED}</i> The different {@link PluginPlatform platforms} the plugin is available on
      * <p>If not specified, the plugin will not be able to check for updates
      */
-    @NotNull public Map<PluginPlatform, String> updatePlatforms = new EnumMap<>(PluginPlatform.class);
+    @NotNull public Set<PluginPlatform> updatePlatforms = new HashSet<>();
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance
