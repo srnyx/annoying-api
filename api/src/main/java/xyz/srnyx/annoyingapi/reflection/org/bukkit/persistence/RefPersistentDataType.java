@@ -12,7 +12,7 @@ public class RefPersistentDataType {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataType
      */
-    @Nullable public static final Class<?> PERSISTENT_DATA_TYPE_CLASS = ReflectionUtility.getClass(10140, "org.bukkit.persistence.PersistentDataType");
+    @Nullable public static final Class<?> PERSISTENT_DATA_TYPE_CLASS = ReflectionUtility.getClass(10140, RefPersistentDataType.class);
 
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataType#STRING

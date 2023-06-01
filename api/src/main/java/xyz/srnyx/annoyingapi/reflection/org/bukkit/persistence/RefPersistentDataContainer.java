@@ -15,7 +15,7 @@ public class RefPersistentDataContainer {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer
      */
-    @Nullable public static final Class<?> PERSISTENT_DATA_CONTAINER_CLASS = ReflectionUtility.getClass(10140, "org.bukkit.persistence.PersistentDataContainer");
+    @Nullable public static final Class<?> PERSISTENT_DATA_CONTAINER_CLASS = ReflectionUtility.getClass(10140, RefPersistentDataContainer.class);
 
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#get(org.bukkit.NamespacedKey, org.bukkit.persistence.PersistentDataType)

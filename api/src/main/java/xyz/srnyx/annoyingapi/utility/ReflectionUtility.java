@@ -35,6 +35,20 @@ public class ReflectionUtility {
     }
 
     /**
+     * Returns a {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   reflectionClass the reflection class
+     *
+     * @return                  the class if the version is greater than or equal to the minimum version, otherwise null
+     */
+    @Nullable
+    public static Class<?> getClass(int minimumVersion, @NotNull Class<?> reflectionClass) {
+        final String className = getClassName(reflectionClass);
+        return className == null ? null : getClass(minimumVersion, className);
+    }
+
+    /**
      * Returns an {@link Enum} {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   minimumVersion  the minimum version
@@ -51,6 +65,53 @@ public class ReflectionUtility {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * Returns an {@link Enum} {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   reflectionClass the reflection class
+     *
+     * @return                  the enum if the version is greater than or equal to the minimum version, otherwise null
+     */
+    @Nullable
+    public static Class<? extends Enum> getEnum(int minimumVersion, @NotNull Class<?> reflectionClass) {
+        final String enumClassName = getClassName(reflectionClass);
+        return enumClassName == null ? null : getEnum(minimumVersion, enumClassName);
+    }
+
+    /**
+     * Returns an array {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   className       the class name
+     *
+     * @return                  the array class if the version is greater than or equal to the minimum version, otherwise null
+     */
+    @Nullable
+    public static Class<?> getClassArray(int minimumVersion, @NotNull String className) {
+        if (checkVersion(minimumVersion)) return null;
+        try {
+            return Class.forName("[L" + className + ";");
+        } catch (final ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Returns an array {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     *
+     * @param   minimumVersion  the minimum version
+     * @param   reflectionClass the reflection class
+     *
+     * @return                  the array class if the version is greater than or equal to the minimum version, otherwise null
+     */
+    @Nullable
+    public static Class<?> getClassArray(int minimumVersion, @NotNull Class<?> reflectionClass) {
+        final String className = getClassName(reflectionClass);
+        return className == null ? null : getClassArray(minimumVersion, className);
     }
 
     /**
@@ -170,6 +231,20 @@ public class ReflectionUtility {
      */
     private static boolean checkVersion(int minimumVersion) {
     	return AnnoyingPlugin.MINECRAFT_VERSION.value < minimumVersion;
+    }
+
+    /**
+     * Gets the reflection class name from a reflected class (must be in the {@code reflection} package)
+     * <p><b>Example:</b> {@code xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey} -> {@code org.bukkit.NamespacedKey}</p>
+     *
+     * @param   reflectedClass  the reflected class
+     *
+     * @return                  the extracted class name if the class is in the {@code reflection} package, otherwise null
+     */
+    @Nullable
+    private static String getClassName(@NotNull Class<?> reflectedClass) {
+        final String[] split = reflectedClass.getName().split("\\.reflection\\.");
+        return split.length == 1 ? null : split[1].replace("Ref", "");
     }
 
     /**

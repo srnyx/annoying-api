@@ -17,7 +17,7 @@ public class RefAttributeModifier {
     /**
      * 1.9+ org.bukkit.attribute.AttributeModifier
      */
-    @Nullable public static final Class<?> ATTRIBUTE_MODIFIER_CLASS = ReflectionUtility.getClass(10090, "org.bukkit.attribute.AttributeModifier");
+    @Nullable public static final Class<?> ATTRIBUTE_MODIFIER_CLASS = ReflectionUtility.getClass(10090, RefAttributeModifier.class);
 
     /**
      * 1.9+ org.bukkit.attribute.AttributeModifier(String, double, org.bukkit.attribute.AttributeModifier.Operation)
@@ -41,13 +41,11 @@ public class RefAttributeModifier {
     /**
      * org.bukkit.attribute.AttributeModifier.Operation
      */
-    public enum RefOperation {
-        ;
-
+    public enum RefOperation {;
         /**
          * 1.9+ org.bukkit.attribute.AttributeModifier.Operation
          */
         @SuppressWarnings("rawtypes")
-        @Nullable public static final Class<? extends Enum> ATTRIBUTE_MODIFIER_OPERATION_ENUM = ReflectionUtility.getEnum(10090, "org.bukkit.attribute.AttributeModifier$Operation");
+        @Nullable public static final Class<? extends Enum> ATTRIBUTE_MODIFIER_OPERATION_ENUM = ReflectionUtility.getEnum(10090, RefOperation.class);
     }
 }

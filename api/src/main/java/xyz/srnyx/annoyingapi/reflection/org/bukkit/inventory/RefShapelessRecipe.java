@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory;
 
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapelessRecipe;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,9 +16,9 @@ import java.lang.reflect.Constructor;
  */
 public class RefShapelessRecipe {
     /**
-     * 1.12+ org.bukkit.inventory.ShapelessRecipe(org.bukkit.NamespacedKey, ItemStack)
+     * 1.12+ org.bukkit.inventory.ShapelessRecipe(org.bukkit.NamespacedKey, org.bukkit.inventory.ItemStack)
      */
-    @Nullable public static final Constructor<org.bukkit.inventory.ShapelessRecipe> SHAPELESS_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(10120, org.bukkit.inventory.ShapelessRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
+    @Nullable public static final Constructor<ShapelessRecipe> SHAPELESS_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(10120, ShapelessRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
 
     /**
      * This class cannot be instantiated

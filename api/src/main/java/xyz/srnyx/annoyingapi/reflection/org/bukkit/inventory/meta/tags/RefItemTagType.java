@@ -12,7 +12,7 @@ public class RefItemTagType {
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.ItemTagType
      */
-    @Nullable public static final Class<?> ITEM_TAG_TYPE_CLASS = ReflectionUtility.getClass(10132, "org.bukkit.inventory.meta.tags.ItemTagType");
+    @Nullable public static final Class<?> ITEM_TAG_TYPE_CLASS = ReflectionUtility.getClass(10132, RefItemTagType.class);
 
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.ItemTagType#STRING

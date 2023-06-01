@@ -15,7 +15,7 @@ public class RefCustomItemTagContainer {
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.CustomItemTagContainer
      */
-    @Nullable public static final Class<?> CUSTOM_ITEM_TAG_CONTAINER_CLASS = ReflectionUtility.getClass(10132, "org.bukkit.inventory.meta.tags.CustomItemTagContainer");
+    @Nullable public static final Class<?> CUSTOM_ITEM_TAG_CONTAINER_CLASS = ReflectionUtility.getClass(10132, RefCustomItemTagContainer.class);
 
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.CustomItemTagContainer#getCustomTag(org.bukkit.NamespacedKey, org.bukkit.inventory.meta.tags.ItemTagType)

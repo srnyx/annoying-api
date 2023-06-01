@@ -16,7 +16,7 @@ public class RefNamespacedKey {
     /**
      * 1.12+ org.bukkit.NamespacedKey
      */
-    @Nullable public static final Class<?> NAMESPACED_KEY_CLASS = ReflectionUtility.getClass(10120, "org.bukkit.NamespacedKey");
+    @Nullable public static final Class<?> NAMESPACED_KEY_CLASS = ReflectionUtility.getClass(10120, RefNamespacedKey.class);
 
     /**
      * 1.12+ org.bukkit.NamespacedKey#constructor(org.bukkit.plugin.Plugin, String)

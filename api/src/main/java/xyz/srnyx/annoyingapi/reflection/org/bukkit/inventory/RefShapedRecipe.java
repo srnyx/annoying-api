@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory;
 
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -15,9 +16,9 @@ import java.lang.reflect.Constructor;
  */
 public class RefShapedRecipe {
     /**
-     * 1.12+ org.bukkit.inventory.ShapedRecipe(org.bukkit.NamespacedKey, ItemStack)
+     * 1.12+ org.bukkit.inventory.ShapedRecipe(org.bukkit.NamespacedKey, org.bukkit.inventory.ItemStack)
      */
-    @Nullable public static final Constructor<org.bukkit.inventory.ShapedRecipe> SHAPED_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(10120, org.bukkit.inventory.ShapedRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
+    @Nullable public static final Constructor<ShapedRecipe> SHAPED_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(10120, ShapedRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
 
     /**
      * This class cannot be instantiated
