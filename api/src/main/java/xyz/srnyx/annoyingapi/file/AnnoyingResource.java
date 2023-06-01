@@ -60,7 +60,7 @@ public class AnnoyingResource extends AnnoyingFile {
     /**
      * Represents the options for the {@link AnnoyingResource}
      */
-    public static class ResourceOptions extends AnnoyingFile.FileOptions {
+    public static class ResourceOptions extends AnnoyingFile.FileOptions<ResourceOptions> {
         /**
          * Whether to create an up-to-date default file called {@code default_}{@link File#getName() name}
          */

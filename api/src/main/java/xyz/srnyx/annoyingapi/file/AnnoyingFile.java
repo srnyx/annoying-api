@@ -56,7 +56,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     /**
      * The {@link FileOptions} for the file
      */
-    @NotNull protected final FileOptions fileOptions;
+    @NotNull protected final FileOptions<?> fileOptions;
 
     /**
      * Constructs a new {@link AnnoyingFile}
@@ -65,11 +65,11 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   path            {@link #path}
      * @param   fileOptions     {@link #fileOptions}
      */
-    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable FileOptions fileOptions) {
+    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable FileOptions<?> fileOptions) {
         this.plugin = plugin;
         this.path = path;
         this.file = new File(plugin.getDataFolder(), path);
-        this.fileOptions = fileOptions == null ? new FileOptions() : fileOptions;
+        this.fileOptions = fileOptions == null ? new FileOptions<>() : fileOptions;
         load();
     }
 
@@ -475,7 +475,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     /**
      * A class to hold the options for a file
      */
-    public static class FileOptions {
+    public static class FileOptions<T extends FileOptions<T>> {
         /**
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
@@ -496,9 +496,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
          * @return              the {@link FileOptions} instance
          */
         @NotNull
-        public FileOptions canBeEmpty(boolean canBeEmpty) {
+        public T canBeEmpty(boolean canBeEmpty) {
             this.canBeEmpty = canBeEmpty;
-            return this;
+            return (T) this;
         }
     }
 }
