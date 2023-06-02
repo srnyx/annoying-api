@@ -1,10 +1,13 @@
 package xyz.srnyx.annoyingapi.utility;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -242,6 +245,20 @@ public class ReflectionUtility {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * Returns a new array of the specified class with the specified length
+     *
+     * @param   clazz   the class of the array
+     * @param   length  the length of the array
+     *
+     * @return          the new array or null if the class is null/Void
+     */
+    @Nullable @Contract("null, _ -> null")
+    public static Object createArray(@Nullable Class<?> clazz, @Range(from = 0, to = Integer.MAX_VALUE) int length) {
+        if (clazz == null || clazz == void.class) return null;
+        return Array.newInstance(clazz, length);
     }
 
     /**
