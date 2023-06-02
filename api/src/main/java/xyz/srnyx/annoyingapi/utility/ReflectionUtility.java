@@ -254,7 +254,7 @@ public class ReflectionUtility {
      * @return          true if the version is less than the minimum version, otherwise false
      */
     private static boolean checkVersion(int major, int minor, int patch) {
-    	return AnnoyingPlugin.MINECRAFT_VERSION.isLessOrEqualThan(major, minor, patch);
+    	return AnnoyingPlugin.MINECRAFT_VERSION.isLessThanOrEqualTo(major, minor, patch);
     }
 
     /**

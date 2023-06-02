@@ -125,7 +125,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
      *
      * @return          {@code true} if the version is greater or equal than the provided version, otherwise {@code false}
      */
-    public boolean isGreaterOrEqualThan(@NotNull SemanticVersion other) {
+    public boolean isGreaterThanOrEqualTo(@NotNull SemanticVersion other) {
         return compareTo(other) >= 0;
     }
 
@@ -138,7 +138,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
      *
      * @return          {@code true} if the version is greater or equal than the provided version, otherwise {@code false}
      */
-    public boolean isGreaterOrEqualThan(@Nullable Integer major, @Nullable Integer minor, @Nullable Integer patch) {
+    public boolean isGreaterThanOrEqualTo(@Nullable Integer major, @Nullable Integer minor, @Nullable Integer patch) {
         return compareTo(major, minor, patch) >= 0;
     }
 
@@ -173,7 +173,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
      *
      * @return          {@code true} if the version is less or equal than the provided version, otherwise {@code false}
      */
-    public boolean isLessOrEqualThan(@NotNull SemanticVersion other) {
+    public boolean isLessThanOrEqualTo(@NotNull SemanticVersion other) {
         return compareTo(other) <= 0;
     }
 
@@ -186,7 +186,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
      *
      * @return          {@code true} if the version is less or equal than the provided version, otherwise {@code false}
      */
-    public boolean isLessOrEqualThan(@Nullable Integer major, @Nullable Integer minor, @Nullable Integer patch) {
+    public boolean isLessThanOrEqualTo(@Nullable Integer major, @Nullable Integer minor, @Nullable Integer patch) {
         return compareTo(major, minor, patch) <= 0;
     }
 }
