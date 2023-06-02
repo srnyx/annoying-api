@@ -36,3 +36,9 @@ recipe:
     custom-model-data: 4508
     data:
       config: true
+
+sound:
+  sound: ENTITY_GENERIC_EXPLODE
+  category: BLOCKS
+  volume: 0.5
+  pitch: 1.5

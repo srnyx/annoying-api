@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.file.PlayableSound;
 
 
 /**
@@ -23,6 +24,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
      * Example item generated from the {@code config.yml} file
      */
     @Nullable public ItemStack item;
+    @Nullable public PlayableSound sound;
 
     /**
      * Constructor for the {@link ExamplePlugin} class
@@ -55,6 +57,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         this.item = config.getItemStack("recipe.result");
         final Recipe recipe = config.getRecipe("recipe", null);
         if (recipe != null) Bukkit.addRecipe(recipe);
+        this.sound = config.getPlayableSound("sound");
 
         // Data example
         final AnnoyingData data = new AnnoyingData(this, "data.yml");

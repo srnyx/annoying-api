@@ -71,6 +71,7 @@ public class ExampleListener implements AnnoyingListener {
                 .replace("%player%", player.getName())
                 .replace("%durability%", maxDurability - item.getDurability() - 1 + "/" + maxDurability)
                 .broadcast(AnnoyingMessage.BroadcastType.ACTIONBAR);
+        if (plugin.sound != null) plugin.sound.play(event.getPlayer());
     }
 
     /**
