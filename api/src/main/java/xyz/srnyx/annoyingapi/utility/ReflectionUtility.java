@@ -242,7 +242,6 @@ public class ReflectionUtility {
         try {
             return (T) Enum.valueOf(enumClass, enumName);
         } catch (final IllegalArgumentException e) {
-            e.printStackTrace();
             return null;
         }
     }
