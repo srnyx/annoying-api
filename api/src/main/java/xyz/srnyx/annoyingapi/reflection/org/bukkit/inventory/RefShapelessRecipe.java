@@ -18,7 +18,7 @@ public class RefShapelessRecipe {
     /**
      * 1.12+ org.bukkit.inventory.ShapelessRecipe(org.bukkit.NamespacedKey, org.bukkit.inventory.ItemStack)
      */
-    @Nullable public static final Constructor<ShapelessRecipe> SHAPELESS_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(10120, ShapelessRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
+    @Nullable public static final Constructor<ShapelessRecipe> SHAPELESS_RECIPE_CONSTRUCTOR = ReflectionUtility.getConstructor(1, 12, 0, ShapelessRecipe.class, RefNamespacedKey.NAMESPACED_KEY_CLASS, ItemStack.class);
 
     /**
      * This class cannot be instantiated

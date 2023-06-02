@@ -14,12 +14,12 @@ public class RefDamageable {
     /**
      * 1.13+ org.bukkit.inventory.meta.Damageable
      */
-    @Nullable public static final Class<?> DAMAGEABLE_CLASS = ReflectionUtility.getClass(10130, RefDamageable.class);
+    @Nullable public static final Class<?> DAMAGEABLE_CLASS = ReflectionUtility.getClass(1, 13, 0, RefDamageable.class);
 
     /**
      * 1.13+ org.bukkit.inventory.meta.Damageable#setDamage(int)
      */
-    @Nullable public static final Method DAMAGEABLE_SET_DAMAGE_METHOD = ReflectionUtility.getMethod(10130, DAMAGEABLE_CLASS, "setDamage", int.class);
+    @Nullable public static final Method DAMAGEABLE_SET_DAMAGE_METHOD = ReflectionUtility.getMethod(1, 13, 0, DAMAGEABLE_CLASS, "setDamage", int.class);
 
     /**
      * This class cannot be instantiated

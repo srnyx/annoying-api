@@ -12,12 +12,12 @@ public class RefPersistentDataType {
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataType
      */
-    @Nullable public static final Class<?> PERSISTENT_DATA_TYPE_CLASS = ReflectionUtility.getClass(10140, RefPersistentDataType.class);
+    @Nullable public static final Class<?> PERSISTENT_DATA_TYPE_CLASS = ReflectionUtility.getClass(1, 14, 0, RefPersistentDataType.class);
 
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataType#STRING
      */
-    @Nullable public static final Object PERSISTENT_DATA_TYPE_STRING = ReflectionUtility.getStaticFieldValue(10140, PERSISTENT_DATA_TYPE_CLASS, "STRING");
+    @Nullable public static final Object PERSISTENT_DATA_TYPE_STRING = ReflectionUtility.getStaticFieldValue(1, 14, 0, PERSISTENT_DATA_TYPE_CLASS, "STRING");
 
     /**
      * This class cannot be instantiated

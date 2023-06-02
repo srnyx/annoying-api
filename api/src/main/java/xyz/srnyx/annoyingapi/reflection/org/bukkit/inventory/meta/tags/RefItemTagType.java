@@ -12,12 +12,12 @@ public class RefItemTagType {
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.ItemTagType
      */
-    @Nullable public static final Class<?> ITEM_TAG_TYPE_CLASS = ReflectionUtility.getClass(10132, RefItemTagType.class);
+    @Nullable public static final Class<?> ITEM_TAG_TYPE_CLASS = ReflectionUtility.getClass(1, 13, 2, RefItemTagType.class);
 
     /**
      * 1.13.2+ org.bukkit.inventory.meta.tags.ItemTagType#STRING
      */
-    @Nullable public static final Object ITEM_TAG_TYPE_STRING = ReflectionUtility.getStaticFieldValue(10132, ITEM_TAG_TYPE_CLASS, "STRING");
+    @Nullable public static final Object ITEM_TAG_TYPE_STRING = ReflectionUtility.getStaticFieldValue(1, 13, 2, ITEM_TAG_TYPE_CLASS, "STRING");
 
     /**
      * This class cannot be instantiated

@@ -38,7 +38,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The Minecraft version the server is running
      */
-    @NotNull public static final MinecraftVersion MINECRAFT_VERSION = new MinecraftVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
+    @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
 
     /**
      * The API options for the plugin

@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi.file;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,8 +14,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
+import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -164,20 +167,93 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link Sound} from the path
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the {@link Sound} or {@code null} if it doesn't exist
+     */
+    @Nullable
+    public Sound getSound(@NotNull String path) {
+        final Object def = getDefault(path);
+        return getSound(path, def instanceof Sound ? (Sound) def : null);
+    }
+
+    /**
+     * Gets a {@link Sound} from the path
+     *
+     * @param   path    the path to the node
+     * @param   def     the default value
+     *
+     * @return          the {@link Sound} or {@code def} if it doesn't exist
+     */
+    @Nullable
+    public Sound getSound(@NotNull String path, @Nullable Sound def) {
+        try {
+            return Sound.valueOf(getString(path));
+        } catch (final IllegalArgumentException e) {
+            return def;
+        }
+    }
+
+    /**
+     * Gets a {@link PlayableSound} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the {@link PlayableSound} or {@code null} if it's invalid
+     */
+    @Nullable
+    public PlayableSound getPlayableSound(@NotNull String path) {
+        final Object def = getDefault(path);
+        return getPlayableSound(path, def instanceof PlayableSound ? (PlayableSound) def : null);
+    }
+
+    /**
+     * Gets a {@link PlayableSound} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     * @param   def     the default value
+     *
+     * @return          the {@link PlayableSound} or {@code def} if it's invalid
+     */
+    @Nullable
+    public PlayableSound getPlayableSound(@NotNull String path, @Nullable PlayableSound def) {
+        final Sound sound = getSound(path + ".sound");
+        if (sound == null) return def;
+        final ConfigurationSection section = getConfigurationSection(path);
+        if (section == null) return def;
+
+        // Get category
+        Object category = null;
+        final String categoryString = section.getString("category");
+        try {
+            category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
+        } catch (final IllegalArgumentException e) {
+            log(Level.WARNING, path, "Invalid sound category: " + categoryString);
+        }
+
+        // Return SoundData
+        return new PlayableSound(sound, category, (float) section.getDouble("volume"), (float) section.getDouble("pitch"));
+    }
+
+    /**
+     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
      * @return          the {@code AttributeModifier} or {@code null} if it's invalid
+     *
+     * @param   <T>     the {@code AttributeModifier} class
      */
     @Nullable
-    public Object getAttributeModifier(@NotNull String path) {
+    public <T> T getAttributeModifier(@NotNull String path) {
         final Object def = getDefault(path);
-        return getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? def : null);
+        return (T) getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? ATTRIBUTE_MODIFIER_CLASS.cast(def) : null);
     }
 
     /**
-     * Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -277,7 +353,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final int damage = section.getInt("damage", 0);
 
         // Material, amount, and durability (1.12.2-)
-        final ItemStack item = AnnoyingPlugin.MINECRAFT_VERSION.value >= 10130 ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
+        final ItemStack item = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
 
         // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
         final ItemMeta meta = item.getItemMeta();

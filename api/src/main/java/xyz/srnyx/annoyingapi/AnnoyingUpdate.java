@@ -185,7 +185,7 @@ public class AnnoyingUpdate {
     }
 
     /**
-     * Class for handling versions (only supports numbers [letters/words will be ignored]) to allow for easy comparison. For Minecraft versions use {@link MinecraftVersion} instead!
+     * Class for handling versions (only supports numbers [letters/words will be ignored]) to allow for easy comparison. For Minecraft versions use {@link SemanticVersion} instead!
      * <p><b>This will work best if the version is in <a href="https://semver.org">semantic format</a></b>
      */
     private static class Version {

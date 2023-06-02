@@ -18,14 +18,16 @@ public class ReflectionUtility {
     /**
      * Returns a {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
-     * @param   className       the class name
+     * @param   major       the major version of the minimum version
+     * @param   minor       the minor version of the minimum version
+     * @param   patch       the patch version of the minimum version
+     * @param   className   the class name
      *
-     * @return                  the class if the version is greater than or equal to the minimum version, otherwise null
+     * @return              the class if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<?> getClass(int minimumVersion, @NotNull String className) {
-        if (checkVersion(minimumVersion)) return null;
+    public static Class<?> getClass(int major, int minor, int patch, @NotNull String className) {
+        if (checkVersion(major, minor, patch)) return null;
         try {
             return Class.forName(className);
         } catch (final ClassNotFoundException e) {
@@ -37,28 +39,32 @@ public class ReflectionUtility {
     /**
      * Returns a {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   reflectionClass the reflection class
      *
      * @return                  the class if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<?> getClass(int minimumVersion, @NotNull Class<?> reflectionClass) {
+    public static Class<?> getClass(int major, int minor, int patch, @NotNull Class<?> reflectionClass) {
         final String className = getClassName(reflectionClass);
-        return className == null ? null : getClass(minimumVersion, className);
+        return className == null ? null : getClass(major, minor, patch, className);
     }
 
     /**
      * Returns an {@link Enum} {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   enumClassName   the enum class name
      *
      * @return                  the enum if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<? extends Enum> getEnum(int minimumVersion, @NotNull String enumClassName) {
-        if (checkVersion(minimumVersion)) return null;
+    public static Class<? extends Enum> getEnum(int major, int minor, int patch, @NotNull String enumClassName) {
+        if (checkVersion(major, minor, patch)) return null;
         try {
             return (Class<? extends Enum>) Class.forName(enumClassName);
         } catch (final ClassNotFoundException e) {
@@ -70,28 +76,32 @@ public class ReflectionUtility {
     /**
      * Returns an {@link Enum} {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   reflectionClass the reflection class
      *
      * @return                  the enum if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<? extends Enum> getEnum(int minimumVersion, @NotNull Class<?> reflectionClass) {
+    public static Class<? extends Enum> getEnum(int major, int minor, int patch, @NotNull Class<?> reflectionClass) {
         final String enumClassName = getClassName(reflectionClass);
-        return enumClassName == null ? null : getEnum(minimumVersion, enumClassName);
+        return enumClassName == null ? null : getEnum(major, minor, patch, enumClassName);
     }
 
     /**
      * Returns an array {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
-     * @param   className       the class name
+     * @param   major       the major version of the minimum version
+     * @param   minor       the minor version of the minimum version
+     * @param   patch       the patch version of the minimum version
+     * @param   className   the class name
      *
-     * @return                  the array class if the version is greater than or equal to the minimum version, otherwise null
+     * @return              the array class if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<?> getClassArray(int minimumVersion, @NotNull String className) {
-        if (checkVersion(minimumVersion)) return null;
+    public static Class<?> getClassArray(int major, int minor, int patch, @NotNull String className) {
+        if (checkVersion(major, minor, patch)) return null;
         try {
             return Class.forName("[L" + className + ";");
         } catch (final ClassNotFoundException e) {
@@ -103,21 +113,25 @@ public class ReflectionUtility {
     /**
      * Returns an array {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   reflectionClass the reflection class
      *
      * @return                  the array class if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Class<?> getClassArray(int minimumVersion, @NotNull Class<?> reflectionClass) {
+    public static Class<?> getClassArray(int major, int minor, int patch, @NotNull Class<?> reflectionClass) {
         final String className = getClassName(reflectionClass);
-        return className == null ? null : getClassArray(minimumVersion, className);
+        return className == null ? null : getClassArray(major, minor, patch, className);
     }
 
     /**
      * Returns a {@link Constructor} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   clazz           the class to get the constructor from
      * @param   parameterTypes  the parameter types of the constructor
      *
@@ -126,8 +140,8 @@ public class ReflectionUtility {
      * @param   <T>             the type of the class
      */
     @Nullable
-    public static <T> Constructor<T> getConstructor(int minimumVersion, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
-        if (clazz == null || parameterTypes == null || checkVersion(minimumVersion)) return null;
+    public static <T> Constructor<T> getConstructor(int major, int minor, int patch, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
+        if (clazz == null || parameterTypes == null || checkVersion(major, minor, patch)) return null;
         try {
             return clazz.getConstructor(parameterTypes);
         } catch (final NoSuchMethodException e) {
@@ -139,7 +153,9 @@ public class ReflectionUtility {
     /**
      * Returns a {@link Method} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major           the major version of the minimum version
+     * @param   minor           the minor version of the minimum version
+     * @param   patch           the patch version of the minimum version
      * @param   clazz           the class to get the method from
      * @param   methodName      the name of the method
      * @param   parameterTypes  the parameter types of the method
@@ -149,8 +165,8 @@ public class ReflectionUtility {
      * @param   <T>             the type of the class
      */
     @Nullable
-    public static <T> Method getMethod(int minimumVersion, @Nullable Class<T> clazz, @NotNull String methodName, @Nullable Class<?>... parameterTypes) {
-        if (clazz == null || parameterTypes == null || checkVersion(minimumVersion)) return null;
+    public static <T> Method getMethod(int major, int minor, int patch, @Nullable Class<T> clazz, @NotNull String methodName, @Nullable Class<?>... parameterTypes) {
+        if (clazz == null || parameterTypes == null || checkVersion(major, minor, patch)) return null;
         try {
             return clazz.getMethod(methodName, parameterTypes);
         } catch (final NoSuchMethodException e) {
@@ -162,15 +178,17 @@ public class ReflectionUtility {
     /**
      * Returns a {@link Field} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
-     * @param   clazz           the class to get the field from
-     * @param   fieldName       the name of the field
+     * @param   major       the major version of the minimum version
+     * @param   minor       the minor version of the minimum version
+     * @param   patch       the patch version of the minimum version
+     * @param   clazz       the class to get the field from
+     * @param   fieldName   the name of the field
      *
-     * @return                  the field if the version is greater than or equal to the minimum version, otherwise null
+     * @return              the field if the version is greater than or equal to the minimum version, otherwise null
      */
     @Nullable
-    public static Field getField(int minimumVersion, @Nullable Class<?> clazz, @NotNull String fieldName) {
-        if (clazz == null || checkVersion(minimumVersion)) return null;
+    public static Field getField(int major, int minor, int patch, @Nullable Class<?> clazz, @NotNull String fieldName) {
+        if (clazz == null || checkVersion(major, minor, patch)) return null;
         try {
             return clazz.getField(fieldName);
         } catch (final NoSuchFieldException e) {
@@ -180,17 +198,19 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns the value of a <b>static</b> {@link Field} if the result of {@link #getField(int, Class, String)} is not null
+     * Returns the value of a <b>static</b> {@link Field} if the result of {@link #getField(int, int, int, Class, String)} is not null
      *
-     * @param   minimumVersion  the minimum version
-     * @param   clazz           the class to get the field from
-     * @param   fieldName       the name of the field
+     * @param   major       the major version of the minimum version
+     * @param   minor       the minor version of the minimum version
+     * @param   patch       the patch version of the minimum version
+     * @param   clazz       the class to get the field from
+     * @param   fieldName   the name of the field
      *
-     * @return                  the value of the field if the result of {@link #getField(int, Class, String)} is not null, otherwise null
+     * @return              the value of the field if the result of {@link #getField(int, int, int, Class, String)} is not null, otherwise null
      */
     @Nullable
-    public static Object getStaticFieldValue(int minimumVersion, @Nullable Class<?> clazz, @NotNull String fieldName) {
-        final Field field = getField(minimumVersion, clazz, fieldName);
+    public static Object getStaticFieldValue(int major, int minor, int patch, @Nullable Class<?> clazz, @NotNull String fieldName) {
+        final Field field = getField(major, minor, patch, clazz, fieldName);
         if (field == null) return null;
         try {
             return field.get(null);
@@ -203,17 +223,19 @@ public class ReflectionUtility {
     /**
      * Returns an {@link Enum} value if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
-     * @param   minimumVersion  the minimum version
-     * @param   enumClass       the enum class
-     * @param   enumName        the name of the enum
+     * @param   major       the major version of the minimum version
+     * @param   minor       the minor version of the minimum version
+     * @param   patch       the patch version of the minimum version
+     * @param   enumClass   the enum class
+     * @param   enumName    the name of the enum
      *
-     * @return                  the enum value if the version is greater than or equal to the minimum version, otherwise null
+     * @return              the enum value if the version is greater than or equal to the minimum version, otherwise null
      *
-     * @param   <T>             the type of the enum
+     * @param   <T>         the type of the enum
      */
     @Nullable
-    public static <T extends Enum> T getEnumValue(int minimumVersion, @Nullable Class<T> enumClass, @NotNull String enumName) {
-        if (enumClass == null || checkVersion(minimumVersion)) return null;
+    public static <T extends Enum> T getEnumValue(int major, int minor, int patch, @Nullable Class<T> enumClass, @NotNull String enumName) {
+        if (enumClass == null || checkVersion(major, minor, patch)) return null;
         try {
             return (T) Enum.valueOf(enumClass, enumName);
         } catch (final IllegalArgumentException e) {
@@ -225,12 +247,14 @@ public class ReflectionUtility {
     /**
      * Checks if {@link AnnoyingPlugin#MINECRAFT_VERSION} is less than the minimum version
      *
-     * @param   minimumVersion  the minimum version
+     * @param   major   the major version of the minimum version
+     * @param   minor   the minor version of the minimum version
+     * @param   patch   the patch version of the minimum version
      *
-     * @return                  true if the version is less than the minimum version, otherwise false
+     * @return          true if the version is less than the minimum version, otherwise false
      */
-    private static boolean checkVersion(int minimumVersion) {
-    	return AnnoyingPlugin.MINECRAFT_VERSION.value < minimumVersion;
+    private static boolean checkVersion(int major, int minor, int patch) {
+    	return AnnoyingPlugin.MINECRAFT_VERSION.isLessOrEqualThan(major, minor, patch);
     }
 
     /**

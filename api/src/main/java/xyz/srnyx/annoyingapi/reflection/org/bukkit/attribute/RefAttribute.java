@@ -13,5 +13,5 @@ public enum RefAttribute {;
      * 1.9+ org.bukkit.attribute.Attribute
      */
     @SuppressWarnings("rawtypes")
-    @Nullable public static final Class<? extends Enum> ATTRIBUTE_ENUM = ReflectionUtility.getEnum(10090, RefAttribute.class);
+    @Nullable public static final Class<? extends Enum> ATTRIBUTE_ENUM = ReflectionUtility.getEnum(1, 9, 0, RefAttribute.class);
 }

@@ -17,17 +17,17 @@ public class RefAttributeModifier {
     /**
      * 1.9+ org.bukkit.attribute.AttributeModifier
      */
-    @Nullable public static final Class<?> ATTRIBUTE_MODIFIER_CLASS = ReflectionUtility.getClass(10090, RefAttributeModifier.class);
+    @Nullable public static final Class<?> ATTRIBUTE_MODIFIER_CLASS = ReflectionUtility.getClass(1, 9, 0, RefAttributeModifier.class);
 
     /**
      * 1.9+ org.bukkit.attribute.AttributeModifier(String, double, org.bukkit.attribute.AttributeModifier.Operation)
      */
-    @Nullable public static final Constructor<?> ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 = ReflectionUtility.getConstructor(10090, ATTRIBUTE_MODIFIER_CLASS, String.class, double.class, RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM);
+    @Nullable public static final Constructor<?> ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 = ReflectionUtility.getConstructor(1, 9, 0, ATTRIBUTE_MODIFIER_CLASS, String.class, double.class, RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM);
 
     /**
      * 1.13.2+ org.bukkit.attribute.AttributeModifier(String, double, org.bukkit.attribute.AttributeModifier.Operation, org.bukkit.inventory.EquipmentSlot)
      */
-    @Nullable public static final Constructor<?> ATTRIBUTE_MODIFIER_CONSTRUCTOR_5 = ReflectionUtility.getConstructor(10132, ATTRIBUTE_MODIFIER_CLASS, UUID.class, String.class, double.class, RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM, EquipmentSlot.class);
+    @Nullable public static final Constructor<?> ATTRIBUTE_MODIFIER_CONSTRUCTOR_5 = ReflectionUtility.getConstructor(1, 13, 2, ATTRIBUTE_MODIFIER_CLASS, UUID.class, String.class, double.class, RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM, EquipmentSlot.class);
 
     /**
      * This class cannot be instantiated
@@ -46,6 +46,6 @@ public class RefAttributeModifier {
          * 1.9+ org.bukkit.attribute.AttributeModifier.Operation
          */
         @SuppressWarnings("rawtypes")
-        @Nullable public static final Class<? extends Enum> ATTRIBUTE_MODIFIER_OPERATION_ENUM = ReflectionUtility.getEnum(10090, RefOperation.class);
+        @Nullable public static final Class<? extends Enum> ATTRIBUTE_MODIFIER_OPERATION_ENUM = ReflectionUtility.getEnum(1, 9, 0, RefOperation.class);
     }
 }
