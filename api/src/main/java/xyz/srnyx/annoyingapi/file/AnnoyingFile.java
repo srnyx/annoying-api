@@ -189,8 +189,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      */
     @Nullable
     public Sound getSound(@NotNull String path, @Nullable Sound def) {
+        final String sound = getString(path);
+        if (sound == null) return def;
         try {
-            return Sound.valueOf(getString(path));
+            return Sound.valueOf(sound.toUpperCase());
         } catch (final IllegalArgumentException e) {
             return def;
         }
