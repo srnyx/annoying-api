@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -460,35 +461,62 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to get the recipe from
-     * @param   name    the name of the recipe (only used in 1.12+ for the {@code NamespacedKey})
      *
      * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
      */
     @Nullable
-    public Recipe getRecipe(@NotNull String path, @Nullable String name) {
-        final Object def = getDefault(path);
-        return getRecipe(path, name, def instanceof Recipe ? (Recipe) def : null);
+    public Recipe getRecipe(@NotNull String path) {
+        return getRecipe(path, null, null);
     }
 
     /**
      * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
-     * @param   path    the path to get the recipe from
-     * @param   name    the name of the recipe (only used in 1.12+ for the {@code NamespacedKey})
-     * @param   def     the default {@link Recipe} to return if the recipe doesn't exist / is invalid / something went wrong
+     * @param   path            the path to get the recipe from
+     * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
+     *
+     * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
+     */
+    @Nullable
+    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction) {
+        final Object def = getDefault(path);
+        return getRecipe(path, itemFunction, def instanceof Recipe ? (Recipe) def : null, null);
+    }
+
+    /**
+     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path            the path to get the recipe from
+     * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
+     * @param   def             the default {@link Recipe} to return if the recipe doesn't exist / is invalid / something went wrong
+     *
+     * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
+     */
+    @Nullable
+    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable Recipe def) {
+        return getRecipe(path, itemFunction, def, null);
+    }
+
+    /**
+     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path            the path to get the recipe from
+     * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
+     * @param   def             the default {@link Recipe} to return if the recipe doesn't exist / is invalid / something went wrong
+     * @param   name            the name of the recipe (only used in 1.12+ for the {@code NamespacedKey}), or {@code null} to use the node name
      *
      * @return          the {@link Recipe} or the {@code def} if it doesn't exist / is invalid / something went wrong
      */
     @Nullable
-    public Recipe getRecipe(@NotNull String path, @Nullable String name, @Nullable Recipe def) {
-        // Get section, shape, and ingredients
+    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable Recipe def, @Nullable String name) {
+        // section, shape, result, & ingredientMaterials
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
         final ConfigurationSection ingredients = section.getConfigurationSection("ingredients");
         final List<String> shape = section.getStringList("shape").stream()
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
-        final ItemStack result = getItemStack(path + ".result");
+        ItemStack result = getItemStack(path + ".result");
         if (ingredients == null || shape.isEmpty() || result == null) return def;
         final Map<Character, Material> ingredientMaterials = new HashMap<>();
         for (final Map.Entry<String, Object> entry : ingredients.getValues(false).entrySet()) {
@@ -501,6 +529,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);
         }
         if (ingredientMaterials.isEmpty()) return def;
+
+        // Apply itemFunction
+        if (itemFunction != null) result = itemFunction.apply(result);
 
         // Set name if null
         if (name == null) {
