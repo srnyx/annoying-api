@@ -451,7 +451,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Data
         final ItemDataUtility dataUtility = new ItemDataUtility(plugin, item);
         final ConfigurationSection dataSection = section.getConfigurationSection("data");
-        for (final String key : dataSection.getKeys(false)) dataUtility.set(key, dataSection.getString(key));
+        if (dataSection != null) for (final String key : dataSection.getKeys(false)) dataUtility.set(key, dataSection.getString(key));
 
         // Return
         return dataUtility.item;
