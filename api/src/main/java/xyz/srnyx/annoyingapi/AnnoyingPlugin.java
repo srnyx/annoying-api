@@ -254,7 +254,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message the message to log
      */
-    public void log(@Nullable Level level, @NotNull String message) {
+    public void log(@Nullable Level level, @Nullable String message) {
         if (level == null) level = Level.INFO;
         getLogger().log(level, AnnoyingUtility.color(message));
     }
