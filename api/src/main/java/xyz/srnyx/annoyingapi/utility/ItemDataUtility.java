@@ -91,8 +91,9 @@ public class ItemDataUtility {
      * @return          this {@link ItemDataUtility} instance
      */
     @NotNull
-    public ItemDataUtility set(@NotNull String key, @Nullable String value) {
+    public ItemDataUtility set(@NotNull String key, @Nullable Object value) {
         if (value == null) return remove(key); // Remove the value if it's null
+        final String string = value.toString();
 
         // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
@@ -101,7 +102,7 @@ public class ItemDataUtility {
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
-                PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
+                PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, string);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
@@ -112,7 +113,7 @@ public class ItemDataUtility {
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD != null) try {
-                CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, value);
+                CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, string);
                 item.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
@@ -124,7 +125,7 @@ public class ItemDataUtility {
 
         // 1.13.1- (NBT API)
         final NBTItem nbt = new NBTItem(item);
-        nbt.setString(key, value);
+        nbt.setString(key, string);
         item = nbt.getItem();
         return this;
     }
