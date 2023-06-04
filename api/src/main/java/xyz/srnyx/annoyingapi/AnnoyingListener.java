@@ -20,6 +20,15 @@ public interface AnnoyingListener extends Listener {
     AnnoyingPlugin getPlugin();
 
     /**
+     * Returns whether the listener is registered to the {@link #getPlugin()}
+     *
+     * @return  whether the listener is registered
+     */
+    default boolean isRegistered() {
+        return getPlugin().registeredListeners.contains(this);
+    }
+
+    /**
      * Registers the listener to the {@link #getPlugin()}
      */
     default void register() {
