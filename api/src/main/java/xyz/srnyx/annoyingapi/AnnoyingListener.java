@@ -29,9 +29,23 @@ public interface AnnoyingListener extends Listener {
     }
 
     /**
+     * Toggles the registration of the listener to the {@link #getPlugin()}
+     *
+     * @param   registered  whether the listener should be registered or unregistered
+     */
+    default void setRegistered(boolean registered) {
+        if (registered) {
+            register();
+            return;
+        }
+        unregister();
+    }
+
+    /**
      * Registers the listener to the {@link #getPlugin()}
      */
     default void register() {
+        if (isRegistered()) return;
         Bukkit.getPluginManager().registerEvents(this, getPlugin());
         getPlugin().registeredListeners.add(this);
     }
@@ -40,6 +54,7 @@ public interface AnnoyingListener extends Listener {
      * Unregisters the listener from the {@link #getPlugin()}
      */
     default void unregister() {
+        if (!isRegistered()) return;
         HandlerList.unregisterAll(this);
         getPlugin().registeredListeners.remove(this);
     }
