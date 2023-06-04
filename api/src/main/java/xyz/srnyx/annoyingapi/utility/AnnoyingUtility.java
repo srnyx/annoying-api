@@ -22,6 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -29,6 +30,8 @@ import java.util.stream.Collectors;
  * General utility methods for AnnoyingAPI
  */
 public class AnnoyingUtility {
+    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)&[0-9A-FK-OR]");
+
     /**
      * Translates {@code &} color codes to {@link ChatColor}
      *
@@ -55,6 +58,19 @@ public class AnnoyingUtility {
         return objects.stream()
                 .map(AnnoyingUtility::color)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Strips untranslated {@link ChatColor ChatColors} (using {@code &}) from a {@link String}
+     *
+     * @param   string  the {@link String} to strip
+     *
+     * @return          the stripped {@link String}
+     */
+    @NotNull
+    public static String stripUntranslatedColor(@Nullable String string) {
+        if (string == null) return "null";
+        return STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
     }
 
     /**

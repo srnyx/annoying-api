@@ -108,26 +108,18 @@ public class AnnoyingMessage {
         }
         replace("%command%", command.toString());
 
-        // Single component
+        // Get player, splitterJson, & section
         final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
         final String splitterJson = plugin.getMessagesString(plugin.options.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
+
+        // Single component
         if (section == null) {
             String string = messages.getString(key);
             if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesFileName + "&c!").build();
             for (final Replacement replacement : replacements) string = replacement.process(string);
             final String[] split = plugin.parsePapiPlaceholders(player, string).split(splitterJson, 3);
-
-            // Message
-            final String display = split[0];
-            if (split.length == 1) return json.append(display).build();
-
-            // Message with hover
-            final String hover = split[1];
-            if (split.length == 2) return json.append(display, hover).build();
-
-            // Message with hover and click
-            return json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, split[2]).build();
+            return json.append(split[0], extractHover(split), ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
         }
 
         // Multiple components
@@ -140,10 +132,16 @@ public class AnnoyingMessage {
             for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
 
             // Get component parts
-            final String[] split = AnnoyingUtility.color(plugin.parsePapiPlaceholders(player, subMessage)).split(splitterJson, 3);
+            final String[] split = plugin.parsePapiPlaceholders(player, subMessage).split(splitterJson, 3);
             final String display = split[0];
-            final String hover = split.length == 2 ? split[1] : null;
-            final String function = split.length == 3 ? split[2] : null;
+            final String hover = extractHover(split);
+            final String function = extractFunction(split);
+
+            // No function component
+            if (function == null) {
+                json.append(display, hover);
+                continue;
+            }
 
             // Prompt component
             if (subKey.startsWith("suggest")) {
@@ -288,32 +286,6 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Broadcasts the specified title and subtitle to all online players. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
-     *
-     * @param   title       the title to broadcast
-     * @param   subtitle    the subtitle to broadcast
-     * @param   fadeIn      the fade in time for the title
-     * @param   stay        the stay time for the title
-     * @param   fadeOut     the fade out time for the title
-     *
-     * @see                 #broadcast(BroadcastType, Integer, Integer, Integer)
-     * @see                 #broadcast(BroadcastType)
-     */
-    private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
-        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if (PLAYER_SEND_TITLE_METHOD != null) {
-            try {
-                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-        //noinspection deprecation
-        players.forEach(player -> player.sendTitle(title, subtitle));
-    }
-
-    /**
      * Sends the message to the specified {@link AnnoyingSender}
      *
      * @param   sender  the {@link AnnoyingSender} to send the message to
@@ -342,6 +314,58 @@ public class AnnoyingMessage {
      */
     public void send(@NotNull CommandSender sender) {
         send(new AnnoyingSender(plugin, sender));
+    }
+
+    /**
+     * Extracts the hover component from the specified {@link String} array. This will return {@code null} if the hover component is empty (stripped of color)
+     *
+     * @param   split   the {@link String} array to extract the hover component from
+     *
+     * @return          the hover component, or {@code null} if the hover component is empty
+     */
+    @Nullable
+    private String extractHover(String @NotNull [] split) {
+        final String hover = split.length >= 2 ? split[1] : null;
+        return hover != null && AnnoyingUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
+    }
+
+    /**
+     * Extracts the function from the specified {@link String} array. This will return {@code null} if the function is empty (stripped of color)
+     *
+     * @param   split   the {@link String} array to extract the function from
+     *
+     * @return          the function, or {@code null} if the function is empty
+     */
+    @Nullable
+    private String extractFunction(String @NotNull [] split) {
+        final String function = split.length >= 3 ? split[2] : null;
+        return function != null && AnnoyingUtility.stripUntranslatedColor(function).isEmpty() ? null : function;
+    }
+
+    /**
+     * Broadcasts the specified title and subtitle to all online players. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
+     *
+     * @param   title       the title to broadcast
+     * @param   subtitle    the subtitle to broadcast
+     * @param   fadeIn      the fade in time for the title
+     * @param   stay        the stay time for the title
+     * @param   fadeOut     the fade out time for the title
+     *
+     * @see                 #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see                 #broadcast(BroadcastType)
+     */
+    private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        if (PLAYER_SEND_TITLE_METHOD != null) {
+            try {
+                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+        //noinspection deprecation
+        players.forEach(player -> player.sendTitle(title, subtitle));
     }
 
     /**
@@ -377,18 +401,31 @@ public class AnnoyingMessage {
         /**
          * Input is used as the format for {@link AnnoyingUtility#formatMillis(long, String, boolean)}
          */
-        TIME("hh:ss", (input, value) -> AnnoyingUtility.formatMillis(Long.parseLong(value), input, false)),
+        TIME("hh:ss", (input, value) -> {
+            try {
+                return AnnoyingUtility.formatMillis(Long.parseLong(value), input, false);
+            } catch (final NumberFormatException e) {
+                return null;
+            }
+        }),
         /**
          * Input is used as the format for {@link AnnoyingUtility#formatNumber(Number, String)}
          */
-        NUMBER("#,###.##", (input, value) -> AnnoyingUtility.formatNumber(Double.parseDouble(value), input)),
+        NUMBER("#,###.##", (input, value) -> {
+            try {
+                return AnnoyingUtility.formatNumber(Double.parseDouble(value), input);
+            } catch (final NumberFormatException e) {
+                return null;
+            }
+        }),
         /**
          * Input is used to turn 'true' or 'false' into the specified value
          */
         BOOLEAN("true//false", (input, value) -> {
-            String[] split = input.split("//", 2);
-            if (split.length != 2) split = new String[]{"true", "false"};
-            return Boolean.parseBoolean(value) ? split[0] : split[1];
+            final String[] split = input.split("//", 2);
+            final boolean bool = Boolean.parseBoolean(value);
+            if (split.length != 2) return bool ? "true" : "false";
+            return bool ? split[0] : split[1];
         });
 
         /**
