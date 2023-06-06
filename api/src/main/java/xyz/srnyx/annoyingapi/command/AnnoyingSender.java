@@ -90,6 +90,7 @@ public class AnnoyingSender {
      * @return          {@code true} if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
      */
     public boolean argEquals(int index, @Nullable String... strings) {
+        if (args == null || args.length <= index) return false;
         final String arg = args[index];
         for (final String string : strings) if (arg.equalsIgnoreCase(string)) return true;
         return false;
