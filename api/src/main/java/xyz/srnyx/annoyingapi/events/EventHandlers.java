@@ -5,6 +5,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,6 +35,21 @@ public class EventHandlers implements AnnoyingListener {
     @NotNull
     public AnnoyingPlugin getPlugin() {
         return plugin;
+    }
+
+    /**
+     * Holds information for player movement events
+     *
+     * @param   event   the event
+     *
+     * @see             AnnoyingPlayerMoveEvent
+     */
+    @EventHandler
+    public void onPlayerMove(@NotNull PlayerMoveEvent event) {
+        final AnnoyingPlayerMoveEvent newEvent = new AnnoyingPlayerMoveEvent(event);
+        newEvent.setCancelled(event.isCancelled());
+        Bukkit.getPluginManager().callEvent(newEvent);
+        event.setCancelled(newEvent.isCancelled());
     }
 
     /**
