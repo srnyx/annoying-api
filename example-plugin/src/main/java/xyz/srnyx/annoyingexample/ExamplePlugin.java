@@ -21,9 +21,12 @@ import xyz.srnyx.annoyingapi.file.PlayableSound;
  */
 public class ExamplePlugin extends AnnoyingPlugin {
     /**
-     * Example item generated from the {@code config.yml} file
+     * Example {@link ItemStack item} generated from the {@code config.yml} file
      */
     @Nullable public ItemStack item;
+    /**
+     * Example {@link PlayableSound sound} generated from the {@code config.yml} file
+     */
     @Nullable public PlayableSound sound;
 
     /**

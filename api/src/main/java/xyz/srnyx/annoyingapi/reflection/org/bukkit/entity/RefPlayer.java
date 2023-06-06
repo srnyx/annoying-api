@@ -24,6 +24,9 @@ public class RefPlayer {
      */
     @Nullable public static final Method PLAYER_SEND_TITLE_METHOD = ReflectionUtility.getMethod(1, 11, 0, Player.class, "sendTitle", String.class, String.class, int.class, int.class, int.class);
 
+    /**
+     * 1.11+ org.bukkit.entity.Player#playSound(Location, Sound, SoundCategory, float, float)
+     */
     @Nullable public static final Method PLAYER_PLAY_SOUND_METHOD = ReflectionUtility.getMethod(1, 11, 0, Player.class, "playSound", Location.class, Sound.class, RefSoundCategory.SOUND_CATEGORY_ENUM, float.class, float.class);
 
     /**

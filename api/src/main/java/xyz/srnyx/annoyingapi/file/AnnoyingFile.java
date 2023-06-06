@@ -583,6 +583,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
     /**
      * A class to hold the options for a file
+     *
+     * @param   <T> the type of the {@link FileOptions} instance
      */
     public static class FileOptions<T extends FileOptions<T>> {
         /**
