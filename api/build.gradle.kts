@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    api("org.jetbrains", "annotations", "24.0.0")
+    compileOnlyApi("org.jetbrains", "annotations", "24.0.0")
     api("org.bstats", "bstats-bukkit", "3.0.0")
     api("de.tr7zw", "item-nbt-api", "2.11.2")
 }
@@ -25,11 +25,9 @@ configure<PublishingExtension> {
     }
 }
 
-// Relocate org.jetbrains.annotations, org.intellij.lang.annotations, org.bstats, de.tr7zw.annotations, and de.tr7zw.changeme.nbtapi
+// Relocate org.bstats, de.tr7zw.annotations, and de.tr7zw.changeme.nbtapi
 tasks {
     shadowJar {
-        relocate("org.jetbrains.annotations", "xyz.srnyx.annoyingapi.annotations")
-        relocate("org.intellij.lang.annotations", "xyz.srnyx.annoyingapi.annotations")
         relocate("org.bstats", "xyz.srnyx.annoyingapi.bstats")
         relocate("de.tr7zw.annotations", "xyz.srnyx.annoyingapi.nbtapi.annotations")
         relocate("de.tr7zw.changeme.nbtapi", "xyz.srnyx.annoyingapi.nbtapi")
