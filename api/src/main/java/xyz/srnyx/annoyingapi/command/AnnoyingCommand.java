@@ -97,9 +97,32 @@ public interface AnnoyingCommand extends TabExecutor {
     }
 
     /**
+     * Returns whether the command is registered to the {@link #getPlugin()}
+     *
+     * @return  whether the command is registered
+     */
+    default boolean isRegistered() {
+        return getPlugin().registeredCommands.contains(this);
+    }
+
+    /**
+     * Toggles the registration of the command to the {@link #getPlugin()}
+     *
+     * @param   registered  whether the command should be registered or unregistered
+     */
+    default void setRegistered(boolean registered) {
+        if (registered) {
+            register();
+            return;
+        }
+        unregister();
+    }
+
+    /**
      * Registers the command to the {@link #getPlugin()}
      */
     default void register() {
+        if (isRegistered()) return;
         final PluginCommand command = getPlugin().getCommand(getName());
         if (command == null) {
             getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
@@ -113,6 +136,7 @@ public interface AnnoyingCommand extends TabExecutor {
      * Unregisters the command from the {@link #getPlugin()}
      */
     default void unregister() {
+        if (!isRegistered()) return;
         final PluginCommand command = getPlugin().getCommand(getName());
         if (command != null) command.setExecutor(new DisabledCommand(getPlugin()));
         getPlugin().registeredCommands.remove(this);
