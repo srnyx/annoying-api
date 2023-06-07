@@ -3,6 +3,10 @@ plugins {
     `maven-publish`
 }
 
+repositories {
+    maven("https://repo.codemc.io/repository/maven-public") // de.tr7zw:item-nbt-api
+}
+
 dependencies {
     compileOnlyApi("org.jetbrains", "annotations", "24.0.0")
     api("org.bstats", "bstats-bukkit", "3.0.0")

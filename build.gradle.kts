@@ -25,7 +25,6 @@ subprojects {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots") // org.spigotmc:spigot-api
         maven("https://oss.sonatype.org/content/repositories/snapshots") // org.spigotmc:spigot-api
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi") // me.clip:placeholderapi
-        maven("https://repo.codemc.io/repository/maven-public") // de.tr7zw:item-nbt-api (api)
     }
 
     dependencies {
