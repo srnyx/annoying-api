@@ -31,10 +31,10 @@ configure<PublishingExtension> {
     }
 }
 
-// Relocate org.bstats, de.tr7zw.annotations, and de.tr7zw.changeme.nbtapi
+// Relocate org.bstats and de.tr7zw.changeme.nbtapi
 tasks {
     shadowJar {
-        relocate("org.bstats", "xyz.srnyx.annoyingapi.bstats")
-        relocate("de.tr7zw.changeme.nbtapi", "xyz.srnyx.annoyingapi.nbtapi")
+        relocate("org.bstats", "xyz.srnyx.annoyingapi.libs.bstats")
+        relocate("de.tr7zw.changeme.nbtapi", "xyz.srnyx.annoyingapi.libs.nbtapi")
     }
 }
