@@ -1,16 +1,19 @@
+import me.dkim19375.dkimgradle.enums.Repository
+import me.dkim19375.dkimgradle.enums.maven
+
 plugins {
     `java-library`
     `maven-publish`
 }
 
 repositories {
-    maven("https://repo.codemc.io/repository/maven-public") // de.tr7zw:item-nbt-api
+    maven(Repository.CODE_MC) // de.tr7zw:item-nbt-api
 }
 
 dependencies {
     compileOnlyApi("org.jetbrains", "annotations", "24.0.0")
     api("org.bstats", "bstats-bukkit", "3.0.0")
-    api("de.tr7zw", "item-nbt-api", "2.11.2") {
+    api("de.tr7zw", "item-nbt-api", "2.11.3") {
         exclude("de.tr7zw", "functional-annotations")
     }
 }
@@ -25,8 +28,7 @@ configure<PublishingExtension> {
     publications {
         create<MavenPublication>("maven") {
             groupId = "com.github.srnyx"
-            artifact(tasks["shadowJar"])
-            artifact(tasks["javadocJar"])
+            from(components["java"])
         }
     }
 }

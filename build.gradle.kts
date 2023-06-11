@@ -1,34 +1,30 @@
+import me.dkim19375.dkimgradle.enums.Repository
+import me.dkim19375.dkimgradle.enums.maven
+import me.dkim19375.dkimgradle.util.spigotAPI
+
 plugins {
     java
     id("com.github.johnrengelman.shadow") version "8.1.1"
-}
-
-// Prevent java tasks from running for root project
-tasks {
-    classes { enabled = false }
-    jar { enabled = false }
-    assemble { enabled = false }
-    testClasses { enabled = false }
-    check { enabled = false }
-    build { enabled = false }
+    id("io.github.dkim19375.dkim-gradle") version "1.2.0"
 }
 
 subprojects {
-    version = "3.0.1"
     group = "xyz.srnyx"
+    version = "3.0.1"
 
     apply(plugin = "java")
     apply(plugin = "com.github.johnrengelman.shadow")
+    apply(plugin = "io.github.dkim19375.dkim-gradle")
 
     repositories {
-        mavenCentral() // org.spigotmc:spigot, net.md-5:bungeecord-api (api)
-        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots") // org.spigotmc:spigot-api
-        maven("https://oss.sonatype.org/content/repositories/snapshots") // org.spigotmc:spigot-api
-        maven("https://repo.extendedclip.com/content/repositories/placeholderapi") // me.clip:placeholderapi
+        mavenCentral() // org.spigotmc:spigot-api, net.md-5:bungeecord-api (api)
+        maven(Repository.SPIGOT) // org.spigotmc:spigot-api
+        maven(Repository.SONATYPE_SNAPSHOTS_OLD) // org.spigotmc:spigot-api
+        maven(Repository.PLACEHOLDER_API) // me.clip:placeholderapi
     }
 
     dependencies {
-        compileOnly("org.spigotmc", "spigot-api", "1.8.8-R0.1-SNAPSHOT")
+        compileOnly(spigotAPI("1.8.8"))
         compileOnly("me.clip", "placeholderapi", "2.11.3")
     }
 
@@ -62,14 +58,5 @@ subprojects {
                 expand("name" to project.name, "version" to version)
             }
         }
-
-        // Disable unnecessary tasks
-        classes { enabled = false }
-        jar { enabled = false }
-        compileTestJava { enabled = false }
-        processTestResources { enabled = false }
-        testClasses { enabled = false }
-        test { enabled = false }
-        check { enabled = false }
     }
 }
