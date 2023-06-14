@@ -17,10 +17,7 @@ subprojects {
     apply(plugin = "io.github.dkim19375.dkim-gradle")
 
     repositories {
-        mavenCentral() // org.spigotmc:spigot-api, net.md-5:bungeecord-api (api)
-        maven(Repository.SPIGOT) // org.spigotmc:spigot-api
-        maven(Repository.SONATYPE_SNAPSHOTS_OLD) // org.spigotmc:spigot-api
-        maven(Repository.PLACEHOLDER_API) // me.clip:placeholderapi
+        maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT, Repository.SONATYPE_SNAPSHOTS_OLD, Repository.PLACEHOLDER_API)
     }
 
     dependencies {
