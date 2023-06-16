@@ -221,9 +221,9 @@ public class AnnoyingDownload {
                     .get("file").getAsJsonObject()
                     .get("externalUrl").getAsString();
             if (externalUrl.endsWith(".jar")) {
-                platforms.putIfAbsent(PluginPlatform.external(externalUrl));
+                platforms.addIfAbsent(PluginPlatform.external(externalUrl));
             } else {
-                platforms.putIfAbsent(PluginPlatform.manual(externalUrl));
+                platforms.addIfAbsent(PluginPlatform.manual(externalUrl));
             }
 
             // Retry download

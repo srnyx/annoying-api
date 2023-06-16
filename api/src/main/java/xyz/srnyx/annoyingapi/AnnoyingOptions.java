@@ -129,7 +129,7 @@ public class AnnoyingOptions {
      * <i>{@code RECOMMENDED}</i> The different {@link PluginPlatform platforms} the plugin is available on
      * <p>If not specified, the plugin will not be able to check for updates
      */
-    @NotNull public Set<PluginPlatform> updatePlatforms = new HashSet<>();
+    @NotNull public PluginPlatform.Multi updatePlatforms = new PluginPlatform.Multi();
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance

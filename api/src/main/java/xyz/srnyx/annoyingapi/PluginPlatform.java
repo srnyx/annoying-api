@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -180,9 +181,9 @@ public class PluginPlatform {
      */
     public static class Multi {
         /**
-         * The {@link PluginPlatform}s in this {@link Multi}
+         * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */
-        @NotNull private final Collection<PluginPlatform> pluginPlatforms = new HashSet<>();
+        @NotNull public final Collection<PluginPlatform> pluginPlatforms = new HashSet<>();
 
         /**
          * Creates a new {@link Multi} with the given {@link PluginPlatform}s
@@ -190,7 +191,16 @@ public class PluginPlatform {
          * @param   pluginPlatforms {@link #pluginPlatforms}
          */
         public Multi(@NotNull Collection<PluginPlatform> pluginPlatforms) {
-            pluginPlatforms.forEach(this::putIfAbsent);
+            pluginPlatforms.forEach(this::addIfAbsent);
+        }
+
+        /**
+         * Creates a new {@link Multi} with the given {@link PluginPlatform}s
+         *
+         * @param   pluginPlatforms {@link #pluginPlatforms}
+         */
+        public Multi(@NotNull PluginPlatform... pluginPlatforms) {
+            this(Arrays.asList(pluginPlatforms));
         }
 
         /**
@@ -222,21 +232,37 @@ public class PluginPlatform {
         }
 
         /**
+         * Adds the given {@link PluginPlatform} to this {@link Multi}
+         *
+         * @param   pluginPlatform  the {@link PluginPlatform} to add
+         *
+         * @return                  whether the {@link PluginPlatform} was added
+         */
+        public boolean add(@NotNull PluginPlatform pluginPlatform) {
+            return pluginPlatforms.add(pluginPlatform);
+        }
+
+        /**
          * Adds the given {@link PluginPlatform} to this {@link Multi} if it doesn't already exist
          *
          * @param   pluginPlatform  the {@link PluginPlatform} to add
+         *
+         * @return                  whether the {@link PluginPlatform} was added
          */
-        public void putIfAbsent(@NotNull PluginPlatform pluginPlatform) {
-            if (get(pluginPlatform.platform) == null) pluginPlatforms.add(pluginPlatform);
+        public boolean addIfAbsent(@NotNull PluginPlatform pluginPlatform) {
+            if (get(pluginPlatform.platform) == null) return add(pluginPlatform);
+            return false;
         }
 
         /**
          * Removes the {@link PluginPlatform} for the given {@link Platform}
          *
          * @param   platform    the {@link Platform} to remove the {@link PluginPlatform} for
+         *
+         * @return              whether a {@link PluginPlatform} was removed
          */
-        public void remove(@NotNull Platform platform) {
-            pluginPlatforms.removeIf(filter -> filter.platform == platform);
+        public boolean remove(@NotNull Platform platform) {
+            return pluginPlatforms.removeIf(filter -> filter.platform == platform);
         }
     }
 }

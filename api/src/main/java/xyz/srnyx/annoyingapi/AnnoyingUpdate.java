@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -51,12 +52,12 @@ public class AnnoyingUpdate {
      * @param   plugin          {@link #plugin}
      * @param   platforms       {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull JavaPlugin plugin, @NotNull Set<PluginPlatform> platforms) {
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull JavaPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
         this.annoyingPlugin = annoyingPlugin;
         this.plugin = plugin;
         this.currentVersion = new Version(plugin.getDescription().getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via AnnoyingAPI (update)";
-        this.platforms = new PluginPlatform.Multi(platforms);
+        this.platforms = platforms;
         this.latestVersion = getLatestVersion();
     }
 
@@ -66,7 +67,7 @@ public class AnnoyingUpdate {
      * @param   plugin      {@link #annoyingPlugin} and {@link #plugin}
      * @param   platforms   {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull Set<PluginPlatform> platforms) {
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
         this(plugin, plugin, platforms);
     }
 
