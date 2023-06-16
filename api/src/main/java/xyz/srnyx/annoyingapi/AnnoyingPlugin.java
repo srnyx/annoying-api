@@ -3,8 +3,6 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
-import org.apache.commons.lang.StringUtils;
-
 import org.bstats.bukkit.Metrics;
 
 import org.bukkit.Bukkit;
@@ -12,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -166,13 +165,15 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @see #enable()
      */
     private void enablePlugin() {
+        final String name = getName();
+
         // Check if required dependencies are installed
         final String missing = options.dependencies.stream()
                 .filter(dependency -> dependency.required && dependency.isNotInstalled())
                 .map(dependency -> dependency.name)
                 .collect(Collectors.joining("&c, &4"));
         if (missing.length() != 0) {
-            log(Level.SEVERE, "&cDisabling " + getName() + " because it's missing required dependencies: &4" + missing);
+            log(Level.SEVERE, "&cDisabling " + name + " because it's missing required dependencies: &4" + missing);
             disablePlugin();
             return;
         }
@@ -189,12 +190,18 @@ public class AnnoyingPlugin extends JavaPlugin {
         final String secondaryColorString = globalPlaceholders.get("s");
         final String secondaryColor = secondaryColorString != null ? AnnoyingUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
 
+        // Get start messages
+        final PluginDescriptionFile description = getDescription();
+        final String nameVersion = name + " v" + description.getVersion();
+        final String authors = "By " + String.join(", ", description.getAuthors());
+        final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
+        final int lineLength = Math.max(nameVersion.length(), authors.length());
+        for (int i = 0; i < lineLength; i++) lineBuilder.append("-");
+        final String line = lineBuilder.toString();
+
         // Send start messages
-        final String name = getName() + " v" + getDescription().getVersion();
-        final String authors = "By " + String.join(", ", getDescription().getAuthors());
-        final String line = secondaryColor + StringUtils.repeat("-", Math.max(name.length(), authors.length()));
         log(Level.INFO, line);
-        log(Level.INFO, primaryColor + name);
+        log(Level.INFO, primaryColor + nameVersion);
         log(Level.INFO, primaryColor + authors);
         log(Level.INFO, line);
 
