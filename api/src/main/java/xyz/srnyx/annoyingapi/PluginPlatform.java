@@ -3,9 +3,8 @@ package xyz.srnyx.annoyingapi;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -183,7 +182,7 @@ public class PluginPlatform {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */
-        @NotNull public final Collection<PluginPlatform> pluginPlatforms = new HashSet<>();
+        @NotNull public final Set<PluginPlatform> pluginPlatforms = new HashSet<>();
 
         /**
          * Creates a new {@link Multi} with the given {@link PluginPlatform}s
@@ -232,37 +231,40 @@ public class PluginPlatform {
         }
 
         /**
-         * Adds the given {@link PluginPlatform} to this {@link Multi}
+         * Adds the given {@link PluginPlatform plugin platforms} to this {@link Multi}
          *
-         * @param   pluginPlatform  the {@link PluginPlatform} to add
+         * @param   pluginPlatforms the {@link PluginPlatform plugin platforms} to add
          *
-         * @return                  whether the {@link PluginPlatform} was added
+         * @return                  whether a {@link PluginPlatform plugin platform} was added
          */
-        public boolean add(@NotNull PluginPlatform pluginPlatform) {
-            return pluginPlatforms.add(pluginPlatform);
+        public boolean add(@NotNull PluginPlatform... pluginPlatforms) {
+            return this.pluginPlatforms.addAll(Arrays.asList(pluginPlatforms));
         }
 
         /**
-         * Adds the given {@link PluginPlatform} to this {@link Multi} if it doesn't already exist
+         * Adds the given {@link PluginPlatform plugin platforms} to this {@link Multi} if they don't already exist
          *
-         * @param   pluginPlatform  the {@link PluginPlatform} to add
+         * @param   pluginPlatforms the {@link PluginPlatform plugin platforms} to add
          *
-         * @return                  whether the {@link PluginPlatform} was added
+         * @return                  whether a {@link PluginPlatform plugin platform} was added
          */
-        public boolean addIfAbsent(@NotNull PluginPlatform pluginPlatform) {
-            if (get(pluginPlatform.platform) == null) return add(pluginPlatform);
-            return false;
+        public boolean addIfAbsent(@NotNull PluginPlatform... pluginPlatforms) {
+            final Set<PluginPlatform> toAdd = Arrays.stream(pluginPlatforms)
+                    .filter(filter -> get(filter.platform) == null)
+                    .collect(Collectors.toSet());
+            return this.pluginPlatforms.addAll(toAdd);
         }
 
         /**
-         * Removes the {@link PluginPlatform} for the given {@link Platform}
+         * Removes the {@link PluginPlatform plugin platforms} for the given {@link Platform platforms}
          *
-         * @param   platform    the {@link Platform} to remove the {@link PluginPlatform} for
+         * @param   platforms   the {@link Platform platforms} to remove the {@link PluginPlatform plugin platforms} for
          *
-         * @return              whether a {@link PluginPlatform} was removed
+         * @return              whether a {@link PluginPlatform plugin platform} was removed
          */
-        public boolean remove(@NotNull Platform platform) {
-            return pluginPlatforms.removeIf(filter -> filter.platform == platform);
+        public boolean remove(@NotNull Platform... platforms) {
+            final List<Platform> toRemove = Arrays.asList(platforms);
+            return pluginPlatforms.removeIf(filter -> toRemove.contains(filter.platform));
         }
     }
 }
