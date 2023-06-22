@@ -1,10 +1,10 @@
 name: ${name}
-description: Plugin to test/give an example use of AnnoyingAPI
+description: ${description}
 authors:
   - srnyx
 website: https://srnyx.com
 
-main: xyz.srnyx.annoyingexample.ExamplePlugin
+main: ${group}.annoyingexample.ExamplePlugin
 version: ${version}
 api-version: 1.13
 

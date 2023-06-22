@@ -1,14 +1,14 @@
+import xyz.srnyx.gradlegalaxy.utility.implementationRelocate
+
+
+description = "Plugin to test/give an example use of AnnoyingAPI"
+
 dependencies {
-    implementation(project(":AnnoyingAPI", configuration = "shadow"))
+    implementationRelocate(project, project(":AnnoyingAPI", "shadow"), "xyz.srnyx.annoyingapi")
 }
 
+// Fix compileJava task
 tasks {
-    // Relocate the AnnoyingAPI package
-    shadowJar {
-        relocate("xyz.srnyx.annoyingapi", "xyz.srnyx.annoyingexample.annoyingapi")
-    }
-
-    // Fix compileJava task
     compileJava {
         dependsOn(":AnnoyingAPI:jar")
     }

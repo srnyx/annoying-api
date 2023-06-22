@@ -1,11 +1,12 @@
 name: ${name}
-description: General purpose API with tons of features
+description: ${description}
 authors:
   - srnyx
 website: https://srnyx.com
 
-main: xyz.srnyx.annoyingapi.AnnoyingPlugin
+main: ${group}.annoyingapi.AnnoyingPlugin
 version: ${version}
+api-version: 1.13
 
 softdepend:
   - PlaceholderAPI
