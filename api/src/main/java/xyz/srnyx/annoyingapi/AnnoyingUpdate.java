@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,9 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
 
@@ -134,13 +133,16 @@ public class AnnoyingUpdate {
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
 
         // Request failed
-        if (json == null) {
-            platforms.remove(PluginPlatform.Platform.MODRINTH);
-            return getLatestVersion();
-        }
+        if (json == null) return fail(PluginPlatform.Platform.MODRINTH);
 
         // Return the latest version
-        return new Version(json.getAsJsonArray().get(0).getAsJsonObject().get("version_number").getAsString());
+        try {
+            final JsonArray versions = json.getAsJsonArray();
+            if (versions.size() == 0) return fail(PluginPlatform.Platform.MODRINTH);
+            return new Version(versions.get(0).getAsJsonObject().get("version_number").getAsString());
+        } catch (final IllegalStateException e) {
+            return fail(PluginPlatform.Platform.MODRINTH);
+        }
     }
 
     /**
@@ -155,10 +157,7 @@ public class AnnoyingUpdate {
         final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
 
         // Request failed
-        if (json == null) {
-            platforms.remove(PluginPlatform.Platform.HANGAR);
-            return getLatestVersion();
-        }
+        if (json == null) return fail(PluginPlatform.Platform.HANGAR);
 
         // Return the latest version
         return new Version(json.getAsJsonObject().get("result").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
@@ -176,13 +175,23 @@ public class AnnoyingUpdate {
         final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
 
         // Request failed
-        if (json == null) {
-            platforms.remove(PluginPlatform.Platform.SPIGOT);
-            return getLatestVersion();
-        }
+        if (json == null) return fail(PluginPlatform.Platform.SPIGOT);
 
         // Return the latest version
         return new Version(json.getAsJsonObject().get("name").getAsString());
+    }
+
+    /**
+     * Remove the failed platform from the list of platforms and retry {@link #getLatestVersion() getting the latest version}
+     *
+     * @param   platform    the platform that failed
+     *
+     * @return              the latest version, or {@code null} if an error occurred
+     */
+    @Nullable
+    private Version fail(@NotNull PluginPlatform.Platform platform) {
+        platforms.remove(platform);
+        return getLatestVersion();
     }
 
     /**
