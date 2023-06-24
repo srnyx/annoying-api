@@ -92,6 +92,31 @@ public class PluginPlatform {
     }
 
     /**
+     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
+     *
+     * @param   plugin  the plugin to get the {@link #identifier} from
+     * @param   author  {@link #author}
+     *
+     * @return          a new {@link PluginPlatform}
+     */
+    @NotNull
+    public static PluginPlatform hangar(@NotNull Plugin plugin, @NotNull String author) {
+        return hangar(plugin.getName(), author);
+    }
+
+    /**
+     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
+     *
+     * @param   plugin  the plugin to get the {@link #identifier} and {@link #author} from
+     *
+     * @return          a new {@link PluginPlatform}
+     */
+    @NotNull
+    public static PluginPlatform hangar(@NotNull Plugin plugin) {
+        return hangar(plugin.getName(), plugin);
+    }
+
+    /**
      * Creates a new {@link PluginPlatform} for {@link Platform#SPIGOT}
      *
      * @param   identifier  {@link #identifier}
