@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
+import org.bukkit.plugin.Plugin;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,6 +74,21 @@ public class PluginPlatform {
     @NotNull
     public static PluginPlatform hangar(@NotNull String identifier, @NotNull String author) {
         return new PluginPlatform(Platform.HANGAR, identifier, author);
+    }
+
+    /**
+     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
+     *
+     * @param   identifier  {@link #identifier}
+     * @param   plugin      the plugin to get the {@link #author} from
+     *
+     * @return              a new {@link PluginPlatform}
+     */
+    @NotNull
+    public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) {
+        final List<String> authors = plugin.getDescription().getAuthors();
+        if (authors.isEmpty()) throw new IllegalArgumentException(plugin.getName() + " has no authors but Hangar requires one");
+        return hangar(identifier, authors.get(0));
     }
 
     /**
