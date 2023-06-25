@@ -106,8 +106,7 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
     @NotNull
     public static AnnoyingOptions load(@NotNull YamlConfiguration yaml) {
         final ConfigurationSection annoying = yaml.getConfigurationSection("annoying");
-        if (annoying == null) throw new IllegalArgumentException("No 'annoying' section found in the configuration");
-        return load(annoying);
+        return annoying != null ? load(annoying) : new AnnoyingOptions();
     }
 
     /**
