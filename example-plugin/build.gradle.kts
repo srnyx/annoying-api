@@ -8,8 +8,6 @@ dependencies {
 }
 
 // Fix compileJava task
-tasks {
-    compileJava {
-        dependsOn(":AnnoyingAPI:jar")
-    }
+tasks.compileJava {
+    dependsOn(":AnnoyingAPI:jar")
 }

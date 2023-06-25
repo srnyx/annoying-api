@@ -164,7 +164,7 @@ public interface AnnoyingCommand extends TabExecutor {
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(getPlugin(), getPlugin().options.invalidArguments).send(sender);
+            new AnnoyingMessage(getPlugin(), getPlugin().options.messageKeys.invalidArguments).send(sender);
             return true;
         }
 

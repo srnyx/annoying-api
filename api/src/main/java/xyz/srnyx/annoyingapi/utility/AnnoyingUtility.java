@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 
 /**
- * General utility methods for AnnoyingAPI
+ * General utility methods for Annoying API
  */
 public class AnnoyingUtility {
     @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)&[0-9A-FK-OR]");

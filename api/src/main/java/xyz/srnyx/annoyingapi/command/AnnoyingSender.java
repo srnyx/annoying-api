@@ -97,17 +97,17 @@ public class AnnoyingSender {
     }
 
     /**
-     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link AnnoyingOptions#playerOnly} message
+     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link AnnoyingOptions.MessageKeys#playerOnly} message
      *
      * @return  whether the {@link CommandSender} is a {@link Player}
      */
     public boolean checkPlayer() {
-        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.playerOnly).send(this);
+        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.messageKeys.playerOnly).send(this);
         return isPlayer;
     }
 
     /**
-     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link AnnoyingOptions#noPermission} message
+     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link AnnoyingOptions.MessageKeys#noPermission} message
      *
      * @param   permission  the permission to check
      *
@@ -115,7 +115,7 @@ public class AnnoyingSender {
      */
     public boolean checkPermission(@NotNull String permission) {
         final boolean hasPermission = cmdSender.hasPermission(permission);
-        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.noPermission)
+        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.messageKeys.noPermission)
                 .replace("%permission%", permission)
                 .send(this);
         return hasPermission;
@@ -127,7 +127,7 @@ public class AnnoyingSender {
      * @param   argument    the argument to replace {@code %argument%} with
      */
     public void invalidArgument(@Nullable Object argument) {
-        new AnnoyingMessage(plugin, plugin.options.invalidArgument)
+        new AnnoyingMessage(plugin, plugin.options.messageKeys.invalidArgument)
                 .replace("%argument%", String.valueOf(argument))
                 .send(this);
     }
@@ -136,6 +136,6 @@ public class AnnoyingSender {
      * Sends the invalid arguments message
      */
     public void invalidArguments() {
-        new AnnoyingMessage(plugin, plugin.options.invalidArguments).send(this);
+        new AnnoyingMessage(plugin, plugin.options.messageKeys.invalidArguments).send(this);
     }
 }

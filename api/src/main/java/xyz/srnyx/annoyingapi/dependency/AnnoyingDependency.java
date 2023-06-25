@@ -1,19 +1,22 @@
 package xyz.srnyx.annoyingapi.dependency;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.Dumpable;
 import xyz.srnyx.annoyingapi.PluginPlatform;
+import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 
 import java.io.File;
-import java.util.Set;
+import java.util.ArrayList;
 
 
 /**
  * Represents a downloadable dependency
  */
-public class AnnoyingDependency {
+public class AnnoyingDependency implements Dumpable<ConfigurationSection> {
     /**
      * The name of the dependency (from it's {@code plugin.yml})
      */
@@ -44,12 +47,30 @@ public class AnnoyingDependency {
      * @param   required                {@link #required}
      * @param   enableAfterDownload     {@link #enableAfterDownload}
      */
-    public AnnoyingDependency(@NotNull String name, @NotNull Set<PluginPlatform> platforms, boolean required, boolean enableAfterDownload) {
+    public AnnoyingDependency(@NotNull String name, @NotNull PluginPlatform.Multi platforms, boolean required, boolean enableAfterDownload) {
         this.name = name;
-        this.platforms = new PluginPlatform.Multi(platforms);
+        this.platforms = platforms;
         this.required = required;
         this.enableAfterDownload = enableAfterDownload;
         this.file = new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");
+    }
+
+    @NotNull
+    public static AnnoyingDependency load(@NotNull ConfigurationSection section) {
+        return new AnnoyingDependency(
+                section.getString("name"),
+                PluginPlatform.Multi.load(ConfigurationUtility.toConfigurationList(section.getMapList("platforms"))),
+                section.getBoolean("required"),
+                section.getBoolean("enableAfterDownload"));
+    }
+
+    @Override @NotNull
+    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
+        section.set("name", name);
+        section.set("platforms", ConfigurationUtility.toMapList(platforms.dump(new ArrayList<>())));
+        section.set("required", required);
+        section.set("enableAfterDownload", enableAfterDownload);
+        return section;
     }
 
     /**

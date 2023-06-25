@@ -110,7 +110,7 @@ public class AnnoyingMessage {
 
         // Get player, splitterJson, & section
         final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
-        final String splitterJson = plugin.getMessagesString(plugin.options.splitterJson);
+        final String splitterJson = plugin.getMessagesString(plugin.options.messageKeys.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
 
         // Single component
@@ -504,7 +504,7 @@ public class AnnoyingMessage {
             if (type == null) return input.replace(before, value);
 
             // Parameter placeholder
-            if (splitterPlaceholder == null) splitterPlaceholder = plugin.getMessagesString(plugin.options.splitterPlaceholder);
+            if (splitterPlaceholder == null) splitterPlaceholder = plugin.getMessagesString(plugin.options.messageKeys.splitterPlaceholder);
             final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(input);
             final String match;
             final String parameter;

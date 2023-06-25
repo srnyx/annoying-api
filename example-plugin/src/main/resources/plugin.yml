@@ -10,6 +10,29 @@ api-version: 1.13
 
 softdepend:
   - PlaceholderAPI
+  - ViaVersion
+
+annoying:
+  bStatsId: 12345
+  bStatsFileName: "stats.yml"
+  bStatsOptions:
+    createDefaultFile: false
+  messagesFileName: "msgs.yml"
+  messageKeys:
+    globalPlaceholders: "placeholders"
+    splitterJson: "splitter.json"
+    splitterPlaceholder: "splitter.placeholder"
+    noPermission: "no-permission"
+    playerOnly: "player-only"
+    invalidArguments: "invalid-arguments"
+    disabledCommand: "disabled-command"
+  dependencies:
+    - name: ViaVersion
+      platforms:
+        - platform: SPIGOT
+          identifier: 19254
+      required: true
+      enableAfterDownload: true
 
 commands:
   test:

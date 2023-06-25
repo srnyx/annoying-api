@@ -24,6 +24,7 @@ import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -42,7 +43,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The API options for the plugin
      */
-    @NotNull public final AnnoyingOptions options = new AnnoyingOptions();
+    @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(new InputStreamReader(getResource("plugin.yml")));
     /**
      * The {@link Metrics bStats} instance for the plugin
      */
@@ -52,9 +53,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Nullable public AnnoyingResource messages;
     /**
-     * {@link ChatColor} aliases for the plugin from the messages file ({@link AnnoyingOptions#globalPlaceholders})
+     * {@link ChatColor} aliases for the plugin from the messages file ({@link AnnoyingOptions.MessageKeys#globalPlaceholders})
      *
-     * @see AnnoyingOptions#globalPlaceholders
+     * @see AnnoyingOptions.MessageKeys#globalPlaceholders
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
@@ -108,7 +109,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Download missing dependencies then enable the plugin
         if (!missingDependencies.isEmpty()) {
-            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoyingAPI will attempt to download/install them...");
+            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoying API will attempt to download/install them...");
             new AnnoyingDownload(this, missingDependencies).downloadPlugins(this::enablePlugin);
             return;
         }
@@ -240,7 +241,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         messages = new AnnoyingResource(this, options.messagesFileName, options.messagesOptions);
         // globalPlaceholders
         globalPlaceholders.clear();
-        final ConfigurationSection section = messages.getConfigurationSection(options.globalPlaceholders);
+        final ConfigurationSection section = messages.getConfigurationSection(options.messageKeys.globalPlaceholders);
         if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
     }
 

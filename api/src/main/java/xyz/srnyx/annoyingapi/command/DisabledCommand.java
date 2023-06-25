@@ -41,6 +41,6 @@ public class DisabledCommand implements AnnoyingCommand {
      */
     @Override
     public void onCommand(@NotNull AnnoyingSender sender) {
-        new AnnoyingMessage(plugin, plugin.options.disabledCommand).send(sender);
+        new AnnoyingMessage(plugin, plugin.options.messageKeys.disabledCommand).send(sender);
     }
 }

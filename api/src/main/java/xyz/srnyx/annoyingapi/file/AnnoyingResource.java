@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi.file;
 
+import org.bukkit.configuration.ConfigurationSection;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,6 +73,20 @@ public class AnnoyingResource extends AnnoyingFile {
          */
         public ResourceOptions() {
             // Only exists to provide a Javadoc
+        }
+
+        @NotNull
+        public static ResourceOptions load(@NotNull ConfigurationSection section) {
+            final ResourceOptions options = FileOptions.load(new ResourceOptions(), section);
+            if (section.contains("createDefaultFile")) options.createDefaultFile = section.getBoolean("createDefaultFile");
+            return options;
+        }
+
+        @Override @NotNull
+        public ConfigurationSection dump(@NotNull ConfigurationSection section) {
+            super.dump(section);
+            section.set("createDefaultFile", createDefaultFile);
+            return section;
         }
 
         /**

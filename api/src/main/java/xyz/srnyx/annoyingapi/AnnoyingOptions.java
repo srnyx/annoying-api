@@ -2,17 +2,20 @@ package xyz.srnyx.annoyingapi;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.Reader;
+import java.util.*;
 import java.util.function.Supplier;
 
 
@@ -20,7 +23,7 @@ import java.util.function.Supplier;
  * Represents the options for the API
  */
 @SuppressWarnings("CanBeFinal")
-public class AnnoyingOptions {
+public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
     /**
      * <i>{@code RECOMMENDED}</i> The ID of the plugin on <a href="https://bstats.org">bStats</a>
      * <p>If not specified, bStats metrics will not be enabled
@@ -53,52 +56,9 @@ public class AnnoyingOptions {
     @Nullable public AnnoyingResource.ResourceOptions messagesOptions = null;
 
     /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
-     *
-     * @see AnnoyingPlugin#globalPlaceholders
+     * <i>{@code OPTIONAL}</i> The different message keys for some default messages in the {@link #messagesFileName messages file}
      */
-    @NotNull public String globalPlaceholders = "plugin.global-placeholders";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's JSON component splitter
-     */
-    @NotNull public String splitterJson = "plugin.splitters.json";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's placeholder component splitter
-     */
-    @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The key for the message sent in the console when an update is available for the plugin
-     */
-    @NotNull public String updateAvailable = "plugin.update-available";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "no permission" message
-     */
-    @NotNull public String noPermission = "error.no-permission";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "player-only" message
-     */
-    @NotNull public String playerOnly = "error.player-only";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid argument" message
-     * <p>This should contain {@code %argument%} for the invalid argument
-     */
-    @NotNull public String invalidArgument = "error.invalid-argument";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid arguments" message
-     */
-    @NotNull public String invalidArguments = "error.invalid-arguments";
-
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "disabled command" message
-     */
-    @NotNull public String disabledCommand = "error.disabled-command";
+    @NotNull public MessageKeys messageKeys = new MessageKeys();
 
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add commands to this in the plugin's constructor)
@@ -132,10 +92,63 @@ public class AnnoyingOptions {
     @NotNull public PluginPlatform.Multi updatePlatforms = new PluginPlatform.Multi();
 
     /**
-     * Constructs a new {@link AnnoyingOptions} instance
+     * Constructs a new {@link AnnoyingOptions} instance with default values
      */
     public AnnoyingOptions() {
         // Only exists to give the constructor a Javadoc
+    }
+
+    /**
+     * Loads the options from the specified {@link YamlConfiguration}
+     *
+     * @param   yaml    the configuration to load the options from
+     */
+    @NotNull
+    public static AnnoyingOptions load(@NotNull YamlConfiguration yaml) {
+        final ConfigurationSection annoying = yaml.getConfigurationSection("annoying");
+        if (annoying == null) throw new IllegalArgumentException("No 'annoying' section found in the configuration");
+        return load(annoying);
+    }
+
+    /**
+     * Loads the options from the specified {@link Reader}
+     *
+     * @param   reader  the reader to load the options from
+     */
+    @NotNull
+    public static AnnoyingOptions load(@NotNull Reader reader) {
+        return load(YamlConfiguration.loadConfiguration(reader));
+    }
+
+    @NotNull
+    public static AnnoyingOptions load(@NotNull ConfigurationSection section) {
+        final AnnoyingOptions options = new AnnoyingOptions();
+        if (section.contains("bStatsId")) options.bStatsId = section.getInt("bStatsId");
+        if (section.contains("bStatsFileName")) options.bStatsFileName = section.getString("bStatsFileName");
+        if (section.contains("bStatsOptions")) options.bStatsOptions = AnnoyingResource.ResourceOptions.load(section.getConfigurationSection("bStatsOptions"));
+        if (section.contains("messagesFileName")) options.messagesFileName = section.getString("messagesFileName");
+        if (section.contains("messagesOptions")) options.messagesOptions = AnnoyingResource.ResourceOptions.load(section.getConfigurationSection("messagesOptions"));
+        options.messageKeys = MessageKeys.load(section.getConfigurationSection("messageKeys"));
+        ConfigurationUtility.toConfigurationList(section.getMapList("dependencies")).stream()
+                .map(AnnoyingDependency::load)
+                .forEach(options.dependencies::add);
+        Bukkit.getLogger().severe(ConfigurationUtility.toMapList(options.dependencies.get(0).platforms.dump(new ArrayList<>())).toString());
+        options.updatePlatforms = PluginPlatform.Multi.load(ConfigurationUtility.toConfigurationList(section.getMapList("updatePlatforms")));
+        return options;
+    }
+
+    @Override @NotNull
+    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
+        section.set("bStatsId", bStatsId);
+        section.set("bStatsFileName", bStatsFileName);
+        if (bStatsOptions != null) bStatsOptions.dump(section.createSection("bStatsOptions"));
+        section.set("messagesFileName", messagesFileName);
+        if (messagesOptions != null) messagesOptions.dump(section.createSection("messagesOptions"));
+        messageKeys.dump(section.createSection("messageKeys"));
+        final ConfigurationSection dependenciesSection = section.createSection("dependencies");
+        this.dependencies.forEach(dependency -> dependency.dump(dependenciesSection));
+        section.set("updatePlatforms", ConfigurationUtility.toMapList(updatePlatforms.dump(new ArrayList<>())));
+        return section;
     }
 
     /**
@@ -146,5 +159,91 @@ public class AnnoyingOptions {
     @Nullable
     public PlaceholderExpansion getPapiExpansionToRegister() {
         return papiExpansionToRegister instanceof PlaceholderExpansion ? (PlaceholderExpansion) papiExpansionToRegister.get() : null;
+    }
+
+    public static class MessageKeys implements Dumpable<ConfigurationSection> {
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
+         *
+         * @see AnnoyingPlugin#globalPlaceholders
+         */
+        @NotNull public String globalPlaceholders = "plugin.global-placeholders";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's JSON component splitter
+         */
+        @NotNull public String splitterJson = "plugin.splitters.json";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's placeholder component splitter
+         */
+        @NotNull public String splitterPlaceholder = "plugin.splitters.placeholder";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The key for the message sent in the console when an update is available for the plugin
+         */
+        @NotNull public String updateAvailable = "plugin.update-available";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "no permission" message
+         */
+        @NotNull public String noPermission = "error.no-permission";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "player-only" message
+         */
+        @NotNull public String playerOnly = "error.player-only";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid argument" message
+         * <p>This should contain {@code %argument%} for the invalid argument
+         */
+        @NotNull public String invalidArgument = "error.invalid-argument";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "invalid arguments" message
+         */
+        @NotNull public String invalidArguments = "error.invalid-arguments";
+
+        /**
+         * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's "disabled command" message
+         */
+        @NotNull public String disabledCommand = "error.disabled-command";
+
+        /**
+         * Creates a new {@link MessageKeys} with the default values
+         */
+        public MessageKeys() {
+            // Only exists to give the constructor a Javadoc
+        }
+
+        @NotNull
+        public static MessageKeys load(@NotNull ConfigurationSection section) {
+            final MessageKeys keys = new MessageKeys();
+            if (section.contains("globalPlaceholders")) keys.globalPlaceholders = section.getString("globalPlaceholders");
+            if (section.contains("splitterJson")) keys.splitterJson = section.getString("splitterJson");
+            if (section.contains("splitterPlaceholder")) keys.splitterPlaceholder = section.getString("splitterPlaceholder");
+            if (section.contains("updateAvailable")) keys.updateAvailable = section.getString("updateAvailable");
+            if (section.contains("noPermission")) keys.noPermission = section.getString("noPermission");
+            if (section.contains("playerOnly")) keys.playerOnly = section.getString("playerOnly");
+            if (section.contains("invalidArgument")) keys.invalidArgument = section.getString("invalidArgument");
+            if (section.contains("invalidArguments")) keys.invalidArguments = section.getString("invalidArguments");
+            if (section.contains("disabledCommand")) keys.disabledCommand = section.getString("disabledCommand");
+            return keys;
+        }
+
+        @Override @NotNull
+        public ConfigurationSection dump(@NotNull ConfigurationSection section) {
+            section.set("globalPlaceholders", globalPlaceholders);
+            section.set("splitterJson", splitterJson);
+            section.set("splitterPlaceholder", splitterPlaceholder);
+            section.set("updateAvailable", updateAvailable);
+            section.set("noPermission", noPermission);
+            section.set("playerOnly", playerOnly);
+            section.set("invalidArgument", invalidArgument);
+            section.set("invalidArguments", invalidArguments);
+            section.set("disabledCommand", disabledCommand);
+            return section;
+        }
     }
 }

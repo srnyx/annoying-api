@@ -55,7 +55,7 @@ public class AnnoyingUpdate {
         this.annoyingPlugin = annoyingPlugin;
         this.plugin = plugin;
         this.currentVersion = new Version(plugin.getDescription().getVersion());
-        this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via AnnoyingAPI (update)";
+        this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
         this.latestVersion = getLatestVersion();
     }
@@ -71,13 +71,13 @@ public class AnnoyingUpdate {
     }
 
     /**
-     * Checks if an update is available and sends {@link AnnoyingOptions#updateAvailable a message} to the console if it is
+     * Checks if an update is available and sends {@link AnnoyingOptions.MessageKeys#updateAvailable a message} to the console if it is
      *
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) annoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.updateAvailable)
+        if (update && latestVersion != null) annoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messageKeys.updateAvailable)
                 .replace("%plugin%", plugin.getName())
                 .replace("%current%", currentVersion.string)
                 .replace("%new%", latestVersion.string)

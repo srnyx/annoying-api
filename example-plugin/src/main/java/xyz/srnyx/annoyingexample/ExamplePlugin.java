@@ -1,15 +1,11 @@
 package xyz.srnyx.annoyingexample;
 
-import com.google.common.collect.Sets;
-
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.PluginPlatform;
-import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
@@ -33,24 +29,9 @@ public class ExamplePlugin extends AnnoyingPlugin {
      * Constructor for the {@link ExamplePlugin} class
      */
     public ExamplePlugin() {
-        // Options
-        options.bStatsId = 12345;
-        options.bStatsFileName = "stats.yml";
-        options.bStatsOptions = new AnnoyingResource.ResourceOptions().createDefaultFile(false);
-        options.messagesFileName = "msgs.yml";
-        options.globalPlaceholders = "placeholders";
-        options.splitterJson = "splitter.json";
-        options.splitterPlaceholder = "splitter.placeholder";
-        options.noPermission = "no-permission";
-        options.playerOnly = "player-only";
-        options.invalidArguments = "invalid-arguments";
-        options.disabledCommand = "disabled-command";
         options.commandsToRegister.add(new ExampleCommand(this));
         options.listenersToRegister.add(new ExampleListener(this));
         options.papiExpansionToRegister = () -> new ExamplePlaceholders(this);
-
-        // Dependencies
-        options.dependencies.add(new AnnoyingDependency("ViaVersion", Sets.newHashSet(PluginPlatform.spigot("19254")), true, true));
     }
 
     @Override

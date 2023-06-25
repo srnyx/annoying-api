@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi;
 
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * Contains information about a plugin on a {@link Platform}
  */
-public class PluginPlatform {
+public class PluginPlatform implements Dumpable<ConfigurationSection> {
     /**
      * The platform the plugin is on
      */
@@ -49,6 +51,40 @@ public class PluginPlatform {
         this.platform = platform;
         this.identifier = identifier;
         this.author = author;
+    }
+
+    @NotNull
+    public static PluginPlatform load(@NotNull ConfigurationSection section) {
+        // platform
+        final String platformName = section.getString("platform");
+        if (platformName == null) throw new IllegalArgumentException("platform is null");
+        final Platform platform;
+        try {
+            platform = Platform.valueOf(platformName.toUpperCase());
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("invalid platform: " + platformName);
+        }
+
+        // identifier
+        final String identifier = section.getString("identifier");
+        if (identifier == null) throw new IllegalArgumentException("identifier is null");
+
+        // author
+        if (platform.requiresAuthor) {
+            final String author = section.getString("author");
+            if (author == null) throw new IllegalArgumentException("author is null");
+            return new PluginPlatform(platform, identifier, author);
+        }
+
+        return new PluginPlatform(platform, identifier);
+    }
+
+    @Override @NotNull
+    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
+        section.set("platform", platform.name());
+        section.set("identifier", identifier);
+        if (platform.requiresAuthor) section.set("author", author);
+        return section;
     }
 
     /**
@@ -220,7 +256,7 @@ public class PluginPlatform {
     /**
      * A collection of {@link PluginPlatform}s
      */
-    public static class Multi {
+    public static class Multi implements Dumpable<List<ConfigurationSection>> {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */
@@ -242,6 +278,19 @@ public class PluginPlatform {
          */
         public Multi(@NotNull PluginPlatform... pluginPlatforms) {
             this(Arrays.asList(pluginPlatforms));
+        }
+
+        @NotNull
+        public static Multi load(@NotNull List<ConfigurationSection> list) {
+            final Multi multi = new Multi();
+            list.forEach(section -> multi.addIfAbsent(PluginPlatform.load(section)));
+            return multi;
+        }
+
+        @Override @NotNull
+        public List<ConfigurationSection> dump(@NotNull List<ConfigurationSection> sections) {
+            pluginPlatforms.forEach(pluginPlatform -> sections.add(pluginPlatform.dump(new MemoryConfiguration())));
+            return sections;
         }
 
         /**
