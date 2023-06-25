@@ -263,6 +263,13 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
         @NotNull public final Set<PluginPlatform> pluginPlatforms = new HashSet<>();
 
         /**
+         * Creates a new empty {@link Multi}
+         */
+        public Multi() {
+            // Creates a new empty Multi
+        }
+
+        /**
          * Creates a new {@link Multi} with the given {@link PluginPlatform}s
          *
          * @param   pluginPlatforms {@link #pluginPlatforms}
