@@ -33,11 +33,11 @@ jobs:
             purpur
             paper
             spigot
-          primary-files: |
+          files-primary: |
             api/build/libs/AnnoyingAPI-*[!a-z].jar
-          secondary-files: |
+          files-secondary: |
             api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
             example-plugin/build/libs/*.jar
-          changelog: https://annoying-api.srnyx.com/releases/tag/${{ github.event.release.tag.name }}
+          changelog: https://annoying-api.srnyx.com/releases/tag/${{ github.event.release.tagName }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
