@@ -102,6 +102,8 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
      * Loads the options from the specified {@link YamlConfiguration}
      *
      * @param   yaml    the configuration to load the options from
+     *
+     * @return          the loaded options
      */
     @NotNull
     public static AnnoyingOptions load(@NotNull YamlConfiguration yaml) {
@@ -113,12 +115,21 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
      * Loads the options from the specified {@link Reader}
      *
      * @param   reader  the reader to load the options from
+     *
+     * @return          the loaded options
      */
     @NotNull
     public static AnnoyingOptions load(@NotNull Reader reader) {
         return load(YamlConfiguration.loadConfiguration(reader));
     }
 
+    /**
+     * Loads the options from the specified {@link ConfigurationSection}
+     *
+     * @param   section the section to load the options from
+     *
+     * @return          the loaded options
+     */
     @NotNull
     public static AnnoyingOptions load(@NotNull ConfigurationSection section) {
         final AnnoyingOptions options = new AnnoyingOptions();
@@ -160,6 +171,9 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
         return papiExpansionToRegister instanceof PlaceholderExpansion ? (PlaceholderExpansion) papiExpansionToRegister.get() : null;
     }
 
+    /**
+     * A class to hold the different default {@link AnnoyingPlugin#messages} keys
+     */
     public static class MessageKeys implements Dumpable<ConfigurationSection> {
         /**
          * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
@@ -216,6 +230,13 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
             // Only exists to give the constructor a Javadoc
         }
 
+        /**
+         * Loads the {@link MessageKeys} from the specified {@link ConfigurationSection}
+         *
+         * @param   section the section to load the {@link MessageKeys} from
+         *
+         * @return          the loaded {@link MessageKeys}
+         */
         @NotNull
         public static MessageKeys load(@NotNull ConfigurationSection section) {
             final MessageKeys keys = new MessageKeys();

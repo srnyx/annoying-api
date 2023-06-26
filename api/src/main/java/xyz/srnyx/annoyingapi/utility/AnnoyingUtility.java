@@ -234,5 +234,4 @@ public class AnnoyingUtility {
     private AnnoyingUtility() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
-
 }

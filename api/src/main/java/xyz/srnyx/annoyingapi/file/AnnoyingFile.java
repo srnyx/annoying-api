@@ -600,6 +600,16 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             // Only exists to provide a Javadoc
         }
 
+        /**
+         * Loads a {@link FileOptions} from the given {@link ConfigurationSection}
+         *
+         * @param   options the {@link FileOptions} to load into
+         * @param   section the {@link ConfigurationSection} to load from
+         *
+         * @return          the {@link FileOptions} instance
+         *
+         * @param   <G>     the type of the {@link FileOptions} instance
+         */
         @NotNull
         public static <G extends FileOptions<G>> G load(@NotNull G options, @NotNull ConfigurationSection section) {
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");

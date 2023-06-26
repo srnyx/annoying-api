@@ -55,6 +55,13 @@ public class AnnoyingDependency implements Dumpable<ConfigurationSection> {
         this.file = new File(Bukkit.getUpdateFolderFile().getParentFile(), name + ".jar");
     }
 
+    /**
+     * Loads a dependency from a {@link ConfigurationSection}
+     *
+     * @param   section the section to load from
+     *
+     * @return          the loaded dependency
+     */
     @NotNull
     public static AnnoyingDependency load(@NotNull ConfigurationSection section) {
         return new AnnoyingDependency(

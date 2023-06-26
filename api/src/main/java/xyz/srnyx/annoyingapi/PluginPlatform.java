@@ -53,6 +53,13 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
         this.author = author;
     }
 
+    /**
+     * Loads a {@link PluginPlatform} from a {@link ConfigurationSection}
+     *
+     * @param   section the section to load from
+     *
+     * @return          the loaded {@link PluginPlatform}
+     */
     @NotNull
     public static PluginPlatform load(@NotNull ConfigurationSection section) {
         // platform
@@ -287,6 +294,13 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
             this(Arrays.asList(pluginPlatforms));
         }
 
+        /**
+         * Loads a {@link Multi} from the given {@link ConfigurationSection ConfigurationSections}
+         *
+         * @param   list    the {@link ConfigurationSection ConfigurationSections} to load from
+         *
+         * @return          the loaded {@link Multi}
+         */
         @NotNull
         public static Multi load(@NotNull List<ConfigurationSection> list) {
             final Multi multi = new Multi();

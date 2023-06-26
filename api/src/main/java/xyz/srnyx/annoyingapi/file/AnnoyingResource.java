@@ -75,6 +75,13 @@ public class AnnoyingResource extends AnnoyingFile {
             // Only exists to provide a Javadoc
         }
 
+        /**
+         * Loads the {@link ResourceOptions} from the {@link ConfigurationSection}
+         *
+         * @param   section the section to load from
+         *
+         * @return          the loaded {@link ResourceOptions}
+         */
         @NotNull
         public static ResourceOptions load(@NotNull ConfigurationSection section) {
             final ResourceOptions options = FileOptions.load(new ResourceOptions(), section);
