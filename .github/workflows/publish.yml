@@ -40,4 +40,4 @@ jobs:
             example-plugin/build/libs/*.jar
           changelog: ${{ github.event.release.html_url }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
