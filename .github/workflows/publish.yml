@@ -33,9 +33,8 @@ jobs:
             purpur
             paper
             spigot
-          files-primary: |
+          files: |
             api/build/libs/AnnoyingAPI-*[!a-z].jar
-          files-secondary: |
             api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
             example-plugin/build/libs/*.jar
           changelog: ${{ github.event.release.html_url }}
