@@ -25,7 +25,7 @@ jobs:
         uses: "Kir-Antipov/mc-publish@v3.3"
         with:
           modrinth-id: gzktm9GG
-          #curseforge-id: 728930
+          curseforge-id: 728930
           game-versions: |
             >=1.8.8
           game-version-filter: releases
@@ -40,4 +40,4 @@ jobs:
             example-plugin/build/libs/*.jar
           changelog: ${{ github.event.release.html_url }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
