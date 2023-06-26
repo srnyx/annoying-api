@@ -38,6 +38,6 @@ jobs:
           secondary-files: |
             api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
             example-plugin/build/libs/*.jar
-          changelog: ${{ github.event.release.url }}
+          changelog: https://annoying-api.srnyx.com/releases/tag/${{ github.event.release.url }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
