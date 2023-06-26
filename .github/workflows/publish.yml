@@ -24,17 +24,18 @@ jobs:
       - name: Publish artifacts
         uses: "Kir-Antipov/mc-publish@v3.3"
         with:
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           modrinth-id: gzktm9GG
-          
-          #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           #curseforge-id: 728930
-          
           game-versions: |
             >=1.8.8
           
-          changelog: github.event.release.url
-          
+          loaders: |
+            purpur
+            paper
+            spigot
           files: |
-            api/build/libs/AnnoyingAPI-*.jar
-            example-plugin/build/libs/AnnoyingExample-*.jar
+            api/build/libs/*.jar
+            example-plugin/build/libs/*.jar
+          changelog: github.event.release.url
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          #curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
