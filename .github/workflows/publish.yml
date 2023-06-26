@@ -33,8 +33,10 @@ jobs:
             purpur
             paper
             spigot
-          files: |
-            api/build/libs/*.jar
+          primary-files: |
+            api/build/libs/AnnoyingAPI-*[!a-z].jar
+          secondary-files: |
+            api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
             example-plugin/build/libs/*.jar
           changelog: github.event.release.url
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
