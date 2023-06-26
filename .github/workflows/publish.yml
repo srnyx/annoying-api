@@ -36,5 +36,5 @@ jobs:
           changelog: github.event.release.url
           
           files: |
-            "api/build/libs/AnnoyingAPI-*.jar"
-            "example-plugin/build/libs/AnnoyingExample-*.jar"
+            api/build/libs/AnnoyingAPI-*.jar
+            example-plugin/build/libs/AnnoyingExample-*.jar
