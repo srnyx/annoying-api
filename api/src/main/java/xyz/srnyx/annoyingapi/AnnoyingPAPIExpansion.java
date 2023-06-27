@@ -1,8 +1,10 @@
-package xyz.srnyx.annoyingapi.parents;
+package xyz.srnyx.annoyingapi;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 import org.jetbrains.annotations.NotNull;
+
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 
 /**

@@ -1,8 +1,10 @@
-package xyz.srnyx.annoyingapi.parents;
+package xyz.srnyx.annoyingapi;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 
 /**

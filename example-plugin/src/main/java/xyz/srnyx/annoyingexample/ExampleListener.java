@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.parents.AnnoyingListener;
+import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
