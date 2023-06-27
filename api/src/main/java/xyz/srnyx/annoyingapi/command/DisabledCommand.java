@@ -30,7 +30,7 @@ public class DisabledCommand implements AnnoyingCommand {
      * @return  the plugin instance
      */
     @Override @NotNull
-    public AnnoyingPlugin getPlugin() {
+    public AnnoyingPlugin getAnnoyingPlugin() {
         return plugin;
     }
 

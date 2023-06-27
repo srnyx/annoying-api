@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.util.Collection;
@@ -23,15 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a command that can be executed by a player or the console
  */
-public interface AnnoyingCommand extends TabExecutor {
-    /**
-     * The {@link AnnoyingPlugin} that this command belongs to
-     *
-     * @return  the plugin instance
-     */
-    @NotNull
-    AnnoyingPlugin getPlugin();
-
+public interface AnnoyingCommand extends TabExecutor, Annoyable {
     /**
      * <i>{@code OPTIONAL}</i> This is the name of the command
      * <p>If not specified, the lowercase class name will be used ({@code Command} will be removed)
@@ -97,16 +90,16 @@ public interface AnnoyingCommand extends TabExecutor {
     }
 
     /**
-     * Returns whether the command is registered to the {@link #getPlugin()}
+     * Returns whether the command is registered to the {@link #getAnnoyingPlugin()}
      *
      * @return  whether the command is registered
      */
     default boolean isRegistered() {
-        return getPlugin().registeredCommands.contains(this);
+        return getAnnoyingPlugin().registeredCommands.contains(this);
     }
 
     /**
-     * Toggles the registration of the command to the {@link #getPlugin()}
+     * Toggles the registration of the command to the {@link #getAnnoyingPlugin()}
      *
      * @param   registered  whether the command should be registered or unregistered
      */
@@ -119,27 +112,27 @@ public interface AnnoyingCommand extends TabExecutor {
     }
 
     /**
-     * Registers the command to the {@link #getPlugin()}
+     * Registers the command to the {@link #getAnnoyingPlugin()}
      */
     default void register() {
         if (isRegistered()) return;
-        final PluginCommand command = getPlugin().getCommand(getName());
+        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
         if (command == null) {
             AnnoyingPlugin.log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
             return;
         }
         command.setExecutor(this);
-        getPlugin().registeredCommands.add(this);
+        getAnnoyingPlugin().registeredCommands.add(this);
     }
 
     /**
-     * Unregisters the command from the {@link #getPlugin()}
+     * Unregisters the command from the {@link #getAnnoyingPlugin()}
      */
     default void unregister() {
         if (!isRegistered()) return;
-        final PluginCommand command = getPlugin().getCommand(getName());
-        if (command != null) command.setExecutor(new DisabledCommand(getPlugin()));
-        getPlugin().registeredCommands.remove(this);
+        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
+        if (command != null) command.setExecutor(new DisabledCommand(getAnnoyingPlugin()));
+        getAnnoyingPlugin().registeredCommands.remove(this);
     }
 
     /**
@@ -156,7 +149,7 @@ public interface AnnoyingCommand extends TabExecutor {
      */
     @Override
     default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
-        final AnnoyingSender sender = new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args);
+        final AnnoyingSender sender = new AnnoyingSender(getAnnoyingPlugin(), cmdSender, cmd, label, args);
 
         // Permission & player check
         final String permission = getPermission();
@@ -164,7 +157,7 @@ public interface AnnoyingCommand extends TabExecutor {
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(getPlugin(), getPlugin().options.messageKeys.invalidArguments).send(sender);
+            new AnnoyingMessage(getAnnoyingPlugin(), getAnnoyingPlugin().options.messageKeys.invalidArguments).send(sender);
             return true;
         }
 
@@ -189,7 +182,7 @@ public interface AnnoyingCommand extends TabExecutor {
         if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();
 
         // Get suggestions
-        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(getPlugin(), cmdSender, cmd, label, args));
+        final Collection<String> suggestions = onTabComplete(new AnnoyingSender(getAnnoyingPlugin(), cmdSender, cmd, label, args));
         if (suggestions == null) return Collections.emptyList();
 
         // Filter suggestions

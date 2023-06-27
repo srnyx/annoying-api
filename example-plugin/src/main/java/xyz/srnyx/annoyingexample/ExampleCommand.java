@@ -32,7 +32,7 @@ public class ExampleCommand implements AnnoyingCommand {
     }
 
     @Override @NotNull
-    public ExamplePlugin getPlugin() {
+    public ExamplePlugin getAnnoyingPlugin() {
         return plugin;
     }
 

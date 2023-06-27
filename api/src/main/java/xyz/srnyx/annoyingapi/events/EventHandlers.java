@@ -33,8 +33,8 @@ public class EventHandlers extends Stringable implements AnnoyingListener {
         this.plugin = plugin;
     }
 
-    @NotNull
-    public AnnoyingPlugin getPlugin() {
+    @Override @NotNull
+    public AnnoyingPlugin getAnnoyingPlugin() {
         return plugin;
     }
 
