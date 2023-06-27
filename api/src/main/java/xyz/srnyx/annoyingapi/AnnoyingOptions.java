@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 import xyz.srnyx.annoyingapi.parents.AnnoyingListener;
 import xyz.srnyx.annoyingapi.parents.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.parents.Stringable;
@@ -141,12 +139,9 @@ public class AnnoyingOptions extends Stringable {
         if (section.contains("bStatsOptions")) options.bStatsOptions = AnnoyingResource.ResourceOptions.load(section.getConfigurationSection("bStatsOptions"));
         if (section.contains("messagesFileName")) options.messagesFileName = section.getString("messagesFileName");
         if (section.contains("messagesOptions")) options.messagesOptions = AnnoyingResource.ResourceOptions.load(section.getConfigurationSection("messagesOptions"));
-        options.messageKeys = MessageKeys.load(section.getConfigurationSection("messageKeys"));
-        ConfigurationUtility.toConfigurationList(section.getMapList("dependencies")).stream()
-                .map(AnnoyingDependency::load)
-                .forEach(options.dependencies::add);
-        Bukkit.getLogger().severe(ConfigurationUtility.toMapList(options.dependencies.get(0).platforms.dump(new ArrayList<>())).toString());
-        options.updatePlatforms = PluginPlatform.Multi.load(ConfigurationUtility.toConfigurationList(section.getMapList("updatePlatforms")));
+        if (section.contains("messageKeys")) options.messageKeys = MessageKeys.load(section.getConfigurationSection("messageKeys"));
+        options.dependencies.addAll(AnnoyingDependency.loadList(section, "dependencies"));
+        options.updatePlatforms = PluginPlatform.Multi.load(section, "updatePlatforms");
         return options;
     }
 

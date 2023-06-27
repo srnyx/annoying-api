@@ -10,7 +10,9 @@ import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 /**
@@ -64,11 +66,28 @@ public class AnnoyingDependency extends Stringable {
      */
     @NotNull
     public static AnnoyingDependency load(@NotNull ConfigurationSection section) {
+        final String name = section.getName();
         return new AnnoyingDependency(
-                section.getString("name"),
-                PluginPlatform.Multi.load(ConfigurationUtility.toConfigurationList(section.getMapList("platforms"))),
+                name.isEmpty() ? section.getString("name") : name,
+                PluginPlatform.Multi.load(section, "platforms"),
                 section.getBoolean("required"),
                 section.getBoolean("enableAfterDownload"));
+    }
+
+    /**
+     * Loads a list of dependencies from a {@link ConfigurationSection}
+     *
+     * @param   section the section to load from
+     * @param   key     the key to load from
+     *
+     * @return          the loaded dependencies
+     */
+    @NotNull
+    public static List<AnnoyingDependency> loadList(@NotNull ConfigurationSection section, @NotNull String key) {
+        final ConfigurationSection dependenciesSection = section.getConfigurationSection(key);
+        return (dependenciesSection == null ? ConfigurationUtility.toConfigurationList(section.getMapList(key)).stream() : dependenciesSection.getKeys(false).stream().map(dependenciesSection::getConfigurationSection).filter(Objects::nonNull))
+                .map(AnnoyingDependency::load)
+                .collect(Collectors.toList());
     }
 
     /**

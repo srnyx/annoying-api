@@ -27,10 +27,12 @@ annoying:
     invalidArguments: "invalid-arguments"
     disabledCommand: "disabled-command"
   dependencies:
-    - name: ViaVersion
+    ViaVersion:
       platforms:
-        - platform: SPIGOT
-          identifier: 19254
+        HANGAR:
+          author: ViaVersion
+          identifier: ViaVersion
+        SPIGOT: 19254
       required: true
       enableAfterDownload: true
 

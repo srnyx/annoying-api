@@ -1,13 +1,13 @@
 package xyz.srnyx.annoyingapi;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.plugin.Plugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.parents.Stringable;
+import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -63,11 +63,15 @@ public class PluginPlatform extends Stringable {
      *
      * @return          the loaded {@link PluginPlatform}
      */
-    @NotNull
+    @Nullable
     public static PluginPlatform load(@NotNull ConfigurationSection section) {
         // platform
-        final String platformName = section.getString("platform");
-        if (platformName == null) throw new IllegalArgumentException("platform is null");
+        final String name = section.getName();
+        final String platformName = name.isEmpty() ? section.getString("platform") : name;
+        if (platformName == null) {
+            AnnoyingPlugin.log(Level.WARNING, "platform is null");
+            return null;
+        }
         final Platform platform;
         try {
             platform = Platform.valueOf(platformName.toUpperCase());
@@ -300,16 +304,43 @@ public class PluginPlatform extends Stringable {
         }
 
         /**
-         * Loads a {@link Multi} from the given {@link ConfigurationSection ConfigurationSections}
+         * Loads a {@link Multi} from the given {@link ConfigurationSection}
          *
-         * @param   list    the {@link ConfigurationSection ConfigurationSections} to load from
+         * @param   section the {@link ConfigurationSection} to load from
+         * @param   key     the key to load from
          *
          * @return          the loaded {@link Multi}
          */
         @NotNull
-        public static Multi load(@NotNull List<ConfigurationSection> list) {
+        public static Multi load(@NotNull ConfigurationSection section, @NotNull String key) {
             final Multi multi = new Multi();
-            list.forEach(section -> multi.addIfAbsent(PluginPlatform.load(section)));
+
+            // Map list
+            final ConfigurationSection platformsSection = section.getConfigurationSection(key);
+            if (platformsSection == null) {
+                ConfigurationUtility.toConfigurationList(section.getMapList(key)).stream()
+                        .map(PluginPlatform::load)
+                        .forEach(multi::addIfAbsent);
+                return multi;
+            }
+
+            // Key list
+            for (final String platformKey : platformsSection.getKeys(false)) {
+                // String
+                final ConfigurationSection platformSection = platformsSection.getConfigurationSection(platformKey);
+                if (platformSection == null) {
+                    try {
+                        multi.addIfAbsent(new PluginPlatform(Platform.valueOf(platformKey.toUpperCase()), platformsSection.getString(platformKey)));
+                    } catch (final IllegalArgumentException e) {
+                        // Ignore
+                    }
+                    continue;
+                }
+                // Section
+                final PluginPlatform pluginPlatform = PluginPlatform.load(platformSection);
+                if (pluginPlatform != null) multi.addIfAbsent(pluginPlatform);
+            }
+
             return multi;
         }
 
