@@ -10,12 +10,13 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 
 
 /**
  * This class is typically used in conjunction with {@link AnnoyingCommand}
  */
-public class AnnoyingSender {
+public class AnnoyingSender extends Stringable {
     /**
      * The {@link AnnoyingPlugin} instance
      */

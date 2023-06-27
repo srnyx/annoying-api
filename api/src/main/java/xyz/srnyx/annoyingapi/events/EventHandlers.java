@@ -11,12 +11,13 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 
 
 /**
  * Class for handling events for the API
  */
-public class EventHandlers implements AnnoyingListener {
+public class EventHandlers extends Stringable implements AnnoyingListener {
     /**
      * The plugin instance
      */

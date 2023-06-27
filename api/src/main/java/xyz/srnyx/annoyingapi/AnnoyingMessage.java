@@ -14,7 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -32,7 +34,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSp
 /**
  * Represents a message from the {@link AnnoyingOptions#messagesFileName} file
  */
-public class AnnoyingMessage {
+public class AnnoyingMessage extends Stringable {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String key;
     @Nullable private String splitterPlaceholder;
@@ -473,7 +475,7 @@ public class AnnoyingMessage {
     /**
      * Used in {@link #replace(String, Object, ReplaceType)} and {@link #replace(String, Object)}
      */
-    private class Replacement {
+    private class Replacement extends Stringable {
         @NotNull private final String before;
         @NotNull private final String value;
         @Nullable private final ReplaceType type;

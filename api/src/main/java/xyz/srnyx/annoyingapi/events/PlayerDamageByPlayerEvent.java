@@ -10,6 +10,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.parents.Stringable;
 import java.util.EnumMap;
 
 
@@ -36,6 +37,10 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
         super(damager, damagee, cause, new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, damage)), new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, ZERO)));
     }
 
+    @Override @NotNull
+    public String toString() {
+        return Stringable.toString(this);
+    }
     /**
      * Returns the {@link HandlerList} for this event
      *

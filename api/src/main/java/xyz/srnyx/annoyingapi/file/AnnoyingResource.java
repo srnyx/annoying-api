@@ -89,13 +89,6 @@ public class AnnoyingResource extends AnnoyingFile {
             return options;
         }
 
-        @Override @NotNull
-        public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-            super.dump(section);
-            section.set("createDefaultFile", createDefaultFile);
-            return section;
-        }
-
         /**
          * Sets {@link #createDefaultFile}
          *
@@ -107,6 +100,14 @@ public class AnnoyingResource extends AnnoyingFile {
         public ResourceOptions createDefaultFile(boolean createDefaultFile) {
             this.createDefaultFile = createDefaultFile;
             return this;
+        }
+
+        @Override @NotNull
+        public String toString() {
+            return "ResourceOptions{" +
+                    "canBeEmpty=" + canBeEmpty +
+                    ", createDefaultFile=" + createDefaultFile +
+                    '}';
         }
     }
 }

@@ -5,8 +5,8 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.Dumpable;
 import xyz.srnyx.annoyingapi.PluginPlatform;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 
 import java.io.File;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 /**
  * Represents a downloadable dependency
  */
-public class AnnoyingDependency implements Dumpable<ConfigurationSection> {
+public class AnnoyingDependency extends Stringable {
     /**
      * The name of the dependency (from it's {@code plugin.yml})
      */
@@ -69,15 +69,6 @@ public class AnnoyingDependency implements Dumpable<ConfigurationSection> {
                 PluginPlatform.Multi.load(ConfigurationUtility.toConfigurationList(section.getMapList("platforms"))),
                 section.getBoolean("required"),
                 section.getBoolean("enableAfterDownload"));
-    }
-
-    @Override @NotNull
-    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-        section.set("name", name);
-        section.set("platforms", ConfigurationUtility.toMapList(platforms.dump(new ArrayList<>())));
-        section.set("required", required);
-        section.set("enableAfterDownload", enableAfterDownload);
-        return section;
     }
 
     /**

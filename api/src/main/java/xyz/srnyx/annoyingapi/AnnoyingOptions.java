@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 
 import java.io.Reader;
 import java.util.*;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
  * Represents the options for the API
  */
 @SuppressWarnings("CanBeFinal")
-public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
+public class AnnoyingOptions extends Stringable {
     /**
      * <i>{@code RECOMMENDED}</i> The ID of the plugin on <a href="https://bstats.org">bStats</a>
      * <p>If not specified, bStats metrics will not be enabled
@@ -147,20 +148,6 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
         return options;
     }
 
-    @Override @NotNull
-    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-        section.set("bStatsId", bStatsId);
-        section.set("bStatsFileName", bStatsFileName);
-        if (bStatsOptions != null) bStatsOptions.dump(section.createSection("bStatsOptions"));
-        section.set("messagesFileName", messagesFileName);
-        if (messagesOptions != null) messagesOptions.dump(section.createSection("messagesOptions"));
-        messageKeys.dump(section.createSection("messageKeys"));
-        final ConfigurationSection dependenciesSection = section.createSection("dependencies");
-        this.dependencies.forEach(dependency -> dependency.dump(dependenciesSection));
-        section.set("updatePlatforms", ConfigurationUtility.toMapList(updatePlatforms.dump(new ArrayList<>())));
-        return section;
-    }
-
     /**
      * Casts the {@link #papiExpansionToRegister} to a {@link PlaceholderExpansion} and returns it
      *
@@ -174,7 +161,7 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
     /**
      * A class to hold the different default {@link AnnoyingPlugin#messages} keys
      */
-    public static class MessageKeys implements Dumpable<ConfigurationSection> {
+    public static class MessageKeys extends Stringable {
         /**
          * <i>{@code OPTIONAL}</i> The {@link AnnoyingPlugin#messages} key for the plugin's global placeholders
          *
@@ -250,20 +237,6 @@ public class AnnoyingOptions implements Dumpable<ConfigurationSection> {
             if (section.contains("invalidArguments")) keys.invalidArguments = section.getString("invalidArguments");
             if (section.contains("disabledCommand")) keys.disabledCommand = section.getString("disabledCommand");
             return keys;
-        }
-
-        @Override @NotNull
-        public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-            section.set("globalPlaceholders", globalPlaceholders);
-            section.set("splitterJson", splitterJson);
-            section.set("splitterPlaceholder", splitterPlaceholder);
-            section.set("updateAvailable", updateAvailable);
-            section.set("noPermission", noPermission);
-            section.set("playerOnly", playerOnly);
-            section.set("invalidArgument", invalidArgument);
-            section.set("invalidArguments", invalidArguments);
-            section.set("disabledCommand", disabledCommand);
-            return section;
         }
     }
 }

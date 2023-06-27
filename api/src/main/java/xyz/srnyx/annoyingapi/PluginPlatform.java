@@ -7,6 +7,8 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.parents.Stringable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Contains information about a plugin on a {@link Platform}
  */
-public class PluginPlatform implements Dumpable<ConfigurationSection> {
+public class PluginPlatform extends Stringable {
     /**
      * The platform the plugin is on
      */
@@ -84,14 +86,6 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
         }
 
         return new PluginPlatform(platform, identifier);
-    }
-
-    @Override @NotNull
-    public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-        section.set("platform", platform.name());
-        section.set("identifier", identifier);
-        if (platform.requiresAuthor) section.set("author", author);
-        return section;
     }
 
     /**
@@ -263,7 +257,7 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
     /**
      * A collection of {@link PluginPlatform}s
      */
-    public static class Multi implements Dumpable<List<ConfigurationSection>> {
+    public static class Multi {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */
@@ -306,12 +300,6 @@ public class PluginPlatform implements Dumpable<ConfigurationSection> {
             final Multi multi = new Multi();
             list.forEach(section -> multi.addIfAbsent(PluginPlatform.load(section)));
             return multi;
-        }
-
-        @Override @NotNull
-        public List<ConfigurationSection> dump(@NotNull List<ConfigurationSection> sections) {
-            pluginPlatforms.forEach(pluginPlatform -> sections.add(pluginPlatform.dump(new MemoryConfiguration())));
-            return sections;
         }
 
         /**

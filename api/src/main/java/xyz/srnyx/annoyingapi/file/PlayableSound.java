@@ -9,6 +9,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.parents.Stringable;
+
 import java.lang.reflect.InvocationTargetException;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefWorld.WORLD_PLAY_SOUND_METHOD;
@@ -18,7 +20,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYE
 /**
  * Represents a {@link Sound} with a volume and pitch
  */
-public class PlayableSound {
+public class PlayableSound extends Stringable {
     /**
      * The {@link Sound} to play
      */

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.Dumpable;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
@@ -76,6 +76,11 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         this.file = new File(plugin.getDataFolder(), path);
         this.fileOptions = fileOptions == null ? new FileOptions<>() : fileOptions;
         load();
+    }
+
+    @Override @NotNull
+    public String toString() {
+        return Stringable.toString(this);
     }
 
     /**
@@ -587,7 +592,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      *
      * @param   <T> the type of the {@link FileOptions} instance
      */
-    public static class FileOptions<T extends FileOptions<T>> implements Dumpable<ConfigurationSection> {
+    public static class FileOptions<T extends FileOptions<T>> extends Stringable {
         /**
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
@@ -614,12 +619,6 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         public static <G extends FileOptions<G>> G load(@NotNull G options, @NotNull ConfigurationSection section) {
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
             return options;
-        }
-
-        @Override @NotNull
-        public ConfigurationSection dump(@NotNull ConfigurationSection section) {
-            section.set("canBeEmpty", canBeEmpty);
-            return section;
         }
 
         /**

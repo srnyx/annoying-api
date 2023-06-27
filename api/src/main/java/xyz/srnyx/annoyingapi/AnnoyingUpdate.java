@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 
 import java.util.logging.Level;
 
@@ -16,7 +17,7 @@ import java.util.logging.Level;
 /**
  * Class for handling update checking
  */
-public class AnnoyingUpdate {
+public class AnnoyingUpdate extends Stringable {
     /**
      * The {@link AnnoyingPlugin plugin} instance
      */

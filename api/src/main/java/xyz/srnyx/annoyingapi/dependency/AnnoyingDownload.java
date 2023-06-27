@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.parents.Stringable;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
@@ -31,7 +32,7 @@ import java.util.logging.Level;
 /**
  * Used for downloading {@link AnnoyingDependency}s
  */
-public class AnnoyingDownload {
+public class AnnoyingDownload extends Stringable {
     @NotNull private static final CommandRegister COMMAND_REGISTER = new CommandRegister();
 
     @NotNull private final AnnoyingPlugin plugin;

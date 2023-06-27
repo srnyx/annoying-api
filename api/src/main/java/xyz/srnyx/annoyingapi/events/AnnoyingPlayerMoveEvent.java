@@ -8,6 +8,8 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.parents.Stringable;
+
 
 /**
  * A more advanced version of {@link PlayerMoveEvent}
@@ -41,6 +43,11 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
      */
     public AnnoyingPlayerMoveEvent(@NotNull PlayerMoveEvent event) {
         this(event.getPlayer(), event.getFrom(), event.getTo());
+    }
+
+    @Override @NotNull
+    public String toString() {
+        return Stringable.toString(this);
     }
 
     /**
