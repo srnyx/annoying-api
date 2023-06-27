@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.parents;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
@@ -8,22 +8,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * An extension of {@link PlaceholderExpansion} to allow for easier creation of PlaceholderAPI expansions
  */
-public abstract class AnnoyingPAPIExpansion extends PlaceholderExpansion {
-    /**
-     * Constructor for the {@link AnnoyingPAPIExpansion} class
-     */
-    public AnnoyingPAPIExpansion() {
-        // Only exists to provide a Javadoc
-    }
-
-    /**
-     * The {@link AnnoyingPlugin plugin} that this expansion is for
-     *
-     * @return  the {@link AnnoyingPlugin plugin} that this expansion is for
-     */
-    @NotNull
-    public abstract AnnoyingPlugin getAnnoyingPlugin();
-
+public abstract class AnnoyingPAPIExpansion extends PlaceholderExpansion implements Annoyable {
     @Override @NotNull
     public String getAuthor() {
         return getAnnoyingPlugin().getDescription().getAuthors().get(0);
@@ -37,5 +22,12 @@ public abstract class AnnoyingPAPIExpansion extends PlaceholderExpansion {
     @Override
     public final boolean persist() {
         return true;
+    }
+
+    /**
+     * Constructor for the {@link AnnoyingPAPIExpansion} class
+     */
+    public AnnoyingPAPIExpansion() {
+        // Only exists to provide a Javadoc
     }
 }

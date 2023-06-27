@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingMessage;
-import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
+import xyz.srnyx.annoyingapi.parents.AnnoyingPAPIExpansion;
 
 
 /**

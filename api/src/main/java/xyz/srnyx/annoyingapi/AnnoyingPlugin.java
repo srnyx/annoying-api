@@ -22,6 +22,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.parents.AnnoyingListener;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.io.InputStreamReader;

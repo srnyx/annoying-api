@@ -9,7 +9,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.AnnoyingListener;
+import xyz.srnyx.annoyingapi.parents.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 

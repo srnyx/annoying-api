@@ -13,6 +13,8 @@ import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
+import xyz.srnyx.annoyingapi.parents.AnnoyingListener;
+import xyz.srnyx.annoyingapi.parents.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 
 import java.io.Reader;
