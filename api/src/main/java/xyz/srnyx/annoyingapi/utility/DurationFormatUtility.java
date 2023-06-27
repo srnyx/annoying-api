@@ -56,7 +56,7 @@ public class DurationFormatUtility {
                         inLiteral = false;
                     } else {
                         lexxBuilder = new StringBuilder();
-                        list.add(new Token(""));
+                        list.add(new Token(lexxBuilder));
                         inLiteral = true;
                     }
                     break;
@@ -68,10 +68,10 @@ public class DurationFormatUtility {
                 case 's':
                 case 'S':
                     final String value = String.valueOf(ch);
-                    if (previous != null && previous.value.equals(value)) {
+                    if (previous != null && previous.value.toString().equals(value)) {
                         previous.count++;
                     } else {
-                        final Token token = new Token(value);
+                        final Token token = new Token(new StringBuilder(value));
                         list.add(token);
                         previous = token;
                     }
@@ -80,7 +80,7 @@ public class DurationFormatUtility {
                 default:
                     if (lexxBuilder == null) {
                         lexxBuilder = new StringBuilder();
-                        list.add(new Token(""));
+                        list.add(new Token(lexxBuilder));
                     }
                     lexxBuilder.append(ch);
             }
@@ -131,7 +131,7 @@ public class DurationFormatUtility {
         final StringBuilder builder = new StringBuilder();
         boolean lastOutputSeconds = false;
         for (final Token token : tokens) {
-            final String value = token.value;
+            final String value = token.value.toString();
             final int count = token.count;
             switch (value) {
                 case "y":
@@ -191,7 +191,7 @@ public class DurationFormatUtility {
      * Element that is parsed from the format pattern
      */
     private static class Token {
-        @NotNull private final String value;
+        @NotNull private final StringBuilder value;
         private int count = 1;
 
         /**
@@ -199,7 +199,7 @@ public class DurationFormatUtility {
          *
          * @param   value   to wrap
          */
-        private Token(@NotNull String value) {
+        private Token(@NotNull StringBuilder value) {
             this.value = value;
         }
 
@@ -213,7 +213,7 @@ public class DurationFormatUtility {
          */
         @Contract(pure = true)
         static boolean containsTokenWithValue(@NotNull Token[] tokens, @NotNull String value) {
-            for (final Token token : tokens) if (token.value.equals(value)) return true;
+            for (final Token token : tokens) if (token.value.toString().equals(value)) return true;
             return false;
         }
     }
