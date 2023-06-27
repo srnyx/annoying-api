@@ -53,6 +53,18 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
+     * Constructs a new {@link AnnoyingMessage} from another {@link AnnoyingMessage} (copy constructor)
+     *
+     * @param   message the {@link AnnoyingMessage} to copy
+     */
+    public AnnoyingMessage(@NotNull AnnoyingMessage message) {
+        this.plugin = message.plugin;
+        this.key = message.key;
+        this.splitterPlaceholder = message.splitterPlaceholder;
+        this.replacements.addAll(message.replacements);
+    }
+
+    /**
      * {@link #replace(String, Object)} except using parameter placeholders
      * 
      * @param   placeholder the placeholder to replace (must have {@code %} on both sides)
