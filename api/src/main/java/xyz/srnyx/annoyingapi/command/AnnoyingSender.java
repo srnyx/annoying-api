@@ -28,7 +28,7 @@ public class AnnoyingSender extends Stringable {
     /**
      * The {@link Command} that was used
      */
-    @Nullable public final Command cmd;
+    @Nullable public final Command command;
     /**
      * The {@link Command}'s label that was used
      */
@@ -47,14 +47,14 @@ public class AnnoyingSender extends Stringable {
      *
      * @param   plugin      the {@link AnnoyingPlugin} instance
      * @param   cmdSender   the {@link CommandSender} to be used
-     * @param   cmd         the {@link Command} that was used
+     * @param   command     the {@link Command} that was used
      * @param   label       the {@link Command}'s label that was used
      * @param   args        the {@link Command}'s arguments that were used
      */
-    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @Nullable Command cmd, @Nullable String label, @Nullable String[] args) {
+    public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @Nullable Command command, @Nullable String label, @Nullable String[] args) {
         this.plugin = plugin;
         this.cmdSender = cmdSender;
-        this.cmd = cmd;
+        this.command = command;
         this.label = label;
         this.args = args;
         this.isPlayer = cmdSender instanceof Player;
@@ -68,18 +68,6 @@ public class AnnoyingSender extends Stringable {
      */
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender) {
         this(plugin, cmdSender, null, null, null);
-    }
-
-    /**
-     * Casts the {@link CommandSender} to a {@link Player}
-     * <p>Only use this if you know that the {@link CommandSender} is a {@link Player}
-     *
-     * @return  the {@link Player} that was used
-     */
-    @NotNull
-    public Player getPlayer() {
-        if (!isPlayer) throw new IllegalStateException("CommandSender is not a Player");
-        return (Player) cmdSender;
     }
 
     /**
@@ -120,6 +108,18 @@ public class AnnoyingSender extends Stringable {
                 .replace("%permission%", permission)
                 .send(this);
         return hasPermission;
+    }
+
+    /**
+     * Casts the {@link CommandSender} to a {@link Player}
+     * <p>Only use this if you know that the {@link CommandSender} is a {@link Player}
+     *
+     * @return  the {@link Player} that was used
+     */
+    @NotNull
+    public Player getPlayer() {
+        if (!isPlayer) throw new IllegalStateException("CommandSender is not a Player");
+        return (Player) cmdSender;
     }
 
     /**
