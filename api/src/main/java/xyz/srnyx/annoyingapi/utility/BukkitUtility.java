@@ -3,14 +3,18 @@ package xyz.srnyx.annoyingapi.utility;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefEntity.*;
 
 
 /**
@@ -58,6 +62,28 @@ public class BukkitUtility {
     public static String stripUntranslatedColor(@Nullable String string) {
         if (string == null) return "null";
         return STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
+    }
+
+    /**
+     * Toggles a scoreboard tag on an {@link Entity}
+     *
+     * @param   entity          the {@link Entity} to toggle the scoreboard tag on
+     * @param   scoreboardTag   the scoreboard tag to toggle
+     *
+     * @return                  true if the scoreboard tag was successfully toggled, false otherwise
+     */
+    public static boolean toggleScoreboardTag(@NotNull Entity entity, @NotNull String scoreboardTag) {
+        if (ENTITY_GET_SCOREBOARD_TAGS_METHOD == null || ENTITY_REMOVE_SCOREBOARD_TAG_METHOD == null || ENTITY_ADD_SCOREBOARD_TAG_METHOD == null) return false;
+        try {
+            if (((Set<String>) ENTITY_GET_SCOREBOARD_TAGS_METHOD.invoke(entity)).contains(scoreboardTag)) {
+                return (boolean) ENTITY_REMOVE_SCOREBOARD_TAG_METHOD.invoke(entity, scoreboardTag);
+            } else {
+                return (boolean) ENTITY_ADD_SCOREBOARD_TAG_METHOD.invoke(entity, scoreboardTag);
+            }
+        } catch (final InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
