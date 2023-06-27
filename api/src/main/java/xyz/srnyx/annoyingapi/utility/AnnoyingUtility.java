@@ -43,7 +43,7 @@ public class AnnoyingUtility {
     @NotNull
     public static String formatMillis(long value, @Nullable String pattern, boolean padWithZeros) {
         if (pattern == null) pattern = "m':'s";
-        return DurationFormatUtils.formatDuration(value, pattern, padWithZeros);
+        return DurationFormatUtility.formatDuration(value, pattern, padWithZeros);
     }
 
     /**
