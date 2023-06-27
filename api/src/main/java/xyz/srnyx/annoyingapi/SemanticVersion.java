@@ -40,22 +40,16 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
     }
 
     /**
-     * Creates a new {@link SemanticVersion}
+     * Creates a new {@link SemanticVersion}, removing all non-numeric characters from the version string
      *
      * @param   version                     {@link #version}
-     *
-     * @throws  IllegalArgumentException    if the version does not match the format {@code MAJOR.MINOR} or {@code MAJOR.MINOR.PATCH}
      */
-    public SemanticVersion(@NotNull String version) throws IllegalArgumentException {
-        this.version = version;
-        final String[] split = version.split("\\.");
-        try {
-            this.major = Integer.parseInt(split[0]);
-            this.minor = Integer.parseInt(split[1]);
-            this.patch = split.length > 2 ? Integer.parseInt(split[2]) : 0;
-        } catch (final IndexOutOfBoundsException | NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid version: " + version, e);
-        }
+    public SemanticVersion(@NotNull String version) {
+        this.version = version.replaceAll("[^0-9.]", "");
+        final String[] split = this.version.split("\\.");
+        this.major = Integer.parseInt(split[0]);
+        this.minor = split.length > 1 ? Integer.parseInt(split[1]) : 0;
+        this.patch = split.length > 2 ? Integer.parseInt(split[2]) : 0;
     }
 
     @Override

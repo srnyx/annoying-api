@@ -10,8 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 
@@ -30,7 +28,7 @@ public class AnnoyingUpdate {
     /**
      * The current version of the plugin
      */
-    @NotNull private final Version currentVersion;
+    @NotNull private final SemanticVersion currentVersion;
     /**
      * The user agent to use when making requests
      */
@@ -42,7 +40,7 @@ public class AnnoyingUpdate {
     /**
      * The latest version of the plugin
      */
-    @Nullable public final Version latestVersion;
+    @Nullable public final SemanticVersion latestVersion;
 
     /**
      * Creates a new {@link AnnoyingUpdate} object
@@ -54,7 +52,7 @@ public class AnnoyingUpdate {
     public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull JavaPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
         this.annoyingPlugin = annoyingPlugin;
         this.plugin = plugin;
-        this.currentVersion = new Version(plugin.getDescription().getVersion());
+        this.currentVersion = new SemanticVersion(plugin.getDescription().getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
         this.latestVersion = getLatestVersion();
@@ -79,8 +77,8 @@ public class AnnoyingUpdate {
         final boolean update = isUpdateAvailable();
         if (update && latestVersion != null) annoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messageKeys.updateAvailable)
                 .replace("%plugin%", plugin.getName())
-                .replace("%current%", currentVersion.string)
-                .replace("%new%", latestVersion.string)
+                .replace("%current%", currentVersion.version)
+                .replace("%new%", latestVersion.version)
                 .toString());
         return update;
     }
@@ -91,23 +89,22 @@ public class AnnoyingUpdate {
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     public boolean isUpdateAvailable() {
-        if (latestVersion == null) return false;
-        return latestVersion.value > currentVersion.value;
+        return latestVersion != null && latestVersion.isGreaterThan(currentVersion);
     }
 
     @Nullable
-    private Version getLatestVersion() {
+    private SemanticVersion getLatestVersion() {
         // Modrinth
         final String modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
         if (modrinthIdentifier != null) {
-            final Version modrinth = modrinth(modrinthIdentifier);
+            final SemanticVersion modrinth = modrinth(modrinthIdentifier);
             if (modrinth != null) return modrinth;
         }
 
         // Hangar
         final PluginPlatform hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
         if (hangarPlatform != null) {
-            final Version hangar = hangar(hangarPlatform);
+            final SemanticVersion hangar = hangar(hangarPlatform);
             if (hangar != null) return hangar;
         }
 
@@ -126,8 +123,8 @@ public class AnnoyingUpdate {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private Version modrinth(@NotNull String identifier) {
         final JsonElement json = AnnoyingUtility.getJson(userAgent,
+    private SemanticVersion modrinth(@NotNull String identifier) {
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
@@ -139,7 +136,7 @@ public class AnnoyingUpdate {
         try {
             final JsonArray versions = json.getAsJsonArray();
             if (versions.size() == 0) return fail(PluginPlatform.Platform.MODRINTH);
-            return new Version(versions.get(0).getAsJsonObject().get("version_number").getAsString());
+            return new SemanticVersion(versions.get(0).getAsJsonObject().get("version_number").getAsString());
         } catch (final IllegalStateException e) {
             return fail(PluginPlatform.Platform.MODRINTH);
         }
@@ -153,14 +150,14 @@ public class AnnoyingUpdate {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private Version hangar(@NotNull PluginPlatform platform) {
         final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
+    private SemanticVersion hangar(@NotNull PluginPlatform platform) {
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.HANGAR);
 
         // Return the latest version
-        return new Version(json.getAsJsonObject().get("result").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
+        return new SemanticVersion(json.getAsJsonObject().get("result").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
     }
 
     /**
@@ -171,14 +168,14 @@ public class AnnoyingUpdate {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private Version spigot(@NotNull String identifier) {
         final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
+    private SemanticVersion spigot(@NotNull String identifier) {
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.SPIGOT);
 
         // Return the latest version
-        return new Version(json.getAsJsonObject().get("name").getAsString());
+        return new SemanticVersion(json.getAsJsonObject().get("name").getAsString());
     }
 
     /**
@@ -189,45 +186,8 @@ public class AnnoyingUpdate {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private Version fail(@NotNull PluginPlatform.Platform platform) {
+    private SemanticVersion fail(@NotNull PluginPlatform.Platform platform) {
         platforms.remove(platform);
         return getLatestVersion();
-    }
-
-    /**
-     * Class for handling versions (only supports numbers [letters/words will be ignored]) to allow for easy comparison. For Minecraft versions use {@link SemanticVersion} instead!
-     * <p><b>This will work best if the version is in <a href="https://semver.org">semantic format</a></b>
-     */
-    private static class Version {
-        /**
-         * The version as a {@link String}
-         */
-        @NotNull public final String string;
-        /**
-         * The value of the version
-         */
-        private int value = 0;
-
-        /**
-         * Creates a new {@link Version} object
-         *
-         * @param   string  {@link #string}
-         */
-        public Version(@NotNull String string) {
-            this.string = string;
-
-            // Set value
-            final List<Integer> values = new ArrayList<>();
-            for (final String subString : string.split("\\.")) {
-                try {
-                    values.add(Integer.parseInt(subString));
-                } catch (final NumberFormatException e) {
-                    break;
-                }
-            }
-
-            final int length = values.size();
-            for (int i = 0; i < length; i++) value += values.get(i) * Math.pow(10, length - i);
-        }
     }
 }
