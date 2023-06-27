@@ -11,6 +11,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.parents.Stringable;
+
 import java.util.EnumMap;
 
 
@@ -41,6 +42,7 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
     public String toString() {
         return Stringable.toString(this);
     }
+
     /**
      * Returns the {@link HandlerList} for this event
      *

@@ -22,7 +22,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.io.InputStreamReader;
 import java.util.*;
@@ -187,9 +187,9 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Get start message colors
         final String primaryColorString = globalPlaceholders.get("p");
-        final String primaryColor = primaryColorString != null ? AnnoyingUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+        final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
         final String secondaryColorString = globalPlaceholders.get("s");
-        final String secondaryColor = secondaryColorString != null ? AnnoyingUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+        final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
 
         // Get start messages
         final PluginDescriptionFile description = getDescription();

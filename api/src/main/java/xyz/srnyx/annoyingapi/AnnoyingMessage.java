@@ -328,7 +328,7 @@ public class AnnoyingMessage extends Stringable {
     @Nullable
     private String extractHover(String @NotNull [] split) {
         final String hover = split.length >= 2 ? split[1] : null;
-        return hover != null && AnnoyingUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
+        return hover != null && BukkitUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
     }
 
     /**
@@ -341,7 +341,7 @@ public class AnnoyingMessage extends Stringable {
     @Nullable
     private String extractFunction(String @NotNull [] split) {
         final String function = split.length >= 3 ? split[2] : null;
-        return function != null && AnnoyingUtility.stripUntranslatedColor(function).isEmpty() ? null : function;
+        return function != null && BukkitUtility.stripUntranslatedColor(function).isEmpty() ? null : function;
     }
 
     /**

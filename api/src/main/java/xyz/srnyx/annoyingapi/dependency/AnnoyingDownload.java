@@ -16,8 +16,8 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.PluginPlatform;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.parents.Stringable;
+import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
@@ -138,15 +138,14 @@ public class AnnoyingDownload extends Stringable {
      * @param   identifier  the identifier of the plugin on Modrinth
      */
     private void modrinth(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
-        final JsonElement json = AnnoyingUtility.getJson(userAgent,
+        final JsonElement json = HttpConnectionUtility.requestJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
 
         // Request failed
         if (json == null) {
-            dependency.platforms.remove(PluginPlatform.Platform.MODRINTH);
-            attemptDownload(dependency);
+            fail(dependency, PluginPlatform.Platform.MODRINTH);
             return;
         }
 
@@ -164,26 +163,21 @@ public class AnnoyingDownload extends Stringable {
      * @param   platform    the {@link PluginPlatform} containing the plugin information
      */
     private void hangar(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform platform) {
-        final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
-
-        final JsonElement latestJson = AnnoyingUtility.getJson(userAgent, url + "latestrelease");
-        // Request failed
-        if (latestJson == null) {
-            dependency.platforms.remove(platform.platform);
-            attemptDownload(dependency);
+        if (platform.author == null) {
+            fail(dependency, platform.platform);
             return;
         }
+        final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
 
-        final JsonElement downloadJson = AnnoyingUtility.getJson(userAgent, url + "versions/" + latestJson.getAsString() + "/PAPER/download");
+        final String latest = HttpConnectionUtility.requestString(userAgent, url + "latestrelease");
         // Request failed
-        if (downloadJson == null) {
-            dependency.platforms.remove(platform.platform);
-            attemptDownload(dependency);
+        if (latest == null) {
+            fail(dependency, platform.platform);
             return;
         }
 
         // Download file
-        downloadFile(dependency, platform.platform, downloadJson.getAsString());
+        downloadFile(dependency, platform.platform, url + "versions/" + latest + "/PAPER/download");
     }
 
     /**
@@ -196,20 +190,18 @@ public class AnnoyingDownload extends Stringable {
     private void spigot(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
         final PluginPlatform.Multi platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + identifier;
-        final JsonElement json = AnnoyingUtility.getJson(userAgent, url);
+        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, url);
 
         // Request failed
         if (json == null) {
-            platforms.remove(PluginPlatform.Platform.SPIGOT);
-            attemptDownload(dependency);
+            fail(dependency, PluginPlatform.Platform.SPIGOT);
             return;
         }
         final JsonObject object = json.getAsJsonObject();
 
         // Resource is premium
         if (object.get("premium").getAsBoolean()) {
-            platforms.remove(PluginPlatform.Platform.SPIGOT);
-            attemptDownload(dependency);
+            fail(dependency, PluginPlatform.Platform.SPIGOT);
             return;
         }
 
@@ -252,8 +244,7 @@ public class AnnoyingDownload extends Stringable {
             connection.setRequestProperty("User-Agent", userAgent);
         } catch (final IOException e) {
             e.printStackTrace();
-            dependency.platforms.remove(platform);
-            attemptDownload(dependency);
+            fail(dependency, platform);
             return;
         }
 
@@ -270,6 +261,17 @@ public class AnnoyingDownload extends Stringable {
         // Send success message
         plugin.log(Level.INFO, "&2" + dependency.name + " &8|&a Successfully downloaded from &2" + platform.name());
         finish(dependency, true);
+    }
+
+    /**
+     * Removes the specified platform from the dependency and attempts to download the dependency again
+     *
+     * @param   dependency  the {@link AnnoyingDependency} being processed
+     * @param   platform    the platform to remove
+     */
+    private void fail(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform.Platform platform) {
+        dependency.platforms.remove(platform);
+        attemptDownload(dependency);
     }
 
     /**

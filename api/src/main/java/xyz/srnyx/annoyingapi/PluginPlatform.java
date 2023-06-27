@@ -366,5 +366,10 @@ public class PluginPlatform extends Stringable {
             final List<Platform> toRemove = Arrays.asList(platforms);
             return pluginPlatforms.removeIf(filter -> toRemove.contains(filter.platform));
         }
+
+        @Override @NotNull
+        public String toString() {
+            return pluginPlatforms.toString();
+        }
     }
 }

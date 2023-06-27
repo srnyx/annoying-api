@@ -1,0 +1,136 @@
+package xyz.srnyx.annoyingapi.utility;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+
+/**
+ * Utility methods relating to Bukkit
+ */
+public class BukkitUtility {
+    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)&[0-9A-FK-OR]");
+
+    /**
+     * Translates {@code &} color codes to {@link ChatColor}
+     *
+     * @param   object  the object/message to translate
+     *
+     * @return          the translated object/message
+     */
+    @NotNull
+    public static String color(@Nullable Object object) {
+        if (object == null) return "null";
+        return ChatColor.translateAlternateColorCodes('&', String.valueOf(object));
+    }
+
+    /**
+     * Translates {@code &} color codes to {@link ChatColor} for a {@link Collection} of messages
+     *
+     * @param   objects the objects/messages to translate
+     *
+     * @return          the translated objects/messages
+     */
+    @NotNull
+    public static List<String> colorCollection(@Nullable Collection<?> objects) {
+        if (objects == null) return new ArrayList<>();
+        return objects.stream()
+                .map(BukkitUtility::color)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Strips untranslated {@link ChatColor ChatColors} (using {@code &}) from a {@link String}
+     *
+     * @param   string  the {@link String} to strip
+     *
+     * @return          the stripped {@link String}
+     */
+    @NotNull
+    public static String stripUntranslatedColor(@Nullable String string) {
+        if (string == null) return "null";
+        return STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
+    }
+
+    /**
+     * Gets an {@link OfflinePlayer} from the specified name
+     *
+     * @param   name    the name of the player
+     *
+     * @return          the {@link OfflinePlayer}, or null if not found
+     */
+    @Nullable
+    public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
+        for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
+            final String offlineName = offline.getName();
+            if (offlineName != null && offlineName.equalsIgnoreCase(name)) return offline;
+        }
+        return null;
+    }
+
+    /**
+     * Gets a {@link Set} of all online player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getOnlinePlayerNames() {
+        return Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all offline player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getOfflinePlayerNames() {
+        return Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(player -> !player.isOnline())
+                .map(OfflinePlayer::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all player names
+     *
+     * @return  the {@link Set} of player names
+     */
+    @NotNull
+    public static Set<String> getAllPlayerNames() {
+        return Arrays.stream(Bukkit.getOfflinePlayers())
+                .map(OfflinePlayer::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Gets a {@link Set} of all world names
+     *
+     * @return  the {@link Set} of world names
+     */
+    @NotNull
+    public static Set<String> getWorldNames() {
+        return Bukkit.getWorlds().stream()
+                .map(org.bukkit.World::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Constructs a new {@link BukkitUtility} instance (illegal)
+     *
+     * @throws  UnsupportedOperationException   if this class is instantiated
+     */
+    private BukkitUtility() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+}

@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
@@ -376,10 +376,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
             // Name
             final String name = section.getString("name");
-            if (name != null) meta.setDisplayName(AnnoyingUtility.color(name));
+            if (name != null) meta.setDisplayName(BukkitUtility.color(name));
 
             // Lore
-            meta.setLore(AnnoyingUtility.colorCollection(section.getStringList("lore")));
+            meta.setLore(BukkitUtility.colorCollection(section.getStringList("lore")));
 
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");

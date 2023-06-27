@@ -8,8 +8,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.parents.Stringable;
+import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
 import java.util.logging.Level;
 
@@ -124,8 +124,8 @@ public class AnnoyingUpdate extends Stringable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-        final JsonElement json = AnnoyingUtility.getJson(userAgent,
     private SemanticVersion modrinth(@NotNull String identifier) {
+        final JsonElement json = HttpConnectionUtility.requestJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
@@ -151,8 +151,8 @@ public class AnnoyingUpdate extends Stringable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-        final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
     private SemanticVersion hangar(@NotNull PluginPlatform platform) {
+        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.HANGAR);
@@ -169,8 +169,8 @@ public class AnnoyingUpdate extends Stringable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-        final JsonElement json = AnnoyingUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
     private SemanticVersion spigot(@NotNull String identifier) {
+        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.SPIGOT);

@@ -5,7 +5,7 @@ import net.md_5.bungee.api.chat.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,9 +63,9 @@ public class AnnoyingJSON {
      */
     @NotNull
     public AnnoyingJSON append(@NotNull String display, @Nullable String hover, @Nullable ClickEvent.Action clickAction, @Nullable String clickValue) {
-        final TextComponent component = new TextComponent(AnnoyingUtility.color(display));
-        if (hover != null) component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(AnnoyingUtility.color(hover)).create()));
-        if (clickAction != null && clickValue != null) component.setClickEvent(new ClickEvent(clickAction, AnnoyingUtility.color(clickValue)));
+        final TextComponent component = new TextComponent(BukkitUtility.color(display));
+        if (hover != null) component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(BukkitUtility.color(hover)).create()));
+        if (clickAction != null && clickValue != null) component.setClickEvent(new ClickEvent(clickAction, BukkitUtility.color(clickValue)));
         return append(component);
     }
 
