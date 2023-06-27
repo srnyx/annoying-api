@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 
@@ -39,7 +40,7 @@ public class PluginPlatform extends Stringable {
     public PluginPlatform(@NotNull Platform platform, @NotNull String identifier) {
         this.platform = platform;
         this.identifier = identifier;
-        if (platform.requiresAuthor) throw new IllegalArgumentException(platform + " requires an author");
+        if (platform.requiresAuthor) AnnoyingPlugin.log(Level.WARNING, "&ePlugin platform &6" + platform + "&e requires an author");
     }
 
     /**
@@ -71,17 +72,24 @@ public class PluginPlatform extends Stringable {
         try {
             platform = Platform.valueOf(platformName.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            throw new IllegalArgumentException("invalid platform: " + platformName);
+            AnnoyingPlugin.log(Level.WARNING, "Invalid platform: " + platformName);
+            return null;
         }
 
         // identifier
         final String identifier = section.getString("identifier");
-        if (identifier == null) throw new IllegalArgumentException("identifier is null");
+        if (identifier == null) {
+            AnnoyingPlugin.log(Level.WARNING, "Identifier is null for platform " + platform);
+            return null;
+        }
 
         // author
         if (platform.requiresAuthor) {
             final String author = section.getString("author");
-            if (author == null) throw new IllegalArgumentException("author is null");
+            if (author == null) {
+                AnnoyingPlugin.log(Level.WARNING, "Author is null for author-required platform " + platform + " with identifier " + identifier);
+                return null;
+            }
             return new PluginPlatform(platform, identifier, author);
         }
 
@@ -121,10 +129,13 @@ public class PluginPlatform extends Stringable {
      *
      * @return              a new {@link PluginPlatform}
      */
-    @NotNull
+    @Nullable
     public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) {
         final List<String> authors = plugin.getDescription().getAuthors();
-        if (authors.isEmpty()) throw new IllegalArgumentException(plugin.getName() + " has no authors but Hangar requires one");
+        if (authors.isEmpty()) {
+            AnnoyingPlugin.log(Level.WARNING, "No authors found for plugin " + plugin.getName() + ", but Hangar requires an author for identifier " + identifier);
+            return null;
+        }
         return hangar(identifier, authors.get(0));
     }
 
@@ -148,7 +159,7 @@ public class PluginPlatform extends Stringable {
      *
      * @return          a new {@link PluginPlatform}
      */
-    @NotNull
+    @Nullable
     public static PluginPlatform hangar(@NotNull Plugin plugin) {
         return hangar(plugin.getName(), plugin);
     }

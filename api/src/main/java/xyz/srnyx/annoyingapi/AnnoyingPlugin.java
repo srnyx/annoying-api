@@ -27,6 +27,7 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
@@ -35,6 +36,10 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
+    /**
+     * The {@link Logger} for the plugin
+     */
+    public static Logger LOGGER;
     /**
      * The Minecraft version the server is running
      */
@@ -79,6 +84,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
      */
     public AnnoyingPlugin() {
+        LOGGER = getLogger();
         options.listenersToRegister.add(new EventHandlers(this));
     }
 
@@ -257,26 +263,6 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Logs a message to the console
-     *
-     * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
-     * @param   message the message to log
-     */
-    public void log(@Nullable Level level, @Nullable String message) {
-        if (level == null) level = Level.INFO;
-        getLogger().log(level, AnnoyingUtility.color(message));
-    }
-
-    /**
-     * Calls {@link #log(Level, String)} with {@code null} as the {@link Level level}
-     *
-     * @param   message the message to log
-     */
-    public void log(@NotNull String message) {
-        log(null, message);
-    }
-
-    /**
      * Gets a string from {@link #messages} with the specified key
      *
      * @param   key the key of the string
@@ -325,5 +311,25 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void checkUpdate() {
         new AnnoyingUpdate(this, options.updatePlatforms).checkUpdate();
+    }
+
+    /**
+     * Logs a message to the console
+     *
+     * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
+     * @param   message the message to log
+     */
+    public static void log(@Nullable Level level, @Nullable String message) {
+        if (level == null) level = Level.INFO;
+        LOGGER.log(level, BukkitUtility.color(message));
+    }
+
+    /**
+     * Calls {@link #log(Level, String)} with {@code null} as the {@link Level level}
+     *
+     * @param   message the message to log
+     */
+    public static void log(@NotNull String message) {
+        log(null, message);
     }
 }

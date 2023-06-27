@@ -170,7 +170,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   message the message to send
      */
     public void log(@NotNull Level level, @Nullable String key, @NotNull String message) {
-        plugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
+        AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
     }
 
     /**

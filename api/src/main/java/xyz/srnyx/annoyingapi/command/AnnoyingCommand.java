@@ -125,7 +125,7 @@ public interface AnnoyingCommand extends TabExecutor {
         if (isRegistered()) return;
         final PluginCommand command = getPlugin().getCommand(getName());
         if (command == null) {
-            getPlugin().log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
+            AnnoyingPlugin.log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
             return;
         }
         command.setExecutor(this);

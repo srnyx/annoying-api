@@ -120,13 +120,13 @@ public class AnnoyingDownload extends Stringable {
         // Manual
         final String manual = platforms.getIdentifier(PluginPlatform.Platform.MANUAL);
         if (manual != null) {
-            plugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual);
+            AnnoyingPlugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual);
             finish(dependency, false);
             return;
         }
 
         // Ran out of platforms
-        plugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
+        AnnoyingPlugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
         finish(dependency, false);
     }
 
@@ -259,7 +259,7 @@ public class AnnoyingDownload extends Stringable {
         }
 
         // Send success message
-        plugin.log(Level.INFO, "&2" + dependency.name + " &8|&a Successfully downloaded from &2" + platform.name());
+        AnnoyingPlugin.log(Level.INFO, "&2" + dependency.name + " &8|&a Successfully downloaded from &2" + platform.name());
         finish(dependency, true);
     }
 
@@ -293,14 +293,14 @@ public class AnnoyingDownload extends Stringable {
                 PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> COMMAND_REGISTER.register(dependencyPlugin, command));
                 COMMAND_REGISTER.sync();
             } catch (final IllegalArgumentException | InvalidPluginException | InvalidDescriptionException e) {
-                plugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
+                AnnoyingPlugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
             }
         }
 
         // Check if all plugins have been processed
         remaining--;
         if (remaining == 0) {
-            plugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
+            AnnoyingPlugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
             Bukkit.getScheduler().callSyncMethod(plugin, () -> {
                 if (finishRunnable != null) finishRunnable.run();
                 return null;

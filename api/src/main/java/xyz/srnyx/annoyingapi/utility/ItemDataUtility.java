@@ -180,6 +180,6 @@ public class ItemDataUtility {
      * @param   action  the action that failed
      */
     private void sendError(@NotNull String action) {
-        plugin.log(Level.WARNING, "&cFailed to " + action + " item data for &4" + item.getType() + "&c!");
+        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " item data for &4" + item.getType() + "&c!");
     }
 }

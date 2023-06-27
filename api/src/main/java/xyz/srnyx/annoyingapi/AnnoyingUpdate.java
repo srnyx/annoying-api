@@ -76,7 +76,7 @@ public class AnnoyingUpdate extends Stringable {
      */
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) annoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messageKeys.updateAvailable)
+        if (update && latestVersion != null) AnnoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messageKeys.updateAvailable)
                 .replace("%plugin%", plugin.getName())
                 .replace("%current%", currentVersion.version)
                 .replace("%new%", latestVersion.version)
