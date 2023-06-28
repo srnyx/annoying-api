@@ -35,21 +35,49 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSp
  * Represents a message from the {@link AnnoyingOptions#messagesFileName} file
  */
 public class AnnoyingMessage extends Stringable {
+    /**
+     * The {@link AnnoyingPlugin} instance
+     */
     @NotNull private final AnnoyingPlugin plugin;
+    /**
+     * The key of the message in the messages file
+     */
     @NotNull private final String key;
+    /**
+     * Whether to parse PAPI placeholders
+     */
+    private final boolean parsePapiPlaceholders;
+    /**
+     * The cached splitter for placeholder parameters
+     */
     @Nullable private String splitterPlaceholder;
+    /**
+     * The replacements for the message
+     */
     @NotNull private final Set<Replacement> replacements = new HashSet<>();
 
     /**
      * Constructs a new {@link AnnoyingMessage} with the specified key
      *
-     * @param   plugin  the plugin getting the message
-     * @param   key     the key of the message
+     * @param   plugin                  {@link #plugin}
+     * @param   key                     {@link #key}
+     * @param   parsePapiPlaceholders   {@link #parsePapiPlaceholders}
      */
-    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
+    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key, boolean parsePapiPlaceholders) {
         this.plugin = plugin;
         this.key = key;
+        this.parsePapiPlaceholders = parsePapiPlaceholders;
         plugin.globalPlaceholders.forEach((placeholder, value) -> replace("%" + placeholder + "%", value));
+    }
+
+    /**
+     * Constructs a new {@link AnnoyingMessage} with the specified key
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   key     {@link #key}
+     */
+    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
+        this(plugin, key, true);
     }
 
     /**
@@ -60,6 +88,7 @@ public class AnnoyingMessage extends Stringable {
     public AnnoyingMessage(@NotNull AnnoyingMessage message) {
         this.plugin = message.plugin;
         this.key = message.key;
+        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
         this.splitterPlaceholder = message.splitterPlaceholder;
         this.replacements.addAll(message.replacements);
     }
@@ -132,7 +161,8 @@ public class AnnoyingMessage extends Stringable {
             String string = messages.getString(key);
             if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesFileName + "&c!").build();
             for (final Replacement replacement : replacements) string = replacement.process(string);
-            final String[] split = plugin.parsePapiPlaceholders(player, string).split(splitterJson, 3);
+            if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
+            final String[] split = string.split(splitterJson, 3);
             return json.append(split[0], extractHover(split), ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
         }
 
@@ -144,9 +174,10 @@ public class AnnoyingMessage extends Stringable {
                 continue;
             }
             for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
+            if (parsePapiPlaceholders) subMessage = plugin.parsePapiPlaceholders(player, subMessage);
 
             // Get component parts
-            final String[] split = plugin.parsePapiPlaceholders(player, subMessage).split(splitterJson, 3);
+            final String[] split = subMessage.split(splitterJson, 3);
             final String display = split[0];
             final String hover = extractHover(split);
             final String function = extractFunction(split);
