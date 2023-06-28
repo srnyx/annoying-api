@@ -39,5 +39,6 @@ jobs:
             api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
             example-plugin/build/libs/*.jar
           changelog: ${{ github.event.release.html_url }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
