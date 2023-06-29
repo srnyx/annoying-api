@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.message;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -12,17 +12,17 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.AnnoyingOptions;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.parents.Stringable;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,7 +106,7 @@ public class AnnoyingMessage extends Stringable {
      * @see                 ReplaceType
      */
     @NotNull
-    public AnnoyingMessage replace(@NotNull String placeholder, @Nullable Object value, @Nullable ReplaceType type) {
+    public AnnoyingMessage replace(@NotNull String placeholder, @Nullable Object value, @Nullable xyz.srnyx.annoyingapi.message.ReplaceType type) {
         replacements.add(new Replacement(placeholder, value, type));
         return this;
     }
@@ -119,7 +119,7 @@ public class AnnoyingMessage extends Stringable {
      *
      * @return          the updated {@link AnnoyingMessage} instance
      *
-     * @see             #replace(String, Object, ReplaceType)
+     * @see             #replace(String, Object, xyz.srnyx.annoyingapi.message.ReplaceType)
      */
     @NotNull
     public AnnoyingMessage replace(@NotNull String before, @Nullable Object after) {
@@ -414,114 +414,12 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
-     * Used in {@link #replace(String, Object, ReplaceType)}
-     * <p>Implement this into your own enum to create your own {@link ReplaceType}s for {@link #replace(String, Object, ReplaceType)}
-     *
-     * @see DefaultReplaceType
-     * @see #replace(String, Object, ReplaceType)
-     */
-    public interface ReplaceType {
-        /**
-         * If no input is provided, this will be used
-         *
-         * @return  the default input
-         */
-        @NotNull
-        String getDefaultInput();
-
-        /**
-         * The action done with the input and value
-         * <p>The input comes first, then the value (for the operands)
-         *
-         * @return  the {@link BinaryOperator} to use on the input and value
-         */
-        @NotNull
-        BinaryOperator<String> getOutputOperator();
-    }
-
-    /**
-     * Default replace types for {@link #replace(String, Object, ReplaceType)}
-     */
-    public enum DefaultReplaceType implements ReplaceType {
-        /**
-         * Input is used as the format for {@link AnnoyingUtility#formatMillis(long, String, boolean)}
-         */
-        TIME("hh:ss", (input, value) -> {
-            try {
-                return AnnoyingUtility.formatMillis(Long.parseLong(value), input, false);
-            } catch (final NumberFormatException e) {
-                return null;
-            }
-        }),
-        /**
-         * Input is used as the format for {@link AnnoyingUtility#formatNumber(Number, String)}
-         */
-        NUMBER("#,###.##", (input, value) -> {
-            try {
-                return AnnoyingUtility.formatNumber(Double.parseDouble(value), input);
-            } catch (final NumberFormatException e) {
-                return null;
-            }
-        }),
-        /**
-         * Input is used to turn 'true' or 'false' into the specified value
-         */
-        BOOLEAN("true//false", (input, value) -> {
-            final String[] split = input.split("//", 2);
-            final boolean bool = Boolean.parseBoolean(value);
-            if (split.length != 2) return bool ? "true" : "false";
-            return bool ? split[0] : split[1];
-        });
-
-        /**
-         * The default input for this {@link ReplaceType}
-         */
-        @NotNull private final String defaultInput;
-        /**
-         * The {@link BinaryOperator<String>} for this {@link ReplaceType}
-         */
-        @NotNull private final BinaryOperator<String> outputOperator;
-
-        /**
-         * Constructs a new {@link DefaultReplaceType}
-         *
-         * @param   defaultInput    the default input value
-         * @param   outputOperator  the {@link BinaryOperator<String>} to use on the input and value
-         */
-        DefaultReplaceType(@NotNull String defaultInput, @NotNull BinaryOperator<String> outputOperator) {
-            this.defaultInput = defaultInput;
-            this.outputOperator = outputOperator;
-        }
-
-        /**
-         * Gets the default input of the type
-         * <p>This is used if the user does not provide a custom input
-         *
-         * @return  the default input
-         */
-        @Override @NotNull
-        public String getDefaultInput() {
-            return defaultInput;
-        }
-
-        /**
-         * Gets the {@link BinaryOperator} to use on the input and value
-         *
-         * @return  the {@link BinaryOperator} to use on the input and value
-         */
-        @Override @NotNull
-        public BinaryOperator<String> getOutputOperator() {
-            return outputOperator;
-        }
-    }
-
-    /**
-     * Used in {@link #replace(String, Object, ReplaceType)} and {@link #replace(String, Object)}
+     * Used in {@link #replace(String, Object, xyz.srnyx.annoyingapi.message.ReplaceType)} and {@link #replace(String, Object)}
      */
     private class Replacement extends Stringable {
         @NotNull private final String before;
         @NotNull private final String value;
-        @Nullable private final ReplaceType type;
+        @Nullable private final xyz.srnyx.annoyingapi.message.ReplaceType type;
 
         /**
          * Constructs a new {@link Replacement}
@@ -530,7 +428,7 @@ public class AnnoyingMessage extends Stringable {
          * @param   value   the value to replace the text with
          * @param   type    the {@link ReplaceType} to use on the value, if {@code null}, the {@code value} will be used as-is
          */
-        public Replacement(@NotNull String before, @Nullable Object value, @Nullable ReplaceType type) {
+        public Replacement(@NotNull String before, @Nullable Object value, @Nullable xyz.srnyx.annoyingapi.message.ReplaceType type) {
             this.before = before;
             this.value = String.valueOf(value);
             this.type = type;
@@ -562,42 +460,6 @@ public class AnnoyingMessage extends Stringable {
                 parameter = type.getDefaultInput(); // use the default input
             }
             return input.replace(match, type.getOutputOperator().apply(parameter, value)); // replace the placeholder with the formatted value
-        }
-    }
-
-    /**
-     * The different types of broadcasts for an {@link AnnoyingMessage}
-     */
-    public enum BroadcastType {
-        /**
-         * Message will be sent in chat
-         */
-        CHAT,
-        /**
-         * Message will be displayed in the action bar (1.11+ only, {@link #CHAT} will be used for older versions)
-         */
-        ACTIONBAR,
-        /**
-         * Message will be sent as a title
-         */
-        TITLE,
-        /**
-         * Message will be sent as a subtitle
-         */
-        SUBTITLE,
-        /**
-         * Only use this if the key has 2 children, "title" and "subtitle"
-         * <p>The "title" child will be sent as the title and the "subtitle" child will be sent as the subtitle
-         */
-        FULL_TITLE;
-
-        /**
-         * Whether the broadcast type is a title ({@link #TITLE}, {@link #SUBTITLE}, or {@link #FULL_TITLE}), aka anything that has a {@code fadeIn}, {@code stay}, and {@code fadeOut}
-         *
-         * @return  true if the broadcast type is a title
-         */
-        public boolean isTitle() {
-            return this == TITLE || this == SUBTITLE || this == FULL_TITLE;
         }
     }
 }

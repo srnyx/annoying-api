@@ -9,8 +9,9 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
-import xyz.srnyx.annoyingapi.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
+import xyz.srnyx.annoyingapi.message.BroadcastType;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
 
 
@@ -70,7 +71,7 @@ public class ExampleListener implements AnnoyingListener {
         new AnnoyingMessage(plugin, "break")
                 .replace("%player%", player.getName())
                 .replace("%durability%", maxDurability - item.getDurability() - 1 + "/" + maxDurability)
-                .broadcast(AnnoyingMessage.BroadcastType.ACTIONBAR);
+                .broadcast(BroadcastType.ACTIONBAR);
         if (plugin.sound != null) plugin.sound.play(event.getPlayer());
     }
 
@@ -85,6 +86,6 @@ public class ExampleListener implements AnnoyingListener {
                 .replace("%damager%", event.getDamager().getName())
                 .replace("%damagee%", event.getDamagee().getName())
                 .replace("%damage%", event.getDamage())
-                .broadcast(AnnoyingMessage.BroadcastType.CHAT);
+                .broadcast(BroadcastType.CHAT);
     }
 }

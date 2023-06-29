@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.message;
 
 import net.md_5.bungee.api.chat.*;
 

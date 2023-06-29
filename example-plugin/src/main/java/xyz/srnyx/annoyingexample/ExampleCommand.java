@@ -5,8 +5,9 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.AnnoyingCooldown;
-import xyz.srnyx.annoyingapi.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
+import xyz.srnyx.annoyingapi.message.DefaultReplaceType;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class ExampleCommand implements AnnoyingCommand {
         final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, sender.getPlayer().getUniqueId(), ExampleCooldown.EXAMPLE);
         if (cooldown.isOnCooldown()) {
             new AnnoyingMessage(plugin, "cooldown")
-                    .replace("%cooldown%", cooldown.getRemaining(), AnnoyingMessage.DefaultReplaceType.TIME)
+                    .replace("%cooldown%", cooldown.getRemaining(), DefaultReplaceType.TIME)
                     .send(sender);
             return;
         }
