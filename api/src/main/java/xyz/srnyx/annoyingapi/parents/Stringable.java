@@ -24,6 +24,13 @@ public class Stringable {
         // Only exists to give the constructor a Javadoc
     }
 
+    /**
+     * Converts an object to a {@link String} by getting all of its fields and their values
+     *
+     * @param   object  the object to convert
+     *
+     * @return          the object as a {@link String}
+     */
     @NotNull
     public static String toString( @Nullable Object object) {
         if (object == null) return "null";

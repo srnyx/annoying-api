@@ -25,4 +25,13 @@ public class RefEntity {
      * 1.10.2+ org.bukkit.entity.Entity#removeScoreboardTag(String)
      */
     @Nullable public static final Method ENTITY_REMOVE_SCOREBOARD_TAG_METHOD = ReflectionUtility.getMethod(1, 10, 2, RefEntity.class, "removeScoreboardTag", String.class);
+
+    /**
+     * This class cannot be instantiated
+     *
+     * @throws  UnsupportedOperationException   if this class is instantiated
+     */
+    private RefEntity() {
+        throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
+    }
 }
