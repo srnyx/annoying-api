@@ -1,7 +1,9 @@
+import xyz.srnyx.gradlegalaxy.data.AdventureDependency
 import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
 import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
 import xyz.srnyx.gradlegalaxy.enums.Repository
 import xyz.srnyx.gradlegalaxy.enums.repository
+import xyz.srnyx.gradlegalaxy.utility.adventure
 import xyz.srnyx.gradlegalaxy.utility.implementationRelocate
 import xyz.srnyx.gradlegalaxy.utility.setupPublishing
 
@@ -12,19 +14,12 @@ plugins {
 
 description = "General purpose API with tons of features"
 repository(Repository.CODE_MC) // de.tr7zw:item-nbt-api
+adventure(dependencies = AdventureDependency.getDefaultAnnoying("compileOnly"))
 
 dependencies {
-    // Adventure
-    compileOnly("net.kyori", "adventure-api", "4.14.0")
-    compileOnly("net.kyori", "adventure-text-minimessage", "4.14.0")
-    compileOnly("net.kyori", "adventure-text-serializer-legacy", "4.14.0")
-    compileOnly("net.kyori", "adventure-platform-bungeecord", "4.3.0")
-
     compileOnlyApi("org.jetbrains", "annotations", "24.0.0")
     implementationRelocate(project, "org.bstats:bstats-bukkit:3.0.0")
-    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.11.3", "de.tr7zw.changeme.nbtapi") {
-        exclude("de.tr7zw", "functional-annotations")
-    }
+    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.11.3", "de.tr7zw.changeme.nbtapi").exclude("de.tr7zw", "functional-annotations")
 }
 
 setupPublishing(
