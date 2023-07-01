@@ -6,7 +6,7 @@ import xyz.srnyx.gradlegalaxy.utility.spigotAPI
 
 plugins {
     java
-    id("xyz.srnyx.gradle-galaxy") version "1.1.0" apply false
+    id("xyz.srnyx.gradle-galaxy") version "1.1.1" apply false
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
 }
 
