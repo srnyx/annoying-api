@@ -18,17 +18,10 @@ import org.jetbrains.annotations.Nullable;
  * A utility class for Adventure API
  */
 public class AdventureUtility {
-    /**
-     * Converts a MiniMessage string to a {@link Component}
-     *
-     * @param   string  the string to convert
-     *
-     * @return          the converted string
-     */
     @NotNull
-    public static Component miniMessageToComponent(@Nullable String string) {
+    public static TextComponent deserializePlain(@Nullable String string) {
         if (string == null) return Component.empty();
-        return MiniMessage.miniMessage().deserialize(string);
+        return LegacyComponentSerializer.legacy().deserialize(string);
     }
 
     /**
@@ -39,9 +32,22 @@ public class AdventureUtility {
      * @return          the converted string
      */
     @NotNull
-    public static TextComponent legacyToComponent(@Nullable String string) {
+    public static TextComponent deserializeLegacy(@Nullable String string) {
         if (string == null) return Component.empty();
         return LegacyComponentSerializer.legacyAmpersand().deserialize(string);
+    }
+
+    /**
+     * Converts a MiniMessage string to a {@link Component}
+     *
+     * @param   string  the string to convert
+     *
+     * @return          the converted string
+     */
+    @NotNull
+    public static Component deserializeMiniMessage(@Nullable String string) {
+        if (string == null) return Component.empty();
+        return MiniMessage.miniMessage().deserialize(string);
     }
 
     /**
@@ -52,7 +58,7 @@ public class AdventureUtility {
      * @return              the converted components
      */
     @NotNull
-    public static Component baseComponentsToComponent(@NotNull BaseComponent[] components) {
+    public static Component deserializeBaseComponents(@NotNull BaseComponent[] components) {
         return BungeeComponentSerializer.legacy().deserialize(components);
     }
 
