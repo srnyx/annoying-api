@@ -19,10 +19,30 @@ import org.jetbrains.annotations.Nullable;
  * A utility class for Adventure API
  */
 public class AdventureUtility {
+    /**
+     * Converts a plain {@link String} to a {@link TextComponent}
+     *
+     * @param   string  the string to convert
+     *
+     * @return          the converted string
+     */
     @NotNull
-    public static TextComponent deserializePlain(@Nullable String string) {
+    public static TextComponent convertPlain(@Nullable String string) {
         if (string == null) return Component.empty();
         return PlainTextComponentSerializer.plainText().deserialize(string);
+    }
+
+    /**
+     * Converts a {@link TextComponent} to a plain {@link String}
+     *
+     * @param   component   the component to convert
+     *
+     * @return              the converted component
+     */
+    @NotNull
+    public static String convertPlain(@Nullable Component component) {
+        if (component == null) return "";
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 
     /**
@@ -33,9 +53,22 @@ public class AdventureUtility {
      * @return          the converted string
      */
     @NotNull
-    public static TextComponent deserializeLegacy(@Nullable String string) {
+    public static TextComponent convertLegacy(@Nullable String string) {
         if (string == null) return Component.empty();
         return LegacyComponentSerializer.legacyAmpersand().deserialize(string);
+    }
+
+    /**
+     * Converts a {@link TextComponent} to a legacy {@link ChatColor} string
+     *
+     * @param   component   the component to convert
+     *
+     * @return              the converted component
+     */
+    @NotNull
+    public static String convertLegacy(@Nullable Component component) {
+        if (component == null) return "";
+        return LegacyComponentSerializer.legacyAmpersand().serialize(component);
     }
 
     /**
@@ -46,9 +79,22 @@ public class AdventureUtility {
      * @return          the converted string
      */
     @NotNull
-    public static Component deserializeMiniMessage(@Nullable String string) {
+    public static Component convertMiniMessage(@Nullable String string) {
         if (string == null) return Component.empty();
         return MiniMessage.miniMessage().deserialize(string);
+    }
+
+    /**
+     * Converts a {@link Component} to a MiniMessage string
+     *
+     * @param   component   the component to convert
+     *
+     * @return              the converted component
+     */
+    @NotNull
+    public static String convertMiniMessage(@Nullable Component component) {
+        if (component == null) return "";
+        return MiniMessage.miniMessage().serialize(component);
     }
 
     /**
@@ -59,8 +105,20 @@ public class AdventureUtility {
      * @return              the converted components
      */
     @NotNull
-    public static Component deserializeBaseComponents(@NotNull BaseComponent[] components) {
+    public static Component convertBaseComponents(@NotNull BaseComponent[] components) {
         return BungeeComponentSerializer.legacy().deserialize(components);
+    }
+
+    /**
+     * Converts a {@link Component} to a {@link BaseComponent} array
+     *
+     * @param   component   the component to convert
+     *
+     * @return              the converted component
+     */
+    @NotNull
+    public static BaseComponent[] convertBaseComponents(@NotNull Component component) {
+        return BungeeComponentSerializer.legacy().serialize(component);
     }
 
     /**
