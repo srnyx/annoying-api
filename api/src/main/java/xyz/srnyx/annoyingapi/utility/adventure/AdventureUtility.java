@@ -5,6 +5,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 
@@ -21,7 +22,7 @@ public class AdventureUtility {
     @NotNull
     public static TextComponent deserializePlain(@Nullable String string) {
         if (string == null) return Component.empty();
-        return LegacyComponentSerializer.legacy().deserialize(string);
+        return PlainTextComponentSerializer.plainText().deserialize(string);
     }
 
     /**
