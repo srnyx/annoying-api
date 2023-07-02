@@ -1,8 +1,12 @@
 package xyz.srnyx.annoyingapi.message;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -18,6 +22,7 @@ import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
+import xyz.srnyx.annoyingapi.utility.adventure.AdventureUtility;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -126,6 +131,87 @@ public class AnnoyingMessage extends Stringable {
         return replace(before, after, null);
     }
 
+    @NotNull
+    public Component getComponent(@Nullable AnnoyingSender sender) {
+        // Get messages file
+        final AnnoyingResource messages = plugin.messages;
+        if (messages == null) return Component.empty();
+        replaceCommand(sender);
+
+        // Get player, splitterJson, & section
+        final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
+        final String splitterJson = plugin.getMessagesString(plugin.options.messageKeys.splitterJson);
+        final ConfigurationSection section = messages.getConfigurationSection(key);
+
+        // Single component
+        if (section == null) {
+            String string = messages.getString(key);
+            if (string == null) return Component.text(key).hoverEvent(Component.text("Check ", NamedTextColor.RED)
+                    .append(Component.text(plugin.options.messagesFileName, NamedTextColor.DARK_RED))
+                    .append(Component.text("!", NamedTextColor.RED)));
+            for (final Replacement replacement : replacements) string = replacement.process(string);
+            if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
+            final String[] split = string.split(splitterJson, 3);
+            final Component component = AdventureUtility.convertLegacy(split[0]).hoverEvent(AdventureUtility.convertLegacy(extractHover(split)));
+            final String function = extractFunction(split);
+            return function == null ? component : component.clickEvent(ClickEvent.suggestCommand(function));
+        }
+
+        // Multiple components
+        final TextComponent.Builder component = Component.text();
+        for (final String subKey : section.getKeys(false)) {
+            String subMessage = section.getString(subKey);
+            if (subMessage == null) {
+                component.append(Component.text(key + "." + subKey).hoverEvent(Component.text("Check ", NamedTextColor.RED)
+                        .append(Component.text(plugin.options.messagesFileName, NamedTextColor.DARK_RED))
+                        .append(Component.text("!", NamedTextColor.RED))));
+                continue;
+            }
+            for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
+            if (parsePapiPlaceholders) subMessage = plugin.parsePapiPlaceholders(player, subMessage);
+
+            // Get component parts
+            final String[] split = subMessage.split(splitterJson, 3);
+            final TextComponent display = AdventureUtility.convertLegacy(split[0]);
+            final TextComponent hover = AdventureUtility.convertLegacy(extractHover(split));
+            final String stringFunction = extractFunction(split);
+            final TextComponent function = stringFunction == null ? null : AdventureUtility.convertLegacy(stringFunction);
+
+            // No function component
+            if (function == null) {
+                component.append(display).hoverEvent(hover);
+                continue;
+            }
+
+            // Clipboard component
+            if (subKey.startsWith("copy")) {
+                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.copyToClipboard(stringFunction));
+                continue;
+            }
+
+            // Chat component
+            if (subKey.startsWith("chat")) {
+                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.runCommand(stringFunction));
+                continue;
+            }
+
+            // Web component
+            if (subKey.startsWith("web")) {
+                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.openUrl(stringFunction));
+                continue;
+            }
+
+            // Prompt component
+            component.append(display).hoverEvent(hover).clickEvent(ClickEvent.suggestCommand(stringFunction));
+        }
+        return component.build();
+    }
+
+    @NotNull
+    public Component getComponent() {
+        return getComponent(null);
+    }
+
     /**
      * Gets the message in {@link BaseComponent}s
      *
@@ -136,20 +222,13 @@ public class AnnoyingMessage extends Stringable {
      * @see             #send(AnnoyingSender)
      */
     @NotNull
-    public BaseComponent[] getComponents(@Nullable AnnoyingSender sender) {
+    public BaseComponent[] getBaseComponents(@Nullable AnnoyingSender sender) {
         final AnnoyingJSON json = new AnnoyingJSON();
 
         // Get messages file
         final AnnoyingResource messages = plugin.messages;
         if (messages == null) return json.build();
-
-        // Replace %command%
-        final StringBuilder command = new StringBuilder();
-        if (sender != null) {
-            if (sender.label != null) command.append("/").append(sender.label);
-            if (sender.args != null && sender.args.length != 0) command.append(" ").append(String.join(" ", sender.args));
-        }
-        replace("%command%", command.toString());
+        replaceCommand(sender);
 
         // Get player, splitterJson, & section
         final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
@@ -163,7 +242,7 @@ public class AnnoyingMessage extends Stringable {
             for (final Replacement replacement : replacements) string = replacement.process(string);
             if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
             final String[] split = string.split(splitterJson, 3);
-            return json.append(split[0], extractHover(split), ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
+            return json.append(split[0], extractHover(split), net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
         }
 
         // Multiple components
@@ -190,7 +269,7 @@ public class AnnoyingMessage extends Stringable {
 
             // Prompt component
             if (subKey.startsWith("suggest")) {
-                json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, function);
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, function);
                 continue;
             }
 
@@ -202,13 +281,13 @@ public class AnnoyingMessage extends Stringable {
 
             // Chat component
             if (subKey.startsWith("chat")) {
-                json.append(display, hover, ClickEvent.Action.RUN_COMMAND, function);
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, function);
                 continue;
             }
 
             // Web component
             if (subKey.startsWith("web")) {
-                json.append(display, hover, ClickEvent.Action.OPEN_URL, function);
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, function);
                 continue;
             }
 
@@ -219,42 +298,40 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
-     * Runs {@link #getComponents(AnnoyingSender)} using {@code null}
+     * Runs {@link #getBaseComponents(AnnoyingSender)} using {@code null}
      *
      * @return  the message in {@link BaseComponent}s
      *
      * @see     #send(AnnoyingSender)
-     * @see     #getComponents(AnnoyingSender)
+     * @see     #getBaseComponents(AnnoyingSender)
      */
     @NotNull
-    public BaseComponent[] getComponents() {
-        return getComponents(null);
+    public BaseComponent[] getBaseComponents() {
+        return getBaseComponents(null);
     }
 
     /**
-     * Gets the message using {@link #getComponents(AnnoyingSender)} then joins the {@link BaseComponent}s together
-     * <p>This will only have the display text of the components, use {@link #getComponents(AnnoyingSender)} for all parts
+     * Gets the message using {@link #getBaseComponents(AnnoyingSender)} then joins the {@link BaseComponent}s together
+     * <p>This will only have the display text of the components, use {@link #getBaseComponents(AnnoyingSender)} for all parts
      *
      * @param   sender  the {@link AnnoyingSender} to use
      *
      * @return          the message
      *
-     * @see             #getComponents(AnnoyingSender)
+     * @see             #getBaseComponents(AnnoyingSender)
      */
     @NotNull
     public String toString(@Nullable AnnoyingSender sender) {
-        final StringBuilder builder = new StringBuilder();
-        for (final BaseComponent component : getComponents(sender)) builder.append(component.toLegacyText());
-        return builder.toString();
+        return AdventureUtility.convertMiniMessage(getComponent(sender));
     }
 
     /**
      * Runs {@link #toString(AnnoyingSender)} using {@code null}
-     * <p>This will only have the display text of the components, use {@link #getComponents()} for all parts
+     * <p>This will only have the display text of the components, use {@link #getBaseComponents()} for all parts
      *
      * @return  the message
      *
-     * @see     #getComponents()
+     * @see     #getBaseComponents()
      * @see     #toString(AnnoyingSender)
      */
     @Override @NotNull
@@ -300,7 +377,7 @@ public class AnnoyingMessage extends Stringable {
             broadcastTitle(titleMessage.toString(), subtitleMessage.toString(), fadeIn, stay, fadeOut);
             return;
         }
-        final BaseComponent[] components = getComponents();
+        final BaseComponent[] components = getBaseComponents();
 
         // Action bar
         if (type.equals(BroadcastType.ACTIONBAR) && PLAYER_SPIGOT_SEND_MESSAGE_METHOD != null) {
@@ -336,12 +413,12 @@ public class AnnoyingMessage extends Stringable {
      * @param   sender  the {@link AnnoyingSender} to send the message to
      *
      * @see             #send(CommandSender)
-     * @see             #getComponents(AnnoyingSender)
+     * @see             #getBaseComponents(AnnoyingSender)
      */
     public void send(@NotNull AnnoyingSender sender) {
         // Player (JSON)
         if (sender.isPlayer) {
-            sender.getPlayer().spigot().sendMessage(getComponents(sender));
+            sender.getPlayer().spigot().sendMessage(getBaseComponents(sender));
             return;
         }
 
@@ -362,6 +439,20 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
+     * Adds the {@link Replacement replacement} for {@code %command%}
+     *
+     * @param   sender  the {@link AnnoyingSender} to use
+     */
+    private void replaceCommand(@Nullable AnnoyingSender sender) {
+        final StringBuilder command = new StringBuilder();
+        if (sender != null) {
+            if (sender.label != null) command.append("/").append(sender.label);
+            if (sender.args != null && sender.args.length != 0) command.append(" ").append(String.join(" ", sender.args));
+        }
+        replace("%command%", command.toString());
+    }
+
+    /**
      * Extracts the hover component from the specified {@link String} array. This will return {@code null} if the hover component is empty (stripped of color)
      *
      * @param   split   the {@link String} array to extract the hover component from
@@ -369,7 +460,7 @@ public class AnnoyingMessage extends Stringable {
      * @return          the hover component, or {@code null} if the hover component is empty
      */
     @Nullable
-    private String extractHover(String @NotNull [] split) {
+    private String extractHover(@NotNull String[] split) {
         final String hover = split.length >= 2 ? split[1] : null;
         return hover != null && BukkitUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
     }
@@ -382,7 +473,7 @@ public class AnnoyingMessage extends Stringable {
      * @return          the function, or {@code null} if the function is empty
      */
     @Nullable
-    private String extractFunction(String @NotNull [] split) {
+    private String extractFunction(@NotNull String[] split) {
         final String function = split.length >= 3 ? split[2] : null;
         return function != null && BukkitUtility.stripUntranslatedColor(function).isEmpty() ? null : function;
     }
