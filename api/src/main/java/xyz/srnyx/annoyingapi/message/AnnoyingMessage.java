@@ -132,7 +132,7 @@ public class AnnoyingMessage extends Stringable {
     }
 
     @NotNull
-    public Component getComponent(@Nullable AnnoyingSender sender) {
+    public TextComponent getComponent(@Nullable AnnoyingSender sender) {
         // Get messages file
         final AnnoyingResource messages = plugin.messages;
         if (messages == null) return Component.empty();
@@ -152,9 +152,20 @@ public class AnnoyingMessage extends Stringable {
             for (final Replacement replacement : replacements) string = replacement.process(string);
             if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
             final String[] split = string.split(splitterJson, 3);
-            final Component component = AdventureUtility.convertLegacy(split[0]).hoverEvent(AdventureUtility.convertLegacy(extractHover(split)));
+
+            // Display
+            final TextComponent.Builder component = Component.text()
+                    .append(AdventureUtility.convertLegacy(split[0]));
+
+            // Hover
+            final String hover = extractHover(split);
+            if (hover != null) component.hoverEvent(AdventureUtility.convertLegacy(hover));
+
+            // Function
             final String function = extractFunction(split);
-            return function == null ? component : component.clickEvent(ClickEvent.suggestCommand(function));
+            if (function != null) component.clickEvent(ClickEvent.suggestCommand(function));
+
+            return component.build();
         }
 
         // Multiple components
@@ -208,7 +219,7 @@ public class AnnoyingMessage extends Stringable {
     }
 
     @NotNull
-    public Component getComponent() {
+    public TextComponent getComponent() {
         return getComponent(null);
     }
 

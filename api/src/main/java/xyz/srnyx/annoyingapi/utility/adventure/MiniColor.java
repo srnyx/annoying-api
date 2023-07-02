@@ -1,5 +1,10 @@
 package xyz.srnyx.annoyingapi.utility.adventure;
 
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.format.TextFormat;
+import net.kyori.adventure.text.serializer.legacy.Reset;
+
 import org.bukkit.ChatColor;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,103 +20,105 @@ public enum MiniColor {
     /**
      * {@link ChatColor#BLACK} ({@code 0})
      */
-    BLACK,
+    BLACK(NamedTextColor.BLACK, ChatColor.BLACK),
     /**
      * {@link ChatColor#DARK_BLUE} ({@code 1})
      */
-    DARK_BLUE,
+    DARK_BLUE(NamedTextColor.DARK_BLUE, ChatColor.DARK_BLUE),
     /**
      * {@link ChatColor#DARK_GREEN} ({@code 2})
      */
-    DARK_GREEN,
+    DARK_GREEN(NamedTextColor.DARK_GREEN, ChatColor.DARK_GREEN),
     /**
      * {@link ChatColor#DARK_AQUA} ({@code 3})
      */
-    DARK_AQUA,
+    DARK_AQUA(NamedTextColor.DARK_AQUA, ChatColor.DARK_AQUA),
     /**
      * {@link ChatColor#DARK_RED} ({@code 4})
      */
-    DARK_RED,
+    DARK_RED(NamedTextColor.DARK_RED, ChatColor.DARK_RED),
     /**
      * {@link ChatColor#DARK_PURPLE} ({@code 5})
      */
-    DARK_PURPLE,
+    DARK_PURPLE(NamedTextColor.DARK_PURPLE, ChatColor.DARK_PURPLE),
     /**
      * {@link ChatColor#GOLD} ({@code 6})
      */
-    GOLD,
+    GOLD(NamedTextColor.GOLD, ChatColor.GOLD),
     /**
      * {@link ChatColor#GRAY} ({@code 7})
      */
-    GRAY,
+    GRAY(NamedTextColor.GRAY, ChatColor.GRAY),
     /**
      * {@link ChatColor#DARK_GRAY} ({@code 8})
      */
-    DARK_GRAY,
+    DARK_GRAY(NamedTextColor.DARK_GRAY, ChatColor.DARK_GRAY),
     /**
      * {@link ChatColor#BLUE} ({@code 9})
      */
-    BLUE,
+    BLUE(NamedTextColor.BLUE, ChatColor.BLUE),
     /**
      * {@link ChatColor#GREEN} ({@code a})
      */
-    GREEN,
+    GREEN(NamedTextColor.GREEN, ChatColor.GREEN),
     /**
      * {@link ChatColor#AQUA} ({@code b})
      */
-    AQUA,
+    AQUA(NamedTextColor.AQUA, ChatColor.AQUA),
     /**
      * {@link ChatColor#RED} ({@code c})
      */
-    RED,
+    RED(NamedTextColor.RED, ChatColor.RED),
     /**
      * {@link ChatColor#LIGHT_PURPLE} ({@code d})
      */
-    LIGHT_PURPLE,
+    LIGHT_PURPLE(NamedTextColor.LIGHT_PURPLE, ChatColor.LIGHT_PURPLE),
     /**
      * {@link ChatColor#YELLOW} ({@code e})
      */
-    YELLOW,
+    YELLOW(NamedTextColor.YELLOW, ChatColor.YELLOW),
     /**
      * {@link ChatColor#WHITE} ({@code f})
      */
-    WHITE,
+    WHITE(NamedTextColor.WHITE, ChatColor.WHITE),
     /**
      * {@link ChatColor#MAGIC} ({@code k})
      */
-    OBFUSCATED(ChatColor.MAGIC),
+    OBFUSCATED(TextDecoration.OBFUSCATED, ChatColor.MAGIC),
     /**
      * {@link ChatColor#BOLD} ({@code l})
      */
-    BOLD,
+    BOLD(TextDecoration.BOLD, ChatColor.BOLD),
     /**
      * {@link ChatColor#STRIKETHROUGH} ({@code m})
      */
-    STRIKETHROUGH,
+    STRIKETHROUGH(TextDecoration.STRIKETHROUGH, ChatColor.STRIKETHROUGH),
     /**
      * {@link ChatColor#UNDERLINE} ({@code n})
      */
-    UNDERLINE,
+    UNDERLINED(TextDecoration.UNDERLINED, ChatColor.UNDERLINE),
     /**
      * {@link ChatColor#ITALIC} ({@code o})
      */
-    ITALIC,
+    ITALIC(TextDecoration.ITALIC, ChatColor.ITALIC),
     /**
      * {@link ChatColor#RESET} ({@code r})
      */
-    RESET;
+    RESET(Reset.INSTANCE, ChatColor.RESET);
+
+    /**
+     * The {@link TextFormat} equivalent of the MiniMessage color
+     */
+    @NotNull public final TextFormat textFormat;
 
     /**
      * The {@link ChatColor} equivalent of the MiniMessage color
      */
-    @Nullable public final ChatColor chatColor;
+    @NotNull public final ChatColor chatColor;
 
-    MiniColor(@Nullable ChatColor chatColor) {
+    MiniColor(@NotNull TextFormat textFormat, @NotNull ChatColor chatColor) {
+        this.textFormat = textFormat;
         this.chatColor = chatColor;
-    }
-
-    MiniColor() {
-        this(null);
     }
 
     /**
@@ -121,7 +128,22 @@ public enum MiniColor {
      */
     @Override @NotNull
     public String toString() {
-        return "<" + name().toLowerCase() + ">";
+        return "<" + textFormat + ">";
+    }
+
+    /**
+     * Get a {@link MiniColor} from a {@link TextFormat}
+     *
+     * @param   textFormat  the {@link TextFormat} to get the {@link MiniColor} from
+     *
+     * @return              the {@link MiniColor} from the {@link TextFormat}
+     */
+    @Nullable
+    public static MiniColor fromTextFormat(@NotNull TextFormat textFormat) {
+        return Arrays.stream(values())
+                .filter(miniColor -> miniColor.textFormat == textFormat)
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -133,9 +155,8 @@ public enum MiniColor {
      */
     @Nullable
     public static MiniColor fromChatColor(@NotNull ChatColor chatColor) {
-        final String name = chatColor.name();
         return Arrays.stream(values())
-                .filter(miniColor -> miniColor.chatColor == chatColor || miniColor.name().equals(name))
+                .filter(miniColor -> miniColor.chatColor == chatColor)
                 .findFirst()
                 .orElse(null);
     }
