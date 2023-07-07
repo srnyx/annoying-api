@@ -3,9 +3,6 @@ package xyz.srnyx.annoyingapi.dependency;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -123,18 +120,13 @@ public class AnnoyingDownload extends Stringable {
         // Manual
         final String manual = platforms.getIdentifier(PluginPlatform.Platform.MANUAL);
         if (manual != null) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text(name, NamedTextColor.GOLD)
-                    .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                    .append(Component.text("Please install this plugin manually at ", NamedTextColor.YELLOW))
-                    .append(Component.text(manual, NamedTextColor.GOLD)));
+            AnnoyingPlugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual);
             finish(dependency, false);
             return;
         }
 
         // Ran out of platforms
-        AnnoyingPlugin.log(Level.SEVERE, Component.text(name, NamedTextColor.DARK_RED)
-                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                .append(Component.text("Ran out of platforms!", NamedTextColor.RED)));
+        AnnoyingPlugin.log(Level.SEVERE, "&4" + name + " &8|&c Ran out of platforms!");
         finish(dependency, false);
     }
 
@@ -267,10 +259,7 @@ public class AnnoyingDownload extends Stringable {
         }
 
         // Send success message
-        AnnoyingPlugin.log(Level.INFO, Component.text(dependency.name, NamedTextColor.DARK_GREEN)
-                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text("Successfully downloaded from ", NamedTextColor.GREEN))
-                        .append(Component.text(platform.name(), NamedTextColor.DARK_GREEN)));
+        AnnoyingPlugin.log(Level.INFO, "&2" + dependency.name + " &8|&a Successfully downloaded from &2" + platform.name());
         finish(dependency, true);
     }
 
@@ -304,19 +293,14 @@ public class AnnoyingDownload extends Stringable {
                 PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> COMMAND_REGISTER.register(dependencyPlugin, command));
                 COMMAND_REGISTER.sync();
             } catch (final IllegalArgumentException | InvalidPluginException | InvalidDescriptionException e) {
-                AnnoyingPlugin.log(Level.SEVERE, Component.text(dependency.name, NamedTextColor.DARK_RED)
-                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text("Failed to load plugin!", NamedTextColor.RED)));
+                AnnoyingPlugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
             }
         }
 
         // Check if all plugins have been processed
         remaining--;
         if (remaining == 0) {
-            AnnoyingPlugin.log(Level.INFO, Component.text("All ", NamedTextColor.GREEN, TextDecoration.BOLD)
-                    .append(Component.text(dependencies.size(), NamedTextColor.DARK_GREEN, TextDecoration.BOLD))
-                    .append(Component.text(" plugins have been processed! ", NamedTextColor.GREEN, TextDecoration.BOLD))
-                    .append(Component.text("Please resolve any errors and then restart the server.", NamedTextColor.GREEN)));
+            AnnoyingPlugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
             Bukkit.getScheduler().callSyncMethod(plugin, () -> {
                 if (finishRunnable != null) finishRunnable.run();
                 return null;

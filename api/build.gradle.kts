@@ -1,9 +1,7 @@
-import xyz.srnyx.gradlegalaxy.data.AdventureDependency
 import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
 import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
 import xyz.srnyx.gradlegalaxy.enums.Repository
 import xyz.srnyx.gradlegalaxy.enums.repository
-import xyz.srnyx.gradlegalaxy.utility.adventure
 import xyz.srnyx.gradlegalaxy.utility.implementationRelocate
 import xyz.srnyx.gradlegalaxy.utility.relocate
 import xyz.srnyx.gradlegalaxy.utility.setupPublishing
@@ -15,7 +13,6 @@ plugins {
 
 description = "General purpose API with tons of features"
 repository(Repository.CODE_MC) // de.tr7zw:item-nbt-api
-adventure(dependencies = AdventureDependency.getDefaultAnnoyingSpigot("compileOnly"))
 relocate("javassist")
 
 dependencies {

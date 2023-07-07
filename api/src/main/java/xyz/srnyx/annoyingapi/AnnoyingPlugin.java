@@ -3,14 +3,6 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
 
@@ -33,12 +25,11 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.file.MessagesFormat;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.options.PluginOptions;
 import xyz.srnyx.annoyingapi.parents.Registrable;
-import xyz.srnyx.annoyingapi.utility.adventure.AdventureUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -57,7 +48,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link Logger} for the plugin
      */
-    public static ComponentLogger LOGGER;
+    public static Logger LOGGER;
     /**
      * The Minecraft version the server is running
      */
@@ -76,19 +67,11 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Nullable public AnnoyingResource messages;
     /**
-     * The {@link MessagesFormat} of the {@link #messages} file
-     */
-    @NotNull public MessagesFormat messagesFormat = MessagesFormat.LEGACY;
-    /**
      * {@link ChatColor} aliases for the plugin from the messages file ({@link MessagesOptions.MessageKeys#globalPlaceholders})
      *
      * @see MessagesOptions.MessageKeys#globalPlaceholders
      */
-    @NotNull public final Map<String, Component> globalPlaceholders = new HashMap<>();
-    /**
-     * The {@link BukkitAudiences} instance for the plugin
-     */
-    public BukkitAudiences audiences;
+    @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
      * Set of registered {@link AnnoyingCommand}s by the plugin
      */
@@ -110,7 +93,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
      */
     public AnnoyingPlugin() {
-        LOGGER = ComponentLogger.logger(getName());
+        LOGGER = getLogger();
         options.registrationOptions.listenersToRegister.add(new EventHandlers(this));
     }
 
@@ -135,16 +118,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onEnable() {
-        audiences = BukkitAudiences.create(this); // Must be initialized in onEnable as it registers a listener
-
         // Get missing dependencies
         final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
         for (final AnnoyingDependency dependency : options.pluginOptions.dependencies) if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(dep -> dep.name.equals(dependency.name))) missingDependencies.add(dependency);
 
         // Download missing dependencies then enable the plugin
         if (!missingDependencies.isEmpty()) {
-            log(Level.WARNING, Component.text("Missing dependencies!", NamedTextColor.GOLD, TextDecoration.BOLD)
-                    .append(Component.text(" Annoying API will attempt to download/install them...", NamedTextColor.YELLOW)));
+            log(Level.WARNING, "&6&lMissing dependencies! &eAnnoying API will attempt to download/install them...");
             new AnnoyingDownload(this, missingDependencies).downloadPlugins(this::enablePlugin);
             return;
         }
@@ -205,56 +185,39 @@ public class AnnoyingPlugin extends JavaPlugin {
         final String missing = options.pluginOptions.dependencies.stream()
                 .filter(dependency -> dependency.required && dependency.isNotInstalled())
                 .map(dependency -> dependency.name)
-                .collect(Collectors.joining("<red>, <dark_red>"));
+                .collect(Collectors.joining("&c, &4"));
         if (!missing.isEmpty()) {
-            log(Level.SEVERE, Component.text("Disabling ", NamedTextColor.RED)
-                    .append(Component.text(getName(), NamedTextColor.DARK_RED))
-                    .append(Component.text(" because it's missing required dependencies: ", NamedTextColor.RED))
-                    .append(AdventureUtility.convertMiniMessage("<dark_red>" + missing)));
+            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because it's missing required dependencies: &4" + missing);
             disablePlugin();
             return;
         }
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean("enabled")) {
-            final Metrics metrics = new Metrics(this, 18281); // API
-            metrics.addCustomChart(new SimplePie("plugins", this::getName));
-            metrics.addCustomChart(new SimplePie("messages_format", () -> messagesFormat.statsName));
+            new Metrics(this, 18281).addCustomChart(new SimplePie("plugins", this::getName)); // API
             if (options.bStatsOptions.id != null) bStats = new Metrics(this, options.bStatsOptions.id); // Plugin
         }
 
-        // Send start messages
+        // Get start message colors
+        final String primaryColorString = globalPlaceholders.get("p");
+        final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+
+        // Get start messages
         final PluginDescriptionFile description = getDescription();
         final String nameVersion = getName() + " v" + description.getVersion();
         final String authors = "By " + String.join(", ", description.getAuthors());
+        final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
         final int lineLength = Math.max(nameVersion.length(), authors.length());
-        if (messagesFormat.isMiniMessage()) {
-            // MiniMessage start messages
-            final Style primaryColor = globalPlaceholders.getOrDefault("p", Component.text("", NamedTextColor.AQUA)).style();
-            final TextComponent.Builder lineBuilder = Component.text();
-            for (int i = 0; i < lineLength; i++) lineBuilder.append(Component.text("-"));
-            final TextComponent line = lineBuilder.style(globalPlaceholders.getOrDefault("s", Component.text("", NamedTextColor.DARK_GRAY)).style()).build();
+        for (int i = 0; i < lineLength; i++) lineBuilder.append("-");
+        final String line = lineBuilder.toString();
 
-            // Send
-            log(line);
-            log(Component.text(nameVersion, primaryColor));
-            log(Component.text(authors, primaryColor));
-            log(line);
-        } else {
-            // Legacy start messages
-            final Component pPlaceholder = globalPlaceholders.get("p");
-            final String primaryColor = pPlaceholder != null ? AdventureUtility.convertLegacy(pPlaceholder) : ChatColor.AQUA.toString();
-            final Component sPlaceholder = globalPlaceholders.get("s");
-            final StringBuilder lineBuilder = new StringBuilder(sPlaceholder != null ? AdventureUtility.convertLegacy(sPlaceholder) : ChatColor.DARK_AQUA.toString());
-            for (int i = 0; i < lineLength; i++) lineBuilder.append("-");
-            final String line = lineBuilder.toString();
-
-            // Send
-            log(line);
-            log(primaryColor + nameVersion);
-            log(primaryColor + authors);
-            log(line);
-        }
+        // Send start messages
+        log(Level.INFO, line);
+        log(Level.INFO, primaryColor + nameVersion);
+        log(Level.INFO, primaryColor + authors);
+        log(Level.INFO, line);
 
         // Check for updates
         checkUpdate();
@@ -304,12 +267,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void loadMessages() {
         messages = new AnnoyingResource(this, options.messagesOptions.fileName, options.messagesOptions.fileOptions);
-        // messagesFormat
-        messagesFormat = MessagesFormat.fromString(messages.getString(options.messagesOptions.keys.format));
         // globalPlaceholders
         globalPlaceholders.clear();
         final ConfigurationSection section = messages.getConfigurationSection(options.messagesOptions.keys.globalPlaceholders);
-        if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, getMessagesComponent(key)));
+        if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
     }
 
     /**
@@ -323,13 +284,17 @@ public class AnnoyingPlugin extends JavaPlugin {
         Bukkit.getPluginManager().disablePlugin(this);
     }
 
+    /**
+     * Gets a string from {@link #messages} with the specified key
+     *
+     * @param   key the key of the string
+     *
+     * @return      the string, or the {@code key} if {@link #messages} is {@code null} or the string is not found
+     */
     @NotNull
-    public Component getMessagesComponent(@NotNull String key) {
-        if (messages == null) return Component.text(key);
-        final String string = messages.getString(key);
-        if (string == null) return Component.text(key);
-        if (messagesFormat.isMiniMessage()) return AdventureUtility.convertMiniMessage(string);
-        return AdventureUtility.convertLegacy(string);
+    public String getMessagesString(@NotNull String key) {
+        if (messages == null) return key;
+        return messages.getString(key, key);
     }
 
     /**
@@ -373,43 +338,12 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Logs a message to the console
      *
-     * @param   level       the level of the message. If {@code null}, {@link Level#INFO} will be used
-     * @param   component   the message to log
-     */
-    public static void log(@Nullable Level level, @Nullable Component component) {
-        if (level == null) level = Level.INFO;
-        if (component == null) component = Component.empty();
-
-        if (level.equals(Level.WARNING)) {
-            LOGGER.warn(component);
-            return;
-        }
-
-        if (level.equals(Level.SEVERE)) {
-            LOGGER.error(component);
-            return;
-        }
-
-        LOGGER.info(component);
-    }
-
-    /**
-     * Calls {@link #log(Level, Component)} with {@code null} as the {@link Level level}
-     *
-     * @param   component   the message to log
-     */
-    public static void log(@NotNull Component component) {
-        log(null, component);
-    }
-
-    /**
-     * Logs a message to the console
-     *
      * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message the message to log
      */
     public static void log(@Nullable Level level, @Nullable String message) {
-        log(level, AdventureUtility.convertMiniMessage(message));
+        if (level == null) level = Level.INFO;
+        LOGGER.log(level, BukkitUtility.color(message));
     }
 
     /**

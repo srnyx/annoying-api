@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
@@ -42,9 +40,7 @@ public class PluginPlatform extends Stringable {
     public PluginPlatform(@NotNull Platform platform, @NotNull String identifier) {
         this.platform = platform;
         this.identifier = identifier;
-        if (platform.requiresAuthor) AnnoyingPlugin.log(Level.WARNING, Component.text("Plugin platform ", NamedTextColor.YELLOW)
-                .append(Component.text(platform.name(), NamedTextColor.GOLD))
-                .append(Component.text(" requires an author", NamedTextColor.YELLOW)));
+        if (platform.requiresAuthor) AnnoyingPlugin.log(Level.WARNING, "&ePlugin platform &6" + platform + "&e requires an author");
     }
 
     /**
@@ -73,28 +69,21 @@ public class PluginPlatform extends Stringable {
         final String name = section.getName();
         final String platformName = name.isEmpty() ? section.getString("platform") : name;
         if (platformName == null) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text("platform", NamedTextColor.GOLD)
-                    .append(Component.text(" is null for section ", NamedTextColor.YELLOW))
-                    .append(Component.text(section.getCurrentPath(), NamedTextColor.GOLD)));
+            AnnoyingPlugin.log(Level.WARNING, "&6platform&e is null for section &6" + section.getCurrentPath());
             return null;
         }
         final Platform platform;
         try {
             platform = Platform.valueOf(platformName.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text("Invalid platform ", NamedTextColor.YELLOW)
-                    .append(Component.text(platformName, NamedTextColor.GOLD))
-                    .append(Component.text(" for section ", NamedTextColor.YELLOW))
-                    .append(Component.text(section.getCurrentPath(), NamedTextColor.GOLD)));
+            AnnoyingPlugin.log(Level.WARNING, "&eInvalid platform &6" + platformName + "&e for section &6" + section.getCurrentPath());
             return null;
         }
 
         // identifier
         final String identifier = section.getString("identifier");
         if (identifier == null) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text("identifier", NamedTextColor.GOLD)
-                    .append(Component.text(" is null for platform ", NamedTextColor.YELLOW))
-                    .append(Component.text(platform.name(), NamedTextColor.GOLD)));
+            AnnoyingPlugin.log(Level.WARNING, "&eidentifier&e is null for platform &6" + platform.name());
             return null;
         }
 
@@ -102,11 +91,7 @@ public class PluginPlatform extends Stringable {
         if (platform.requiresAuthor) {
             final String author = section.getString("author");
             if (author == null) {
-                AnnoyingPlugin.log(Level.WARNING, Component.text("author", NamedTextColor.GOLD)
-                        .append(Component.text(" is null for author-required platform ", NamedTextColor.YELLOW))
-                        .append(Component.text(platform.name(), NamedTextColor.GOLD))
-                        .append(Component.text(" with identifier ", NamedTextColor.YELLOW))
-                        .append(Component.text(identifier, NamedTextColor.GOLD)));
+                AnnoyingPlugin.log(Level.WARNING, "&eauthor&e is null for author-required platform &6" + platform.name() + "&e with identifier &6" + identifier);
                 return null;
             }
             return new PluginPlatform(platform, identifier, author);
@@ -152,10 +137,7 @@ public class PluginPlatform extends Stringable {
     public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) {
         final List<String> authors = plugin.getDescription().getAuthors();
         if (authors.isEmpty()) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text("No authors found for plugin ", NamedTextColor.YELLOW)
-                    .append(Component.text(plugin.getName(), NamedTextColor.GOLD))
-                    .append(Component.text(", but Hangar requires an author for identifier ", NamedTextColor.YELLOW))
-                    .append(Component.text(identifier, NamedTextColor.GOLD)));
+            AnnoyingPlugin.log(Level.WARNING, "&eNo authors found for plugin &6" + plugin.getName() + "&e, but Hangar requires an author for identifier &6" + identifier);
             return null;
         }
         return hangar(identifier, authors.get(0));

@@ -1,8 +1,5 @@
 package xyz.srnyx.annoyingapi.command;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -104,9 +101,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
         if (isRegistered()) return;
         final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
         if (command == null) {
-            AnnoyingPlugin.log(Level.WARNING, Component.text("Command ", NamedTextColor.RED)
-                    .append(Component.text(getName(), NamedTextColor.DARK_RED))
-                    .append(Component.text(" not found in plugin.yml!", NamedTextColor.RED)));
+            AnnoyingPlugin.log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
             return;
         }
         command.setExecutor(this);

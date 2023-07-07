@@ -1,9 +1,6 @@
 package xyz.srnyx.annoyingapi.file;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
-
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -166,15 +163,15 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
+     * Sends a formatted log message to the console
      * Sends a formatted warning message to the console
      *
+     * @param   level   the {@link Level} of the message
      * @param   key     the key of the node that the message is about ({@code null} if it's not about a node)
      * @param   message the message to send
      */
-    public void warning(@Nullable String key, @NotNull TextComponent message) {
-        AnnoyingPlugin.log(Level.WARNING, Component.text(path + (key == null ? "" : ", " + key), NamedTextColor.DARK_RED)
-                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                .append(message));
+    public void log(@NotNull Level level, @Nullable String key, @NotNull String message) {
+        AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
     }
 
     /**
@@ -243,8 +240,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            warning(path, Component.text("Invalid sound category: ", NamedTextColor.RED)
-                    .append(Component.text(categoryString, NamedTextColor.DARK_RED)));
+            log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
         }
 
         // Return SoundData
@@ -282,14 +278,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) {
-            warning(path, Component.text("Invalid attribute modifier", NamedTextColor.RED));
+            log(Level.WARNING, path, "&cInvalid attribute modifier");
             return def;
         }
 
         final String name = section.getString("name");
         final String operationString = section.getString("operation");
         if (name == null || operationString == null) {
-            warning(path, Component.text("Invalid attribute modifier", NamedTextColor.RED));
+            log(Level.WARNING, path, "&cInvalid attribute modifier");
             return def;
         }
 
@@ -298,8 +294,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
-            warning(path, Component.text("Invalid attribute modifier operation: ", NamedTextColor.RED)
-                    .append(Component.text(operationString, NamedTextColor.DARK_RED)));
+            log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
             return def;
         }
 
@@ -314,8 +309,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (equipmentSlotString != null) try {
                 slot = EquipmentSlot.valueOf(equipmentSlotString);
             } catch (final IllegalArgumentException e) {
-                warning(path, Component.text("Invalid equipment slot: ", NamedTextColor.RED)
-                        .append(Component.text(equipmentSlotString, NamedTextColor.DARK_RED)));
+                log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
             }
 
             // Return
@@ -393,8 +387,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
                 if (enchantment == null) {
-                    warning(path, Component.text("Invalid enchantment: ", NamedTextColor.RED)
-                            .append(Component.text(enchantmentKey, NamedTextColor.DARK_RED)));
+                    log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
                 meta.addEnchant(enchantment, enchantmentsSection.getInt(enchantmentKey), true);
@@ -406,8 +399,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         try {
                             return ItemFlag.valueOf(string.toUpperCase());
                         } catch (final IllegalArgumentException e) {
-                            warning(section.getCurrentPath() + "." + "flags", Component.text("Invalid item flag: ", NamedTextColor.RED)
-                                    .append(Component.text(string, NamedTextColor.DARK_RED)));
+                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
                             return null;
                         }
                     })
@@ -432,8 +424,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         //noinspection unchecked
                         attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
-                        warning(pathString, Component.text("Invalid attribute: ", NamedTextColor.RED)
-                                .append(Component.text(attributeKey, NamedTextColor.DARK_RED)));
+                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
 
@@ -539,8 +530,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             final String key = entry.getKey();
             final Material material = Material.matchMaterial(String.valueOf(entry.getValue()));
             if (material == null) {
-                warning(ingredients.getCurrentPath() + "." + key, Component.text("Invalid material: ", NamedTextColor.RED)
-                        .append(Component.text(entry.getValue().toString(), NamedTextColor.DARK_RED)));
+                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + entry.getValue());
                 continue;
             }
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);

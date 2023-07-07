@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.options;
 
 import org.bukkit.configuration.ConfigurationSection;
+
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.PluginPlatform;
@@ -18,8 +19,7 @@ public class PluginOptions {
      * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
      * <p><i>This is <b>NOT</b> meant for optional dependencies, all of these dependencies will be downloaded/installed (even if {@link AnnoyingDependency#required} is {@code false})</i>
      */
-    @NotNull
-    public List<AnnoyingDependency> dependencies = new ArrayList<>();
+    @NotNull public List<AnnoyingDependency> dependencies = new ArrayList<>();
     /**
      * <i>{@code RECOMMENDED}</i> The different {@link PluginPlatform platforms} the plugin is available on
      * <p>If not specified, the plugin will not be able to check for updates

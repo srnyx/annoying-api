@@ -1,12 +1,9 @@
 package xyz.srnyx.annoyingapi.message;
 
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.Title;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -17,32 +14,27 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.file.MessagesFormat;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-import xyz.srnyx.annoyingapi.utility.adventure.AdventureUtility;
 
-import java.time.Duration;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_SEND_TITLE_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSpigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
+
 
 /**
  * Represents a message from the {@link MessagesOptions#fileName} file
  */
 public class AnnoyingMessage extends Stringable {
-    @NotNull private static final TextComponent MINIMESSAGE_SECTION_HOVER = Component.text()
-                .append(Component.text("You're trying to use ", NamedTextColor.RED))
-                .append(Component.text("LEGACY", NamedTextColor.DARK_RED))
-                .append(Component.text(" JSON components with a ", NamedTextColor.RED))
-                .append(Component.text("MINIMESSAGE", NamedTextColor.DARK_RED))
-                .append(Component.text(" format!", NamedTextColor.RED))
-                .build();
-
     /**
      * The {@link AnnoyingPlugin} instance
      */
@@ -102,20 +94,20 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
-     * {@link #replace(String, Component)} except using parameter placeholders
-     * 
-     * @param   before  the placeholder to replace (must have {@code %} on both sides)
-     * @param   after   the {@link Component} to replace with
-     * @param   type    the {@link DefaultReplaceType} to use. If {@code null}, the replacement will be treated normally
-     * 
-     * @return          the updated {@link AnnoyingMessage} instance
+     * {@link #replace(String, Object)} except using parameter placeholders
      *
-     * @see             AnnoyingMessage#replace(String, Component)
-     * @see             ReplaceType
+     * @param   placeholder the placeholder to replace (must have {@code %} on both sides)
+     * @param   value       the {@link Object} to replace with
+     * @param   type        the {@link DefaultReplaceType} to use. If {@code null}, the replacement will be treated normally
+     *
+     * @return              the updated {@link AnnoyingMessage} instance
+     *
+     * @see                 AnnoyingMessage#replace(String, Object)
+     * @see                 ReplaceType
      */
     @NotNull
-    public AnnoyingMessage replace(@NotNull String before, @Nullable Component after, @Nullable ReplaceType type) {
-        replacements.add(new Replacement(before, after, type));
+    public AnnoyingMessage replace(@NotNull String placeholder, @Nullable Object value, @Nullable ReplaceType type) {
+        replacements.add(new Replacement(placeholder, value, type));
         return this;
     }
 
@@ -127,148 +119,135 @@ public class AnnoyingMessage extends Stringable {
      *
      * @return          the updated {@link AnnoyingMessage} instance
      *
-     * @see             #replace(String, Component, ReplaceType)
+     * @see             #replace(String, Object, xyz.srnyx.annoyingapi.message.ReplaceType)
      */
-    @NotNull
-    public AnnoyingMessage replace(@NotNull String before, @Nullable Component after) {
-        return replace(before, after, null);
-    }
-
-    @NotNull
-    public AnnoyingMessage replace(@NotNull String before, @Nullable Object after, @Nullable ReplaceType type) {
-        replacements.add(new Replacement(before, AdventureUtility.convertMiniMessage(String.valueOf(after)), type));
-        return this;
-    }
-
     @NotNull
     public AnnoyingMessage replace(@NotNull String before, @Nullable Object after) {
         return replace(before, after, null);
     }
 
+    /**
+     * Gets the message in {@link BaseComponent}s
+     *
+     * @param   sender  the {@link AnnoyingSender} to use
+     *
+     * @return          the message in {@link BaseComponent}s
+     *
+     * @see             #send(AnnoyingSender)
+     */
     @NotNull
-    public Component getComponent(@Nullable AnnoyingSender sender) {
+    public BaseComponent[] getComponents(@Nullable AnnoyingSender sender) {
+        final AnnoyingJSON json = new AnnoyingJSON();
+
+        // Get messages file
         final AnnoyingResource messages = plugin.messages;
-        if (messages == null) return Component.empty();
+        if (messages == null) return json.build();
+        replaceCommand(sender);
+
+        // Get player, splitterJson, & section
         final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
+        final String splitterJson = plugin.getMessagesString(plugin.options.messagesOptions.keys.splitterJson);
         final ConfigurationSection section = messages.getConfigurationSection(key);
-        final String splitterJson = plugin.messages.getString(plugin.options.messagesOptions.keys.splitterJson, plugin.options.messagesOptions.keys.splitterJson);
 
-        // Replace %command%
-        final TextComponent.Builder command = Component.text();
-        if (sender != null) {
-            if (sender.label != null) command.append(Component.text("/" + sender.label));
-            if (sender.args != null && sender.args.length != 0) command.append(Component.text(" " + String.join(" ", sender.args)));
-        }
-        replace("%command%", command.build());
-
+        // Single component
         if (section == null) {
-            // MINIMESSAGE
-            if (plugin.messagesFormat.equals(MessagesFormat.MINIMESSAGE)) {
-                final Component component = processComponent(player, AdventureUtility.convertMiniMessage(messages.getString(key, key)));
-                if (component.equals(Component.text(key))) return nullMessage(key);
-                return component;
-            }
-
-            // LEGACY: Single component
-            final String string = processString(player, messages.getString(key, key));
-            if (string.equals(key)) return nullMessage(key);
+            String string = messages.getString(key);
+            if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!").build();
+            for (final Replacement replacement : replacements) string = replacement.process(string);
+            if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
             final String[] split = string.split(splitterJson, 3);
-            // Display
-            final TextComponent.Builder display = extractDisplay(split).toBuilder();
-            // Hover
-            final TextComponent hover = extractHover(split);
-            if (hover != null) display.hoverEvent(hover);
-            // Function
-            final String function = extractFunction(split);
-            if (function != null) display.clickEvent(ClickEvent.suggestCommand(function));
-            // Return
-            return display.build();
+            return json.append(split[0], extractHover(split), net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
         }
 
-        // MINIMESSAGE: Multiple components
-        if (plugin.messagesFormat.equals(MessagesFormat.MINIMESSAGE)) return Component.text(key).hoverEvent(MINIMESSAGE_SECTION_HOVER);
-
-        // LEGACY: Multiple components
-        final TextComponent.Builder component = Component.text();
+        // Multiple components
         for (final String subKey : section.getKeys(false)) {
-            final String subMessage = processString(player, messages.getString(subKey, subKey));
-            if (subMessage.equals(subKey)) {
-                component.append(nullMessage(key + "." + subKey));
+            String subMessage = section.getString(subKey);
+            if (subMessage == null) {
+                json.append(key + "." + subKey, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!");
                 continue;
             }
+            for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
+            if (parsePapiPlaceholders) subMessage = plugin.parsePapiPlaceholders(player, subMessage);
 
             // Get component parts
             final String[] split = subMessage.split(splitterJson, 3);
-            final TextComponent display = extractDisplay(split);
-            final TextComponent hover = extractHover(split);
+            final String display = split[0];
+            final String hover = extractHover(split);
             final String function = extractFunction(split);
 
             // No function component
             if (function == null) {
-                component.append(display).hoverEvent(hover);
+                json.append(display, hover);
+                continue;
+            }
+
+            // Prompt component
+            if (subKey.startsWith("suggest")) {
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, function);
                 continue;
             }
 
             // Clipboard component
-            if (subKey.startsWith("copy")) {
-                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.copyToClipboard(function));
+            if (COPY_TO_CLIPBOARD != null && subKey.startsWith("copy")) {
+                json.append(display, hover, COPY_TO_CLIPBOARD, function);
                 continue;
             }
 
             // Chat component
             if (subKey.startsWith("chat")) {
-                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.runCommand(function));
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, function);
                 continue;
             }
 
             // Web component
             if (subKey.startsWith("web")) {
-                component.append(display).hoverEvent(hover).clickEvent(ClickEvent.openUrl(function));
+                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, function);
                 continue;
             }
 
-            // Prompt component
-            component.append(display).hoverEvent(hover).clickEvent(ClickEvent.suggestCommand(function));
+            // Text component
+            json.append(display, hover);
         }
-        return component.build();
-    }
-
-    @NotNull
-    public Component getComponent() {
-        return getComponent(null);
-    }
-
-    @NotNull
-    public TextComponent.Builder getBuilder(@Nullable AnnoyingSender sender) {
-        return Component.text().append(getComponent(sender));
-    }
-
-    @NotNull
-    public TextComponent.Builder getBuilder() {
-        return getBuilder(null);
+        return json.build();
     }
 
     /**
-     * Gets the message using {@link #getComponent(AnnoyingSender)} and converts it to a MiniMessage {@link String}
+     * Runs {@link #getComponents(AnnoyingSender)} using {@code null}
+     *
+     * @return  the message in {@link BaseComponent}s
+     *
+     * @see     #send(AnnoyingSender)
+     * @see     #getComponents(AnnoyingSender)
+     */
+    @NotNull
+    public BaseComponent[] getComponents() {
+        return getComponents(null);
+    }
+
+    /**
+     * Gets the message using {@link #getComponents(AnnoyingSender)} then joins the {@link BaseComponent}s together
+     * <p>This will only have the display text of the components, use {@link #getComponents(AnnoyingSender)} for all parts
      *
      * @param   sender  the {@link AnnoyingSender} to use
      *
      * @return          the message
      *
-     * @see             #getComponent(AnnoyingSender)
+     * @see             #getComponents(AnnoyingSender)
      */
     @NotNull
     public String toString(@Nullable AnnoyingSender sender) {
-        return AdventureUtility.convertMiniMessage(getComponent(sender));
+        final StringBuilder builder = new StringBuilder();
+        for (final BaseComponent component : getComponents(sender)) builder.append(component.toLegacyText());
+        return builder.toString();
     }
 
     /**
      * Runs {@link #toString(AnnoyingSender)} using {@code null}
-     * <p>This will only have the display text of the components, use {@link #getComponent()} for all parts
+     * <p>This will only have the display text of the components, use {@link #getComponents()} for all parts
      *
      * @return  the message
      *
-     * @see     #getComponent()
+     * @see     #getComponents()
      * @see     #toString(AnnoyingSender)
      */
     @Override @NotNull
@@ -286,30 +265,23 @@ public class AnnoyingMessage extends Stringable {
      *
      * @see             #broadcast(BroadcastType)
      */
-    public void broadcast(@NotNull BroadcastType type, @Nullable Duration fadeIn, @Nullable Duration stay, @Nullable Duration fadeOut) {
-        final Audience all = plugin.audiences.all();
-
+    public void broadcast(@NotNull BroadcastType type, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
         // Title/subtitle/full title
         if (type.isTitle()) {
-            if (fadeIn == null) fadeIn = Duration.ofMillis(500);
-            if (stay == null) stay = Duration.ofMillis(3500);
-            if (fadeOut == null) fadeOut = Duration.ofSeconds(1);
+            if (fadeIn == null) fadeIn = 10;
+            if (stay == null) stay = 70;
+            if (fadeOut == null) fadeOut = 20;
 
-            // Title
-            if (type.equals(BroadcastType.TITLE)) {
-                all.showTitle(Title.title(
-                        getComponent(),
-                        Component.empty(),
-                        Title.Times.times(fadeIn, stay, fadeOut)));
-                return;
-            }
-
-            // Subtitle
-            if (type.equals(BroadcastType.SUBTITLE)) {
-                all.showTitle(Title.title(
-                        Component.empty(),
-                        getComponent(),
-                        Title.Times.times(fadeIn, stay, fadeOut)));
+            // Title/subtitle
+            if (type.equals(BroadcastType.TITLE) || type.equals(BroadcastType.SUBTITLE)) {
+                final String message = toString();
+                // Title
+                if (type.equals(BroadcastType.TITLE)) {
+                    broadcastTitle(message, "", fadeIn, stay, fadeOut);
+                    return;
+                }
+                // Subtitle
+                broadcastTitle("", message, fadeIn, stay, fadeOut);
                 return;
             }
 
@@ -318,38 +290,37 @@ public class AnnoyingMessage extends Stringable {
             final AnnoyingMessage subtitleMessage = new AnnoyingMessage(plugin, key + ".subtitle");
             titleMessage.replacements.addAll(replacements);
             subtitleMessage.replacements.addAll(replacements);
-            all.showTitle(Title.title(
-                    titleMessage.getComponent(),
-                    subtitleMessage.getComponent(),
-                    Title.Times.times(fadeIn, stay, fadeOut)));
+            broadcastTitle(titleMessage.toString(), subtitleMessage.toString(), fadeIn, stay, fadeOut);
             return;
         }
+        final BaseComponent[] components = getComponents();
 
         // Action bar
-        if (type.equals(BroadcastType.ACTIONBAR)) {
-            all.sendActionBar(getComponent());
+        if (type.equals(BroadcastType.ACTIONBAR) && PLAYER_SPIGOT_SEND_MESSAGE_METHOD != null) {
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                try {
+                    PLAYER_SPIGOT_SEND_MESSAGE_METHOD.invoke(player.spigot(), ChatMessageType.ACTION_BAR, components);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            });
             return;
         }
 
         // Chat
-        all.sendMessage(getComponent());
-    }
-
-    public void broadcast(@NotNull BroadcastType type, @Nullable Title.Times times) {
-        final boolean timesProvided = times != null;
-        broadcast(type, timesProvided ? times.fadeIn() : null, timesProvided ? times.stay() : null, timesProvided ? times.fadeOut() : null);
+        Bukkit.spigot().broadcast(components);
     }
 
     /**
      * Broadcasts the message with the specified {@link BroadcastType} and default title parameters
-     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, Duration, Duration, Duration)} with {@code null} for all title parameters
+     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, Integer, Integer, Integer)} with {@code null} for all title parameters
      *
      * @param   type    the {@link BroadcastType} to broadcast with
      *
-     * @see             #broadcast(BroadcastType, Duration, Duration, Duration)
+     * @see             #broadcast(BroadcastType, Integer, Integer, Integer)
      */
     public void broadcast(@NotNull BroadcastType type) {
-        broadcast(type, null);
+        broadcast(type, null, null, null);
     }
 
     /**
@@ -358,10 +329,17 @@ public class AnnoyingMessage extends Stringable {
      * @param   sender  the {@link AnnoyingSender} to send the message to
      *
      * @see             #send(CommandSender)
-     * @see             #getComponent(AnnoyingSender)
+     * @see             #getComponents(AnnoyingSender)
      */
     public void send(@NotNull AnnoyingSender sender) {
-        plugin.audiences.sender(sender.cmdSender).sendMessage(getComponent(sender));
+        // Player (JSON)
+        if (sender.isPlayer) {
+            sender.getPlayer().spigot().sendMessage(getComponents(sender));
+            return;
+        }
+
+        // Console/non-player (normal)
+        sender.cmdSender.sendMessage(toString(sender));
     }
 
     /**
@@ -372,42 +350,30 @@ public class AnnoyingMessage extends Stringable {
      *
      * @see             #send(AnnoyingSender)
      */
-    public void send(@NotNull CommandSender sender){
+    public void send(@NotNull CommandSender sender) {
         send(new AnnoyingSender(plugin, sender));
     }
 
     public void log(@Nullable Level level) {
-        AnnoyingPlugin.log(level, getComponent());
+        AnnoyingPlugin.log(level, toString());
     }
 
     public void log() {
         log(null);
     }
 
-    @NotNull
-    private TextComponent nullMessage(@NotNull String keyUsed) {
-        return Component.text(keyUsed).hoverEvent(Component.text("Check ", NamedTextColor.RED))
-                .append(Component.text(plugin.options.messagesOptions.fileName, NamedTextColor.DARK_RED))
-                .append(Component.text("!", NamedTextColor.RED));
-    }
-
-    @NotNull
-    private Component processComponent(@Nullable Player player, @NotNull Component component) {
-        for (final Replacement replacement : replacements) component = replacement.process(component);
-        //TODO if (parsePapiPlaceholders) component = plugin.parsePapiPlaceholders(player, component);
-        return component;
-    }
-
-    @NotNull
-    private String processString(@Nullable Player player, @NotNull String string) {
-        for (final Replacement replacement : replacements) string = AdventureUtility.convertLegacy(replacement.process(AdventureUtility.convertLegacy(string)));
-        if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
-        return string;
-    }
-
-    @NotNull
-    private TextComponent extractDisplay(@NotNull String[] split) {
-        return AdventureUtility.convertLegacy(split[0]);
+    /**
+     * Adds the {@link Replacement replacement} for {@code %command%}
+     *
+     * @param   sender  the {@link AnnoyingSender} to use
+     */
+    private void replaceCommand(@Nullable AnnoyingSender sender) {
+        final StringBuilder command = new StringBuilder();
+        if (sender != null) {
+            if (sender.label != null) command.append("/").append(sender.label);
+            if (sender.args != null && sender.args.length != 0) command.append(" ").append(String.join(" ", sender.args));
+        }
+        replace("%command%", command.toString());
     }
 
     /**
@@ -418,9 +384,9 @@ public class AnnoyingMessage extends Stringable {
      * @return          the hover component, or {@code null} if the hover component is empty
      */
     @Nullable
-    private TextComponent extractHover(@NotNull String[] split) {
+    private String extractHover(@NotNull String[] split) {
         final String hover = split.length >= 2 ? split[1] : null;
-        return hover == null || BukkitUtility.stripUntranslatedColor(hover).isEmpty() ? null : AdventureUtility.convertLegacy(hover);
+        return hover != null && BukkitUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
     }
 
     /**
@@ -437,34 +403,67 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
-     * Used in {@link #replace(String, Component, ReplaceType)} and {@link #replace(String, Component)}
+     * Broadcasts the specified title and subtitle to all online players. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
+     *
+     * @param   title       the title to broadcast
+     * @param   subtitle    the subtitle to broadcast
+     * @param   fadeIn      the fade in time for the title
+     * @param   stay        the stay time for the title
+     * @param   fadeOut     the fade out time for the title
+     *
+     * @see                 #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see                 #broadcast(BroadcastType)
+     */
+    private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        if (PLAYER_SEND_TITLE_METHOD != null) {
+            try {
+                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
+            } catch (final IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+        //noinspection deprecation
+        players.forEach(player -> player.sendTitle(title, subtitle));
+    }
+
+    /**
+     * Used in {@link #replace(String, Object, xyz.srnyx.annoyingapi.message.ReplaceType)} and {@link #replace(String, Object)}
      */
     private class Replacement extends Stringable {
         @NotNull private final String before;
-        @Nullable private final Component after;
+        @NotNull private final String value;
         @Nullable private final ReplaceType type;
 
         /**
          * Constructs a new {@link Replacement}
          *
          * @param   before  the text to replace. If {@code type} isn't {@code null}, this should be a placeholder ({@code %} around it)
-         * @param   after   the value to replace the text with
+         * @param   value   the value to replace the text with
          * @param   type    the {@link ReplaceType} to use on the value, if {@code null}, the {@code value} will be used as-is
          */
-        public Replacement(@NotNull String before, @Nullable Component after, @Nullable ReplaceType type) {
+        public Replacement(@NotNull String before, @Nullable Object value, @Nullable xyz.srnyx.annoyingapi.message.ReplaceType type) {
             this.before = before;
-            this.after = after;
+            this.value = String.valueOf(value);
             this.type = type;
         }
 
+        /**
+         * Performs the replacement on the specified {@link String}
+         *
+         * @param   input   the {@link String} to perform the replacement on
+         *
+         * @return          the {@link String} with the replacement performed
+         */
         @NotNull
-        public Component process(@NotNull Component input) {
+        public String process(@NotNull String input) {
             // Normal placeholder
-            if (after == null || type == null || plugin.messages == null) return replace(input, before, after);
+            if (type == null) return input.replace(before, value);
 
             // Parameter placeholder
-            if (splitterPlaceholder == null) splitterPlaceholder = plugin.messages.getString(plugin.options.messagesOptions.keys.splitterPlaceholder, plugin.options.messagesOptions.keys.splitterPlaceholder);
-            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(AdventureUtility.convertMiniMessage(input));
+            if (splitterPlaceholder == null) splitterPlaceholder = plugin.getMessagesString(plugin.options.messagesOptions.keys.splitterPlaceholder);
+            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(input);
             final String match;
             final String parameter;
             if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
@@ -475,14 +474,7 @@ public class AnnoyingMessage extends Stringable {
                 match = before; // use the original placeholder
                 parameter = type.getDefaultInput(); // use the default input
             }
-            return replace(input, match, AdventureUtility.convertMiniMessage(type.getOutputOperator().apply(parameter, AdventureUtility.convertMiniMessage(after)))); // replace the placeholder with the formatted value
-        }
-
-        @NotNull
-        private Component replace(@NotNull Component input, @NotNull String before, @Nullable Component after) {
-            return input.replaceText(builder -> builder
-                    .matchLiteral(before)
-                    .replacement(after));
+            return input.replace(match, type.getOutputOperator().apply(parameter, value)); // replace the placeholder with the formatted value
         }
     }
 }

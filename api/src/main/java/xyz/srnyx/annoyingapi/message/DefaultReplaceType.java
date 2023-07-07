@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi.message;
 
-import net.kyori.adventure.text.Component;
-
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
@@ -10,7 +8,7 @@ import java.util.function.BinaryOperator;
 
 
 /**
- * Default replace types for {@link AnnoyingMessage#replace(String, Component, ReplaceType)}
+ * Default replace types for {@link AnnoyingMessage#replace(String, Object, ReplaceType)}
  */
 public enum DefaultReplaceType implements ReplaceType {
     /**
