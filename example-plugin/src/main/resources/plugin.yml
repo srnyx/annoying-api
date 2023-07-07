@@ -12,29 +12,34 @@ softdepend:
   - PlaceholderAPI
   - ViaVersion
 
+# You can either specify options here or in the plugin's main class (recommended)
 annoying:
-  bStatsId: 12345
-  bStatsFileName: "stats.yml"
+  pluginOptions:
+    dependencies:
+      ViaVersion:
+        platforms:
+          HANGAR:
+            author: ViaVersion
+            identifier: ViaVersion
+          SPIGOT: 19254
+        required: true
+        enableAfterDownload: true
   bStatsOptions:
-    createDefaultFile: false
-  messagesFileName: "msgs.yml"
-  messageKeys:
-    globalPlaceholders: "placeholders"
-    splitterJson: "splitter.json"
-    splitterPlaceholder: "splitter.placeholder"
-    noPermission: "no-permission"
-    playerOnly: "player-only"
-    invalidArguments: "invalid-arguments"
-    disabledCommand: "disabled-command"
-  dependencies:
-    ViaVersion:
-      platforms:
-        HANGAR:
-          author: ViaVersion
-          identifier: ViaVersion
-        SPIGOT: 19254
-      required: true
-      enableAfterDownload: true
+    id: 12345
+    fileName: "stats.yml"
+    fileOptions:
+      createDefaultFile: false
+    toggleKey: "enable-stats"
+  messagesOptions:
+    fileName: "msgs.yml"
+    keys:
+      globalPlaceholders: "placeholders"
+      splitterJson: "splitter.json"
+      splitterPlaceholder: "splitter.placeholder"
+      noPermission: "no-permission"
+      playerOnly: "player-only"
+      invalidArguments: "invalid-arguments"
+      disabledCommand: "disabled-command"
 
 commands:
   test:

@@ -19,10 +19,10 @@ public class AnnoyingData extends AnnoyingFile {
      *
      * @param   plugin      {@link #plugin}
      * @param   path        the path to the file (relative to {@code data} folder in the plugin's folder)
-     * @param   fileOptions {@link #fileOptions}
+     * @param   options {@link #fileOptions}
      */
-    public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.FileOptions<?> fileOptions) {
-        super(plugin, "data/" + path, fileOptions);
+    public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.Options<?> options) {
+        super(plugin, "data/" + path, options);
     }
 
     /**

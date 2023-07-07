@@ -29,9 +29,10 @@ public class ExamplePlugin extends AnnoyingPlugin {
      * Constructor for the {@link ExamplePlugin} class
      */
     public ExamplePlugin() {
-        options.commandsToRegister.add(new ExampleCommand(this));
-        options.listenersToRegister.add(new ExampleListener(this));
-        options.papiExpansionToRegister = () -> new ExamplePlaceholders(this);
+        options.registrationOptions(registrationOptions -> registrationOptions
+                .commandsToRegister(new ExampleCommand(this))
+                .listenersToRegister(new ExampleListener(this))
+                .papiExpansionToRegister(new ExamplePlaceholders(this)));
     }
 
     @Override

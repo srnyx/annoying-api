@@ -1,5 +1,8 @@
 package xyz.srnyx.annoyingapi.command;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -10,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.parents.Annoyable;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
 
 import java.util.Collection;
@@ -24,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a command that can be executed by a player or the console
  */
-public interface AnnoyingCommand extends TabExecutor, Annoyable {
+public interface AnnoyingCommand extends TabExecutor, Registrable {
     /**
      * <i>{@code OPTIONAL}</i> This is the name of the command
      * <p>If not specified, the lowercase class name will be used ({@code Command} will be removed)
@@ -70,6 +73,58 @@ public interface AnnoyingCommand extends TabExecutor, Annoyable {
     }
 
     /**
+     * Returns whether the command is registered to the {@link #getAnnoyingPlugin()}
+     *
+     * @return  whether the command is registered
+     */
+    @Override
+    default boolean isRegistered() {
+        return getAnnoyingPlugin().registeredCommands.contains(this);
+    }
+
+    /**
+     * Toggles the registration of the command to the {@link #getAnnoyingPlugin()}
+     *
+     * @param   registered  whether the command should be registered or unregistered
+     */
+    @Override
+    default void setRegistered(boolean registered) {
+        if (registered) {
+            register();
+            return;
+        }
+        unregister();
+    }
+
+    /**
+     * Registers the command to the {@link #getAnnoyingPlugin()}
+     */
+    @Override
+    default void register() {
+        if (isRegistered()) return;
+        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
+        if (command == null) {
+            AnnoyingPlugin.log(Level.WARNING, Component.text("Command ", NamedTextColor.RED)
+                    .append(Component.text(getName(), NamedTextColor.DARK_RED))
+                    .append(Component.text(" not found in plugin.yml!", NamedTextColor.RED)));
+            return;
+        }
+        command.setExecutor(this);
+        getAnnoyingPlugin().registeredCommands.add(this);
+    }
+
+    /**
+     * Unregisters the command from the {@link #getAnnoyingPlugin()}
+     */
+    @Override
+    default void unregister() {
+        if (!isRegistered()) return;
+        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
+        if (command != null) command.setExecutor(new DisabledCommand(getAnnoyingPlugin()));
+        getAnnoyingPlugin().registeredCommands.remove(this);
+    }
+
+    /**
      * <i>{@code REQUIRED}</i> This is everything that's executed when the command is run
      *
      * @param   sender  the sender of the command
@@ -87,52 +142,6 @@ public interface AnnoyingCommand extends TabExecutor, Annoyable {
     @Nullable
     default Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return null;
-    }
-
-    /**
-     * Returns whether the command is registered to the {@link #getAnnoyingPlugin()}
-     *
-     * @return  whether the command is registered
-     */
-    default boolean isRegistered() {
-        return getAnnoyingPlugin().registeredCommands.contains(this);
-    }
-
-    /**
-     * Toggles the registration of the command to the {@link #getAnnoyingPlugin()}
-     *
-     * @param   registered  whether the command should be registered or unregistered
-     */
-    default void setRegistered(boolean registered) {
-        if (registered) {
-            register();
-            return;
-        }
-        unregister();
-    }
-
-    /**
-     * Registers the command to the {@link #getAnnoyingPlugin()}
-     */
-    default void register() {
-        if (isRegistered()) return;
-        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
-        if (command == null) {
-            AnnoyingPlugin.log(Level.WARNING, "&cCommand &4" + getName() + "&c not found in plugin.yml!");
-            return;
-        }
-        command.setExecutor(this);
-        getAnnoyingPlugin().registeredCommands.add(this);
-    }
-
-    /**
-     * Unregisters the command from the {@link #getAnnoyingPlugin()}
-     */
-    default void unregister() {
-        if (!isRegistered()) return;
-        final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
-        if (command != null) command.setExecutor(new DisabledCommand(getAnnoyingPlugin()));
-        getAnnoyingPlugin().registeredCommands.remove(this);
     }
 
     /**
@@ -157,7 +166,7 @@ public interface AnnoyingCommand extends TabExecutor, Annoyable {
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(getAnnoyingPlugin(), getAnnoyingPlugin().options.messageKeys.invalidArguments).send(sender);
+            new AnnoyingMessage(getAnnoyingPlugin(), getAnnoyingPlugin().options.messagesOptions.keys.invalidArguments).send(sender);
             return true;
         }
 

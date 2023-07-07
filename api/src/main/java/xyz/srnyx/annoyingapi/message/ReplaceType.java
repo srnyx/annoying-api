@@ -1,16 +1,18 @@
 package xyz.srnyx.annoyingapi.message;
 
+import net.kyori.adventure.text.Component;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BinaryOperator;
 
 
 /**
- * Used in {@link AnnoyingMessage#replace(String, Object, xyz.srnyx.annoyingapi.message.ReplaceType)}
- * <p>Implement this into your own enum to create your own {@link ReplaceType}s for {@link AnnoyingMessage#replace(String, Object, ReplaceType)}
+ * Used in {@link AnnoyingMessage#replace(String, Component, ReplaceType)}
+ * <p>Implement this into your own enum to create your own {@link ReplaceType}s for {@link AnnoyingMessage#replace(String, Component, ReplaceType)}
  *
  * @see DefaultReplaceType
- * @see AnnoyingMessage#replace(String, Object, ReplaceType)
+ * @see AnnoyingMessage#replace(String, Component, ReplaceType)
  */
 public interface ReplaceType {
     /**

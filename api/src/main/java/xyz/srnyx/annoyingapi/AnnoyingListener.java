@@ -4,13 +4,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
-import xyz.srnyx.annoyingapi.parents.Annoyable;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 
 
 /**
  * A listener that can be registered to the Bukkit event system
  */
-public interface AnnoyingListener extends Listener, Annoyable {
+public interface AnnoyingListener extends Listener, Registrable {
     /**
      * Returns whether the listener is registered to the {@link #getAnnoyingPlugin()}
      *

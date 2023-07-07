@@ -2,6 +2,8 @@ package xyz.srnyx.annoyingapi.utility;
 
 import de.tr7zw.changeme.nbtapi.NBTItem;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -180,6 +182,8 @@ public class ItemDataUtility {
      * @param   action  the action that failed
      */
     private void sendError(@NotNull String action) {
-        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " item data for &4" + item.getType() + "&c!");
+        AnnoyingPlugin.log(Level.WARNING, Component.text("Failed to " + action + " item data for ", NamedTextColor.RED)
+                .append(Component.text(item.getType().toString(), NamedTextColor.DARK_RED))
+                .append(Component.text("!", NamedTextColor.RED)));
     }
 }

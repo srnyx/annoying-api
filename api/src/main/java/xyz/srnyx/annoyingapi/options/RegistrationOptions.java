@@ -1,0 +1,192 @@
+package xyz.srnyx.annoyingapi.options;
+
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+
+import org.bukkit.configuration.ConfigurationSection;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import xyz.srnyx.annoyingapi.AnnoyingListener;
+import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
+import xyz.srnyx.annoyingapi.parents.Registrable;
+import xyz.srnyx.annoyingapi.parents.Stringable;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+
+public class RegistrationOptions extends Stringable {
+    @NotNull public AutomaticRegistration automaticRegistration = new AutomaticRegistration();
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add commands to this in the plugin's constructor)
+     * <p>If you add a command to this OUTSIDE the constructor, it will not be registered
+     */
+    @NotNull public Set<AnnoyingCommand> commandsToRegister = new HashSet<>();
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingListener}s to register (add listeners to this in the plugin's constructor)
+     * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered
+     */
+    @NotNull public Set<AnnoyingListener> listenersToRegister = new HashSet<>();
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
+     * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>
+     */
+    @NotNull public Supplier<Object> papiExpansionToRegister = () -> null;
+
+    /**
+     * Constructs a new {@link RegistrationOptions} instance with default values
+     */
+    public RegistrationOptions() {
+        // Only exists to give the constructor a Javadoc
+    }
+
+    @NotNull
+    public static RegistrationOptions load(@NotNull ConfigurationSection section) {
+        final RegistrationOptions options = new RegistrationOptions();
+        if (section.contains("automaticRegistration")) options.automaticRegistration(AutomaticRegistration.load(section.getConfigurationSection("automaticRegistration")));
+        return options;
+    }
+
+    /**
+     * Casts the {@link #papiExpansionToRegister} to a {@link PlaceholderExpansion} and returns it
+     *
+     * @return  the {@link #papiExpansionToRegister} as a {@link PlaceholderExpansion} or {@code null} if it is not a {@link PlaceholderExpansion}
+     */
+    @Nullable
+    public PlaceholderExpansion getPapiExpansionToRegister() {
+        final Object expansion = papiExpansionToRegister.get();
+        return expansion instanceof PlaceholderExpansion ? (PlaceholderExpansion) expansion : null;
+    }
+
+    @NotNull
+    public RegistrationOptions automaticRegistration(@NotNull AutomaticRegistration automaticRegistration) {
+        this.automaticRegistration = automaticRegistration;
+        return this;
+    }
+
+    @NotNull
+    public RegistrationOptions automaticRegistration(@NotNull Consumer<AutomaticRegistration> automaticRegistration) {
+        automaticRegistration.accept(this.automaticRegistration);
+        return this;
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingCommand}s to {@link #commandsToRegister}
+     *
+     * @param   commandsToRegister  the commands to add
+     *
+     * @return                      this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions commandsToRegister(@NotNull Collection<AnnoyingCommand> commandsToRegister) {
+        this.commandsToRegister.addAll(commandsToRegister);
+        return this;
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingCommand}s to {@link #commandsToRegister}
+     *
+     * @param   commandsToRegister  the commands to add
+     *
+     * @return                      this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions commandsToRegister(@NotNull AnnoyingCommand... commandsToRegister) {
+        return commandsToRegister(Arrays.asList(commandsToRegister));
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingListener}s to {@link #listenersToRegister}
+     *
+     * @param   listenersToRegister the listeners to add
+     *
+     * @return                      this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions listenersToRegister(@NotNull Collection<AnnoyingListener> listenersToRegister) {
+        this.listenersToRegister.addAll(listenersToRegister);
+        return this;
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingListener}s to {@link #listenersToRegister}
+     *
+     * @param   listenersToRegister the listeners to add
+     *
+     * @return                      this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions listenersToRegister(@NotNull AnnoyingListener... listenersToRegister) {
+        return listenersToRegister(Arrays.asList(listenersToRegister));
+    }
+
+    /**
+     * Sets the {@link #papiExpansionToRegister}
+     *
+     * @param   papiExpansionToRegister the PAPI expansion to register
+     *
+     * @return                          this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions papiExpansionToRegister(@NotNull Supplier<Object> papiExpansionToRegister) {
+        this.papiExpansionToRegister = papiExpansionToRegister;
+        return this;
+    }
+
+    /**
+     * Sets the {@link #papiExpansionToRegister}
+     *
+     * @param   papiExpansionToRegister the PAPI expansion to register
+     *
+     * @return                          this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions papiExpansionToRegister(@NotNull PlaceholderExpansion papiExpansionToRegister) {
+        return papiExpansionToRegister(() -> papiExpansionToRegister);
+    }
+
+    public static class AutomaticRegistration {
+        @NotNull public final Set<String> packages = new HashSet<>();
+        @NotNull public final Set<Class<? extends Registrable>> ignoredClasses = new HashSet<>();
+
+        public AutomaticRegistration() {
+            // Only exists to give the constructor a Javadoc
+        }
+
+        @NotNull
+        public static AutomaticRegistration load(@NotNull ConfigurationSection section) {
+            final AutomaticRegistration automaticRegistration = new AutomaticRegistration();
+            if (section.contains("packages")) automaticRegistration.packages(section.getStringList("packages"));
+            return automaticRegistration;
+        }
+
+        @NotNull
+        public AutomaticRegistration packages(@NotNull Collection<String> packages) {
+            this.packages.addAll(packages);
+            return this;
+        }
+
+        @NotNull
+        public AutomaticRegistration packages(@NotNull String... packages) {
+            return packages(Arrays.asList(packages));
+        }
+
+        @NotNull
+        public AutomaticRegistration ignoredClasses(@NotNull Collection<Class<? extends Registrable>> ignoredClasses) {
+            this.ignoredClasses.addAll(ignoredClasses);
+            return this;
+        }
+
+        @NotNull @SafeVarargs
+        public final AutomaticRegistration ignoredClasses(@NotNull Class<? extends Registrable>... ignoredClasses) {
+            return ignoredClasses(Arrays.asList(ignoredClasses));
+        }
+    }
+}

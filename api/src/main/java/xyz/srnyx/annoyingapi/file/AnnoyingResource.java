@@ -22,16 +22,16 @@ public class AnnoyingResource extends AnnoyingFile {
     /**
      * Constructs and loads a new {@link AnnoyingResource} from the path, the file MUST exist in the {@code resources} folder
      *
-     * @param   plugin  the {@link AnnoyingPlugin} instance (used in {@link #load()})
-     * @param   path    the path to the file (relative to the plugin's folder)
-     * @param   resourceOptions the {@link ResourceOptions options} for the file
+     * @param   plugin      the {@link AnnoyingPlugin} instance (used in {@link #load()})
+     * @param   path        the path to the file (relative to the plugin's folder)
+     * @param   fileOptions the {@link Options options} for the file
      */
-    public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable ResourceOptions resourceOptions) {
-        super(plugin, path, resourceOptions);
-        resourceOptions = resourceOptions == null ? new ResourceOptions() : resourceOptions;
+    public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingResource.Options fileOptions) {
+        super(plugin, path, fileOptions);
+        fileOptions = fileOptions == null ? new Options() : fileOptions;
 
         // Create default file
-        if (resourceOptions.createDefaultFile) try {
+        if (fileOptions.createDefaultFile) try {
             final InputStream input = plugin.getResource(path);
             if (input == null) return;
             final Path defaultPath = plugin.getDataFolder().toPath().resolve("default/" + path);
@@ -48,10 +48,10 @@ public class AnnoyingResource extends AnnoyingFile {
      * @param   plugin  the {@link AnnoyingPlugin} instance (used in {@link #load()})
      * @param   path    the path to the file (relative to the plugin's folder)
      *
-     * @see #AnnoyingResource(AnnoyingPlugin, String, ResourceOptions)
+     * @see #AnnoyingResource(AnnoyingPlugin, String, Options)
      */
     public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
-        this(plugin, path, new ResourceOptions());
+        this(plugin, path, new Options());
     }
 
     @Override
@@ -62,29 +62,29 @@ public class AnnoyingResource extends AnnoyingFile {
     /**
      * Represents the options for the {@link AnnoyingResource}
      */
-    public static class ResourceOptions extends AnnoyingFile.FileOptions<ResourceOptions> {
+    public static class Options extends AnnoyingFile.Options<Options> {
         /**
          * Whether to create an up-to-date default file called {@code default_}{@link File#getName() name}
          */
         public boolean createDefaultFile = true;
 
         /**
-         * Constructs a new {@link ResourceOptions} with the default values
+         * Constructs a new {@link Options} with the default values
          */
-        public ResourceOptions() {
+        public Options() {
             // Only exists to provide a Javadoc
         }
 
         /**
-         * Loads the {@link ResourceOptions} from the {@link ConfigurationSection}
+         * Loads the {@link Options} from the {@link ConfigurationSection}
          *
          * @param   section the section to load from
          *
-         * @return          the loaded {@link ResourceOptions}
+         * @return          the loaded {@link Options}
          */
         @NotNull
-        public static ResourceOptions load(@NotNull ConfigurationSection section) {
-            final ResourceOptions options = FileOptions.load(new ResourceOptions(), section);
+        public static AnnoyingResource.Options load(@NotNull ConfigurationSection section) {
+            final Options options = AnnoyingFile.Options.load(new Options(), section);
             if (section.contains("createDefaultFile")) options.createDefaultFile = section.getBoolean("createDefaultFile");
             return options;
         }
@@ -97,7 +97,7 @@ public class AnnoyingResource extends AnnoyingFile {
          * @return                      this
          */
         @NotNull
-        public ResourceOptions createDefaultFile(boolean createDefaultFile) {
+        public AnnoyingResource.Options createDefaultFile(boolean createDefaultFile) {
             this.createDefaultFile = createDefaultFile;
             return this;
         }

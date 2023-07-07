@@ -2,12 +2,10 @@ package xyz.srnyx.annoyingapi.utility.adventure;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-
-import net.md_5.bungee.api.chat.BaseComponent;
 
 import org.bukkit.ChatColor;
 
@@ -97,28 +95,10 @@ public class AdventureUtility {
         return MiniMessage.miniMessage().serialize(component);
     }
 
-    /**
-     * Converts a {@link BaseComponent} array to a {@link Component}
-     *
-     * @param   components  the components to convert
-     *
-     * @return              the converted components
-     */
     @NotNull
-    public static Component convertBaseComponents(@NotNull BaseComponent[] components) {
-        return BungeeComponentSerializer.legacy().deserialize(components);
-    }
-
-    /**
-     * Converts a {@link Component} to a {@link BaseComponent} array
-     *
-     * @param   component   the component to convert
-     *
-     * @return              the converted component
-     */
-    @NotNull
-    public static BaseComponent[] convertBaseComponents(@NotNull Component component) {
-        return BungeeComponentSerializer.legacy().serialize(component);
+    public static Style getMiniMessageStyle(@Nullable String string) {
+        if (string == null) return Style.empty();
+        return MiniMessage.miniMessage().deserialize(string + "a").style(); // Add a character to make sure it's not empty, else no styles will be deserialized
     }
 
     /**

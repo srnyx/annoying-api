@@ -3,20 +3,26 @@ DOCUMENTATION: https://annoying-api.srnyx.com/wiki/messages-file
 
 # Messages for general plugin usage
 plugin:
+  # The format to use for colors/decorations and JSON components
+  # - LEGACY: Legacy color codes (ex: "&a") and JSON components (see documentation)
+  # - MINIMESSAGE: A more modern approach to color codes (ex: "<green>") and JSON components (https://docs.advntr.dev/minimessage)
+  format: MINIMESSAGE
+
   # These are placeholders that can be used in any message in this file
   # This is extremely useful for things like prefixes, color schemes, and more
   # Using a global placeholder is just like any other placeholder! Simply surround the placeholder name with "%" (ex: "%prefix%")
   # WARNING: Global placeholders can conflict with local placeholders! Please be wary when creating your own global placeholder(s)!
   global-placeholders: # It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)
-    prefix: "&3&lANNOYING &8&l| &b" # Prefix for the plugin, typically used in the beginning of most messages
-    p: "&b" # Base color for non-error messages
-    s: "&3" # Highlight color for non-error messages
-    pe: "&c" # Base color for error messages
-    se: "&4" # Highlight color for error messages
+    prefix: "<b><dark_aqua>ANNOYING <dark_gray>|</b><aqua> " # Prefix for the plugin, typically used in the beginning of most messages
+    p: "<aqua>" # Base color for non-error messages
+    s: "<dark_aqua>" # Highlight color for non-error messages
+    pe: "<red>" # Base color for error messages
+    se: "<dark_red>" # Highlight color for error messages
 
   # These are the different splitters for messages/placeholders
   splitters:
     # This is the splitter for the JSON components. Default: "@@"
+    # This is useless if you're using MINIMESSAGE format
     json: "@@"
     # This is the splitter for placeholders with parameters. Default: "=="
     placeholder: "=="
@@ -27,14 +33,14 @@ plugin:
 # Error messages when a player does something wrong
 error:
   # Player doesn't have permission to use a command
-  no-permission: "%prefix%%pe%You must have %se%%permission%%pe% to use this!@@%pe%%command%@@%command%" # %permission%
+  no-permission: "<click:suggest_command:'%command%'><hover:show_text:'%pe%%command%'>%prefix%%pe%You must have %se%%permission%%pe% to use this!" # %permission%
   # Console tries to use a command that can only be used by players
-  player-only: "%prefix%%pe%You must be a player to run this command!@@%pe%%command%@@%command%"
+  player-only: "<click:suggest_command:'%command%'><hover:show_text:'%pe%%command%'>%prefix%%pe%You must be a player to run this command!"
   # Command is used with an invalid/incorrect argument
-  invalid-argument: "%prefix%%se%%argument%%pe% is an invalid argument!@@%pe%%command%@@%command%" # %argument%
+  invalid-argument: "<click:suggest_command:'%command%'><hover:show_text:'%pe%%command%'>%prefix%%se%%argument%%pe% is an invalid argument!" # %argument%
   # Command is used with multiple invalid/incorrect arguments
-  invalid-arguments: "%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%"
+  invalid-arguments: "<click:suggest_command:'%command%'><hover:show_text:'%pe%%command%'>%prefix%%pe%Invalid arguments!"
   # Command is used when it's disabled
-  disabled-command: "%prefix%%se%%command%%pe% is disabled!@@%pe%%command%@@%command%"
+  disabled-command: "<click:suggest_command:'%command%'><hover:show_text:'%pe%%command%'>%prefix%%se%%command%%pe% is disabled!"
 
 test: "%prefix%This is a test message!"

@@ -20,103 +20,107 @@ public enum MiniColor {
     /**
      * {@link ChatColor#BLACK} ({@code 0})
      */
-    BLACK(NamedTextColor.BLACK, ChatColor.BLACK),
+    BLACK("<black>", NamedTextColor.BLACK, ChatColor.BLACK),
     /**
      * {@link ChatColor#DARK_BLUE} ({@code 1})
      */
-    DARK_BLUE(NamedTextColor.DARK_BLUE, ChatColor.DARK_BLUE),
+    DARK_BLUE("<dark_blue>", NamedTextColor.DARK_BLUE, ChatColor.DARK_BLUE),
     /**
      * {@link ChatColor#DARK_GREEN} ({@code 2})
      */
-    DARK_GREEN(NamedTextColor.DARK_GREEN, ChatColor.DARK_GREEN),
+    DARK_GREEN("<dark_green>", NamedTextColor.DARK_GREEN, ChatColor.DARK_GREEN),
     /**
      * {@link ChatColor#DARK_AQUA} ({@code 3})
      */
-    DARK_AQUA(NamedTextColor.DARK_AQUA, ChatColor.DARK_AQUA),
+    DARK_AQUA("<dark_aqua>", NamedTextColor.DARK_AQUA, ChatColor.DARK_AQUA),
     /**
      * {@link ChatColor#DARK_RED} ({@code 4})
      */
-    DARK_RED(NamedTextColor.DARK_RED, ChatColor.DARK_RED),
+    DARK_RED("<dark_red>", NamedTextColor.DARK_RED, ChatColor.DARK_RED),
     /**
      * {@link ChatColor#DARK_PURPLE} ({@code 5})
      */
-    DARK_PURPLE(NamedTextColor.DARK_PURPLE, ChatColor.DARK_PURPLE),
+    DARK_PURPLE("<dark_purple>", NamedTextColor.DARK_PURPLE, ChatColor.DARK_PURPLE),
     /**
      * {@link ChatColor#GOLD} ({@code 6})
      */
-    GOLD(NamedTextColor.GOLD, ChatColor.GOLD),
+    GOLD("<gold>", NamedTextColor.GOLD, ChatColor.GOLD),
     /**
      * {@link ChatColor#GRAY} ({@code 7})
      */
-    GRAY(NamedTextColor.GRAY, ChatColor.GRAY),
+    GRAY("<gray>", NamedTextColor.GRAY, ChatColor.GRAY),
     /**
      * {@link ChatColor#DARK_GRAY} ({@code 8})
      */
-    DARK_GRAY(NamedTextColor.DARK_GRAY, ChatColor.DARK_GRAY),
+    DARK_GRAY("<dark_gray>", NamedTextColor.DARK_GRAY, ChatColor.DARK_GRAY),
     /**
      * {@link ChatColor#BLUE} ({@code 9})
      */
-    BLUE(NamedTextColor.BLUE, ChatColor.BLUE),
+    BLUE("<blue>", NamedTextColor.BLUE, ChatColor.BLUE),
     /**
      * {@link ChatColor#GREEN} ({@code a})
      */
-    GREEN(NamedTextColor.GREEN, ChatColor.GREEN),
+    GREEN("<green>", NamedTextColor.GREEN, ChatColor.GREEN),
     /**
      * {@link ChatColor#AQUA} ({@code b})
      */
-    AQUA(NamedTextColor.AQUA, ChatColor.AQUA),
+    AQUA("<aqua>", NamedTextColor.AQUA, ChatColor.AQUA),
     /**
      * {@link ChatColor#RED} ({@code c})
      */
-    RED(NamedTextColor.RED, ChatColor.RED),
+    RED("<red>", NamedTextColor.RED, ChatColor.RED),
     /**
      * {@link ChatColor#LIGHT_PURPLE} ({@code d})
      */
-    LIGHT_PURPLE(NamedTextColor.LIGHT_PURPLE, ChatColor.LIGHT_PURPLE),
+    LIGHT_PURPLE("<light_purple>", NamedTextColor.LIGHT_PURPLE, ChatColor.LIGHT_PURPLE),
     /**
      * {@link ChatColor#YELLOW} ({@code e})
      */
-    YELLOW(NamedTextColor.YELLOW, ChatColor.YELLOW),
+    YELLOW("<yellow>", NamedTextColor.YELLOW, ChatColor.YELLOW),
     /**
      * {@link ChatColor#WHITE} ({@code f})
      */
-    WHITE(NamedTextColor.WHITE, ChatColor.WHITE),
+    WHITE("<white>", NamedTextColor.WHITE, ChatColor.WHITE),
     /**
      * {@link ChatColor#MAGIC} ({@code k})
      */
-    OBFUSCATED(TextDecoration.OBFUSCATED, ChatColor.MAGIC),
+    OBFUSCATED("<obfuscated>", TextDecoration.OBFUSCATED, ChatColor.MAGIC),
     /**
      * {@link ChatColor#BOLD} ({@code l})
      */
-    BOLD(TextDecoration.BOLD, ChatColor.BOLD),
+    BOLD("<bold>", TextDecoration.BOLD, ChatColor.BOLD),
     /**
      * {@link ChatColor#STRIKETHROUGH} ({@code m})
      */
-    STRIKETHROUGH(TextDecoration.STRIKETHROUGH, ChatColor.STRIKETHROUGH),
+    STRIKETHROUGH("<strikethrough>", TextDecoration.STRIKETHROUGH, ChatColor.STRIKETHROUGH),
     /**
      * {@link ChatColor#UNDERLINE} ({@code n})
      */
-    UNDERLINED(TextDecoration.UNDERLINED, ChatColor.UNDERLINE),
+    UNDERLINE("<underline>", TextDecoration.UNDERLINED, ChatColor.UNDERLINE),
     /**
      * {@link ChatColor#ITALIC} ({@code o})
      */
-    ITALIC(TextDecoration.ITALIC, ChatColor.ITALIC),
+    ITALIC("<italic>", TextDecoration.ITALIC, ChatColor.ITALIC),
     /**
      * {@link ChatColor#RESET} ({@code r})
      */
-    RESET(Reset.INSTANCE, ChatColor.RESET);
+    RESET("<reset>", Reset.INSTANCE, ChatColor.RESET);
 
+    /**
+     * The MiniMessage tag of the color
+     */
+    @NotNull public final String miniMessageTag;
     /**
      * The {@link TextFormat} equivalent of the MiniMessage color
      */
     @NotNull public final TextFormat textFormat;
-
     /**
      * The {@link ChatColor} equivalent of the MiniMessage color
      */
     @NotNull public final ChatColor chatColor;
 
-    MiniColor(@NotNull TextFormat textFormat, @NotNull ChatColor chatColor) {
+    MiniColor(@NotNull String miniMessageTag, @NotNull TextFormat textFormat, @NotNull ChatColor chatColor) {
+        this.miniMessageTag = miniMessageTag;
         this.textFormat = textFormat;
         this.chatColor = chatColor;
     }
@@ -128,7 +132,7 @@ public enum MiniColor {
      */
     @Override @NotNull
     public String toString() {
-        return "<" + textFormat + ">";
+        return miniMessageTag;
     }
 
     /**
@@ -157,6 +161,14 @@ public enum MiniColor {
     public static MiniColor fromChatColor(@NotNull ChatColor chatColor) {
         return Arrays.stream(values())
                 .filter(miniColor -> miniColor.chatColor == chatColor)
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Nullable
+    public static MiniColor fromMiniMessageTag(@NotNull String tag) {
+        return Arrays.stream(values())
+                .filter(miniColor -> miniColor.miniMessageTag.equals(tag))
                 .findFirst()
                 .orElse(null);
     }

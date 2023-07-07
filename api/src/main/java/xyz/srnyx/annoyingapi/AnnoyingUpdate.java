@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
+import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
@@ -71,17 +72,17 @@ public class AnnoyingUpdate extends Stringable {
     }
 
     /**
-     * Checks if an update is available and sends {@link AnnoyingOptions.MessageKeys#updateAvailable a message} to the console if it is
+     * Checks if an update is available and sends {@link MessagesOptions.MessageKeys#updateAvailable a message} to the console if it is
      *
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) AnnoyingPlugin.log(Level.WARNING, new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messageKeys.updateAvailable)
+        if (update && latestVersion != null) new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messagesOptions.keys.updateAvailable)
                 .replace("%plugin%", plugin.getName())
                 .replace("%current%", currentVersion.version)
                 .replace("%new%", latestVersion.version)
-                .toString());
+                .log(Level.WARNING);
         return update;
     }
 

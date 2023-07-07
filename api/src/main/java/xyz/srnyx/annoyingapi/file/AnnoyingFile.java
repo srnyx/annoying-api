@@ -1,6 +1,9 @@
 package xyz.srnyx.annoyingapi.file;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -59,9 +62,9 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      */
     @NotNull public final File file;
     /**
-     * The {@link FileOptions} for the file
+     * The {@link Options} for the file
      */
-    @NotNull protected final FileOptions<?> fileOptions;
+    @NotNull protected final AnnoyingFile.Options<?> fileOptions;
 
     /**
      * Constructs a new {@link AnnoyingFile}
@@ -70,11 +73,11 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   path            {@link #path}
      * @param   fileOptions     {@link #fileOptions}
      */
-    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable FileOptions<?> fileOptions) {
+    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.Options<?> fileOptions) {
         this.plugin = plugin;
         this.path = path;
         this.file = new File(plugin.getDataFolder(), path);
-        this.fileOptions = fileOptions == null ? new FileOptions<>() : fileOptions;
+        this.fileOptions = fileOptions == null ? new Options<>() : fileOptions;
         load();
     }
 
@@ -163,14 +166,15 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Sends a formatted log message to the console
+     * Sends a formatted warning message to the console
      *
-     * @param   level   the {@link Level} of the message
      * @param   key     the key of the node that the message is about ({@code null} if it's not about a node)
      * @param   message the message to send
      */
-    public void log(@NotNull Level level, @Nullable String key, @NotNull String message) {
-        AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
+    public void warning(@Nullable String key, @NotNull TextComponent message) {
+        AnnoyingPlugin.log(Level.WARNING, Component.text(path + (key == null ? "" : ", " + key), NamedTextColor.DARK_RED)
+                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                .append(message));
     }
 
     /**
@@ -239,7 +243,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "Invalid sound category: " + categoryString);
+            warning(path, Component.text("Invalid sound category: ", NamedTextColor.RED)
+                    .append(Component.text(categoryString, NamedTextColor.DARK_RED)));
         }
 
         // Return SoundData
@@ -277,14 +282,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier");
+            warning(path, Component.text("Invalid attribute modifier", NamedTextColor.RED));
             return def;
         }
 
         final String name = section.getString("name");
         final String operationString = section.getString("operation");
         if (name == null || operationString == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier");
+            warning(path, Component.text("Invalid attribute modifier", NamedTextColor.RED));
             return def;
         }
 
@@ -293,7 +298,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid operation: &4" + operationString);
+            warning(path, Component.text("Invalid attribute modifier operation: ", NamedTextColor.RED)
+                    .append(Component.text(operationString, NamedTextColor.DARK_RED)));
             return def;
         }
 
@@ -308,7 +314,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (equipmentSlotString != null) try {
                 slot = EquipmentSlot.valueOf(equipmentSlotString);
             } catch (final IllegalArgumentException e) {
-                log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
+                warning(path, Component.text("Invalid equipment slot: ", NamedTextColor.RED)
+                        .append(Component.text(equipmentSlotString, NamedTextColor.DARK_RED)));
             }
 
             // Return
@@ -386,7 +393,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
                 if (enchantment == null) {
-                    log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
+                    warning(path, Component.text("Invalid enchantment: ", NamedTextColor.RED)
+                            .append(Component.text(enchantmentKey, NamedTextColor.DARK_RED)));
                     continue;
                 }
                 meta.addEnchant(enchantment, enchantmentsSection.getInt(enchantmentKey), true);
@@ -398,7 +406,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         try {
                             return ItemFlag.valueOf(string.toUpperCase());
                         } catch (final IllegalArgumentException e) {
-                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
+                            warning(section.getCurrentPath() + "." + "flags", Component.text("Invalid item flag: ", NamedTextColor.RED)
+                                    .append(Component.text(string, NamedTextColor.DARK_RED)));
                             return null;
                         }
                     })
@@ -423,7 +432,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         //noinspection unchecked
                         attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
-                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
+                        warning(pathString, Component.text("Invalid attribute: ", NamedTextColor.RED)
+                                .append(Component.text(attributeKey, NamedTextColor.DARK_RED)));
                         continue;
                     }
 
@@ -529,7 +539,8 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             final String key = entry.getKey();
             final Material material = Material.matchMaterial(String.valueOf(entry.getValue()));
             if (material == null) {
-                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + entry.getValue());
+                warning(ingredients.getCurrentPath() + "." + key, Component.text("Invalid material: ", NamedTextColor.RED)
+                        .append(Component.text(entry.getValue().toString(), NamedTextColor.DARK_RED)));
                 continue;
             }
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);
@@ -590,33 +601,33 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     /**
      * A class to hold the options for a file
      *
-     * @param   <T> the type of the {@link FileOptions} instance
+     * @param   <T> the type of the {@link Options} instance
      */
-    public static class FileOptions<T extends FileOptions<T>> extends Stringable {
+    public static class Options<T extends Options<T>> extends Stringable {
         /**
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
         public boolean canBeEmpty = true;
 
         /**
-         * Creates a new {@link FileOptions} instance
+         * Creates a new {@link Options} instance
          */
-        public FileOptions() {
+        public Options() {
             // Only exists to provide a Javadoc
         }
 
         /**
-         * Loads a {@link FileOptions} from the given {@link ConfigurationSection}
+         * Loads a {@link Options} from the given {@link ConfigurationSection}
          *
-         * @param   options the {@link FileOptions} to load into
+         * @param   options the {@link Options} to load into
          * @param   section the {@link ConfigurationSection} to load from
          *
-         * @return          the {@link FileOptions} instance
+         * @return          the {@link Options} instance
          *
-         * @param   <G>     the type of the {@link FileOptions} instance
+         * @param   <G>     the type of the {@link Options} instance
          */
         @NotNull
-        public static <G extends FileOptions<G>> G load(@NotNull G options, @NotNull ConfigurationSection section) {
+        public static <G extends Options<G>> G load(@NotNull G options, @NotNull ConfigurationSection section) {
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
             return options;
         }
@@ -626,7 +637,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
          *
          * @param   canBeEmpty  {@link #canBeEmpty}
          *
-         * @return              the {@link FileOptions} instance
+         * @return              the {@link Options} instance
          */
         @NotNull
         public T canBeEmpty(boolean canBeEmpty) {

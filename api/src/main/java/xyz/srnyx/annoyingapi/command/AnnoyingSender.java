@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
-import xyz.srnyx.annoyingapi.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 
 
@@ -86,17 +86,17 @@ public class AnnoyingSender extends Stringable {
     }
 
     /**
-     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link AnnoyingOptions.MessageKeys#playerOnly} message
+     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link MessagesOptions.MessageKeys#playerOnly} message
      *
      * @return  whether the {@link CommandSender} is a {@link Player}
      */
     public boolean checkPlayer() {
-        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.messageKeys.playerOnly).send(this);
+        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.playerOnly).send(this);
         return isPlayer;
     }
 
     /**
-     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link AnnoyingOptions.MessageKeys#noPermission} message
+     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link MessagesOptions.MessageKeys#noPermission} message
      *
      * @param   permission  the permission to check
      *
@@ -104,7 +104,7 @@ public class AnnoyingSender extends Stringable {
      */
     public boolean checkPermission(@NotNull String permission) {
         final boolean hasPermission = cmdSender.hasPermission(permission);
-        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.messageKeys.noPermission)
+        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.noPermission)
                 .replace("%permission%", permission)
                 .send(this);
         return hasPermission;
@@ -128,7 +128,7 @@ public class AnnoyingSender extends Stringable {
      * @param   argument    the argument to replace {@code %argument%} with
      */
     public void invalidArgument(@Nullable Object argument) {
-        new AnnoyingMessage(plugin, plugin.options.messageKeys.invalidArgument)
+        new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.invalidArgument)
                 .replace("%argument%", String.valueOf(argument))
                 .send(this);
     }
@@ -137,6 +137,6 @@ public class AnnoyingSender extends Stringable {
      * Sends the invalid arguments message
      */
     public void invalidArguments() {
-        new AnnoyingMessage(plugin, plugin.options.messageKeys.invalidArguments).send(this);
+        new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.invalidArguments).send(this);
     }
 }
