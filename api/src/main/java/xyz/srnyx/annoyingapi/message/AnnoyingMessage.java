@@ -354,10 +354,18 @@ public class AnnoyingMessage extends Stringable {
         send(new AnnoyingSender(plugin, sender));
     }
 
+    /**
+     * Logs the message to the console with the specified {@link Level}
+     *
+     * @param   level   the {@link Level} to log with
+     */
     public void log(@Nullable Level level) {
         AnnoyingPlugin.log(level, toString());
     }
 
+    /**
+     * Runs {@link #log(Level)} using {@code null}
+     */
     public void log() {
         log(null);
     }

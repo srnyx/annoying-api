@@ -12,6 +12,9 @@ import xyz.srnyx.annoyingapi.parents.Stringable;
 import java.util.function.Consumer;
 
 
+/**
+ * Represents the options for the {@link AnnoyingPlugin#messages} file
+ */
 public class MessagesOptions extends Stringable {
     /**
      * <i>{@code OPTIONAL}</i>  The file name of the messages file <i>(usually {@code messages.yml})</i>
@@ -35,6 +38,13 @@ public class MessagesOptions extends Stringable {
         // Only exists to give the constructor a Javadoc
     }
 
+    /**
+     * Loads the options from the specified {@link ConfigurationSection}
+     *
+     * @param   section the section to load the options from
+     *
+     * @return          the loaded options
+     */
     @NotNull
     public static MessagesOptions load(@NotNull ConfigurationSection section) {
         final MessagesOptions options = new MessagesOptions();

@@ -22,16 +22,22 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 
+/**
+ * Represents the options for class registration (commands/listeners/etc...)
+ */
 public class RegistrationOptions extends Stringable {
+    /**
+     * The {@link AutomaticRegistration} options to automatically register {@link Registrable}s
+     */
     @NotNull public AutomaticRegistration automaticRegistration = new AutomaticRegistration();
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add commands to this in the plugin's constructor)
-     * <p>If you add a command to this OUTSIDE the constructor, it will not be registered
+     * <p>If you add a command to this OUTSIDE the constructor, it will not be registered (unless you call {@link AnnoyingCommand#register()})
      */
     @NotNull public Set<AnnoyingCommand> commandsToRegister = new HashSet<>();
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingListener}s to register (add listeners to this in the plugin's constructor)
-     * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered
+     * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered (unless you call {@link AnnoyingListener#register()})
      */
     @NotNull public Set<AnnoyingListener> listenersToRegister = new HashSet<>();
     /**
@@ -47,6 +53,13 @@ public class RegistrationOptions extends Stringable {
         // Only exists to give the constructor a Javadoc
     }
 
+    /**
+     * Loads the options from the specified {@link ConfigurationSection}
+     *
+     * @param   section the section to load the options from
+     *
+     * @return          the loaded options
+     */
     @NotNull
     public static RegistrationOptions load(@NotNull ConfigurationSection section) {
         final RegistrationOptions options = new RegistrationOptions();
@@ -65,12 +78,26 @@ public class RegistrationOptions extends Stringable {
         return expansion instanceof PlaceholderExpansion ? (PlaceholderExpansion) expansion : null;
     }
 
+    /**
+     * Sets the {@link #automaticRegistration}
+     *
+     * @param   automaticRegistration   the automatic registration
+     *
+     * @return                          this {@link RegistrationOptions} instance for chaining
+     */
     @NotNull
     public RegistrationOptions automaticRegistration(@NotNull AutomaticRegistration automaticRegistration) {
         this.automaticRegistration = automaticRegistration;
         return this;
     }
 
+    /**
+     * Sets the {@link #automaticRegistration} using the specified {@link Consumer}
+     *
+     * @param   automaticRegistration   the automatic registration
+     *
+     * @return                          this {@link RegistrationOptions} instance for chaining
+     */
     @NotNull
     public RegistrationOptions automaticRegistration(@NotNull Consumer<AutomaticRegistration> automaticRegistration) {
         automaticRegistration.accept(this.automaticRegistration);
@@ -152,14 +179,33 @@ public class RegistrationOptions extends Stringable {
         return papiExpansionToRegister(() -> papiExpansionToRegister);
     }
 
+    /**
+     * The automatic registration options
+     */
     public static class AutomaticRegistration {
+        /**
+         * The packages to scan for {@link Registrable}s
+         */
         @NotNull public final Set<String> packages = new HashSet<>();
+        /**
+         * The classes to ignore when scanning for {@link Registrable}s
+         */
         @NotNull public final Set<Class<? extends Registrable>> ignoredClasses = new HashSet<>();
 
+        /**
+         * Constructs a new {@link AutomaticRegistration} instance with default values
+         */
         public AutomaticRegistration() {
             // Only exists to give the constructor a Javadoc
         }
 
+        /**
+         * Loads the options from the specified {@link ConfigurationSection}
+         *
+         * @param   section the section to load the options from
+         *
+         * @return          the loaded options
+         */
         @NotNull
         public static AutomaticRegistration load(@NotNull ConfigurationSection section) {
             final AutomaticRegistration automaticRegistration = new AutomaticRegistration();
@@ -167,23 +213,51 @@ public class RegistrationOptions extends Stringable {
             return automaticRegistration;
         }
 
+        /**
+         * Adds the specified packages to {@link #packages}
+         *
+         * @param   packages    the packages to add
+         *
+         * @return              this {@link AutomaticRegistration} instance for chaining
+         */
         @NotNull
         public AutomaticRegistration packages(@NotNull Collection<String> packages) {
             this.packages.addAll(packages);
             return this;
         }
 
+        /**
+         * Adds the specified packages to {@link #packages}
+         *
+         * @param   packages    the packages to add
+         *
+         * @return              this {@link AutomaticRegistration} instance for chaining
+         */
         @NotNull
         public AutomaticRegistration packages(@NotNull String... packages) {
             return packages(Arrays.asList(packages));
         }
 
+        /**
+         * Adds the specified classes to {@link #ignoredClasses}
+         *
+         * @param   ignoredClasses  the classes to add
+         *
+         * @return                  this {@link AutomaticRegistration} instance for chaining
+         */
         @NotNull
         public AutomaticRegistration ignoredClasses(@NotNull Collection<Class<? extends Registrable>> ignoredClasses) {
             this.ignoredClasses.addAll(ignoredClasses);
             return this;
         }
 
+        /**
+         * Adds the specified classes to {@link #ignoredClasses}
+         *
+         * @param   ignoredClasses  the classes to add
+         *
+         * @return                  this {@link AutomaticRegistration} instance for chaining
+         */
         @NotNull @SafeVarargs
         public final AutomaticRegistration ignoredClasses(@NotNull Class<? extends Registrable>... ignoredClasses) {
             return ignoredClasses(Arrays.asList(ignoredClasses));

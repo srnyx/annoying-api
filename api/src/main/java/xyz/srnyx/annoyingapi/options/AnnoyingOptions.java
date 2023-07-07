@@ -16,9 +16,21 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("CanBeFinal")
 public class AnnoyingOptions extends Stringable {
+    /**
+     * Some general plugin options
+     */
     @NotNull public PluginOptions pluginOptions = new PluginOptions();
+    /**
+     * Options for class registration (commands/listeners/etc...)
+     */
     @NotNull public RegistrationOptions registrationOptions = new RegistrationOptions();
+    /**
+     * Options for <a href="https://bstats.org/">bStats</a>
+     */
     @NotNull public BStatsOptions bStatsOptions = new BStatsOptions();
+    /**
+     * Options for the messages file ({@code messages.yml} by default)
+     */
     @NotNull public MessagesOptions messagesOptions = new MessagesOptions();
 
     /**

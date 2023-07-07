@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.List;
 
 
+/**
+ * Represents the general options for the plugin
+ */
 public class PluginOptions {
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency AnnoyingDependencies} to check for (add dependencies to this in the plugin's constructor)
@@ -33,6 +36,13 @@ public class PluginOptions {
         // Only exists to give the constructor a Javadoc
     }
 
+    /**
+     * Loads the options from the specified {@link ConfigurationSection}
+     *
+     * @param   section the section to load the options from
+     *
+     * @return          the loaded options
+     */
     @NotNull
     public static PluginOptions load(@NotNull ConfigurationSection section) {
         final PluginOptions options = new PluginOptions();

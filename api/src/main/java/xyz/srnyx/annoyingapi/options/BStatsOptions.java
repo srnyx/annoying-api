@@ -9,6 +9,9 @@ import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 
 
+/**
+ * Represents the options for <a href="https://bstats.org">bStats</a>
+ */
 public class BStatsOptions extends Stringable {
     /**
      * <i>{@code RECOMMENDED}</i> The ID of the plugin on <a href="https://bstats.org">bStats</a>
@@ -26,6 +29,9 @@ public class BStatsOptions extends Stringable {
      * <p>If not specified, the default options will be used
      */
     @Nullable public AnnoyingResource.Options fileOptions = null;
+    /**
+     * <i>{@code OPTIONAL}</i> The key for the node people can change to toggle bStats in the {@link #fileName bStats} file
+     */
     @NotNull public String toggleKey = "enabled";
 
     /**
@@ -35,6 +41,13 @@ public class BStatsOptions extends Stringable {
         // Only exists to give the constructor a Javadoc
     }
 
+    /**
+     * Loads the options from the specified {@link ConfigurationSection}
+     *
+     * @param   section the section to load the options from
+     *
+     * @return          the loaded options
+     */
     @NotNull
     public static BStatsOptions load(@NotNull ConfigurationSection section) {
         final BStatsOptions options = new BStatsOptions();
