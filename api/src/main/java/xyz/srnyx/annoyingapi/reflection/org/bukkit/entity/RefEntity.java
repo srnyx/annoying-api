@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.entity;
 
+import org.bukkit.entity.Entity;
+
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
@@ -14,17 +16,17 @@ public class RefEntity {
     /**
      * 1.10.2+ org.bukkit.entity.Entity#addScoreboardTag(String)
      */
-    @Nullable public static final Method ENTITY_ADD_SCOREBOARD_TAG_METHOD = ReflectionUtility.getMethod(1, 10, 2, RefEntity.class, "addScoreboardTag", String.class);
+    @Nullable public static final Method ENTITY_ADD_SCOREBOARD_TAG_METHOD = ReflectionUtility.getMethod(1, 10, 2, Entity.class, "addScoreboardTag", String.class);
 
     /**
      * 1.10.2+ org.bukkit.entity.Entity#getScoreboardTags()
      */
-    @Nullable public static final Method ENTITY_GET_SCOREBOARD_TAGS_METHOD = ReflectionUtility.getMethod(1, 10, 2, RefEntity.class, "getScoreboardTags");
+    @Nullable public static final Method ENTITY_GET_SCOREBOARD_TAGS_METHOD = ReflectionUtility.getMethod(1, 10, 2, Entity.class, "getScoreboardTags");
 
     /**
      * 1.10.2+ org.bukkit.entity.Entity#removeScoreboardTag(String)
      */
-    @Nullable public static final Method ENTITY_REMOVE_SCOREBOARD_TAG_METHOD = ReflectionUtility.getMethod(1, 10, 2, RefEntity.class, "removeScoreboardTag", String.class);
+    @Nullable public static final Method ENTITY_REMOVE_SCOREBOARD_TAG_METHOD = ReflectionUtility.getMethod(1, 10, 2, Entity.class, "removeScoreboardTag", String.class);
 
     /**
      * This class cannot be instantiated
