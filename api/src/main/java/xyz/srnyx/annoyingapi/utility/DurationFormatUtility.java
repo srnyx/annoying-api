@@ -12,18 +12,35 @@ import java.util.List;
  */
 public class DurationFormatUtility {
     /**
-     * Pad the left hand side of a String with zeros
+     * Handles whether to pad the left hand side of numbers with 0's
      *
-     * @param   string  the String to pad out
-     * @param   size    the size to pad to
+     * @param   padWithZeros    whether to pad the left hand side of the String with 0's
+     * @param   integer         the int to pad out (will be converted to a {@link String})
+     * @param   size            the size to pad to
      *
-     * @return          the padded String
+     * @return                  the padded String (or the original String if no padding was required)
      */
     @NotNull
-    private static String padWithZeros(@NotNull String string, int size) {
-        final int pads = size - string.length();
-        if (pads <= 0 || pads > 8192) return string;
+    private static String padWithZeros(boolean padWithZeros, int integer, int size) {
+        final String string = Integer.toString(integer);
+        final int length = string.length();
+        if (!padWithZeros || length >= size) return string;
+        final int pads = size - length;
+        if (pads > 8192) return string;
         return AnnoyingUtility.repeat("0", pads) + string;
+    }
+
+    /**
+     * Formats the duration as a string, using the specified format and padding the left hand side of numbers with 0's
+     *
+     * @param   durationMillis  the duration to format
+     * @param   format          the way in which to format the duration
+     *
+     * @return                  the duration as a String
+     */
+    @NotNull
+    public static String formatDuration(long durationMillis, @NotNull String format) {
+        return formatDuration(durationMillis, format, true);
     }
 
     /**
@@ -135,31 +152,31 @@ public class DurationFormatUtility {
             final int count = token.count;
             switch (value) {
                 case "y":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(years), count) : Integer.toString(years));
+                    builder.append(padWithZeros(padWithZeros, years, count));
                     lastOutputSeconds = false;
                     break;
                 case "M":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(months), count) : Integer.toString(months));
+                    builder.append(padWithZeros(padWithZeros, months, count));
                     lastOutputSeconds = false;
                     break;
                 case "d":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(days), count) : Integer.toString(days));
+                    builder.append(padWithZeros(padWithZeros, days, count));
                     lastOutputSeconds = false;
                     break;
                 case "H":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(hours), count) : Integer.toString(hours));
+                    builder.append(padWithZeros(padWithZeros, hours, count));
                     lastOutputSeconds = false;
                     break;
                 case "m":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(minutes), count) : Integer.toString(minutes));
+                    builder.append(padWithZeros(padWithZeros, minutes, count));
                     lastOutputSeconds = false;
                     break;
                 case "s":
-                    builder.append(padWithZeros ? padWithZeros(Integer.toString(seconds), count) : Integer.toString(seconds));
+                    builder.append(padWithZeros(padWithZeros, seconds, count));
                     lastOutputSeconds = true;
                     break;
                 case "S":
-                    final String millisecondsString = padWithZeros ? padWithZeros(Integer.toString(milliseconds), count) : Integer.toString(milliseconds);
+                    final String millisecondsString = padWithZeros(padWithZeros, milliseconds, count);
                     if (!lastOutputSeconds) {
                         builder.append(millisecondsString);
                         break;
