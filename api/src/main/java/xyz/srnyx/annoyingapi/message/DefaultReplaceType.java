@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.message;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.DurationFormatUtility;
 
 import java.util.function.BinaryOperator;
 
@@ -12,11 +13,11 @@ import java.util.function.BinaryOperator;
  */
 public enum DefaultReplaceType implements ReplaceType {
     /**
-     * Input is used as the format for {@link AnnoyingUtility#formatMillis(long, String, boolean)}
+     * Input is used as the format for {@link DurationFormatUtility#formatDuration(long, String)}
      */
     TIME("mm':'ss", (input, value) -> {
         try {
-            return AnnoyingUtility.formatMillis(Long.parseLong(value), input, false);
+            return DurationFormatUtility.formatDuration(Long.parseLong(value), input);
         } catch (final NumberFormatException e) {
             return null;
         }

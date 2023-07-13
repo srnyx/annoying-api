@@ -3,7 +3,7 @@ package xyz.srnyx.annoyingapi;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.parents.Stringable;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.DurationFormatUtility;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,7 +54,7 @@ public class AnnoyingCooldown extends Stringable {
      *
      * @return  amount of time left in the cooldown (in milliseconds)
      *
-     * @see     AnnoyingUtility#formatMillis(long, String, boolean)
+     * @see     DurationFormatUtility#formatDuration(long, String, boolean)
      */
     public long getRemaining() {
         final Map<CooldownType, Long> map = plugin.cooldowns.get(uuid);

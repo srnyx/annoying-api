@@ -32,21 +32,6 @@ public class AnnoyingUtility {
     }
 
     /**
-     * Formats a millisecond long using the given pattern
-     *
-     * @param   value           the milliseconds to format
-     * @param   pattern         the way in which to format the milliseconds
-     * @param   padWithZeros    whether to pad the left hand side of numbers with 0's
-     *
-     * @return                  the formatted milliseconds
-     */
-    @NotNull
-    public static String formatMillis(long value, @Nullable String pattern, boolean padWithZeros) {
-        if (pattern == null) pattern = "mm':'ss";
-        return DurationFormatUtility.formatDuration(value, pattern, padWithZeros);
-    }
-
-    /**
      * Formats a {@link Double} value using the given pattern
      *
      * @param   value   the {@link Number} to format
