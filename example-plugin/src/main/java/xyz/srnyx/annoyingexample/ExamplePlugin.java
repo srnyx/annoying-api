@@ -62,12 +62,14 @@ public class ExamplePlugin extends AnnoyingPlugin {
 
     @Override
     public void enable() {
-        // Recipe YML example
+        // Recipe & PlayableSound YML example
         final AnnoyingResource config = new AnnoyingResource(this, "config.yml");
-        this.item = config.getItemStack("recipe.result");
         final Recipe recipe = config.getRecipe("recipe", null);
-        if (recipe != null) Bukkit.addRecipe(recipe);
-        this.sound = config.getPlayableSound("sound");
+        if (recipe != null) {
+            item = recipe.getResult();
+            Bukkit.addRecipe(recipe);
+        }
+        sound = config.getPlayableSound("sound");
 
         // Data example
         final AnnoyingData data = new AnnoyingData(this, "data.yml");
