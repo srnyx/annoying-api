@@ -7,6 +7,8 @@ import org.bukkit.inventory.Recipe;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.PluginPlatform;
+import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.file.PlayableSound;
@@ -29,10 +31,33 @@ public class ExamplePlugin extends AnnoyingPlugin {
      * Constructor for the {@link ExamplePlugin} class
      */
     public ExamplePlugin() {
-        options.registrationOptions(registrationOptions -> registrationOptions
-                .commandsToRegister(new ExampleCommand(this))
-                .listenersToRegister(new ExampleListener(this))
-                .papiExpansionToRegister(() -> new ExamplePlaceholders(this)));
+        options
+                .pluginOptions(pluginOptions -> pluginOptions.dependencies(new AnnoyingDependency(
+                        "ViaVersion",
+                        new PluginPlatform.Multi(
+                                PluginPlatform.hangar("ViaVersion", "ViaVersion"),
+                                PluginPlatform.spigot("19254")),
+                        true, true)))
+                .registrationOptions(registrationOptions -> registrationOptions
+                        .automaticRegistration(automaticRegistration -> automaticRegistration.packages(
+                                "xyz.srnyx.annoyingexample.commands",
+                                "xyz.srnyx.annoyingexample.listeners"))
+                        .papiExpansionToRegister(() -> new ExamplePlaceholders(this)))
+                .bStatsOptions(bStatsOptions -> bStatsOptions
+                        .id(12345)
+                        .fileName("stats.yml")
+                        .fileOptions(fileOptions -> fileOptions.createDefaultFile(false))
+                        .toggleKey("enable-stats"))
+                .messagesOptions(messagesOptions -> messagesOptions
+                        .fileName("msgs.yml")
+                        .keys(messageKeys -> messageKeys
+                                .globalPlaceholders("placeholders")
+                                .splitterJson("splitter.json")
+                                .splitterPlaceholder("splitter.placeholder")
+                                .noPermission("no-permission")
+                                .playerOnly("player-only")
+                                .invalidArguments("invalid-arguments")
+                                .disabledCommand("disabled-command")));
     }
 
     @Override

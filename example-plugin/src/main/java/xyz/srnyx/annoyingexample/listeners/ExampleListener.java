@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingexample;
+package xyz.srnyx.annoyingexample.listeners;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.message.BroadcastType;
 import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
+import xyz.srnyx.annoyingexample.ExamplePlugin;
 
 
 /**

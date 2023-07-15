@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingexample;
+package xyz.srnyx.annoyingexample.commands;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,9 +8,11 @@ import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.message.DefaultReplaceType;
+import xyz.srnyx.annoyingexample.ExampleCooldown;
+import xyz.srnyx.annoyingexample.ExamplePlugin;
 
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import java.util.function.Predicate;
 
 
@@ -21,7 +23,7 @@ public class ExampleCommand implements AnnoyingCommand {
     /**
      * {@link ExamplePlugin} instance
      */
-    private final ExamplePlugin plugin;
+    @NotNull private final ExamplePlugin plugin;
 
     /**
      * Constructor for the {@link ExampleCommand} class
@@ -91,7 +93,7 @@ public class ExampleCommand implements AnnoyingCommand {
     }
 
     @Override @Nullable
-    public Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
+    public List<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return Arrays.asList("test", "reload", "disable");
     }
 }
