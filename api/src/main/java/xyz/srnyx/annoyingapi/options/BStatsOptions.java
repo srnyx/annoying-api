@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 
+import java.util.function.Consumer;
+
 
 /**
  * Represents the options for <a href="https://bstats.org">bStats</a>
@@ -95,6 +97,20 @@ public class BStatsOptions extends Stringable {
     public BStatsOptions fileOptions(@Nullable AnnoyingResource.Options fileOptions) {
         this.fileOptions = fileOptions;
         return this;
+    }
+
+    /**
+     * Sets {@link #fileOptions} using the specified {@link Consumer}
+     *
+     * @param   consumer    the {@link Consumer} to accept the new {@link #fileOptions}
+     *
+     * @return              the {@link BStatsOptions} instance for chaining
+     */
+    @NotNull
+    public BStatsOptions fileOptions(@NotNull Consumer<AnnoyingResource.Options> consumer) {
+        final AnnoyingResource.Options options = new AnnoyingResource.Options();
+        consumer.accept(options);
+        return fileOptions(options);
     }
 
     /**

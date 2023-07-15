@@ -81,6 +81,20 @@ public class MessagesOptions extends Stringable {
     }
 
     /**
+     * Sets {@link #fileOptions} using the specified {@link Consumer}
+     *
+     * @param   consumer    the consumer to accept the new {@link #fileOptions}
+     *
+     * @return              the {@link MessagesOptions} instance for chaining
+     */
+    @NotNull
+    public MessagesOptions fileOptions(@NotNull Consumer<AnnoyingResource.Options> consumer) {
+        final AnnoyingResource.Options options = new AnnoyingResource.Options();
+        consumer.accept(options);
+        return fileOptions(options);
+    }
+
+    /**
      * Sets {@link #keys}
      *
      * @param   keys        the new {@link #keys}
