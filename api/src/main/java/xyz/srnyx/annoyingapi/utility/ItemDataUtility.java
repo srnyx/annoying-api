@@ -32,7 +32,7 @@ public class ItemDataUtility {
     /**
      * The {@link ItemStack} to manage data for
      */
-    @NotNull public ItemStack item;
+    @NotNull public final ItemStack item;
 
     /**
      * Construct a new {@link ItemDataUtility} for the given item stack and key
@@ -124,9 +124,7 @@ public class ItemDataUtility {
         }
 
         // 1.13.1- (NBT API)
-        final NBTItem nbt = new NBTItem(item);
-        nbt.setString(key, string);
-        item = nbt.getItem();
+        new NBTItem(item, true).setString(key, string);
         return this;
     }
 
@@ -168,9 +166,7 @@ public class ItemDataUtility {
         }
 
         // 1.13.1- (NBT API)
-        final NBTItem nbt = new NBTItem(item);
-        nbt.removeKey(key);
-        item = nbt.getItem();
+        new NBTItem(item, true).removeKey(key);
         return this;
     }
 
