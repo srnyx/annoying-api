@@ -32,7 +32,7 @@ public class ExamplePlugin extends AnnoyingPlugin {
         options.registrationOptions(registrationOptions -> registrationOptions
                 .commandsToRegister(new ExampleCommand(this))
                 .listenersToRegister(new ExampleListener(this))
-                .papiExpansionToRegister(new ExamplePlaceholders(this)));
+                .papiExpansionToRegister(() -> new ExamplePlaceholders(this)));
     }
 
     @Override

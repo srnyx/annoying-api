@@ -168,18 +168,6 @@ public class RegistrationOptions extends Stringable {
     }
 
     /**
-     * Sets the {@link #papiExpansionToRegister}
-     *
-     * @param   papiExpansionToRegister the PAPI expansion to register
-     *
-     * @return                          this {@link RegistrationOptions} instance for chaining
-     */
-    @NotNull
-    public RegistrationOptions papiExpansionToRegister(@NotNull PlaceholderExpansion papiExpansionToRegister) {
-        return papiExpansionToRegister(() -> papiExpansionToRegister);
-    }
-
-    /**
      * The automatic registration options
      */
     public static class AutomaticRegistration {
