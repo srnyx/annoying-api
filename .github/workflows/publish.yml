@@ -15,7 +15,4 @@ jobs:
         api/build/libs/AnnoyingAPI-*[!a-z].jar
         api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
         example-plugin/build/libs/*.jar
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+    secrets: inherit
