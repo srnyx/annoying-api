@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.PluginPlatform;
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
@@ -32,7 +33,7 @@ import java.util.logging.Level;
 /**
  * Used for downloading {@link AnnoyingDependency}s
  */
-public class AnnoyingDownload extends Stringable {
+public class AnnoyingDownload extends Stringable implements Annoyable {
     @NotNull private static final CommandRegister COMMAND_REGISTER = new CommandRegister();
 
     @NotNull private final AnnoyingPlugin plugin;
@@ -61,6 +62,11 @@ public class AnnoyingDownload extends Stringable {
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull AnnoyingDependency dependency) {
         this(plugin, Collections.singletonList(dependency));
+    }
+
+    @Override @NotNull
+    public AnnoyingPlugin getAnnoyingPlugin() {
+        return plugin;
     }
 
     /**

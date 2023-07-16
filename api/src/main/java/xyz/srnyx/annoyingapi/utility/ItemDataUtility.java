@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 import java.util.logging.Level;
 
@@ -24,7 +25,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersist
 /**
  * Utility class for adding and getting data from item stacks
  */
-public class ItemDataUtility {
+public class ItemDataUtility implements Annoyable {
     /**
      * The {@link AnnoyingPlugin plugin} instance
      */
@@ -43,6 +44,11 @@ public class ItemDataUtility {
     public ItemDataUtility(@NotNull AnnoyingPlugin plugin, @NotNull ItemStack item) {
         this.plugin = plugin;
         this.item = new ItemStack(item);
+    }
+
+    @Override @NotNull
+    public AnnoyingPlugin getAnnoyingPlugin() {
+        return plugin;
     }
 
     /**

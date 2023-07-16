@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi;
 
 import org.jetbrains.annotations.NotNull;
 
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.DurationFormatUtility;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 /**
  * This class is used to create and manage cooldowns for anything with a {@link UUID}
  */
-public class AnnoyingCooldown extends Stringable {
+public class AnnoyingCooldown extends Stringable implements Annoyable {
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final UUID uuid;
     /**
@@ -32,6 +33,11 @@ public class AnnoyingCooldown extends Stringable {
         this.plugin = plugin;
         this.uuid = uuid;
         this.type = type;
+    }
+
+    @Override @NotNull
+    public AnnoyingPlugin getAnnoyingPlugin() {
+        return plugin;
     }
 
     /**

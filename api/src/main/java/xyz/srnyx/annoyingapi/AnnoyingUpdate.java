@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
+import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
@@ -19,7 +20,7 @@ import java.util.logging.Level;
 /**
  * Class for handling update checking
  */
-public class AnnoyingUpdate extends Stringable {
+public class AnnoyingUpdate extends Stringable implements Annoyable {
     /**
      * The {@link AnnoyingPlugin plugin} instance
      */
@@ -69,6 +70,11 @@ public class AnnoyingUpdate extends Stringable {
      */
     public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
         this(plugin, plugin, platforms);
+    }
+
+    @Override @NotNull
+    public AnnoyingPlugin getAnnoyingPlugin() {
+        return annoyingPlugin;
     }
 
     /**
