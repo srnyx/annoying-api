@@ -58,6 +58,30 @@ public class AnnoyingDependency extends Stringable {
     }
 
     /**
+     * Creates a new dependency instance
+     *
+     * @param   name                {@link #name}
+     * @param   required            {@link #required}
+     * @param   enableAfterDownload {@link #enableAfterDownload}
+     * @param   platforms           {@link #platforms}
+     */
+    public AnnoyingDependency(@NotNull String name, boolean required, boolean enableAfterDownload, @NotNull PluginPlatform.Multi platforms) {
+        this(name, platforms, required, enableAfterDownload);
+    }
+
+    /**
+     * Creates a new dependency instance
+     *
+     * @param   name                {@link #name}
+     * @param   required            {@link #required}
+     * @param   enableAfterDownload {@link #enableAfterDownload}
+     * @param   platforms           {@link #platforms}
+     */
+    public AnnoyingDependency(@NotNull String name, boolean required, boolean enableAfterDownload, @NotNull PluginPlatform... platforms) {
+        this(name, new PluginPlatform.Multi(platforms), required, enableAfterDownload);
+    }
+
+    /**
      * Loads a dependency from a {@link ConfigurationSection}
      *
      * @param   section the section to load from
