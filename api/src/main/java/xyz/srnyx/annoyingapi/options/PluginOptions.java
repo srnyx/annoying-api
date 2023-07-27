@@ -88,4 +88,28 @@ public class PluginOptions {
         this.updatePlatforms = updatePlatforms;
         return this;
     }
+
+    /**
+     * Sets {@link #updatePlatforms}
+     *
+     * @param   updatePlatforms the new {@link #updatePlatforms}
+     *
+     * @return                  the {@link PluginOptions} instance for chaining
+     */
+    @NotNull
+    public PluginOptions updatePlatforms(@NotNull Collection<PluginPlatform> updatePlatforms) {
+        return updatePlatforms(new PluginPlatform.Multi(updatePlatforms));
+    }
+
+    /**
+     * Sets {@link #updatePlatforms}
+     *
+     * @param   updatePlatforms the new {@link #updatePlatforms}
+     *
+     * @return                  the {@link PluginOptions} instance for chaining
+     */
+    @NotNull
+    public PluginOptions updatePlatforms(@NotNull PluginPlatform... updatePlatforms) {
+        return updatePlatforms(new PluginPlatform.Multi(updatePlatforms));
+    }
 }
