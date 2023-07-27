@@ -12,7 +12,7 @@ This may be different for other plugins that **aren't** mine, though. Just check
 
 ### Download (read above)
 
-- **Stable:** You can download the latest **stable** version at [Modrinth](https://annoying-api.srnyx.com/modrinth), [Hangar](https://annoying-api.srnyx.com/hangar), [Spigot](https://annoying-api.srnyx.com/spigot), [Bukkit](https://annoying-api.srnyx.com/bukkit), or [GitHub](https://annoying-api.srnyx.com/releases/latest)
+- **Stable:** You can download the latest **stable** version at [Modrinth](https://annoying-api.srnyx.com/modrinth), [Hangar](https://annoying-api.srnyx.com/hangar), [Spigot](https://annoying-api.srnyx.com/spigot), or [GitHub](https://annoying-api.srnyx.com/releases/latest)
 - **Snapshot:** You can download the latest **snapshot** version at [GitHub Actions](https://annoying-api.srnyx.com/snapshot)
 
 ### Wiki
