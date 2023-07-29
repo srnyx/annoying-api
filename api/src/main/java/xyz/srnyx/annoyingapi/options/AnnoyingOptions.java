@@ -17,19 +17,23 @@ import java.util.function.Consumer;
 @SuppressWarnings("CanBeFinal")
 public class AnnoyingOptions extends Stringable {
     /**
-     * Some general plugin options
+     * {@link PluginOptions}
      */
     @NotNull public PluginOptions pluginOptions = new PluginOptions();
     /**
-     * Options for class registration (commands/listeners/etc...)
+     * {@link RegistrationOptions}
      */
     @NotNull public RegistrationOptions registrationOptions = new RegistrationOptions();
     /**
-     * Options for <a href="https://bstats.org/">bStats</a>
+     * {@link BStatsOptions}
      */
     @NotNull public BStatsOptions bStatsOptions = new BStatsOptions();
     /**
-     * Options for the messages file ({@code messages.yml} by default)
+     * {@link DataOptions}
+     */
+    @NotNull public DataOptions dataOptions = new DataOptions();
+    /**
+     * {@link MessagesOptions}
      */
     @NotNull public MessagesOptions messagesOptions = new MessagesOptions();
 
@@ -50,10 +54,11 @@ public class AnnoyingOptions extends Stringable {
     @NotNull
     public static AnnoyingOptions load(@NotNull ConfigurationSection section) {
         final AnnoyingOptions options = new AnnoyingOptions();
-        if (section.contains("pluginOptions")) options.pluginOptions = PluginOptions.load(section.getConfigurationSection("pluginOptions"));
-        if (section.contains("registrationOptions")) options.registrationOptions = RegistrationOptions.load(section.getConfigurationSection("registrationOptions"));
-        if (section.contains("bStatsOptions")) options.bStatsOptions = BStatsOptions.load(section.getConfigurationSection("bStatsOptions"));
-        if (section.contains("messagesOptions")) options.messagesOptions = MessagesOptions.load(section.getConfigurationSection("messagesOptions"));
+        if (section.contains("pluginOptions")) options.pluginOptions(PluginOptions.load(section.getConfigurationSection("pluginOptions")));
+        if (section.contains("registrationOptions")) options.registrationOptions(RegistrationOptions.load(section.getConfigurationSection("registrationOptions")));
+        if (section.contains("bStatsOptions")) options.bStatsOptions(BStatsOptions.load(section.getConfigurationSection("bStatsOptions")));
+        if (section.contains("dataOptions")) options.dataOptions(DataOptions.load(section.getConfigurationSection("dataOptions")));
+        if (section.contains("messagesOptions")) options.messagesOptions(MessagesOptions.load(section.getConfigurationSection("messagesOptions")));
         return options;
     }
 
@@ -119,6 +124,32 @@ public class AnnoyingOptions extends Stringable {
     @NotNull
     public AnnoyingOptions bStatsOptions(@NotNull Consumer<BStatsOptions> consumer) {
         consumer.accept(bStatsOptions);
+        return this;
+    }
+
+    /**
+     * Sets {@link #dataOptions}
+     *
+     * @param   dataOptions the new {@link #dataOptions}
+     *
+     * @return              the {@link AnnoyingOptions} instance for chaining
+     */
+    @NotNull
+    public AnnoyingOptions dataOptions(@NotNull DataOptions dataOptions) {
+        this.dataOptions = dataOptions;
+        return this;
+    }
+
+    /**
+     * Sets {@link #dataOptions}
+     *
+     * @param   consumer    the consumer to accept the {@link DataOptions}
+     *
+     * @return              the {@link AnnoyingOptions} instance for chaining
+     */
+    @NotNull
+    public AnnoyingOptions dataOptions(@NotNull Consumer<DataOptions> consumer) {
+        consumer.accept(dataOptions);
         return this;
     }
 

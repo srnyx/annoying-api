@@ -24,12 +24,14 @@ import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
+import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.options.PluginOptions;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
+import xyz.srnyx.annoyingapi.utility.EntityDataUtility;
 
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -84,6 +86,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Stores the cooldowns for each player/type
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
+    /**
+     * Caches the data files for entities, used in {@link EntityDataUtility}
+     */
+    @NotNull public final Map<UUID, AnnoyingData> entityDataFiles = new HashMap<>();
     /**
      * Whether PlaceholderAPI is installed
      */
