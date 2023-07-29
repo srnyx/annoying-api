@@ -12,7 +12,7 @@ import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.message.BroadcastType;
-import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
+import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingexample.ExamplePlugin;
 
 
@@ -46,7 +46,7 @@ public class ExampleListener implements AnnoyingListener {
      */
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
-        if (plugin.item != null) event.getPlayer().getInventory().addItem(new ItemDataUtility(plugin, plugin.item).set("example", "example").item);
+        if (plugin.item != null) event.getPlayer().getInventory().addItem(new ItemData(plugin, plugin.item).set("example", "example").target);
     }
 
     /**
@@ -67,7 +67,7 @@ public class ExampleListener implements AnnoyingListener {
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         final Player player = event.getPlayer();
         final ItemStack item = player.getItemInHand();
-        if (!"example".equals(new ItemDataUtility(plugin, item).get("example"))) return;
+        if (!"example".equals(new ItemData(plugin, item).get("example"))) return;
         final short maxDurability = item.getType().getMaxDurability();
         new AnnoyingMessage(plugin, "break")
                 .replace("%player%", player.getName())

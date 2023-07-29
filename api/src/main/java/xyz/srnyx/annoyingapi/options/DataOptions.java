@@ -7,18 +7,18 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.parents.Stringable;
-import xyz.srnyx.annoyingapi.utility.EntityDataUtility;
+import xyz.srnyx.annoyingapi.data.EntityData;
 
 import java.util.function.Consumer;
 
 
 /**
- * These options all relate to data management utilities such as {@link EntityDataUtility}
+ * These options all relate to data management utilities such as {@link EntityData}
  * <p>You only need to worry about these if your plugin supposed 1.13.2 or lower
  */
 public class DataOptions extends Stringable {
     /**
-     * Options for {@link EntityDataUtility entity data management}
+     * Options for {@link EntityData entity data management}
      */
     @NotNull public Entities entities = new Entities();
 
@@ -70,7 +70,7 @@ public class DataOptions extends Stringable {
     }
 
     /**
-     * Options for {@link EntityDataUtility entity data management}
+     * Options for {@link EntityData entity data management}
      */
     public static class Entities {
         /**

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.utility;
+package xyz.srnyx.annoyingapi.data;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
@@ -8,10 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
-import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 import java.util.UUID;
-import java.util.logging.Level;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataContainer.*;
@@ -23,15 +21,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersist
 /**
  * Utility class for adding and getting data from entities
  */
-public class EntityDataUtility implements Annoyable {
-    /**
-     * The {@link AnnoyingPlugin plugin} instance
-     */
-    @NotNull private final AnnoyingPlugin plugin;
-    /**
-     * The {@link Entity} to manage data for
-     */
-    @NotNull private final Entity entity;
+public class EntityData extends Data<Entity> {
     /**
      * 1.13.2- The {@link AnnoyingData} file that contains the data for the entity
      */
@@ -42,33 +32,25 @@ public class EntityDataUtility implements Annoyable {
     @Nullable private ConfigurationSection section;
 
     /**
-     * Construct a new {@link EntityDataUtility} for the given entity
+     * Construct a new {@link EntityData} for the given entity
      *
      * @param   plugin  {@link #plugin}
-     * @param   entity  {@link #entity}
+     * @param   entity  {@link #target}
      */
-    public EntityDataUtility(@NotNull AnnoyingPlugin plugin, @NotNull Entity entity) {
-        this.plugin = plugin;
-        this.entity = entity;
+    public EntityData(@NotNull AnnoyingPlugin plugin, @NotNull Entity entity) {
+        super(plugin, entity);
     }
 
     @Override @NotNull
-    public AnnoyingPlugin getAnnoyingPlugin() {
-        return plugin;
+    public String getTargetName() {
+        return target.getName();
     }
 
-    /**
-     * Get the data value for the given key
-     *
-     * @param   key the key to get the data value for
-     *
-     * @return      the data value, or null if not found
-     */
-    @Nullable
+    @Override @Nullable
     public String get(@NotNull String key) {
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null) try {
-            return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
+            return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(target), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
         } catch (final ReflectiveOperationException e) {
             sendError("get");
             e.printStackTrace();
@@ -79,22 +61,11 @@ public class EntityDataUtility implements Annoyable {
         return getSection().getString(key);
     }
 
-    /**
-     * Set the data value for the given key. If the key already exists, it will be overwritten
-     *
-     * @param   key     the key to set the data value for
-     * @param   value   the data value to set
-     *
-     * @return          this {@link EntityDataUtility} instance
-     */
-    @NotNull
-    public EntityDataUtility set(@NotNull String key, @Nullable Object value) {
-        if (value == null) return remove(key);
-        final String string = value.toString();
-
+    @Override @NotNull
+    protected EntityData set(@NotNull String key, @NotNull String value) {
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
-            PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, string);
+            PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(target), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
             return this;
         } catch (final ReflectiveOperationException e) {
             sendError("set");
@@ -103,23 +74,16 @@ public class EntityDataUtility implements Annoyable {
         }
 
         // 1.13.2- (file)
-        getSection().set(key, string);
+        getSection().set(key, value);
         getFile().save();
         return this;
     }
 
-    /**
-     * Remove the data value with the given key
-     *
-     * @param   key the key to remove the data value for
-     *
-     * @return      this {@link EntityDataUtility} instance
-     */
-    @NotNull
-    public EntityDataUtility remove(@NotNull String key) {
+    @Override @NotNull
+    public EntityData remove(@NotNull String key) {
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null) try {
-            PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
+            PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(target), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
             return this;
         } catch (final ReflectiveOperationException e) {
             sendError("remove");
@@ -141,7 +105,7 @@ public class EntityDataUtility implements Annoyable {
     @NotNull
     private AnnoyingData getFile() {
         if (file != null) return file;
-        final UUID uuid = entity.getUniqueId();
+        final UUID uuid = target.getUniqueId();
 
         final AnnoyingData cachedFile = plugin.entityDataFiles.get(uuid);
         if (cachedFile != null) {
@@ -165,14 +129,5 @@ public class EntityDataUtility implements Annoyable {
         section = getFile().getConfigurationSection(plugin.options.dataOptions.entities.section);
         if (section == null) section = getFile().createSection(plugin.options.dataOptions.entities.section);
         return section;
-    }
-
-    /**
-     * Send an error message to the console
-     *
-     * @param   action  the action that failed
-     */
-    private void sendError(@NotNull String action) {
-        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " entity data for &4" + entity.getName() + "&c!");
     }
 }

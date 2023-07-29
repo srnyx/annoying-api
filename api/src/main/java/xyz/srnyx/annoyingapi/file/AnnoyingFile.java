@@ -17,7 +17,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-import xyz.srnyx.annoyingapi.utility.ItemDataUtility;
+import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.io.File;
@@ -456,12 +456,12 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Data
-        final ItemDataUtility dataUtility = new ItemDataUtility(plugin, item);
+        final ItemData dataUtility = new ItemData(plugin, item);
         final ConfigurationSection dataSection = section.getConfigurationSection("data");
         if (dataSection != null) for (final String key : dataSection.getKeys(false)) dataUtility.set(key, dataSection.getString(key));
 
         // Return
-        return dataUtility.item;
+        return dataUtility.target;
     }
 
     /**

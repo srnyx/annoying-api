@@ -31,7 +31,7 @@ import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.options.PluginOptions;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-import xyz.srnyx.annoyingapi.utility.EntityDataUtility;
+import xyz.srnyx.annoyingapi.data.EntityData;
 
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -87,7 +87,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
     /**
-     * Caches the data files for entities, used in {@link EntityDataUtility}
+     * Caches the data files for entities, used in {@link EntityData}
      */
     @NotNull public final Map<UUID, AnnoyingData> entityDataFiles = new HashMap<>();
     /**
