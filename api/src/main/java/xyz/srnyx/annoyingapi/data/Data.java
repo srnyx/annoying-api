@@ -51,6 +51,17 @@ public abstract class Data<T> implements Annoyable {
     }
 
     /**
+     * Check if the data value exists for the given key
+     *
+     * @param   key the key to check for
+     *
+     * @return      true if the data value exists, false otherwise
+     */
+    public boolean has(@NotNull String key) {
+        return get(key) != null;
+    }
+
+    /**
      * Get the data value for the given key
      *
      * @param   key the key to get the data value for
