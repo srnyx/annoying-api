@@ -17,7 +17,6 @@ plugin:
   # These are the different splitters for messages/placeholders
   splitters:
     # This is the splitter for the JSON components. Default: "@@"
-    # This is useless if you're using MINIMESSAGE format
     json: "@@"
     # This is the splitter for placeholders with parameters. Default: "=="
     placeholder: "=="
@@ -37,5 +36,3 @@ error:
   invalid-arguments: "%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%"
   # Command is used when it's disabled
   disabled-command: "%prefix%%se%%command%%pe% is disabled!@@%pe%%command%@@%command%"
-
-test: "%prefix%This is a test message!"
