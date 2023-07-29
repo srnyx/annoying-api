@@ -623,6 +623,20 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         /**
+         * Loads a {@link Options} from the given {@link ConfigurationSection}
+         *
+         * @param   section the {@link ConfigurationSection} to load from
+         *
+         * @return          the {@link Options} instance
+         */
+        @NotNull
+        public static Options<?> load(@NotNull ConfigurationSection section) {
+            final Options<?> options = new Options<>();
+            if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
+            return options;
+        }
+
+        /**
          * Sets the {@link #canBeEmpty}
          *
          * @param   canBeEmpty  {@link #canBeEmpty}
