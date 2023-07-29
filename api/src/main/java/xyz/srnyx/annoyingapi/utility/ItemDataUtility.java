@@ -36,7 +36,7 @@ public class ItemDataUtility implements Annoyable {
     @NotNull public final ItemStack item;
 
     /**
-     * Construct a new {@link ItemDataUtility} for the given item stack and key
+     * Construct a new {@link ItemDataUtility} for the given item stack
      *
      * @param   plugin  {@link #plugin}
      * @param   item    {@link #item}
@@ -52,7 +52,7 @@ public class ItemDataUtility implements Annoyable {
     }
 
     /**
-     * Get the data value for the given item stack and key
+     * Get the data value for the given key
      *
      * @param   key the key to get the data value for
      *
@@ -60,7 +60,7 @@ public class ItemDataUtility implements Annoyable {
      */
     @Nullable
     public String get(@NotNull String key) {
-        // 1.13.2+ (persistent data container, custom item tag container, or lore)
+        // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
@@ -89,7 +89,7 @@ public class ItemDataUtility implements Annoyable {
     }
 
     /**
-     * Set the data value for the given item stack and key. If the key already exists, it will be overwritten
+     * Set the data value for the given key. If the key already exists, it will be overwritten
      *
      * @param   key     the key to set the data value for
      * @param   value   the data value to set
@@ -135,7 +135,7 @@ public class ItemDataUtility implements Annoyable {
     }
 
     /**
-     * Remove the data value with the given key from the item stack
+     * Remove the data value with the given key
      *
      * @param   key the key to remove the data value for
      *
