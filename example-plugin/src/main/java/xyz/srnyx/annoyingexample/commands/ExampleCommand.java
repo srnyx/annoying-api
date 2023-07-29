@@ -62,7 +62,7 @@ public class ExampleCommand implements AnnoyingCommand {
     @Override
     public void onCommand(@NotNull AnnoyingSender sender) {
         // Check cooldown
-        final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, sender.getPlayer().getUniqueId(), ExampleCooldown.EXAMPLE);
+        final AnnoyingCooldown cooldown = new AnnoyingCooldown(plugin, sender.getPlayer().getUniqueId(), ExampleCooldown.INSTANCE);
         if (cooldown.isOnCooldown()) {
             new AnnoyingMessage(plugin, "cooldown")
                     .replace("%cooldown%", cooldown.getRemaining(), DefaultReplaceType.TIME)
