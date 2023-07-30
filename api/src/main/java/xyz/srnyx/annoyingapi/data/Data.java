@@ -72,6 +72,20 @@ public abstract class Data<T> implements Annoyable {
     public abstract String get(@NotNull String key);
 
     /**
+     * Get the data value for the given key, or the default value if not found
+     *
+     * @param   key the key to get the data value for
+     * @param   def the default value to return if the data value is not found
+     *
+     * @return      the data value, or the default value if not found
+     */
+    @Nullable
+    public String get(@NotNull String key, @Nullable String def) {
+        final String value = get(key);
+        return value == null ? def : value;
+    }
+
+    /**
      * Set the data value for the given key. If the key already exists, it will be overwritten
      *
      * @param   key     the key to set the data value for
