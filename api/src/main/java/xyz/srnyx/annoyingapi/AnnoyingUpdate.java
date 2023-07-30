@@ -59,7 +59,8 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         this.currentVersion = new SemanticVersion(plugin.getDescription().getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
-        this.latestVersion = getLatestVersion();
+        final String latestVersionString = getLatestVersion();
+        this.latestVersion = latestVersionString == null ? null : new SemanticVersion(latestVersionString);
     }
 
     /**
@@ -102,18 +103,18 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     }
 
     @Nullable
-    private SemanticVersion getLatestVersion() {
+    private String getLatestVersion() {
         // Modrinth
         final String modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
         if (modrinthIdentifier != null) {
-            final SemanticVersion modrinth = modrinth(modrinthIdentifier);
+            final String modrinth = modrinth(modrinthIdentifier);
             if (modrinth != null) return modrinth;
         }
 
         // Hangar
         final PluginPlatform hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
         if (hangarPlatform != null) {
-            final SemanticVersion hangar = hangar(hangarPlatform);
+            final String hangar = hangar(hangarPlatform);
             if (hangar != null) return hangar;
         }
 
@@ -132,7 +133,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private SemanticVersion modrinth(@NotNull String identifier) {
+    private String modrinth(@NotNull String identifier) {
         final JsonElement json = HttpConnectionUtility.requestJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
@@ -145,7 +146,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         try {
             final JsonArray versions = json.getAsJsonArray();
             if (versions.size() == 0) return fail(PluginPlatform.Platform.MODRINTH);
-            return new SemanticVersion(versions.get(0).getAsJsonObject().get("version_number").getAsString());
+            return versions.get(0).getAsJsonObject().get("version_number").getAsString();
         } catch (final IllegalStateException e) {
             return fail(PluginPlatform.Platform.MODRINTH);
         }
@@ -159,14 +160,18 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private SemanticVersion hangar(@NotNull PluginPlatform platform) {
+    private String hangar(@NotNull PluginPlatform platform) {
         final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.HANGAR);
 
+        // Get versions
+        final JsonArray result = json.getAsJsonObject().get("result").getAsJsonArray();
+        if (result.size() == 0) return fail(PluginPlatform.Platform.HANGAR);
+
         // Return the latest version
-        return new SemanticVersion(json.getAsJsonObject().get("result").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
+        return result.get(0).getAsJsonObject().get("name").getAsString();
     }
 
     /**
@@ -177,14 +182,14 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private SemanticVersion spigot(@NotNull String identifier) {
+    private String spigot(@NotNull String identifier) {
         final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.SPIGOT);
 
         // Return the latest version
-        return new SemanticVersion(json.getAsJsonObject().get("name").getAsString());
+        return json.getAsJsonObject().get("name").getAsString();
     }
 
     /**
@@ -195,7 +200,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      * @return              the latest version, or {@code null} if an error occurred
      */
     @Nullable
-    private SemanticVersion fail(@NotNull PluginPlatform.Platform platform) {
+    private String fail(@NotNull PluginPlatform.Platform platform) {
         platforms.remove(platform);
         return getLatestVersion();
     }
