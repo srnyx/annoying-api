@@ -18,8 +18,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import org.reflections.Reflections;
-
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
@@ -239,11 +237,8 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Automatic registration
         final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
-        options.registrationOptions.automaticRegistration.packages.stream()
-                .map(packageName -> new Reflections(packageName).getSubTypesOf(Registrable.class).stream()
-                        .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !ignoredClasses.contains(clazz))
-                        .collect(Collectors.toSet()))
-                .flatMap(Set::stream)
+        new AnnoyingReflections(options.registrationOptions.automaticRegistration.packages).getSubTypesOf(Registrable.class).stream()
+                .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !ignoredClasses.contains(clazz))
                 .forEach(clazz -> {
                     try {
                         clazz.getConstructor(this.getClass()).newInstance(this).register();
