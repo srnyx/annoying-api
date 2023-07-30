@@ -41,7 +41,6 @@ public class HttpConnectionUtility {
             if (connection.getResponseCode() == 404) return null;
             result = function.apply(new InputStreamReader(connection.getInputStream()));
         } catch (final IOException e) {
-            e.printStackTrace();
             return null;
         }
         connection.disconnect();
