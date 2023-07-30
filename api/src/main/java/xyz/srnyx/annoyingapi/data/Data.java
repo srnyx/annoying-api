@@ -79,8 +79,8 @@ public abstract class Data<T> implements Annoyable {
      *
      * @return      the data value, or the default value if not found
      */
-    @Nullable
-    public String get(@NotNull String key, @Nullable String def) {
+    @NotNull
+    public String get(@NotNull String key, @NotNull String def) {
         final String value = get(key);
         return value == null ? def : value;
     }
