@@ -80,7 +80,7 @@ public class DataOptions extends Stringable {
         /**
          * The options for all entity data files
          */
-        @Nullable public AnnoyingFile.Options<?> fileOptions = null;
+        @Nullable public AnnoyingFile.Options<?> fileOptions = new AnnoyingFile.Options<>().canBeEmpty(false);
         /**
          * The YML section/node where the entity data will be stored
          */
