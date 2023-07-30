@@ -93,6 +93,7 @@ public class EntityData extends Data<Entity> {
 
         // 1.13.2- (file)
         getSection().set(key, null);
+        if (getSection().getKeys(false).isEmpty()) getFile().set(plugin.options.dataOptions.entities.section, null);
         getFile().save();
         return this;
     }
