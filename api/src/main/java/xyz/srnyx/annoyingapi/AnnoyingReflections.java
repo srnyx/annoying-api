@@ -92,7 +92,12 @@ public class AnnoyingReflections implements NameHelper {
                                 if (entries == null) entries = SubTypes.scan(getClassFile(file));
                                 if (entries != null) for (final Map.Entry<String, String> entry : entries) {
                                     final String key = entry.getKey();
-                                    if (key != null) storeMap.computeIfAbsent(key, s -> new HashSet<>()).add(entry.getValue());
+                                    if (key == null) continue;
+                                    // Not using computeIfAbsent as it throws ConcurrentModificationException on Java 9+
+                                    Set<String> values = storeMap.get(key);
+                                    if (values == null) values = new HashSet<>();
+                                    values.add(entry.getValue());
+                                    storeMap.put(key, values);
                                 }
                             } catch (final Exception e) {
                                 AnnoyingPlugin.log(Level.WARNING, "Could not scan file " + file.getRelativePath());
