@@ -244,6 +244,7 @@ public class AnnoyingPlugin extends JavaPlugin {
                         clazz.getConstructor(this.getClass()).newInstance(this).register();
                     } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName());
+                        e.printStackTrace();
                     }
                 });
 
