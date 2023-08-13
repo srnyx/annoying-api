@@ -50,7 +50,7 @@ public class PluginPlatform extends Stringable {
      * @param   identifier  {@link #identifier}
      * @param   author      {@link #author}
      */
-    public PluginPlatform(@NotNull Platform platform, @NotNull String identifier, @NotNull String author) {
+    public PluginPlatform(@NotNull Platform platform, @NotNull String identifier, @Nullable String author) {
         this.platform = platform;
         this.identifier = identifier;
         this.author = author;
