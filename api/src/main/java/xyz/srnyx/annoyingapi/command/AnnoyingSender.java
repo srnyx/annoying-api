@@ -140,6 +140,15 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     }
 
     /**
+     * Sends the invalid argument message, replacing {@code %argument%} with the specified argument
+     *
+     * @param   index   the argument index
+     */
+    public void invalidArgument(int index) {
+        invalidArgument(args == null || args.length <= index ? null : args[index]);
+    }
+
+    /**
      * Sends the invalid arguments message
      */
     public void invalidArguments() {
