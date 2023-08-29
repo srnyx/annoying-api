@@ -237,7 +237,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Get category
         Object category = null;
         final String categoryString = section.getString("category");
-        try {
+        if (categoryString != null) try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
         } catch (final IllegalArgumentException e) {
             log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
