@@ -538,7 +538,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         if (ingredientMaterials.isEmpty()) return def;
 
         // Apply itemFunction
-        if (itemFunction != null) result = itemFunction.apply(result);
+        if (itemFunction != null) {
+            result = itemFunction.apply(result);
+            if (result == null) return def;
+        }
 
         // Set name if null
         if (name == null) {
