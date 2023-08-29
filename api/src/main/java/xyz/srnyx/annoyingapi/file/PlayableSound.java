@@ -24,19 +24,19 @@ public class PlayableSound extends Stringable {
     /**
      * The {@link Sound} to play
      */
-    @NotNull private final Sound sound;
+    @NotNull public final Sound sound;
     /**
      * The SoundCategory to play the {@link Sound} in
      */
-    @Nullable private final Object category;
+    @Nullable public final Object category;
     /**
      * The volume to play the {@link Sound} at
      */
-    private final float volume;
+    public final float volume;
     /**
      * The pitch to play the {@link Sound} at
      */
-    private final float pitch;
+    public final float pitch;
 
     /**
      * {@code 1.11+} Creates a new {@link PlayableSound} object
