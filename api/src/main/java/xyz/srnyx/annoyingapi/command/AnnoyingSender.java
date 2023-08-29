@@ -145,7 +145,7 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      * @param   index   the argument index
      */
     public void invalidArgument(int index) {
-        invalidArgument(args == null || args.length <= index ? null : args[index]);
+        invalidArgument(args == null || args.length <= index ? index : args[index]);
     }
 
     /**
