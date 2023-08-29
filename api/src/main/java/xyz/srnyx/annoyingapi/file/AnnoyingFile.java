@@ -244,7 +244,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Return SoundData
-        return new PlayableSound(sound, category, (float) section.getDouble("volume"), (float) section.getDouble("pitch"));
+        return new PlayableSound(sound, category, (float) section.getDouble("volume", 1), (float) section.getDouble("pitch", 1));
     }
 
     /**
