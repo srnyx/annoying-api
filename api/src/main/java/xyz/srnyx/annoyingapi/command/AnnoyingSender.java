@@ -11,7 +11,8 @@ import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-import xyz.srnyx.annoyingapi.parents.Stringable;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 
 /**

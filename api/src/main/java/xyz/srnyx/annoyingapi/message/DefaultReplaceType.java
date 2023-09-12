@@ -2,8 +2,8 @@ package xyz.srnyx.annoyingapi.message;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
-import xyz.srnyx.annoyingapi.utility.DurationFormatUtility;
+import xyz.srnyx.javautilities.StringUtility;
+import xyz.srnyx.javautilities.manipulation.DurationFormatter;
 
 import java.util.function.BinaryOperator;
 
@@ -13,21 +13,21 @@ import java.util.function.BinaryOperator;
  */
 public enum DefaultReplaceType implements ReplaceType {
     /**
-     * Input is used as the format for {@link DurationFormatUtility#formatDuration(long, String)}
+     * Input is used as the format for {@link DurationFormatter#formatDuration(long, String)}
      */
     TIME("mm':'ss", (input, value) -> {
         try {
-            return DurationFormatUtility.formatDuration(Long.parseLong(value), input);
+            return DurationFormatter.formatDuration(Long.parseLong(value), input);
         } catch (final NumberFormatException e) {
             return null;
         }
     }),
     /**
-     * Input is used as the format for {@link AnnoyingUtility#formatNumber(Number, String)}
+     * Input is used as the format for {@link StringUtility#formatNumber(Number, String)}
      */
     NUMBER("#,###.##", (input, value) -> {
         try {
-            return AnnoyingUtility.formatNumber(Double.parseDouble(value), input);
+            return StringUtility.formatNumber(Double.parseDouble(value), input);
         } catch (final NumberFormatException e) {
             return null;
         }

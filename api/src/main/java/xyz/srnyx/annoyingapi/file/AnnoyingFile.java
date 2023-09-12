@@ -14,16 +14,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
+import xyz.srnyx.javautilities.FileUtility;
+import xyz.srnyx.javautilities.parents.Stringable;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,11 +123,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * Deletes the {@link #file}
      */
     public void delete() {
-        try {
-            Files.delete(file.toPath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        FileUtility.deleteFile(file.toPath(), false);
     }
 
     /**

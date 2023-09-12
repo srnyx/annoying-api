@@ -11,8 +11,10 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
+
+import xyz.srnyx.javautilities.objects.SemanticVersion;
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.logging.Level;
 

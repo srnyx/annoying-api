@@ -6,8 +6,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.data.EntityData;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.function.Consumer;
 

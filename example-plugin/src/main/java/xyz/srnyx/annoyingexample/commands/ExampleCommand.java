@@ -8,6 +8,7 @@ import xyz.srnyx.annoyingapi.AnnoyingCooldown;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.message.DefaultReplaceType;
+
 import xyz.srnyx.annoyingexample.ExampleCooldown;
 import xyz.srnyx.annoyingexample.ExamplePlugin;
 

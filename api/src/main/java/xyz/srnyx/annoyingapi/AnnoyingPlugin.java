@@ -31,6 +31,8 @@ import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.EntityData;
 
+import xyz.srnyx.javautilities.objects.SemanticVersion;
+
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;

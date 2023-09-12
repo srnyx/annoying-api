@@ -12,7 +12,8 @@ import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.parents.Registrable;
-import xyz.srnyx.annoyingapi.parents.Stringable;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.Arrays;
 import java.util.Collection;

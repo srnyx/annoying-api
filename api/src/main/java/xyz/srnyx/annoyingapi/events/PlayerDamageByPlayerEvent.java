@@ -10,7 +10,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.parents.Stringable;
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.EnumMap;
 

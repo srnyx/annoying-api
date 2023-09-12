@@ -5,7 +5,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.parents.Stringable;
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.Reader;
 import java.util.function.Consumer;

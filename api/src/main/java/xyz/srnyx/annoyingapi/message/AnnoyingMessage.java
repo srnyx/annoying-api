@@ -15,8 +15,9 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;

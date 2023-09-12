@@ -6,8 +6,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.PluginPlatform;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.File;
 import java.util.List;

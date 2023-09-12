@@ -12,17 +12,18 @@ plugins {
 }
 
 description = "General purpose API with tons of features"
-repository(Repository.CODE_MC) // de.tr7zw:item-nbt-api
+repository(Repository.JITPACK, Repository.CODE_MC) // de.tr7zw:item-nbt-api
 relocate("javassist")
 
 dependencies {
-    compileOnlyApi("org.jetbrains", "annotations", "24.0.0")
+    compileOnlyApi("org.jetbrains", "annotations", "24.0.1")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:1.0.0")
     implementationRelocate(project, "org.reflections:reflections:0.10.2") {
         exclude("com.google.code.findbugs", "jsr305")
         exclude("org.slf4j", "slf4j-api")
     }
-    implementationRelocate(project, "org.bstats:bstats-bukkit:3.0.0")
-    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.11.3", "de.tr7zw.changeme.nbtapi").exclude("de.tr7zw", "functional-annotations")
+    implementationRelocate(project, "org.bstats:bstats-bukkit:3.0.2")
+    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.12.0-RC1", "de.tr7zw.changeme.nbtapi").exclude("de.tr7zw", "functional-annotations")
 }
 
 setupPublishing(

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Registrable;
-import xyz.srnyx.annoyingapi.utility.AnnoyingUtility;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -128,7 +128,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
 
     /**
      * <i>{@code OPTIONAL}</i> This is the tab completion for the command
-     * <p><i>{@link AnnoyingUtility} will come in handy</i>
+     * <p><i>{@link BukkitUtility} will come in handy</i>
      *
      * @param   sender  the sender of the command
      *

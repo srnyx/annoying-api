@@ -17,8 +17,9 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-import xyz.srnyx.annoyingapi.parents.Stringable;
 import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
+
+import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
