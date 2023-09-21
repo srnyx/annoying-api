@@ -17,7 +17,7 @@ relocate("javassist")
 
 dependencies {
     compileOnlyApi("org.jetbrains", "annotations", "24.0.1")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:1.0.0")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:1.0.0", "xyz.srnyx.javautilities")
     implementationRelocate(project, "org.reflections:reflections:0.10.2") {
         exclude("com.google.code.findbugs", "jsr305")
         exclude("org.slf4j", "slf4j-api")
