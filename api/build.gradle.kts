@@ -23,7 +23,7 @@ dependencies {
         exclude("org.slf4j", "slf4j-api")
     }
     implementationRelocate(project, "org.bstats:bstats-bukkit:3.0.2")
-    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.12.0-RC1", "de.tr7zw.changeme.nbtapi").exclude("de.tr7zw", "functional-annotations")
+    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.12.0", "de.tr7zw.changeme.nbtapi").exclude("de.tr7zw", "functional-annotations")
 }
 
 setupPublishing(
