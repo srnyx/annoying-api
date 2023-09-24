@@ -312,8 +312,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull
     public String parsePapiPlaceholders(@Nullable OfflinePlayer player, @Nullable String message) {
         if (message == null) return "null";
-        if (!papiInstalled) return message;
-        return PlaceholderAPI.setPlaceholders(player, message);
+        return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
     /**
