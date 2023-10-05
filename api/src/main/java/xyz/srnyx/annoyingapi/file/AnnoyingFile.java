@@ -121,9 +121,22 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
     /**
      * Deletes the {@link #file}
+     *
+     * @param   silentFail  whether to fail silently
+     *
+     * @see #delete()
+     */
+    public void delete(boolean silentFail) {
+        FileUtility.deleteFile(file.toPath(), silentFail);
+    }
+
+    /**
+     * Deletes the {@link #file}, won't fail silently
+     *
+     * @see #delete(boolean)
      */
     public void delete() {
-        FileUtility.deleteFile(file.toPath(), false);
+        delete(false);
     }
 
     /**
