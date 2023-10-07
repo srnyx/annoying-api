@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -120,6 +121,37 @@ public class RegistrationOptions extends Stringable {
     @NotNull
     public RegistrationOptions toRegister(@NotNull Registrable... toRegister) {
         return toRegister(Arrays.asList(toRegister));
+    }
+
+    /**
+     * Adds the specified {@link Registrable}s to {@link #toRegister}
+     *
+     * @param   plugin      the plugin instance
+     * @param   toRegister  the {@link Registrable}s to add
+     *
+     * @return              this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions toRegister(@NotNull AnnoyingPlugin plugin, @NotNull Collection<Class<? extends Registrable>> toRegister) {
+        for (final Class<? extends Registrable> registrable : toRegister) try {
+            this.toRegister.add(registrable.getConstructor(plugin.getClass()).newInstance(plugin));
+        } catch (final NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    /**
+     * Adds the specified {@link Registrable}s to {@link #toRegister}
+     *
+     * @param   plugin      the plugin instance
+     * @param   toRegister  the {@link Registrable}s to add
+     *
+     * @return              this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions toRegister(@NotNull AnnoyingPlugin plugin, @NotNull Class<? extends Registrable>... toRegister) {
+        return toRegister(plugin, Arrays.asList(toRegister));
     }
 
     /**
