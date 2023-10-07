@@ -19,7 +19,7 @@ import xyz.srnyx.annoyingexample.ExamplePlugin;
 /**
  * Example of a {@link AnnoyingListener} implementation
  */
-public class ExampleListener implements AnnoyingListener {
+public class ExampleListener extends AnnoyingListener {
     /**
      * {@link ExamplePlugin} instance
      */

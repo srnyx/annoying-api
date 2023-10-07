@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 /**
  * Example of a {@link AnnoyingCommand} implementation
  */
-public class ExampleCommand implements AnnoyingCommand {
+public class ExampleCommand extends AnnoyingCommand {
     /**
      * {@link ExamplePlugin} instance
      */

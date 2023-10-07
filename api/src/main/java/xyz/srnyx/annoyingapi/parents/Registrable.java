@@ -1,31 +1,45 @@
 package xyz.srnyx.annoyingapi.parents;
 
+import xyz.srnyx.javautilities.parents.Stringable;
+
 
 /**
- * An interface for classes that can be registered/unregistered by the plugin
+ * An abstract class for classes that can be registered/unregistered by the plugin
  */
-public interface Registrable extends Annoyable {
+public abstract class Registrable extends Stringable implements Annoyable {
     /**
      * Returns whether the class is registered or not
      *
-     * @return  whether the class is registered or not
+     * @return whether the class is registered or not
      */
-    boolean isRegistered();
+    public boolean isRegistered() {
+        return getAnnoyingPlugin().registeredClasses.contains(this);
+    }
 
     /**
      * Sets whether the class is registered or not
      *
      * @param   registered  whether the class is registered or not
      */
-    void setRegistered(boolean registered);
+    public void setRegistered(boolean registered) {
+        if (registered) {
+            register();
+            return;
+        }
+        unregister();
+    }
 
     /**
      * Registers the class
      */
-    void register();
+    public void register() {
+        getAnnoyingPlugin().registeredClasses.add(this);
+    }
 
     /**
      * Unregisters the class
      */
-    void unregister();
+    public void unregister() {
+        getAnnoyingPlugin().registeredClasses.remove(this);
+    }
 }

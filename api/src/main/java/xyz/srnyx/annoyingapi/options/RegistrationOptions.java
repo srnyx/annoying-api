@@ -7,10 +7,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -32,15 +30,9 @@ public class RegistrationOptions extends Stringable {
      */
     @NotNull public AutomaticRegistration automaticRegistration = new AutomaticRegistration();
     /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingCommand}s to register (add commands to this in the plugin's constructor)
-     * <p>If you add a command to this OUTSIDE the constructor, it will not be registered (unless you call {@link AnnoyingCommand#register()})
+     * <i>{@code OPTIONAL}</i> The {@link Registrable}s to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      */
-    @NotNull public Set<AnnoyingCommand> commandsToRegister = new HashSet<>();
-    /**
-     * <i>{@code OPTIONAL}</i> The {@link AnnoyingListener}s to register (add listeners to this in the plugin's constructor)
-     * <p>If you add a listener to this OUTSIDE the constructor, it will not be registered (unless you call {@link AnnoyingListener#register()})
-     */
-    @NotNull public Set<AnnoyingListener> listenersToRegister = new HashSet<>();
+    @NotNull public Set<Registrable> toRegister = new HashSet<>();
     /**
      * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>
@@ -106,53 +98,28 @@ public class RegistrationOptions extends Stringable {
     }
 
     /**
-     * Adds the specified {@link AnnoyingCommand}s to {@link #commandsToRegister}
+     * Adds the specified {@link Registrable}s to {@link #toRegister}
      *
-     * @param   commandsToRegister  the commands to add
+     * @param   toRegister  the {@link Registrable}s to add
      *
-     * @return                      this {@link RegistrationOptions} instance for chaining
+     * @return              this {@link RegistrationOptions} instance for chaining
      */
     @NotNull
-    public RegistrationOptions commandsToRegister(@NotNull Collection<AnnoyingCommand> commandsToRegister) {
-        this.commandsToRegister.addAll(commandsToRegister);
+    public RegistrationOptions toRegister(@NotNull Collection<Registrable> toRegister) {
+        this.toRegister.addAll(toRegister);
         return this;
     }
 
     /**
-     * Adds the specified {@link AnnoyingCommand}s to {@link #commandsToRegister}
+     * Adds the specified {@link Registrable}s to {@link #toRegister}
      *
-     * @param   commandsToRegister  the commands to add
+     * @param   toRegister  the {@link Registrable}s to add
      *
-     * @return                      this {@link RegistrationOptions} instance for chaining
+     * @return              this {@link RegistrationOptions} instance for chaining
      */
     @NotNull
-    public RegistrationOptions commandsToRegister(@NotNull AnnoyingCommand... commandsToRegister) {
-        return commandsToRegister(Arrays.asList(commandsToRegister));
-    }
-
-    /**
-     * Adds the specified {@link AnnoyingListener}s to {@link #listenersToRegister}
-     *
-     * @param   listenersToRegister the listeners to add
-     *
-     * @return                      this {@link RegistrationOptions} instance for chaining
-     */
-    @NotNull
-    public RegistrationOptions listenersToRegister(@NotNull Collection<AnnoyingListener> listenersToRegister) {
-        this.listenersToRegister.addAll(listenersToRegister);
-        return this;
-    }
-
-    /**
-     * Adds the specified {@link AnnoyingListener}s to {@link #listenersToRegister}
-     *
-     * @param   listenersToRegister the listeners to add
-     *
-     * @return                      this {@link RegistrationOptions} instance for chaining
-     */
-    @NotNull
-    public RegistrationOptions listenersToRegister(@NotNull AnnoyingListener... listenersToRegister) {
-        return listenersToRegister(Arrays.asList(listenersToRegister));
+    public RegistrationOptions toRegister(@NotNull Registrable... toRegister) {
+        return toRegister(Arrays.asList(toRegister));
     }
 
     /**

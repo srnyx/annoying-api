@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a command that can be executed by a player or the console
  */
-public interface AnnoyingCommand extends TabExecutor, Registrable {
+public abstract class AnnoyingCommand extends Registrable implements TabExecutor {
     /**
      * <i>{@code OPTIONAL}</i> This is the name of the command
      * <p>If not specified, the lowercase class name will be used ({@code Command} will be removed)
@@ -33,7 +33,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return  the name of the command
      */
     @NotNull
-    default String getName() {
+    public String getName() {
         return getClass().getSimpleName().toLowerCase().replace("command", "").replace("cmd", "");
     }
 
@@ -44,7 +44,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return  the permission required to use the command
      */
     @Nullable
-    default String getPermission() {
+    public String getPermission() {
         return null;
     }
 
@@ -53,7 +53,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      *
      * @return  whether the command is player-only
      */
-    default boolean isPlayerOnly() {
+    public boolean isPlayerOnly() {
         return false;
     }
 
@@ -65,39 +65,15 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return  the predicate to test the command's arguments against
      */
     @NotNull
-    default Predicate<String[]> getArgsPredicate() {
+    public Predicate<String[]> getArgsPredicate() {
         return args -> true;
-    }
-
-    /**
-     * Returns whether the command is registered to the {@link #getAnnoyingPlugin()}
-     *
-     * @return  whether the command is registered
-     */
-    @Override
-    default boolean isRegistered() {
-        return getAnnoyingPlugin().registeredCommands.contains(this);
-    }
-
-    /**
-     * Toggles the registration of the command to the {@link #getAnnoyingPlugin()}
-     *
-     * @param   registered  whether the command should be registered or unregistered
-     */
-    @Override
-    default void setRegistered(boolean registered) {
-        if (registered) {
-            register();
-            return;
-        }
-        unregister();
     }
 
     /**
      * Registers the command to the {@link #getAnnoyingPlugin()}
      */
     @Override
-    default void register() {
+    public void register() {
         if (isRegistered()) return;
         final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
         if (command == null) {
@@ -105,18 +81,18 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
             return;
         }
         command.setExecutor(this);
-        getAnnoyingPlugin().registeredCommands.add(this);
+        super.register();
     }
 
     /**
      * Unregisters the command from the {@link #getAnnoyingPlugin()}
      */
     @Override
-    default void unregister() {
+    public void unregister() {
         if (!isRegistered()) return;
         final PluginCommand command = getAnnoyingPlugin().getCommand(getName());
         if (command != null) command.setExecutor(new DisabledCommand(getAnnoyingPlugin()));
-        getAnnoyingPlugin().registeredCommands.remove(this);
+        super.unregister();
     }
 
     /**
@@ -124,7 +100,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      *
      * @param   sender  the sender of the command
      */
-    void onCommand(@NotNull AnnoyingSender sender);
+    public abstract void onCommand(@NotNull AnnoyingSender sender);
 
     /**
      * <i>{@code OPTIONAL}</i> This is the tab completion for the command
@@ -135,7 +111,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return          a {@link Collection} of suggestions
      */
     @Nullable
-    default Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
+    public Collection<String> onTabComplete(@NotNull AnnoyingSender sender) {
         return null;
     }
 
@@ -152,7 +128,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return              true if a valid command, otherwise false
      */
     @Override
-    default boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         final AnnoyingSender sender = new AnnoyingSender(getAnnoyingPlugin(), cmdSender, cmd, label, args);
 
         // Permission & player check
@@ -180,7 +156,7 @@ public interface AnnoyingCommand extends TabExecutor, Registrable {
      * @return              A List of possible completions for the final argument, or null to default to the command executor
      */
     @Override
-    default List<String> onTabComplete(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender cmdSender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
         // Permission check
         final String permission = getPermission();
         if (permission != null && !cmdSender.hasPermission(permission)) return Collections.emptyList();

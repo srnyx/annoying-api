@@ -9,7 +9,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 /**
  * Represents a command that is disabled by the API
  */
-public class DisabledCommand implements AnnoyingCommand {
+public class DisabledCommand extends AnnoyingCommand {
     /**
      * The {@link AnnoyingPlugin} instance
      */

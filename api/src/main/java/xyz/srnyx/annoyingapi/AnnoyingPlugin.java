@@ -18,7 +18,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.command.AnnoyingCommand;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
@@ -75,13 +74,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
-     * Set of registered {@link AnnoyingCommand}s by the plugin
+     * Set of registered {@link Registrable}s by the plugin
      */
-    @NotNull public final Set<AnnoyingCommand> registeredCommands = new HashSet<>();
-    /**
-     * Set of registered {@link AnnoyingListener}s by the plugin
-     */
-    @NotNull public final Set<AnnoyingListener> registeredListeners = new HashSet<>();
+    @NotNull public final Set<Registrable> registeredClasses = new HashSet<>();
     /**
      * Stores the cooldowns for each player/type
      */
@@ -100,7 +95,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
-        options.registrationOptions.listenersToRegister.add(new EventHandlers(this));
+        options.registrationOptions.toRegister.add(new EventHandlers(this));
     }
 
     /**
@@ -228,9 +223,8 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Check for updates
         checkUpdate();
 
-        // Register manually-defined commands/listeners/PAPI expansion
-        options.registrationOptions.commandsToRegister.forEach(AnnoyingCommand::register);
-        options.registrationOptions.listenersToRegister.forEach(AnnoyingListener::register);
+        // Register manually-defined Registrables & PAPI expansion
+        options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papiInstalled) {
             final PlaceholderExpansion expansion = options.registrationOptions.getPapiExpansionToRegister();
@@ -282,8 +276,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
      */
     public void disablePlugin() {
-        new HashSet<>(registeredCommands).forEach(AnnoyingCommand::unregister);
-        new HashSet<>(registeredListeners).forEach(AnnoyingListener::unregister);
+        new HashSet<>(registeredClasses).forEach(Registrable::unregister);
         Bukkit.getScheduler().cancelTasks(this);
         Bukkit.getPluginManager().disablePlugin(this);
     }
@@ -316,17 +309,10 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Unregisters all {@link AnnoyingListener}s in {@link #registeredListeners}
+     * Unregisters all {@link Registrable}s in {@link #registeredClasses}
      */
-    public void unregisterListeners() {
-        new HashSet<>(registeredListeners).forEach(AnnoyingListener::unregister);
-    }
-
-    /**
-     * Unregisters all {@link AnnoyingCommand}s in {@link #registeredCommands}
-     */
-    public void unregisterCommands() {
-        new HashSet<>(registeredCommands).forEach(AnnoyingCommand::unregister);
+    public void unregisterClasses() {
+        new HashSet<>(registeredClasses).forEach(Registrable::unregister);
     }
 
     /**
