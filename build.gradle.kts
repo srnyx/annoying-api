@@ -15,7 +15,7 @@ subprojects {
     apply(plugin = "xyz.srnyx.gradle-galaxy")
     apply(plugin = "com.github.johnrengelman.shadow")
 
-    setupMC("xyz.srnyx", "4.2.0")
+    setupMC("xyz.srnyx", "4.2.1")
     spigotAPI("1.8.8")
     repository(Repository.PLACEHOLDER_API)
     dependencies.compileOnly("me.clip", "placeholderapi", "2.11.3")
