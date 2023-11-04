@@ -37,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,13 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link Logger} for the plugin
      */
-    public static Logger LOGGER;
+    @NotNull public static Logger LOGGER = new Logger("AnnoyingAPI - ?", null) {
+        @Override
+        public void log(@NotNull LogRecord logRecord) {
+            logRecord.setMessage("[AnnoyingAPI - ?] " + logRecord.getMessage());
+            super.log(logRecord);
+        }
+    };
     /**
      * The Minecraft version the server is running
      */
