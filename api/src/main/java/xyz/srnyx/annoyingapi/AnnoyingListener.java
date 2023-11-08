@@ -14,6 +14,7 @@ public abstract class AnnoyingListener extends Registrable implements Listener {
     /**
      * Registers the listener to the {@link #getAnnoyingPlugin()}
      */
+    @Override
     public void register() {
         if (isRegistered()) return;
         Bukkit.getPluginManager().registerEvents(this, getAnnoyingPlugin());
@@ -23,6 +24,7 @@ public abstract class AnnoyingListener extends Registrable implements Listener {
     /**
      * Unregisters the listener from the {@link #getAnnoyingPlugin()}
      */
+    @Override
     public void unregister() {
         if (!isRegistered()) return;
         HandlerList.unregisterAll(this);
