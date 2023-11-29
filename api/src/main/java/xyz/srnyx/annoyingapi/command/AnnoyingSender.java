@@ -119,14 +119,31 @@ public class AnnoyingSender extends Stringable implements Annoyable {
 
     /**
      * Casts the {@link CommandSender} to a {@link Player}
-     * <p>Only use this if you know that the {@link CommandSender} is a {@link Player}
+     * <p>Only use this if you know that the {@link CommandSender} is a {@link Player}, otherwise use {@link #getPlayerOrNull()}
      *
-     * @return  the {@link Player} that was used
+     * @return                          the {@link Player} that was used
+     *
+     * @throws  IllegalStateException   if the {@link CommandSender} is not a {@link Player}
+     *
+     * @see                             #getPlayerOrNull()
      */
     @NotNull
     public Player getPlayer() {
         if (!isPlayer) throw new IllegalStateException("CommandSender is not a Player");
         return (Player) cmdSender;
+    }
+
+    /**
+     * If the {@link CommandSender} is a {@link Player}, it returns it as one. Otherwise, it returns {@code null}
+     * <br>If you know that the {@link CommandSender} is a {@link Player}, use {@link #getPlayer()} instead
+     *
+     * @return  the {@link Player}, or {@code null} if the {@link CommandSender} is not a {@link Player}
+     *
+     * @see     #getPlayer()
+     */
+    @Nullable
+    public Player getPlayerOrNull() {
+        return isPlayer ? (Player) cmdSender : null;
     }
 
     /**
