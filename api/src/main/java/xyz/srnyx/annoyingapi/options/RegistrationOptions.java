@@ -149,8 +149,8 @@ public class RegistrationOptions extends Stringable {
      *
      * @return              this {@link RegistrationOptions} instance for chaining
      */
-    @NotNull
-    public RegistrationOptions toRegister(@NotNull AnnoyingPlugin plugin, @NotNull Class<? extends Registrable>... toRegister) {
+    @NotNull @SafeVarargs
+    public final RegistrationOptions toRegister(@NotNull AnnoyingPlugin plugin, @NotNull Class<? extends Registrable>... toRegister) {
         return toRegister(plugin, Arrays.asList(toRegister));
     }
 

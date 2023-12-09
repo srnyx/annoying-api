@@ -88,6 +88,7 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     public boolean argEquals(int index, @Nullable String... strings) {
         if (args == null || args.length <= index) return false;
         final String arg = args[index];
+        if (arg == null) return false;
         for (final String string : strings) if (arg.equalsIgnoreCase(string)) return true;
         return false;
     }
