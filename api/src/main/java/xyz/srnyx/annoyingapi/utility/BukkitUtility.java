@@ -91,6 +91,23 @@ public class BukkitUtility {
 
     /**
      * Gets the value of a permission node from a {@link Player}
+     * <br>See {@link BukkitUtility#getPermissionValue(Player, String)} for an example
+     *
+     * @param   player          the {@link Player} to get the permission value from
+     * @param   permission      the permission node to get the value of
+     * @param   defaultValue    the default value to return if the permission node is not found or is invalid
+     *
+     * @return                  the value of the permission node, or the default value if not found
+     *
+     * @see                     BukkitUtility#getPermissionValue(Player, String)
+     */
+    public static int getPermissionValue(@NotNull Player player, @NotNull String permission, int defaultValue) {
+        final Integer value = getPermissionValue(player, permission);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * Gets the value of a permission node from a {@link Player}
      * <br><br>
      * <b>Example:</b> {@code player} has {@code friends.max.5} permission, {@code getPermissionValue(player, "friends.max.")} would return {@code 5}
      *
@@ -98,6 +115,8 @@ public class BukkitUtility {
      * @param   permission  the permission node to get the value of
      *
      * @return              the value of the permission node, or null if not found
+     *
+     * @see                 BukkitUtility#getPermissionValue(Player, String, int)
      */
     @Nullable
     public static Integer getPermissionValue(@NotNull Player player, @NotNull String permission) {
