@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -86,6 +87,29 @@ public class BukkitUtility {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Gets the value of a permission node from a {@link Player}
+     * <br><br>
+     * <b>Example:</b> {@code player} has {@code friends.max.5} permission, {@code getPermissionValue(player, "friends.max.")} would return {@code 5}
+     *
+     * @param   player      the {@link Player} to get the permission value from
+     * @param   permission  the permission node to get the value of
+     *
+     * @return              the value of the permission node, or null if not found
+     */
+    @Nullable
+    public static Integer getPermissionValue(@NotNull Player player, @NotNull String permission) {
+        for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
+            final String perm = info.getPermission();
+            if (perm.startsWith(permission)) try {
+                return Integer.parseInt(perm.substring(permission.length()));
+            } catch (final NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     /**
