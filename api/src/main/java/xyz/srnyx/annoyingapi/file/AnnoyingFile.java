@@ -9,6 +9,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +43,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRec
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefDamageable.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.*;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_6;
 
 
 /**
@@ -217,7 +220,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link PlayableSound} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link PlayableSound} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
@@ -230,7 +233,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link PlayableSound} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link PlayableSound} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -250,7 +253,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         if (categoryString != null) try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
+            log(Level.WARNING, path, "&cInvalid sound category for &4" + path + "&c: &4" + categoryString);
         }
 
         // Return SoundData
@@ -258,7 +261,64 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link PotionEffect} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the {@link PotionEffect} or {@code null} if it's invalid
+     */
+    @Nullable
+    public PotionEffect getPotionEffect(@NotNull String path) {
+        final Object def = getDefault(path);
+        return getPotionEffect(path, def instanceof PotionEffect ? (PotionEffect) def : null);
+    }
+
+    /**
+     * Gets a {@link PotionEffect} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     * @param   def     the default value
+     *
+     * @return          the {@link PotionEffect} or {@code def} if it's invalid
+     */
+    @Nullable
+    public PotionEffect getPotionEffect(@NotNull String path, @Nullable PotionEffect def) {
+        final ConfigurationSection section = getConfigurationSection(path);
+        if (section == null) return def;
+
+        // Get type name
+        final String typeString = section.getString("type");
+        if (typeString == null) {
+            log(Level.WARNING, path, "&cInvalid potion effect for &4" + path);
+            return def;
+        }
+
+        // Get type
+        final PotionEffectType type = PotionEffectType.getByName(typeString);
+        if (type == null) {
+            log(Level.WARNING, path, "&cInvalid potion effect type for &4" + path + "&c: &4" + typeString);
+            return def;
+        }
+
+        // Get duration, amplifier, ambient, & particles
+        final int duration = section.getInt("duration", 1);
+        final int amplifier = section.getInt("amplifier", 0);
+        final boolean ambient = section.getBoolean("ambient", false);
+        final boolean particles = section.getBoolean("particles", true);
+
+        // 1.13+ icon
+        if (POTION_EFFECT_CONSTRUCTOR_6 != null) try {
+            return POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true));
+        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        // 1.12.2-
+        return new PotionEffect(type, duration, amplifier, ambient, particles);
+    }
+
+    /**
+     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
@@ -273,7 +333,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -285,17 +345,13 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     @Nullable @SuppressWarnings("unchecked")
     public <T> T getAttributeModifier(@NotNull String path, @Nullable T def) {
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
-
         final ConfigurationSection section = getConfigurationSection(path);
-        if (section == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier");
-            return def;
-        }
+        if (section == null) return def;
 
         final String name = section.getString("name");
         final String operationString = section.getString("operation");
         if (name == null || operationString == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier");
+            log(Level.WARNING, path, "&cInvalid attribute modifier for &4" + path);
             return def;
         }
 
@@ -304,7 +360,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
+            log(Level.WARNING, path, "&cInvalid attribute modifier operation for &4" + path + "&c: &4" + operationString);
             return def;
         }
 
@@ -319,7 +375,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (equipmentSlotString != null) try {
                 slot = EquipmentSlot.valueOf(equipmentSlotString);
             } catch (final IllegalArgumentException e) {
-                log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
+                log(Level.WARNING, path, "&cInvalid equipment slot for &4" + path + "&c: &4" + equipmentSlotString);
             }
 
             // Return
@@ -341,7 +397,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link ItemStack} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      *
@@ -354,7 +410,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets an {@link ItemStack} from the path. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -365,17 +421,29 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     public ItemStack getItemStack(@NotNull String path, @Nullable ItemStack def) {
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
+
+        // Get material name
         final String materialString = section.getString("material");
-        if (materialString == null) return def;
+        if (materialString == null) {
+            log(Level.WARNING, path, "&cInvalid material for &4" + path);
+            return def;
+        }
+
+        // Get material
         final Material material = Material.matchMaterial(materialString);
-        if (material == null) return def;
+        if (material == null) {
+            log(Level.WARNING, path, "&cInvalid material for &4" + path + "&c: &4" + materialString);
+            return def;
+        }
+
+        // Get amount & damage
         final int amount = section.getInt("amount", 1);
         final int damage = section.getInt("damage", 0);
 
-        // Material, amount, and durability (1.12.2-)
+        // Material, amount, & durability (1.12.2-)
         final ItemStack item = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
 
-        // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, and custom model data
+        // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, & custom model data
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             // Durability (1.13+)
@@ -397,7 +465,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
                 if (enchantment == null) {
-                    log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
+                    log(Level.WARNING, path, "&cInvalid enchantment for &4" + path + "&c: &4" + enchantmentKey);
                     continue;
                 }
                 meta.addEnchant(enchantment, enchantmentsSection.getInt(enchantmentKey), true);
@@ -409,7 +477,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         try {
                             return ItemFlag.valueOf(string.toUpperCase());
                         } catch (final IllegalArgumentException e) {
-                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
+                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag for &4" + path + "&c: &4" + string);
                             return null;
                         }
                     })
@@ -434,7 +502,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         //noinspection unchecked
                         attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
-                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
+                        log(Level.WARNING, pathString, "&cInvalid attribute for &4" + path + "&c: &4" + attributeKey);
                         continue;
                     }
 
@@ -475,7 +543,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path    the path to get the recipe from
      *
@@ -487,7 +555,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path            the path to get the recipe from
      * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
@@ -515,7 +583,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path            the path to get the recipe from
      * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
@@ -538,9 +606,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final Map<Character, Material> ingredientMaterials = new HashMap<>();
         for (final Map.Entry<String, Object> entry : ingredients.getValues(false).entrySet()) {
             final String key = entry.getKey();
-            final Material material = Material.matchMaterial(String.valueOf(entry.getValue()));
+            final String value = String.valueOf(entry.getValue());
+            final Material material = Material.matchMaterial(value);
             if (material == null) {
-                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + entry.getValue());
+                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material for &4" + path + "&c: &4" + value);
                 continue;
             }
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);
@@ -603,6 +672,11 @@ public abstract class AnnoyingFile extends YamlConfiguration {
 
     /**
      * A class to hold the options for a file
+     * <br>
+     * <br><b>Default options:</b>
+     * <ul>
+     *     <li>{@link #canBeEmpty} = {@code true}
+     * </ul>
      *
      * @param   <T> the type of the {@link Options} instance
      */
