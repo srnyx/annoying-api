@@ -9,6 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.events.AnnoyingPlayerMoveEvent;
+import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -39,6 +41,11 @@ public class RegistrationOptions extends Stringable {
      * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>
      */
     @NotNull public Supplier<Object> papiExpansionToRegister = () -> null;
+    /**
+     * <i>{@code OPTIONAL}</i> Whether to register custom events such as {@link AnnoyingPlayerMoveEvent} and {@link PlayerDamageByPlayerEvent}
+     * <br>This needs to be set to {@code true} if you want to use any custom events
+     */
+    public boolean registerCustomEvents = false;
 
     /**
      * Constructs a new {@link RegistrationOptions} instance with default values
@@ -164,6 +171,19 @@ public class RegistrationOptions extends Stringable {
     @NotNull
     public RegistrationOptions papiExpansionToRegister(@NotNull Supplier<Object> papiExpansionToRegister) {
         this.papiExpansionToRegister = papiExpansionToRegister;
+        return this;
+    }
+
+    /**
+     * Sets {@link #registerCustomEvents}
+     *
+     * @param   registerCustomEvents    the new value
+     *
+     * @return                          this {@link RegistrationOptions} instance for chaining
+     */
+    @NotNull
+    public RegistrationOptions registerCustomEvents(boolean registerCustomEvents) {
+        this.registerCustomEvents = registerCustomEvents;
         return this;
     }
 

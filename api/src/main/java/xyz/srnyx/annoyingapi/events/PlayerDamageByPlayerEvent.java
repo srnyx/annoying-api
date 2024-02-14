@@ -1,41 +1,67 @@
 package xyz.srnyx.annoyingapi.events;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityEvent;
 
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.util.EnumMap;
-
 
 /**
  * This event is called when a {@link Player} damages another {@link Player}
  */
-public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
+public class PlayerDamageByPlayerEvent extends EntityEvent implements Cancellable {
     /**
      * The {@link HandlerList} for this event.
      */
     @NotNull private static final HandlerList HANDLERS = new HandlerList();
-    @SuppressWarnings("Guava")
-    @NotNull private static final Function<? super Double, Double> ZERO = o -> -0.0;
+
+    /**
+     * Whether this event is cancelled
+     */
+    private boolean cancelled = false;
+    /**
+     * The {@link Player} who damaged the defender
+     */
+    @NotNull private final Player damager;
+    /**
+     * The {@link EntityDamageEvent.DamageCause} of the damage
+     */
+    @NotNull private final EntityDamageEvent.DamageCause cause;
+    /**
+     * The amount of damage dealt
+     */
+    private double damage;
 
     /**
      * Instantiates a new {@link PlayerDamageByPlayerEvent}
      *
-     * @param   damager the {@link Player} who damaged the {@code damagee}
+     * @param   damager {@link #damager}
      * @param   damagee the {@link Player} who was damaged by the {@code damager}
-     * @param   cause   the {@link DamageCause} of the damage
-     * @param   damage  the amount of damage dealt
+     * @param   cause   {@link #cause}
+     * @param   damage  {@link #damage}
      */
-    public PlayerDamageByPlayerEvent(@NotNull Player damager, @NotNull Player damagee, @NotNull DamageCause cause, double damage) {
-        super(damager, damagee, cause, new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, damage)), new EnumMap<>(ImmutableMap.of(DamageModifier.BASE, ZERO)));
+    public PlayerDamageByPlayerEvent(@NotNull Player damager, @NotNull Player damagee, @NotNull EntityDamageEvent.DamageCause cause, double damage) {
+        super(damagee);
+        this.damager = damager;
+        this.cause = cause;
+        this.damage = damage;
+    }
+
+    /**
+     * Instantiates a new {@link PlayerDamageByPlayerEvent} from an {@link EntityDamageByEntityEvent}
+     *
+     * @param   event   the event to instantiate from
+     */
+    public PlayerDamageByPlayerEvent(@NotNull EntityDamageByEntityEvent event) {
+        this((Player) event.getDamager(), (Player) event.getEntity(), event.getCause(), event.getDamage());
+        setCancelled(event.isCancelled());
     }
 
     @Override @NotNull
@@ -63,14 +89,24 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
         return getHandlerList();
     }
 
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        cancelled = cancel;
+    }
+
     /**
      * Returns the {@link Player} that damaged the defender
      *
      * @return  {@link Player} that damaged the defender
      */
-    @Override @NotNull
+    @NotNull
     public Player getDamager() {
-        return (Player) super.getDamager();
+        return damager;
     }
 
     /**
@@ -103,5 +139,33 @@ public class PlayerDamageByPlayerEvent extends EntityDamageByEntityEvent {
     @Override @NotNull
     public EntityType getEntityType() {
         return EntityType.PLAYER;
+    }
+
+    /**
+     * Returns the {@link EntityDamageEvent.DamageCause} of the damage
+     *
+     * @return  {@link EntityDamageEvent.DamageCause} of the damage
+     */
+    @NotNull
+    public EntityDamageEvent.DamageCause getCause() {
+        return cause;
+    }
+
+    /**
+     * Returns the amount of damage dealt
+     *
+     * @return  the amount of damage dealt
+     */
+    public double getDamage() {
+        return damage;
+    }
+
+    /**
+     * Sets the amount of damage dealt
+     *
+     * @param   damage  the amount of damage dealt
+     */
+    public void setDamage(double damage) {
+        this.damage = damage;
     }
 }

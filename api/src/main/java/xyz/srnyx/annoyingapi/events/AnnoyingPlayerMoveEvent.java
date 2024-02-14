@@ -43,6 +43,7 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
      */
     public AnnoyingPlayerMoveEvent(@NotNull PlayerMoveEvent event) {
         this(event.getPlayer(), event.getFrom(), event.getTo());
+        setCancelled(event.isCancelled());
     }
 
     @Override @NotNull

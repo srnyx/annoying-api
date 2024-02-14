@@ -47,9 +47,10 @@ public class EventHandlers extends AnnoyingListener {
     @EventHandler
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
         final AnnoyingPlayerMoveEvent newEvent = new AnnoyingPlayerMoveEvent(event);
-        newEvent.setCancelled(event.isCancelled());
         Bukkit.getPluginManager().callEvent(newEvent);
         event.setCancelled(newEvent.isCancelled());
+        event.setFrom(newEvent.getFrom());
+        event.setTo(newEvent.getTo());
     }
 
     /**
@@ -64,9 +65,9 @@ public class EventHandlers extends AnnoyingListener {
         final Entity damager = event.getDamager();
         final Entity damagee = event.getEntity();
         if (!(damager instanceof Player) || !(damagee instanceof Player)) return;
-        final PlayerDamageByPlayerEvent newEvent = new PlayerDamageByPlayerEvent((Player) damager, (Player) damagee, event.getCause(), event.getDamage());
-        newEvent.setCancelled(event.isCancelled());
+        final PlayerDamageByPlayerEvent newEvent = new PlayerDamageByPlayerEvent(event);
         Bukkit.getPluginManager().callEvent(newEvent);
         event.setCancelled(newEvent.isCancelled());
+        event.setDamage(newEvent.getDamage());
     }
 }
