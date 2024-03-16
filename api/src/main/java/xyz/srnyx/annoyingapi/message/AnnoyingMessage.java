@@ -95,6 +95,20 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
+     * Constructs a new {@link AnnoyingMessage} from another {@link AnnoyingMessage} with a new key
+     *
+     * @param   message the {@link AnnoyingMessage} to copy
+     * @param   newKey  the new key to use
+     */
+    public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull String newKey) {
+        this.plugin = message.plugin;
+        this.key = newKey;
+        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
+        this.replacements.addAll(message.replacements);
+        this.splitterPlaceholder = message.splitterPlaceholder;
+    }
+
+    /**
      * {@link #replace(String, Object)} except using parameter placeholders
      *
      * @param   placeholder the placeholder to replace (must have {@code %} on both sides)
@@ -260,13 +274,16 @@ public class AnnoyingMessage extends Stringable {
      * Broadcasts the message with the specified {@link BroadcastType} and title parameters. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
      *
      * @param   type    the {@link BroadcastType} to broadcast with
+     * @param   sender  the {@link AnnoyingSender} to use
      * @param   fadeIn  the fade in time for the title
      * @param   stay    the stay time for the title
      * @param   fadeOut the fade out time for the title
      *
+     * @see             #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see             #broadcast(BroadcastType, AnnoyingSender)
      * @see             #broadcast(BroadcastType)
      */
-    public void broadcast(@NotNull BroadcastType type, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
+    public void broadcast(@NotNull BroadcastType type, @Nullable AnnoyingSender sender, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
         // Title/subtitle/full title
         if (type.isTitle()) {
             if (fadeIn == null) fadeIn = 10;
@@ -287,14 +304,13 @@ public class AnnoyingMessage extends Stringable {
             }
 
             // Title and subtitle (full title)
-            final AnnoyingMessage titleMessage = new AnnoyingMessage(plugin, key + ".title");
-            final AnnoyingMessage subtitleMessage = new AnnoyingMessage(plugin, key + ".subtitle");
-            titleMessage.replacements.addAll(replacements);
-            subtitleMessage.replacements.addAll(replacements);
-            broadcastTitle(titleMessage.toString(), subtitleMessage.toString(), fadeIn, stay, fadeOut);
+            broadcastTitle(
+                    new AnnoyingMessage(this, key + ".title").toString(sender),
+                    new AnnoyingMessage(this, key + ".subtitle").toString(sender),
+                    fadeIn, stay, fadeOut);
             return;
         }
-        final BaseComponent[] components = getComponents();
+        final BaseComponent[] components = getComponents(sender);
 
         // Action bar
         if (type.equals(BroadcastType.ACTIONBAR) && PLAYER_SPIGOT_SEND_MESSAGE_METHOD != null) {
@@ -313,15 +329,43 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
+     * Broadcasts the message with the specified {@link BroadcastType} and title parameters
+     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)} with {@code null} for {@code sender}
+     *
+     * @param   type    the {@link BroadcastType} to broadcast with
+     * @param   fadeIn  the fade in time for the title
+     * @param   stay    the stay time for the title
+     * @param   fadeOut the fade out time for the title
+     *
+     * @see             #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)
+     */
+    public void broadcast(@NotNull BroadcastType type, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
+        broadcast(type, null, fadeIn, stay, fadeOut);
+    }
+
+    /**
+     * Broadcasts the message with the specified {@link BroadcastType}, {@link AnnoyingSender}, and default title parameters
+     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)} with {@code null} for all title parameters
+     *
+     * @param   type    the {@link BroadcastType} to broadcast with
+     * @param   sender  the {@link AnnoyingSender} to use
+     *
+     * @see             #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)
+     */
+    public void broadcast(@NotNull BroadcastType type, @Nullable AnnoyingSender sender) {
+        broadcast(type, sender, null, null, null);
+    }
+
+    /**
      * Broadcasts the message with the specified {@link BroadcastType} and default title parameters
-     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, Integer, Integer, Integer)} with {@code null} for all title parameters
+     * <p>This is equivalent to calling {@link #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)} with {@code null} for all other parameters
      *
      * @param   type    the {@link BroadcastType} to broadcast with
      *
-     * @see             #broadcast(BroadcastType, Integer, Integer, Integer)
+     * @see             #broadcast(BroadcastType, AnnoyingSender, Integer, Integer, Integer)
      */
     public void broadcast(@NotNull BroadcastType type) {
-        broadcast(type, null, null, null);
+        broadcast(type, null, null, null, null);
     }
 
     /**
