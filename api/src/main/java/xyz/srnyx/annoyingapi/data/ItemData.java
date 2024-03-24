@@ -1,6 +1,8 @@
 package xyz.srnyx.annoyingapi.data;
 
-import de.tr7zw.changeme.nbtapi.NBTItem;
+import de.tr7zw.changeme.nbtapi.NBT;
+import de.tr7zw.changeme.nbtapi.iface.ReadWriteItemNBT;
+import de.tr7zw.changeme.nbtapi.iface.ReadableItemNBT;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -9,6 +11,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
@@ -30,12 +35,20 @@ public class ItemData extends Data<ItemStack> {
      * @param   item    {@link #target}
      */
     public ItemData(@NotNull AnnoyingPlugin plugin, @NotNull ItemStack item) {
-        super(plugin, new ItemStack(item));
+        super(plugin, new ItemStack(item), getName(item));
     }
 
-    @Override @NotNull
-    public String getTargetName() {
-        return target.getType().toString();
+    /**
+     * Get the name of the given item stack; the {@link ItemMeta#getDisplayName() display name} if it exists, otherwise the {@link ItemStack#getType() type}
+     *
+     * @param   item    the item stack to get the name of
+     *
+     * @return          the name of the item stack
+     */
+    @NotNull
+    private static String getName(@NotNull ItemStack item) {
+        final ItemMeta meta = item.getItemMeta();
+        return meta != null && meta.hasDisplayName() ? meta.getDisplayName() : item.getType().toString();
     }
 
     /**
@@ -70,7 +83,7 @@ public class ItemData extends Data<ItemStack> {
         }
 
         // 1.13.1- (NBT API)
-        return new NBTItem(target).getString(key);
+        return NBT.get(target, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(key));
     }
 
     /**
@@ -81,40 +94,40 @@ public class ItemData extends Data<ItemStack> {
      *
      * @return          this {@link ItemData} instance
      */
-    @Override @NotNull
-    protected ItemData set(@NotNull String key, @NotNull String value) {
+    @Override
+    protected boolean set(@NotNull String key, @NotNull String value) {
         // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
             if (meta == null) {
                 sendError("set", null);
+                return false;
             }
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
                 PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
                 target.setItemMeta(meta);
-                return this;
+                return true;
             } catch (final ReflectiveOperationException e) {
-                return this;
                 sendError("set", e);
+                return false;
             }
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD != null) try {
                 CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, value);
                 target.setItemMeta(meta);
-                return this;
+                return true;
             } catch (final ReflectiveOperationException e) {
-                sendError("set");
-                e.printStackTrace();
-                return this;
+                sendError("set", e);
+                return false;
             }
         }
 
         // 1.13.1- (NBT API)
-        new NBTItem(target, true).setString(key, value);
-        return this;
+        NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.setString(key, value));
+        return true;
     }
 
     /**
@@ -124,38 +137,39 @@ public class ItemData extends Data<ItemStack> {
      *
      * @return      this {@link ItemData} instance
      */
-    @Override @NotNull
-    public ItemData remove(@NotNull String key) {
+    @Override
+    public boolean remove(@NotNull String key) {
         // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
             if (meta == null) {
                 sendError("remove", null);
+                return false;
             }
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null) try {
                 PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 target.setItemMeta(meta);
-                return this;
+                return true;
             } catch (final ReflectiveOperationException e) {
-                return this;
                 sendError("remove", e);
+                return false;
             }
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD != null) try {
                 CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 target.setItemMeta(meta);
-                return this;
+                return true;
             } catch (final ReflectiveOperationException e) {
-                return this;
                 sendError("remove", e);
+                return false;
             }
         }
 
         // 1.13.1- (NBT API)
-        new NBTItem(target, true).removeKey(key);
-        return this;
+        NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.removeKey(key));
+        return true;
     }
 }

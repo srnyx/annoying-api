@@ -46,7 +46,10 @@ public class ExampleListener extends AnnoyingListener {
      */
     @EventHandler
     public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
-        if (plugin.item != null) event.getPlayer().getInventory().addItem(new ItemData(plugin, plugin.item).set("example", "example").target);
+        if (plugin.item == null) return;
+        final ItemData data = new ItemData(plugin, plugin.item);
+        data.set("example", "example");
+        event.getPlayer().getInventory().addItem(data.target);
     }
 
     /**

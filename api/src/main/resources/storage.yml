@@ -1,0 +1,35 @@
+# This file controls the storage of different data for entities (players, mobs, etc...)
+# This may not be for ALL data! As this is only for SIMPLE ENTITY data, not anything else
+
+# The method that data will be stored. Available options are listed below
+#
+# LOCAL (data will be stored on the Minecraft server, connection configuration NOT required)
+# - h2 (default)
+# - sqlite
+#
+# REMOTE (data will be stored on a remote database, connection configuration REQUIRED)
+# - mysql
+# - mariadb
+# - postgresql
+method: h2
+
+# The connection configuration for REMOTE databases
+# NOTE: If you are using a LOCAL database, you can ignore this section
+remote-connection:
+  # The host of the database
+  host: localhost
+  # The port of the database
+  # Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL
+  #port: 3306
+
+  # The name of the database (must already exist)
+  database: minecraft
+
+  # The username and password of the database
+  username: admin
+  password: ''
+
+  # If you're using one database for multiple plugins, it's recommended to have a table prefix
+  # By default (if left commented out), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore
+  # To remove the table prefix, set it to an empty string ('')
+  #table-prefix: 'annoying_'

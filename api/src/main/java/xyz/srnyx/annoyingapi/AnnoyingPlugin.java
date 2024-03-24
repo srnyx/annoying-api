@@ -18,17 +18,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.data.ConnectionException;
+import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
-import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.options.PluginOptions;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-import xyz.srnyx.annoyingapi.data.EntityData;
 
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
@@ -76,6 +78,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Nullable public AnnoyingResource messages;
     /**
+     * The {@link DataManager} for the plugin
+     */
+    @Nullable public DataManager dataManager;
+    /**
      * {@link ChatColor} aliases for the plugin from the messages file ({@link MessagesOptions.MessageKeys#globalPlaceholders})
      *
      * @see MessagesOptions.MessageKeys#globalPlaceholders
@@ -89,10 +95,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Stores the cooldowns for each player/type
      */
     @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
-    /**
-     * Caches the data files for entities, used in {@link EntityData}
-     */
-    @NotNull public final Map<UUID, AnnoyingData> entityDataFiles = new HashMap<>();
     /**
      * Whether PlaceholderAPI is installed
      */
@@ -115,6 +117,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         loadMessages();
+        loadDataManger();
         load();
     }
 
@@ -201,8 +204,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Enable bStats
-        if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean("enabled")) {
-            new Metrics(this, 18281).addCustomChart(new SimplePie("plugins", this::getName)); // API
+        if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean(options.bStatsOptions.toggleKey)) {
+            final Metrics apiMetrics = new Metrics(this, 18281); // API
+            apiMetrics.addCustomChart(new SimplePie("plugins", this::getName));
+            apiMetrics.addCustomChart(new SimplePie("storage_method", () -> dataManager == null ? "N/A" : dataManager.storageConfig.method.name()));
             if (options.bStatsOptions.id != null) bStats = new Metrics(this, options.bStatsOptions.id); // Plugin
         }
 
@@ -265,6 +270,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void reloadPlugin() {
         loadMessages();
+        loadDataManger();
         reload();
     }
 
@@ -329,6 +335,18 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void checkUpdate() {
         new AnnoyingUpdate(this, options.pluginOptions.updatePlatforms).checkUpdate();
+    }
+
+    /**
+     * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
+     */
+    public void loadDataManger() {
+        try {
+            dataManager = options.dataOptions.enabled ? new DataManager(this) : null;
+        } catch (final ConnectionException e) {
+            dataManager = null;
+            AnnoyingPlugin.log(Level.WARNING, "Failed to connect to database! URL: '" + e.url + "' Properties: " + e.properties, e);
+        }
     }
 
     /**

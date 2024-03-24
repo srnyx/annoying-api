@@ -23,16 +23,22 @@ public abstract class Data<T> implements Annoyable {
      * The target to manage data for
      */
     @NotNull public final T target;
+    /**
+     * The name of the target used for warning messages
+     */
+    @NotNull private final String name;
 
     /**
      * Construct a new {@link Data} for the given target
      *
      * @param   plugin  {@link #plugin}
      * @param   target  {@link #target}
+     * @param   name    {@link #name}
      */
-    public Data(@NotNull AnnoyingPlugin plugin, @NotNull T target) {
+    protected Data(@NotNull AnnoyingPlugin plugin, @NotNull T target, @NotNull String name) {
         this.plugin = plugin;
         this.target = target;
+        this.name = name;
     }
 
     @Override @NotNull
@@ -41,21 +47,11 @@ public abstract class Data<T> implements Annoyable {
     }
 
     /**
-     * Get the name of the target used for warning messages
-     *
-     * @return  the name of the target
-     */
-    @NotNull
-    protected String getTargetName() {
-        return target.getClass().getSimpleName();
-    }
-
-    /**
      * Check if the data value exists for the given key
      *
      * @param   key the key to check for
      *
-     * @return      true if the data value exists, false otherwise
+     * @return      {@code true} if the data value exists, {@code false} otherwise
      */
     public boolean has(@NotNull String key) {
         return get(key) != null;
@@ -89,35 +85,32 @@ public abstract class Data<T> implements Annoyable {
      * Set the data value for the given key. If the key already exists, it will be overwritten
      *
      * @param   key     the key to set the data value for
-     * @param   value   the data value to set, or null to remove the data value
+     * @param   value   the data value to set
      *
-     * @return          this {@link Data} instance
+     * @return          {@code true} if the data value was set successfully, {@code false} otherwise
      */
-    @NotNull
-    public Data<T> set(@NotNull String key, @Nullable Object value) {
-        return value == null ? remove(key) : set(key, value.toString());
-    }
+    protected abstract boolean set(@NotNull String key, @NotNull String value);
 
     /**
      * Set the data value for the given key. If the key already exists, it will be overwritten
      *
      * @param   key     the key to set the data value for
-     * @param   value   the data value to set
+     * @param   value   the data value to set, or null to remove the data value
      *
-     * @return          this {@link Data} instance
+     * @return          {@code true} if the data value was set successfully, {@code false} otherwise
      */
-    @NotNull
-    protected abstract Data<T> set(@NotNull String key, @NotNull String value);
+    public boolean set(@NotNull String key, @Nullable Object value) {
+        return value == null ? remove(key) : set(key, value.toString());
+    }
 
     /**
      * Remove the data value with the given key
      *
      * @param   key the key to remove the data value for
      *
-     * @return      this {@link Data} instance
+     * @return      {@code true} if the data value was removed successfully, {@code false} otherwise
      */
-    @NotNull
-    public abstract Data<T> remove(@NotNull String key);
+    public abstract boolean remove(@NotNull String key);
 
     /**
      * Send an error message to the console
