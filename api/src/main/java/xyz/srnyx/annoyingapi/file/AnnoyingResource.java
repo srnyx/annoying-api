@@ -61,6 +61,12 @@ public class AnnoyingResource extends AnnoyingFile {
 
     /**
      * Represents the options for the {@link AnnoyingResource}
+     * <br>
+     * <br><b>Default options:</b>
+     * <ul>
+     *     <li>{@link #createDefaultFile} = {@code true}
+     *     <li><i>rest: {@link AnnoyingFile.Options}</i>
+     * </ul>
      */
     public static class Options extends AnnoyingFile.Options<Options> {
         /**

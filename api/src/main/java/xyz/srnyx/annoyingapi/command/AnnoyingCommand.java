@@ -26,6 +26,13 @@ import java.util.stream.Collectors;
  */
 public abstract class AnnoyingCommand extends Registrable implements TabExecutor {
     /**
+     * Constructs a new command instance for registration
+     */
+    public AnnoyingCommand() {
+        // Only exists to give the constructor a Javadoc
+    }
+
+    /**
      * <i>{@code OPTIONAL}</i> This is the name of the command
      * <p>If not specified, the lowercase class name will be used ({@code Command} will be removed)
      * <p><b>Example:</b> the command class {@code MyEpicCommand} would be registered as {@code myepic}

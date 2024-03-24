@@ -29,7 +29,7 @@ import static org.reflections.scanners.Scanners.SubTypes;
 /**
  * This class is a modified version of {@link Reflections} used for automatic {@link Registrable} in {@link AnnoyingPlugin}
  * <p>Only made this to avoid a logger being created which caused an irrelevant error to be logged on start-up
- * <p>It has the added bonus of less logic which makes it about 7x faster (only about 46ms faster with 2 packages with 19 total classes)
+ * <p>It has the added bonus of less logic which makes it about 7x faster (about 46ms faster with 2 packages, 19 total classes)
  */
 public class AnnoyingReflections implements NameHelper {
     @NotNull private final Set<String> packages;

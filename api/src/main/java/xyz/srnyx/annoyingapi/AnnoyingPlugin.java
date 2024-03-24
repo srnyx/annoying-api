@@ -43,12 +43,13 @@ import java.util.stream.Collectors;
 
 
 /**
- * Represents a plugin using the API
+ * Represents a plugin using Annoying API
  */
 @SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link Logger} for the plugin
+     * <br>Uses temporary initialization until the {@link AnnoyingPlugin plugin} is constructed (loaded)
      */
     @NotNull public static Logger LOGGER = new Logger("AnnoyingAPI - ?", null) {
         @Override
@@ -297,8 +298,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull
     public String getMessagesString(@NotNull String key) {
-        if (messages == null) return key;
-        return messages.getString(key, key);
+        return messages != null ? messages.getString(key, key) : key;
     }
 
     /**

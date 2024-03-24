@@ -569,7 +569,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Gets a {@link Recipe} from the YAML. See <a href="https://api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
      *
      * @param   path            the path to get the recipe from
      * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it

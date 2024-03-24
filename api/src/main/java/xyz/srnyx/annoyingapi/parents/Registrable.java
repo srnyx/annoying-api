@@ -8,6 +8,13 @@ import xyz.srnyx.javautilities.parents.Stringable;
  */
 public abstract class Registrable extends Stringable implements Annoyable {
     /**
+     * Constructs a new {@link Registrable} for registration
+     */
+    public Registrable() {
+        // Only exists to give the constructor a Javadoc
+    }
+
+    /**
      * Returns whether the class is registered or not
      *
      * @return whether the class is registered or not

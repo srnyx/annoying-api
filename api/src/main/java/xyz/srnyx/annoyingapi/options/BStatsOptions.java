@@ -29,7 +29,7 @@ public class BStatsOptions extends Stringable {
     @NotNull public String fileName = "bstats.yml";
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingResource.Options options} for the {@link #fileName bStats} file
-     * <p>If not specified, the default options will be used
+     * <p>If not specified, the {@link AnnoyingResource.Options default options} will be used
      */
     @Nullable public AnnoyingResource.Options fileOptions = null;
     /**

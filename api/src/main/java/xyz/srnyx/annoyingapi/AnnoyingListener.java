@@ -12,6 +12,13 @@ import xyz.srnyx.annoyingapi.parents.Registrable;
  */
 public abstract class AnnoyingListener extends Registrable implements Listener {
     /**
+     * Constructs a new listener instance for registration
+     */
+    public AnnoyingListener() {
+        // Only exists to give the constructor a Javadoc
+    }
+
+    /**
      * Registers the listener to the {@link #getAnnoyingPlugin()}
      */
     @Override
