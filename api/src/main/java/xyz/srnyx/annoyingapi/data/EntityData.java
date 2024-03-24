@@ -8,6 +8,10 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
+
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataContainer.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataHolder.PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD;
@@ -44,8 +48,8 @@ public class EntityData extends StringData {
      *
      * @return          {@code true} if the conversion was successful, {@code false} otherwise
      */
-    public boolean convertOldData(@NotNull String... keys) {
-        if (keys.length == 0) return true;
+    public boolean convertOldData(@NotNull Collection<String> keys) {
+        if (keys.isEmpty()) return true;
 
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
@@ -86,5 +90,18 @@ public class EntityData extends StringData {
         if (section.getKeys(false).isEmpty()) file.set(plugin.options.dataOptions.entities.section, null);
         file.save();
         return true;
+    }
+
+    /**
+     * Calls {@link #convertOldData(Collection)} with the given keys
+     *
+     * @param   keys    the names of the keys to convert
+     *
+     * @return          {@code true} if the conversion was successful, {@code false} otherwise
+     *
+     * @see             #convertOldData(Collection)
+     */
+    public boolean convertOldData(@NotNull String... keys) {
+        return convertOldData(Arrays.asList(keys));
     }
 }
