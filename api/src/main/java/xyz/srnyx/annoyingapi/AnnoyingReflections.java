@@ -100,13 +100,11 @@ public class AnnoyingReflections implements NameHelper {
                                     storeMap.put(key, values);
                                 }
                             } catch (final Exception e) {
-                                AnnoyingPlugin.log(Level.WARNING, "Could not scan file " + file.getRelativePath());
-                                e.printStackTrace();
+                                AnnoyingPlugin.log(Level.WARNING, "Could not scan file " + file.getRelativePath(), e);
                             }
                         }
                     } catch (final Exception e) {
-                        AnnoyingPlugin.log(Level.WARNING, "Could not create Vfs.Dir from " + url + ". Ignoring the exception and continuing");
-                        e.printStackTrace();
+                        AnnoyingPlugin.log(Level.WARNING, "Could not create Vfs.Dir from " + url + ". Ignoring the exception and continuing", e);
                     } finally {
                         if (dir != null) dir.close();
                     }

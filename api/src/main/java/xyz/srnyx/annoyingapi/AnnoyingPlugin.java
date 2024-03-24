@@ -332,22 +332,33 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Logs a message to the console
+     * Logs a message with the specified level and throwable to the console
+     *
+     * @param   level       the level of the message. If {@code null}, {@link Level#INFO} will be used
+     * @param   message     the message to log
+     * @param   throwable   the throwable to log
+     */
+    public static void log(@Nullable Level level, @Nullable String message, @Nullable Throwable throwable) {
+        if (level == null) level = Level.INFO;
+        LOGGER.log(level, BukkitUtility.color(message), throwable);
+    }
+
+    /**
+     * Calls {@link #log(Level, String, Throwable)} with {@code null} as the {@link Throwable throwable}
      *
      * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message the message to log
      */
     public static void log(@Nullable Level level, @Nullable String message) {
-        if (level == null) level = Level.INFO;
-        LOGGER.log(level, BukkitUtility.color(message));
+        log(level, message, null);
     }
 
     /**
-     * Calls {@link #log(Level, String)} with {@code null} as the {@link Level level}
+     * Calls {@link #log(Level, String, Throwable)} with {@code null} as the {@link Level level} and {@link Throwable throwable}
      *
      * @param   message the message to log
      */
-    public static void log(@NotNull String message) {
-        log(null, message);
+    public static void log(@Nullable String message) {
+        log(null, message, null);
     }
 }

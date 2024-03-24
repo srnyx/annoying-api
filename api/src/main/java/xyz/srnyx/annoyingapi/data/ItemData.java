@@ -56,8 +56,7 @@ public class ItemData extends Data<ItemStack> {
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null) try {
                 return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
-                sendError("get");
-                e.printStackTrace();
+                sendError("get", e);
                 return null;
             }
 
@@ -65,8 +64,7 @@ public class ItemData extends Data<ItemStack> {
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD != null) try {
                 return (String) CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
-                sendError("get");
-                e.printStackTrace();
+                sendError("get", e);
                 return null;
             }
         }
@@ -88,7 +86,9 @@ public class ItemData extends Data<ItemStack> {
         // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
-            if (meta == null) return this;
+            if (meta == null) {
+                sendError("set", null);
+            }
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
@@ -96,9 +96,8 @@ public class ItemData extends Data<ItemStack> {
                 target.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
-                sendError("set");
-                e.printStackTrace();
                 return this;
+                sendError("set", e);
             }
 
             // 1.13.2 (custom item tag container)
@@ -130,7 +129,9 @@ public class ItemData extends Data<ItemStack> {
         // 1.13.2+ (persistent data container or custom item tag container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
-            if (meta == null) return this;
+            if (meta == null) {
+                sendError("remove", null);
+            }
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null) try {
@@ -138,9 +139,8 @@ public class ItemData extends Data<ItemStack> {
                 target.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
-                sendError("remove");
-                e.printStackTrace();
                 return this;
+                sendError("remove", e);
             }
 
             // 1.13.2 (custom item tag container)
@@ -149,9 +149,8 @@ public class ItemData extends Data<ItemStack> {
                 target.setItemMeta(meta);
                 return this;
             } catch (final ReflectiveOperationException e) {
-                sendError("remove");
-                e.printStackTrace();
                 return this;
+                sendError("remove", e);
             }
         }
 

@@ -123,8 +123,9 @@ public abstract class Data<T> implements Annoyable {
      * Send an error message to the console
      *
      * @param   action  the action that failed
+     * @param   e       the exception that caused the error
      */
-    protected void sendError(@NotNull String action) {
-        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " data for &4" + getTargetName() + "&c!");
+    protected void sendError(@NotNull String action, @Nullable Throwable e) {
+        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " data for &4" + name + "&c!", e);
     }
 }
