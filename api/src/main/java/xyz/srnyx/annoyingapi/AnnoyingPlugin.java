@@ -99,11 +99,10 @@ public class AnnoyingPlugin extends JavaPlugin {
     public boolean papiInstalled = false;
 
     /**
-     * Constructs a new {@link AnnoyingPlugin} instance. Registers event handlers for custom events
+     * Constructs a new {@link AnnoyingPlugin} instance
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
-        options.registrationOptions.toRegister.add(new EventHandlers(this));
     }
 
     /**
@@ -231,7 +230,8 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Check for updates
         checkUpdate();
 
-        // Register manually-defined Registrables & PAPI expansion
+        // Register custom events, manually-defined Registrables, & PAPI expansion
+        if (options.registrationOptions.registerCustomEvents) new EventHandlers(this).register();
         options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papiInstalled) {
