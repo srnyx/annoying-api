@@ -10,7 +10,6 @@ import xyz.srnyx.annoyingapi.file.AnnoyingData;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataContainer.*;
@@ -29,13 +28,19 @@ public class EntityData extends StringData {
     @NotNull public static final String TABLE_NAME = "entities";
 
     /**
+     * The entity to manage data for (only used for {@link #convertOldData(Collection)})
+     */
+    @NotNull private final Entity entity;
+
+    /**
      * Construct a new {@link EntityData} for the given entity
      *
      * @param   plugin  {@link #plugin}
-     * @param   entity  {@link #target}
+     * @param   entity  {@link #target} (uses entity UUID) & {@link #entity}
      */
     public EntityData(@NotNull AnnoyingPlugin plugin, @NotNull Entity entity) {
         super(plugin, TABLE_NAME, entity.getUniqueId().toString());
+        this.entity = entity;
     }
 
     /**
@@ -54,7 +59,7 @@ public class EntityData extends StringData {
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
             try {
-                final Object persistentDataContainer = PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(target);
+                final Object persistentDataContainer = PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity);
                 final Object convertedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, "api_converted");
                 // Check if already converted
                 if (PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE) != null) return true;
