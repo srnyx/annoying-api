@@ -77,6 +77,18 @@ public class AnnoyingSender extends Stringable implements Annoyable {
         return plugin;
     }
 
+
+    /**
+     * Checks if the provided {@link CommandSender} is the same as the {@link #cmdSender}
+     *
+     * @param   sender  the {@link CommandSender} to check
+     *
+     * @return          if the provided {@link CommandSender} is the same as the {@link #cmdSender}
+     */
+    public boolean equalsSender(@NotNull CommandSender sender) {
+        return cmdSender.equals(sender);
+    }
+
     /**
      * Returns if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
      *
