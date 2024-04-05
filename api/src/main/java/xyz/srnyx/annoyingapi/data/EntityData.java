@@ -36,7 +36,7 @@ public class EntityData extends StringData {
      * Construct a new {@link EntityData} for the given entity
      *
      * @param   plugin  {@link #plugin}
-     * @param   entity  {@link #target} (uses entity UUID) & {@link #entity}
+     * @param   entity  {@link #entity} and {@link #target} (uses entity UUID)
      */
     public EntityData(@NotNull AnnoyingPlugin plugin, @NotNull Entity entity) {
         super(plugin, TABLE_NAME, entity.getUniqueId().toString());
