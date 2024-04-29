@@ -16,6 +16,7 @@ import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
 /**
@@ -34,13 +35,17 @@ public class DataOptions extends Stringable {
      */
     @NotNull public Map<String, Set<String>> tables = new HashMap<>(MapUtility.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN))));
     /**
-     * The options for the storage configuration file
+     * Options for the {@link DataManager#dataCache data cache}
      */
-    @NotNull public ConfigFile configFile = new ConfigFile();
+    @NotNull public Cache cache = new Cache();
     /**
      * Options for {@link EntityData entity data management}
      */
     @NotNull public Entities entities = new Entities();
+    /**
+     * Options for the storage configuration file
+     */
+    @NotNull public ConfigFile configFile = new ConfigFile();
 
     /**
      * Sets {@link #enabled}
@@ -123,6 +128,33 @@ public class DataOptions extends Stringable {
     }
 
     /**
+     * Sets {@link #cache}
+     *
+     * @param   cache   the new value
+     *
+     * @return          this {@link DataOptions} instance for chaining
+     */
+    @NotNull
+    public DataOptions cache(@NotNull Cache cache) {
+        this.cache = cache;
+        return this;
+    }
+
+    /**
+     * Sets {@link #cache} using the specified {@link Consumer}
+     *
+     * @param   consumer    the consumer to accept the {@link Cache} instance
+     *
+     * @return              this {@link DataOptions} instance for chaining
+     */
+    @NotNull
+    public DataOptions cache(@NotNull Consumer<Cache> consumer) {
+        final Cache options = new Cache();
+        consumer.accept(options);
+        return cache(options);
+    }
+
+    /**
      * Sets {@link #configFile}
      *
      * @param   configFile  the new value
@@ -193,14 +225,75 @@ public class DataOptions extends Stringable {
     public static DataOptions load(@NotNull ConfigurationSection section) {
         final DataOptions options = new DataOptions();
         if (section.contains("enabled")) options.enabled(section.getBoolean("enabled"));
-        if (section.contains("configFile")) options.configFile(ConfigFile.load(section.getConfigurationSection("configFile")));
         if (section.contains("tables")) {
             final Map<String, Set<String>> tables = new HashMap<>();
             section.getConfigurationSection("tables").getKeys(false).forEach(table -> tables.put(table, new HashSet<>(section.getStringList("tables." + table))));
             options.tables(tables);
         }
+        if (section.contains("cache")) options.cache(Cache.load(section.getConfigurationSection("cache")));
         if (section.contains("entities")) options.entities(Entities.load(section.getConfigurationSection("entities")));
+        if (section.contains("configFile")) options.configFile(ConfigFile.load(section.getConfigurationSection("configFile")));
         return options;
+    }
+
+    public static class Cache {
+        public boolean useCacheDefault = true;
+        @NotNull public Set<SaveOn> saveOn = new HashSet<>(Arrays.asList(SaveOn.values()));
+        /**
+         * If {@link SaveOn#INTERVAL} is in {@link #saveOn}, this is the interval in <b>Minecraft ticks</b> to save the cache
+         */
+        public long saveOnInterval = 6000; // 5 minutes
+
+        @NotNull
+        public static Cache load(@NotNull ConfigurationSection section) {
+            final Cache options = new Cache();
+            if (section.contains("defaultValue")) options.useCacheDefault(section.getBoolean("useCacheDefault"));
+            if (section.contains("removeSaveOn")) options.removeSaveOn(section.getStringList("removeSaveOn").stream()
+                    .map(SaveOn::fromString)
+                    .collect(Collectors.toSet()));
+            if (section.contains("saveOnInterval")) options.saveOnInterval = section.getLong("saveOnInterval");
+            return options;
+        }
+
+        @NotNull
+        public Cache useCacheDefault(boolean useCacheDefault) {
+            this.useCacheDefault = useCacheDefault;
+            return this;
+        }
+
+        @NotNull
+        public Cache removeSaveOn(@NotNull Collection<SaveOn> saveOn) {
+            this.saveOn.removeAll(saveOn);
+            return this;
+        }
+
+        @NotNull
+        public Cache removeSaveOn(@NotNull SaveOn... saveOn) {
+            return removeSaveOn(Arrays.asList(saveOn));
+        }
+
+        public enum SaveOn {
+            RELOAD,
+            DISABLE,
+            /**
+             * @see #saveOnInterval
+             */
+            INTERVAL;
+
+            @Nullable
+            public static SaveOn fromString(@Nullable String string) {
+                if (string == null) return null;
+                try {
+                    return valueOf(string);
+                } catch (final IllegalArgumentException e) {
+                    return null;
+                }
+            }
+        }
+
+        public Cache() {
+            // Only exists to give the constructor a Javadoc
+        }
     }
 
     /**

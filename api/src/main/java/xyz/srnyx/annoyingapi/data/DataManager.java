@@ -1,12 +1,17 @@
 package xyz.srnyx.annoyingapi.data;
 
+import org.bukkit.scheduler.BukkitRunnable;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.options.DataOptions;
 
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 
@@ -34,6 +39,20 @@ public class DataManager {
      * The table prefix for the database (only for remote connections)
      */
     @NotNull public final String tablePrefix;
+    /**
+     * Cached data from {@link StringData}
+     * <ul>
+     *     <li>Key: table name
+     *     <li>Value:<ul>
+     *         <li>Key: target
+     *         <li>Value:<ul>
+     *             <li>Key: data key
+     *             <li>Value: data value
+     *        </ul>
+     *     </ul>
+     * </ul>
+     */
+    @NotNull public final Map<String, Map<String, Map<String, String>>> dataCache = new HashMap<>();
 
     /**
      * Connect to the configured database and create the pre-defined tables/columns
@@ -59,6 +78,17 @@ public class DataManager {
                 if (statement != null) executeUpdate(statement, "Failed to create column " + column + " in table " + table);
             });
         });
+
+        // Start cache saver interval
+        if (plugin.options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.INTERVAL)) {
+            final long interval = plugin.options.dataOptions.cache.saveOnInterval;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    saveCache();
+                }
+            }.runTaskTimerAsynchronously(plugin, interval, interval);
+        }
     }
 
     /**
@@ -77,7 +107,7 @@ public class DataManager {
     /**
      * Execute a query on the database
      *
-     * @param   query           the query to execute
+     * @param   query           the query to execute <i>(careful of SQL injection!)</i>
      *
      * @return                  the {@link ResultSet result} of the query
      *
@@ -91,7 +121,7 @@ public class DataManager {
     /**
      * Execute an update on the database
      *
-     * @param   query           the query to execute
+     * @param   query           the query to execute <i>(careful of SQL injection!)</i>
      * @param   errorMessage    the error message to print if the query fails
      */
     public void executeUpdate(@NotNull String query, @Nullable String errorMessage) {
@@ -104,5 +134,21 @@ public class DataManager {
             }
             AnnoyingPlugin.log(Level.SEVERE, errorMessage, e);
         }
+    }
+
+    /**
+     * Saves the data from the cache to the database
+     */
+    public void saveCache() {
+        dataCache.forEach((table, targets) -> {
+            final String tableName = getTableName(table);
+            targets.forEach((target, data) -> {
+                try (final PreparedStatement statement = dialect.setValues(tableName, target, data)) {
+                    statement.execute();
+                } catch (final SQLException e) {
+                    AnnoyingPlugin.log(Level.SEVERE, "Failed to save cached data for target " + target + " in table " + table + ": " + data, e);
+                }
+            });
+        });
     }
 }

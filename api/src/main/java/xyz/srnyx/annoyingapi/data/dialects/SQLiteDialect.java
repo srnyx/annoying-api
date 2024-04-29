@@ -10,22 +10,18 @@ import xyz.srnyx.annoyingapi.data.StringData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 
 /**
  * SQL dialect for SQLite
  */
-public class SQLiteDialect implements SQLDialect {
-    @NotNull private final DataManager dataManager;
-
-    /**
-     * Construct a new {@link SQLiteDialect} with the given {@link DataManager}
-     *
-     * @param   dataManager the {@link DataManager} to use
-     */
+public class SQLiteDialect extends SQLDialect {
     public SQLiteDialect(@NotNull DataManager dataManager) {
-        this.dataManager = dataManager;
+        super(dataManager);
     }
 
     @Override @NotNull
@@ -56,6 +52,24 @@ public class SQLiteDialect implements SQLDialect {
         statement.setString(1, target);
         statement.setString(2, value);
         return statement;
+    }
+
+    @Override @NotNull
+    public PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
+        // Get builders
+        final StringBuilder insertBuilder = new StringBuilder("INSERT OR REPLACE INTO \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\"");
+        final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
+        final List<String> values = new ArrayList<>();
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            insertBuilder.append(", `").append(entry.getKey()).append("`");
+            valuesBuilder.append(", ?");
+            values.add(entry.getValue());
+        }
+        insertBuilder.append(")");
+        valuesBuilder.append(")");
+
+        // Create statement
+        return setValuesParameters(target, values, insertBuilder.append(valuesBuilder).toString());
     }
 
     @Override @NotNull

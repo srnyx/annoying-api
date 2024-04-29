@@ -15,6 +15,7 @@ public class ConnectionException extends Exception {
     @NotNull public final String url;
     /**
      * The properties used to connect to the database
+     * <br><i>Recommended to use {@link #getPropertiesRedacted()} for logging/other outputs</i>
      */
     @NotNull public final Properties properties;
 
@@ -35,5 +36,18 @@ public class ConnectionException extends Exception {
         super(message);
         this.url = url;
         this.properties = properties;
+    }
+
+    /**
+     * Get the properties used to connect to the database, with the password redacted
+     *
+     * @return  the redacted properties
+     */
+    @NotNull
+    public Properties getPropertiesRedacted() {
+        final Properties redacted = new Properties();
+        redacted.putAll(properties);
+        redacted.put("password", "REDACTED");
+        return redacted;
     }
 }

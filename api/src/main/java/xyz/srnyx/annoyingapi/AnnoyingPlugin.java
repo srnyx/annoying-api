@@ -18,15 +18,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.ConnectionException;
 import xyz.srnyx.annoyingapi.data.DataManager;
-import xyz.srnyx.annoyingapi.data.EntityData;
-import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
+import xyz.srnyx.annoyingapi.options.DataOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.options.PluginOptions;
 import xyz.srnyx.annoyingapi.parents.Registrable;
@@ -78,17 +78,15 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Nullable public AnnoyingResource messages;
     /**
-     * The {@link DataManager} for the plugin
-     */
-    @Nullable public DataManager dataManager;
-    /**
      * {@link ChatColor} aliases for the plugin from the messages file ({@link MessagesOptions.MessageKeys#globalPlaceholders})
      *
      * @see MessagesOptions.MessageKeys#globalPlaceholders
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
+     * The {@link DataManager} for the plugin
      */
+    @Nullable public DataManager dataManager;
     /**
      * Set of registered {@link Registrable}s by the plugin
      */
@@ -116,7 +114,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         loadMessages();
-        loadDataManger();
+        loadDataManger(false);
         load();
     }
 
@@ -151,6 +149,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onDisable() {
+        if (dataManager != null && options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.DISABLE)) dataManager.saveCache();
         disable();
     }
 
@@ -269,7 +268,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void reloadPlugin() {
         loadMessages();
-        loadDataManger();
+        loadDataManger(options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.RELOAD));
         reload();
     }
 
@@ -291,6 +290,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void disablePlugin() {
         new HashSet<>(registeredClasses).forEach(Registrable::unregister);
         Bukkit.getScheduler().cancelTasks(this);
+        if (dataManager != null) dataManager.saveCache();
         Bukkit.getPluginManager().disablePlugin(this);
     }
 
@@ -338,13 +338,17 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
+     *
+     * @param   saveCache   whether to save the cache before loading the data manager
+     *                      <br><i>Data may be lost if {@code false}!</i>
      */
-    public void loadDataManger() {
+    public void loadDataManger(boolean saveCache) {
+        if (dataManager != null && saveCache) dataManager.saveCache();
         try {
             dataManager = options.dataOptions.enabled ? new DataManager(this) : null;
         } catch (final ConnectionException e) {
             dataManager = null;
-            AnnoyingPlugin.log(Level.WARNING, "Failed to connect to database! URL: '" + e.url + "' Properties: " + e.properties, e);
+            AnnoyingPlugin.log(Level.WARNING, "Failed to connect to database! URL: '" + e.url + "' Properties: " + e.getPropertiesRedacted(), e);
         }
     }
 

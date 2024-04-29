@@ -7,21 +7,17 @@ import xyz.srnyx.annoyingapi.data.StringData;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
  * SQL dialect for MariaDB database
  */
-public class MariaDBDialect implements SQLDialect {
-    @NotNull private final DataManager dataManager;
-
-    /**
-     * Construct a new {@link MariaDBDialect} with the given {@link DataManager}
-     *
-     * @param   dataManager {@link #dataManager}
-     */
+public class MariaDBDialect extends SQLDialect {
     public MariaDBDialect(@NotNull DataManager dataManager) {
-        this.dataManager = dataManager;
+        super(dataManager);
     }
 
     @Override @NotNull
@@ -48,6 +44,28 @@ public class MariaDBDialect implements SQLDialect {
         statement.setString(2, value);
         statement.setString(3, value);
         return statement;
+    }
+
+    @Override @NotNull
+    public PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
+        // Get builders
+        final StringBuilder insertBuilder = new StringBuilder("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`");
+        final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
+        final StringBuilder updateBuilder = new StringBuilder(" ON DUPLICATE KEY UPDATE ");
+        final List<String> values = new ArrayList<>();
+        for (final Map.Entry<String, String> entry : data.entrySet()) {
+            final String column = entry.getKey();
+            insertBuilder.append(", `").append(column).append("`");
+            valuesBuilder.append(", ?");
+            updateBuilder.append("`").append(column).append("` = ?, ");
+            values.add(entry.getValue());
+        }
+        insertBuilder.append(")");
+        valuesBuilder.append(")");
+        updateBuilder.setLength(updateBuilder.length() - 2);
+
+        // Create statement
+        return setValuesParameters(target, values, insertBuilder.append(valuesBuilder).append(updateBuilder).toString());
     }
 
     @Override @NotNull
