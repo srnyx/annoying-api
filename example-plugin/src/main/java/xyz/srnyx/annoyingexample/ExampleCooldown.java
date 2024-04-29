@@ -2,11 +2,11 @@ package xyz.srnyx.annoyingexample;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.AnnoyingCooldown;
+import xyz.srnyx.annoyingapi.cooldown.CooldownType;
 
 
 /**
- * Example of a {@link AnnoyingCooldown.CooldownType} implementation
+ * Example of a {@link CooldownType} implementation
  * <p>Since there is only one type with one duration, we can just have it be a class
  * <p>Otherwise, we would make it an enum and store the duration in a field for each type to have its own (unless they all share the same duration), like so:
  * <pre>{@code
@@ -27,7 +27,7 @@ import xyz.srnyx.annoyingapi.AnnoyingCooldown;
  * }
  * }</pre>
  */
-public class ExampleCooldown implements AnnoyingCooldown.CooldownType {
+public class ExampleCooldown implements CooldownType {
     /**
      * This is practically the same as a single enum
      */

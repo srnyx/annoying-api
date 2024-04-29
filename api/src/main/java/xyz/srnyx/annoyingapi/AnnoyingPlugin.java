@@ -88,13 +88,12 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
+     */
+    /**
      * Set of registered {@link Registrable}s by the plugin
      */
     @NotNull public final Set<Registrable> registeredClasses = new HashSet<>();
-    /**
-     * Stores the cooldowns for each player/type
-     */
-    @NotNull public final Map<UUID, Map<AnnoyingCooldown.CooldownType, Long>> cooldowns = new HashMap<>();
+    @NotNull public final CooldownManager cooldownManager = new CooldownManager(this);
     /**
      * Whether PlaceholderAPI is installed
      */
