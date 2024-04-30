@@ -3,8 +3,7 @@ on:
   pull_request:
     paths:
       - 'gradle/**'
-      - 'api/**'
-      - 'example-plugin/**'
+      - 'src/**'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
       - 'gradlew'
@@ -16,6 +15,3 @@ jobs:
     uses: srnyx/tools/.github/workflows/build.yml@main
     with:
       name: Annoying API
-      path: |
-        api/build/libs/*.jar
-        example-plugin/build/libs/*.jar

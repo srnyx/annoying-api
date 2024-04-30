@@ -11,8 +11,4 @@ jobs:
     with:
       modrinth: gzktm9GG
       curseforge: 728930
-      files: |
-        api/build/libs/AnnoyingAPI-*[!a-z].jar
-        api/build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
-        example-plugin/build/libs/*.jar
     secrets: inherit
