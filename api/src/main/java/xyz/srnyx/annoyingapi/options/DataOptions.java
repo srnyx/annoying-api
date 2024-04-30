@@ -241,10 +241,10 @@ public class DataOptions extends Stringable {
         return options;
     }
 
-    public static class Cache {
     /**
      * Options for the {@link DataManager#dataCache data cache}
      */
+    public static class Cache extends Stringable {
         /**
          * Whether to use the cache by default for {@link StringData}
          */
@@ -366,7 +366,7 @@ public class DataOptions extends Stringable {
     /**
      * Options for {@link EntityData entity data management}
      */
-    public static class Entities {
+    public static class Entities extends Stringable {
         /**
          * The path to the folder (inside {@code plugins/PLUGIN/data/}) where the entity data files will be stored
          *
@@ -478,7 +478,7 @@ public class DataOptions extends Stringable {
     /**
      * Options for the storage configuration file for {@link EntityData entity data}
      */
-    public static class ConfigFile {
+    public static class ConfigFile extends Stringable {
         /**
          * <i>{@code REQUIRED}</i> The name of the file to use for the entity data configuration file
          */

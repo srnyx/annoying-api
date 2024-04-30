@@ -191,7 +191,7 @@ public class RegistrationOptions extends Stringable {
     /**
      * The automatic registration options
      */
-    public static class AutomaticRegistration {
+    public static class AutomaticRegistration extends Stringable {
         /**
          * The packages to scan for {@link Registrable}s
          */

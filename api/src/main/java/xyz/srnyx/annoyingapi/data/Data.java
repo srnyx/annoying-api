@@ -6,6 +6,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
+import xyz.srnyx.javautilities.parents.Stringable;
+
 import java.util.logging.Level;
 
 
@@ -14,7 +16,7 @@ import java.util.logging.Level;
  *
  * @param   <T> the type of target to manage data for
  */
-public abstract class Data<T> implements Annoyable {
+public abstract class Data<T> extends Stringable implements Annoyable {
     /**
      * The {@link AnnoyingPlugin plugin} instance
      */

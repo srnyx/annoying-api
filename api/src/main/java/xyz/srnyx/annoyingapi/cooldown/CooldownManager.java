@@ -7,10 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
-import java.util.*;
+import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-public class CooldownManager implements Annoyable {
 
 /**
  * This class is used to manage all cooldowns
@@ -18,6 +21,7 @@ public class CooldownManager implements Annoyable {
  * @see AnnoyingPlugin#cooldownManager
  * @see AnnoyingCooldown
  */
+public class CooldownManager extends Stringable implements Annoyable {
     /**
      * The {@link AnnoyingPlugin} instance
      */

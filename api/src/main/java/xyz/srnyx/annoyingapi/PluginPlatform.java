@@ -273,7 +273,7 @@ public class PluginPlatform extends Stringable {
     /**
      * A collection of {@link PluginPlatform}s
      */
-    public static class Multi {
+    public static class Multi extends Stringable {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */

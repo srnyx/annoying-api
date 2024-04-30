@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 
+import xyz.srnyx.javautilities.parents.Stringable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,7 +18,7 @@ import java.util.List;
 /**
  * Represents the general options for the plugin
  */
-public class PluginOptions {
+public class PluginOptions extends Stringable {
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency AnnoyingDependencies} to check for (add dependencies to this in the plugin's constructor)
      * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
