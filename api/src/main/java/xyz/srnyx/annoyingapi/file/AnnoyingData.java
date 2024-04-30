@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi.file;
 
+import org.bukkit.Bukkit;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,11 +40,13 @@ public class AnnoyingData extends AnnoyingFile {
     @Override
     public void create() {
         final Path filePath = file.toPath();
-        try {
-            Files.createDirectories(filePath.getParent());
-            Files.createFile(filePath);
-        } catch (final IOException e) {
-            e.printStackTrace();
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                Files.createDirectories(filePath.getParent());
+                Files.createFile(filePath);
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

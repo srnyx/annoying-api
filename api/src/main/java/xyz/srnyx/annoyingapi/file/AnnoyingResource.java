@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.file;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,14 +32,18 @@ public class AnnoyingResource extends AnnoyingFile {
         fileOptions = fileOptions == null ? new Options() : fileOptions;
 
         // Create default file
-        if (fileOptions.createDefaultFile) try {
+        if (fileOptions.createDefaultFile) {
             final InputStream input = plugin.getResource(path);
             if (input == null) return;
             final Path defaultPath = plugin.getDataFolder().toPath().resolve("default/" + path);
-            Files.createDirectories(defaultPath.getParent());
-            Files.copy(input, defaultPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (final IOException e) {
-            e.printStackTrace();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try {
+                    Files.createDirectories(defaultPath.getParent());
+                    Files.copy(input, defaultPath, StandardCopyOption.REPLACE_EXISTING);
+                } catch (final IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
