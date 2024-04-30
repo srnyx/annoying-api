@@ -16,6 +16,11 @@ import java.util.Map;
  * SQL dialect for PostgreSQL database
  */
 public class PostgreSQLDialect extends SQLDialect {
+    /**
+     * Creates a new PostgreSQL dialect
+     *
+     * @param   dataManager {@link #dataManager}
+     */
     public PostgreSQLDialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }

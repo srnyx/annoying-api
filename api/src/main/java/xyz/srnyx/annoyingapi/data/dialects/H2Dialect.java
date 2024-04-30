@@ -16,6 +16,11 @@ import java.util.Map;
  * SQL dialect for H2 database
  */
 public class H2Dialect extends SQLDialect {
+    /**
+     * Creates a new H2 dialect
+     *
+     * @param   dataManager {@link #dataManager}
+     */
     public H2Dialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }

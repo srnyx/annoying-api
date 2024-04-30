@@ -15,6 +15,9 @@ import java.util.Map;
  * SQL dialect for a specific type of database
  */
 public abstract class SQLDialect {
+    /**
+     * The {@link DataManager} to use for database operations
+     */
     @NotNull protected final DataManager dataManager;
 
     /**
@@ -90,6 +93,17 @@ public abstract class SQLDialect {
     @NotNull
     public abstract PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException;
 
+    /**
+     * Used for {@link #setValue(String, String, String, String)} to set the parameters of the {@link PreparedStatement}
+     *
+     * @param   target          the target to set the value to
+     * @param   values          the values to set
+     * @param   query           the query to set the values to
+     *
+     * @return                  the prepared statement with the set parameters
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected PreparedStatement setValuesParameters(@NotNull String target, @NotNull List<String> values, @NotNull String query) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement(query);

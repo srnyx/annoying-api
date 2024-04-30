@@ -16,6 +16,11 @@ import java.util.Map;
  * SQL dialect for MariaDB database
  */
 public class MariaDBDialect extends SQLDialect {
+    /**
+     * Creates a new MariaDB dialect
+     *
+     * @param   dataManager {@link #dataManager}
+     */
     public MariaDBDialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }

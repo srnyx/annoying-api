@@ -46,7 +46,7 @@ public class StringData extends Data<String> {
      * @param   plugin      {@link #plugin}
      * @param   table       {@link #table}
      * @param   string      {@link #target}
-     * @param   useCache    {@link #useCache}
+     * @param   useCache    {@link #useCache}, or {@code null} to use {@link xyz.srnyx.annoyingapi.options.DataOptions.Cache#useCacheDefault}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string, @Nullable Boolean useCache) {
         super(plugin, string, string);
@@ -56,6 +56,13 @@ public class StringData extends Data<String> {
         this.useCache = useCache == null ? plugin.options.dataOptions.cache.useCacheDefault : useCache;
     }
 
+    /**
+     * Construct a new {@link StringData} for the given string with {@link xyz.srnyx.annoyingapi.options.DataOptions.Cache#useCacheDefault} as {@link #useCache}
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   table   {@link #table}
+     * @param   string  {@link #target}
+     */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string) {
         this(plugin, table, string, null);
     }
@@ -119,12 +126,27 @@ public class StringData extends Data<String> {
         }
     }
 
+    /**
+     * Get the target's cached data for the given key
+     *
+     * @param   key the key to get from the cache
+     *
+     * @return      the target's cached data for the given key, or {@code null} if the cache is disabled or the target has no cached data for the key
+     */
     @Nullable
     public String getFromCache(@NotNull String key) {
         final Map<String, String> data = getCache();
         return data == null ? null : data.get(key);
     }
 
+    /**
+     * Set the target's cached data for the given key
+     *
+     * @param   key     the key to set in the cache
+     * @param   value   the value to set in the cache
+     *
+     * @return          this {@link StringData} instance
+     */
     @NotNull
     public StringData setToCache(@NotNull String key, @Nullable String value) {
         if (value == null) return removeFromCache(key);
@@ -137,6 +159,13 @@ public class StringData extends Data<String> {
         return this;
     }
 
+    /**
+     * Remove the target's cached data for the given key
+     *
+     * @param   key the key to remove from the cache
+     *
+     * @return      this {@link StringData} instance
+     */
     @NotNull
     public StringData removeFromCache(@NotNull String key) {
         final Map<String, String> data = getCache();
@@ -144,6 +173,11 @@ public class StringData extends Data<String> {
         return this;
     }
 
+    /**
+     * Get the target's cached data
+     *
+     * @return  the target's cached data, or {@code null} if the cache is disabled or the target has no cached data
+     */
     @Nullable
     public Map<String, String> getCache() {
         if (!useCache) return null;

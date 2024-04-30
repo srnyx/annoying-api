@@ -37,6 +37,14 @@ public class RefRegistry {
      */
     @Nullable public static final Object ENCHANTMENT_FIELD = ReflectionUtility.getStaticFieldValue(1, 14, 0, REGISTRY_CLASS, "ENCHANTMENT");
 
+    /**
+     * Get a {@link PotionEffectType} by name, using reflection if needed
+     *
+     * @param   plugin  the {@link AnnoyingPlugin} instance
+     * @param   name    the name of the potion effect
+     *
+     * @return          the {@link PotionEffectType}
+     */
     @Nullable
     public static PotionEffectType getEffect(@NotNull AnnoyingPlugin plugin, @NotNull String name) {
         // 1.20.3+
@@ -47,13 +55,32 @@ public class RefRegistry {
         return PotionEffectType.getByName(name);
     }
 
+    /**
+     * Get an {@link Enchantment} by name, using reflection if needed
+     *
+     * @param   plugin  the {@link AnnoyingPlugin} instance
+     * @param   name    the name of the enchantment
+     *
+     * @return          the {@link Enchantment}
+     */
     @Nullable
     public static Enchantment getEnchantment(@NotNull AnnoyingPlugin plugin, @NotNull String name) {
         // 1.14+
         if (GET_METHOD != null && ENCHANTMENT_FIELD != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
             return (Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name));
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
+        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {
+            // Ignored
+        }
         // 1.13.2-
         return Enchantment.getByName(name);
+    }
+
+    /**
+     * This class cannot be instantiated
+     *
+     * @throws  UnsupportedOperationException   if this class is instantiated
+     */
+    private RefRegistry() {
+        throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

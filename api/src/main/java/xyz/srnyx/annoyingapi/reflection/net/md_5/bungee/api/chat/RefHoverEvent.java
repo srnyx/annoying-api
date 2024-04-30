@@ -26,6 +26,14 @@ public class RefHoverEvent {
      */
     @Nullable public static final Constructor<HoverEvent> HOVER_EVENT_CONSTRUCTOR = ReflectionUtility.getConstructor(1, 16, 1, HoverEvent.class, HoverEvent.Action.class, CONTENT_ARRAY_CLASS);
 
+    /**
+     * Create a {@link HoverEvent} with the given {@link HoverEvent.Action} and content, using reflection if needed
+     *
+     * @param   action  the {@link HoverEvent.Action}
+     * @param   content the content of the hover event
+     *
+     * @return          the created {@link HoverEvent}
+     */
     @NotNull
     public static HoverEvent createHoverEvent(@NotNull HoverEvent.Action action, @NotNull String content) {
         if (HOVER_EVENT_CONSTRUCTOR != null && CONTENT_ARRAY_CLASS != null && TEXT_CONSTRUCTOR != null) try {
@@ -37,8 +45,25 @@ public class RefHoverEvent {
         return getDefaultHoverEvent(action, content);
     }
 
+    /**
+     * Get the default {@link HoverEvent}
+     *
+     * @param   action  the {@link HoverEvent.Action}
+     * @param   content the content of the hover event
+     *
+     * @return          the default {@link HoverEvent}
+     */
     @NotNull
     private static HoverEvent getDefaultHoverEvent(@NotNull HoverEvent.Action action, @NotNull String content) {
         return new HoverEvent(action, new ComponentBuilder(content).create());
+    }
+
+    /**
+     * This class cannot be instantiated
+     *
+     * @throws  UnsupportedOperationException   if this class is instantiated
+     */
+    private RefHoverEvent() {
+        throw new UnsupportedOperationException("This is a reflected class and cannot be instantiated");
     }
 }

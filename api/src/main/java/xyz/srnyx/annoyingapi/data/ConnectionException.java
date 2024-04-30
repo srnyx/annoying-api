@@ -32,6 +32,13 @@ public class ConnectionException extends Exception {
         this.properties = properties;
     }
 
+    /**
+     * Constructs a new connection exception with the given message, URL, and properties
+     *
+     * @param   message     the message to display
+     * @param   url         {@link #url}
+     * @param   properties  {@link #properties}
+     */
     public ConnectionException(@NotNull String message, @NotNull String url, @NotNull Properties properties) {
         super(message);
         this.url = url;

@@ -20,6 +20,11 @@ import java.util.logging.Level;
  * SQL dialect for MySQL database
  */
 public class MySQLDialect extends SQLDialect {
+    /**
+     * Creates a new MySQL dialect
+     *
+     * @param   dataManager {@link #dataManager}
+     */
     public MySQLDialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }

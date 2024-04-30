@@ -90,6 +90,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Set of registered {@link Registrable}s by the plugin
      */
     @NotNull public final Set<Registrable> registeredClasses = new HashSet<>();
+    /**
+     * The {@link CooldownManager} for the plugin
+     */
     @NotNull public final CooldownManager cooldownManager = new CooldownManager(this);
     /**
      * Whether PlaceholderAPI is installed

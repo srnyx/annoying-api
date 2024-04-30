@@ -11,9 +11,27 @@ import java.util.*;
 
 
 public class CooldownManager implements Annoyable {
+
+/**
+ * This class is used to manage all cooldowns
+ *
+ * @see AnnoyingPlugin#cooldownManager
+ * @see AnnoyingCooldown
+ */
+    /**
+     * The {@link AnnoyingPlugin} instance
+     */
     @NotNull private final AnnoyingPlugin plugin;
+    /**
+     * A map of all cooldowns, with the key being the key of the cooldowns
+     */
     @NotNull public final Map<String, Set<AnnoyingCooldown>> cooldowns = new HashMap<>();
 
+    /**
+     * Creates a new cooldown manager with the given plugin
+     *
+     * @param   plugin  {@link #plugin}
+     */
     public CooldownManager(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
     }
@@ -23,12 +41,27 @@ public class CooldownManager implements Annoyable {
         return plugin;
     }
 
+    /**
+     * Get all cooldowns with the given key
+     *
+     * @param   key the key of the cooldowns
+     *
+     * @return      all cooldowns with the given key
+     */
     @NotNull
     public Set<AnnoyingCooldown> getCooldowns(@NotNull Object key) {
         final Set<AnnoyingCooldown> set = cooldowns.get(key.toString());
         return set == null ? Collections.emptySet() : ImmutableSet.copyOf(set);
     }
 
+    /**
+     * Get a cooldown with the given key and type
+     *
+     * @param   key     the key of the cooldown
+     * @param   type    the type of the cooldown
+     *
+     * @return          the cooldown with the given key and type
+     */
     @NotNull
     public AnnoyingCooldown getCooldown(@NotNull Object key, @NotNull CooldownType type) {
         return getCooldowns(key).stream()

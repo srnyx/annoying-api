@@ -20,6 +20,11 @@ import java.util.logging.Level;
  * SQL dialect for SQLite
  */
 public class SQLiteDialect extends SQLDialect {
+    /**
+     * Creates a new SQLite dialect
+     *
+     * @param   dataManager {@link #dataManager}
+     */
     public SQLiteDialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }
