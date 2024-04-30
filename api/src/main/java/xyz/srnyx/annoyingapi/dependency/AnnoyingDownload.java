@@ -294,6 +294,10 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
             try {
                 // Load and enable plugin
                 final Plugin dependencyPlugin = manager.loadPlugin(dependency.file);
+                if (dependencyPlugin == null) {
+                    AnnoyingPlugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
+                    return;
+                }
                 dependencyPlugin.onLoad();
                 manager.enablePlugin(dependencyPlugin);
                 // Register commands

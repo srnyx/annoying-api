@@ -330,11 +330,10 @@ public class PluginPlatform extends Stringable {
                 // String
                 final ConfigurationSection platformSection = platformsSection.getConfigurationSection(platformKey);
                 if (platformSection == null) {
-                    try {
-                        multi.addIfAbsent(new PluginPlatform(Platform.valueOf(platformKey.toUpperCase()), platformsSection.getString(platformKey)));
-                    } catch (final IllegalArgumentException e) {
-                        // Ignore
-                    }
+                    final String platformKeyString = platformsSection.getString(platformKey);
+                    if (platformKeyString != null) try {
+                        multi.addIfAbsent(new PluginPlatform(Platform.valueOf(platformKey.toUpperCase()), platformKeyString));
+                    } catch (final IllegalArgumentException ignored) {}
                     continue;
                 }
                 // Section

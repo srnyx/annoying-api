@@ -64,7 +64,8 @@ public class RegistrationOptions extends Stringable {
     @NotNull
     public static RegistrationOptions load(@NotNull ConfigurationSection section) {
         final RegistrationOptions options = new RegistrationOptions();
-        if (section.contains("automaticRegistration")) options.automaticRegistration(AutomaticRegistration.load(section.getConfigurationSection("automaticRegistration")));
+        final ConfigurationSection automaticRegistrationSection = section.getConfigurationSection("automaticRegistration");
+        if (automaticRegistrationSection != null) options.automaticRegistration(AutomaticRegistration.load(automaticRegistrationSection));
         return options;
     }
 

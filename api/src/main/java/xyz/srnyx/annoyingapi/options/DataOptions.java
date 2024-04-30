@@ -225,14 +225,18 @@ public class DataOptions extends Stringable {
     public static DataOptions load(@NotNull ConfigurationSection section) {
         final DataOptions options = new DataOptions();
         if (section.contains("enabled")) options.enabled(section.getBoolean("enabled"));
-        if (section.contains("tables")) {
+        final ConfigurationSection tablesSection = section.getConfigurationSection("tables");
+        if (tablesSection != null) {
             final Map<String, Set<String>> tables = new HashMap<>();
-            section.getConfigurationSection("tables").getKeys(false).forEach(table -> tables.put(table, new HashSet<>(section.getStringList("tables." + table))));
+            tablesSection.getKeys(false).forEach(table -> tables.put(table, new HashSet<>(section.getStringList("tables." + table))));
             options.tables(tables);
         }
-        if (section.contains("cache")) options.cache(Cache.load(section.getConfigurationSection("cache")));
-        if (section.contains("entities")) options.entities(Entities.load(section.getConfigurationSection("entities")));
-        if (section.contains("configFile")) options.configFile(ConfigFile.load(section.getConfigurationSection("configFile")));
+        final ConfigurationSection cacheSection = section.getConfigurationSection("cache");
+        if (cacheSection != null) options.cache(Cache.load(cacheSection));
+        final ConfigurationSection entitiesSection = section.getConfigurationSection("entities");
+        if (entitiesSection != null) options.entities(Entities.load(entitiesSection));
+        final ConfigurationSection configFileSection = section.getConfigurationSection("configFile");
+        if (configFileSection != null) options.configFile(ConfigFile.load(configFileSection));
         return options;
     }
 
@@ -336,9 +340,12 @@ public class DataOptions extends Stringable {
         @NotNull
         public static Entities load(@NotNull ConfigurationSection section) {
             final Entities options = new Entities();
-            if (section.contains("path")) options.path(section.getString("path"));
-            if (section.contains("fileOptions")) options.fileOptions(AnnoyingFile.Options.load(section.getConfigurationSection("fileOptions")));
-            if (section.contains("section")) options.node(section.getString("section"));
+            final String pathString = section.getString("path");
+            if (pathString != null) options.path(pathString);
+            final ConfigurationSection fileOptionsSection = section.getConfigurationSection("fileOptions");
+            if (fileOptionsSection != null) options.fileOptions(AnnoyingFile.Options.load(fileOptionsSection));
+            final String sectionString = section.getString("section");
+            if (sectionString != null) options.node(sectionString);
             return options;
         }
 
@@ -436,8 +443,10 @@ public class DataOptions extends Stringable {
         @NotNull
         public static DataOptions.ConfigFile load(@NotNull ConfigurationSection section) {
             final ConfigFile options = new ConfigFile();
-            if (section.contains("fileName")) options.fileName(section.getString("fileName"));
-            if (section.contains("fileOptions")) options.fileOptions(AnnoyingResource.Options.load(section.getConfigurationSection("fileOptions")));
+            final String fileNameString = section.getString("fileName");
+            if (fileNameString != null) options.fileName(fileNameString);
+            final ConfigurationSection fileOptionsSection = section.getConfigurationSection("fileOptions");
+            if (fileOptionsSection != null) options.fileOptions(AnnoyingResource.Options.load(fileOptionsSection));
             return options;
         }
 

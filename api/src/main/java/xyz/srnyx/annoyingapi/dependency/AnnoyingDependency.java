@@ -91,9 +91,13 @@ public class AnnoyingDependency extends Stringable {
      */
     @NotNull
     public static AnnoyingDependency load(@NotNull ConfigurationSection section) {
-        final String name = section.getName();
+        String name = section.getName();
+        if (name.isEmpty()) {
+            name = section.getString("name");
+            if (name == null) throw new IllegalArgumentException("The name of the dependency is missing");
+        }
         return new AnnoyingDependency(
-                name.isEmpty() ? section.getString("name") : name,
+                name,
                 PluginPlatform.Multi.load(section, "platforms"),
                 section.getBoolean("required"),
                 section.getBoolean("enableAfterDownload"));

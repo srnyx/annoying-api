@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.events;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,7 +51,8 @@ public class EventHandlers extends AnnoyingListener {
         Bukkit.getPluginManager().callEvent(newEvent);
         event.setCancelled(newEvent.isCancelled());
         event.setFrom(newEvent.getFrom());
-        event.setTo(newEvent.getTo());
+        final Location to = newEvent.getTo();
+        if (to != null) event.setTo(to);
     }
 
     /**

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefRegistry;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
@@ -148,7 +149,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   path    the path to the node
      * @param   value   the value to set the node to
      */
-    public void setSave(@Nullable String path, @Nullable Object value) {
+    public void setSave(@NotNull String path, @Nullable Object value) {
         set(path, value);
         save();
     }
@@ -294,7 +295,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Get type
-        final PotionEffectType type = PotionEffectType.getByName(typeString);
+        final PotionEffectType type = RefRegistry.getEffect(plugin, typeString);
         if (type == null) {
             log(Level.WARNING, path, "&cInvalid potion effect type for &4" + path + "&c: &4" + typeString);
             return def;
@@ -463,7 +464,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Enchantment enchantment = Enchantment.getByName(enchantmentKey);
+                final Enchantment enchantment = RefRegistry.getEnchantment(plugin, enchantmentKey);
                 if (enchantment == null) {
                     log(Level.WARNING, path, "&cInvalid enchantment for &4" + path + "&c: &4" + enchantmentKey);
                     continue;

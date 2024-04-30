@@ -5,8 +5,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
 
+import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.function.Consumer;
 
@@ -54,25 +57,32 @@ public class AnnoyingOptions extends Stringable {
     @NotNull
     public static AnnoyingOptions load(@NotNull ConfigurationSection section) {
         final AnnoyingOptions options = new AnnoyingOptions();
-        if (section.contains("pluginOptions")) options.pluginOptions(PluginOptions.load(section.getConfigurationSection("pluginOptions")));
-        if (section.contains("registrationOptions")) options.registrationOptions(RegistrationOptions.load(section.getConfigurationSection("registrationOptions")));
-        if (section.contains("bStatsOptions")) options.bStatsOptions(BStatsOptions.load(section.getConfigurationSection("bStatsOptions")));
-        if (section.contains("dataOptions")) options.dataOptions(DataOptions.load(section.getConfigurationSection("dataOptions")));
-        if (section.contains("messagesOptions")) options.messagesOptions(MessagesOptions.load(section.getConfigurationSection("messagesOptions")));
+        final ConfigurationSection pluginOptionsSection = section.getConfigurationSection("pluginOptions");
+        if (pluginOptionsSection != null) options.pluginOptions(PluginOptions.load(pluginOptionsSection));
+        final ConfigurationSection registrationOptionsSection = section.getConfigurationSection("registrationOptions");
+        if (registrationOptionsSection != null) options.registrationOptions(RegistrationOptions.load(registrationOptionsSection));
+        final ConfigurationSection bStatsOptionsSection = section.getConfigurationSection("bStatsOptions");
+        if (bStatsOptionsSection != null) options.bStatsOptions(BStatsOptions.load(bStatsOptionsSection));
+        final ConfigurationSection dataOptionsSection = section.getConfigurationSection("dataOptions");
+        if (dataOptionsSection != null) options.dataOptions(DataOptions.load(dataOptionsSection));
+        final ConfigurationSection messagesOptionsSection = section.getConfigurationSection("messagesOptions");
+        if (messagesOptionsSection != null) options.messagesOptions(MessagesOptions.load(messagesOptionsSection));
         return options;
     }
 
     /**
-     * Loads the options from the specified {@link Reader}
+     * Loads the options from the specified {@link InputStream}
      *
-     * @param   reader  the reader to load the options from
+     * @param   inputStream the input stream to load the options from
      *
-     * @return          the loaded options
+     * @return              the loaded options
      */
     @NotNull
-    public static AnnoyingOptions load(@NotNull Reader reader) {
-        final ConfigurationSection annoying = YamlConfiguration.loadConfiguration(reader).getConfigurationSection("annoying");
-        return annoying != null ? load(annoying) : new AnnoyingOptions();
+    public static AnnoyingOptions load(@Nullable InputStream inputStream) {
+        if (inputStream == null) return new AnnoyingOptions();
+        final ConfigurationSection annoying = YamlConfiguration.loadConfiguration(new InputStreamReader(inputStream)).getConfigurationSection("annoying");
+        if (annoying == null) return new AnnoyingOptions();
+        return load(annoying);
     }
 
     /**

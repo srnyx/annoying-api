@@ -34,7 +34,6 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -68,7 +67,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The API options for the plugin
      */
-    @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(new InputStreamReader(getResource("plugin.yml")));
+    @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
      * The {@link Metrics bStats} instance for the plugin
      */

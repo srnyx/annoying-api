@@ -49,9 +49,12 @@ public class MessagesOptions extends Stringable {
     @NotNull
     public static MessagesOptions load(@NotNull ConfigurationSection section) {
         final MessagesOptions options = new MessagesOptions();
-        if (section.contains("fileName")) options.fileName(section.getString("fileName"));
-        if (section.contains("fileOptions")) options.fileOptions(AnnoyingResource.Options.load(section.getConfigurationSection("fileOptions")));
-        if (section.contains("keys")) options.keys(MessageKeys.load(section.getConfigurationSection("keys")));
+        final String fileNameString = section.getString("fileName");
+        if (fileNameString != null) options.fileName(fileNameString);
+        final ConfigurationSection fileOptionsSection = section.getConfigurationSection("fileOptions");
+        if (fileOptionsSection != null) options.fileOptions(AnnoyingResource.Options.load(fileOptionsSection));
+        final ConfigurationSection keysSection = section.getConfigurationSection("keys");
+        if (keysSection != null) options.keys(MessageKeys.load(keysSection));
         return options;
     }
 
@@ -185,15 +188,24 @@ public class MessagesOptions extends Stringable {
         @NotNull
         public static MessagesOptions.MessageKeys load(@NotNull ConfigurationSection section) {
             final MessageKeys keys = new MessageKeys();
-            if (section.contains("globalPlaceholders")) keys.globalPlaceholders(section.getString("globalPlaceholders"));
-            if (section.contains("splitterJson")) keys.splitterJson(section.getString("splitterJson"));
-            if (section.contains("splitterPlaceholder")) keys.splitterPlaceholder(section.getString("splitterPlaceholder"));
-            if (section.contains("updateAvailable")) keys.updateAvailable(section.getString("updateAvailable"));
-            if (section.contains("noPermission")) keys.noPermission(section.getString("noPermission"));
-            if (section.contains("playerOnly")) keys.playerOnly(section.getString("playerOnly"));
-            if (section.contains("invalidArgument")) keys.invalidArgument(section.getString("invalidArgument"));
-            if (section.contains("invalidArguments")) keys.invalidArguments(section.getString("invalidArguments"));
-            if (section.contains("disabledCommand")) keys.disabledCommand(section.getString("disabledCommand"));
+            final String globalPlaceholdersString = section.getString("globalPlaceholders");
+            if (globalPlaceholdersString != null) keys.globalPlaceholders(globalPlaceholdersString);
+            final String splitterJsonString = section.getString("splitterJson");
+            if (splitterJsonString != null) keys.splitterJson(splitterJsonString);
+            final String splitterPlaceholderString = section.getString("splitterPlaceholder");
+            if (splitterPlaceholderString != null) keys.splitterPlaceholder(splitterPlaceholderString);
+            final String updateAvailableString = section.getString("updateAvailable");
+            if (updateAvailableString != null) keys.updateAvailable(updateAvailableString);
+            final String noPermissionString = section.getString("noPermission");
+            if (noPermissionString != null) keys.noPermission(noPermissionString);
+            final String playerOnlyString = section.getString("playerOnly");
+            if (playerOnlyString != null) keys.playerOnly(playerOnlyString);
+            final String invalidArgumentString = section.getString("invalidArgument");
+            if (invalidArgumentString != null) keys.invalidArgument(invalidArgumentString);
+            final String invalidArgumentsString = section.getString("invalidArguments");
+            if (invalidArgumentsString != null) keys.invalidArguments(invalidArgumentsString);
+            final String disabledCommandString = section.getString("disabledCommand");
+            if (disabledCommandString != null) keys.disabledCommand(disabledCommandString);
             return keys;
         }
 

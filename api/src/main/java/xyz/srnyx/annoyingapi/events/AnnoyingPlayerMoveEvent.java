@@ -32,7 +32,7 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
      * @param   from    {@link #getFrom()}
      * @param   to      {@link #getTo()}
      */
-    public AnnoyingPlayerMoveEvent(@NotNull Player player, @NotNull Location from, @NotNull Location to) {
+    public AnnoyingPlayerMoveEvent(@NotNull Player player, @NotNull Location from, @Nullable Location to) {
         super(player, from, to);
     }
 
@@ -81,6 +81,7 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
         if (movementType != null) return movementType;
         final Location from = getFrom();
         final Location to = getTo();
+        if (to == null) return MovementType.TRANSLATION;
         if (from.getYaw() == to.getYaw() && from.getPitch() == to.getPitch()) {
             movementType = MovementType.TRANSLATION;
         } else if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) {

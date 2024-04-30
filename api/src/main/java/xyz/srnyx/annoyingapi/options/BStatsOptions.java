@@ -55,9 +55,12 @@ public class BStatsOptions extends Stringable {
     public static BStatsOptions load(@NotNull ConfigurationSection section) {
         final BStatsOptions options = new BStatsOptions();
         if (section.contains("id")) options.id = section.getInt("id");
-        if (section.contains("fileName")) options.fileName = section.getString("fileName");
-        if (section.contains("fileOptions")) options.fileOptions = AnnoyingResource.Options.load(section.getConfigurationSection("fileOptions"));
-        if (section.contains("toggleKey")) options.toggleKey = section.getString("toggleKey");
+        final String fileNameString = section.getString("fileName");
+        if (fileNameString != null) options.fileName = fileNameString;
+        final ConfigurationSection fileOptionsSection = section.getConfigurationSection("fileOptions");
+        if (fileOptionsSection != null) options.fileOptions = AnnoyingResource.Options.load(fileOptionsSection);
+        final String toggleKeyString = section.getString("toggleKey");
+        if (toggleKeyString != null) options.toggleKey = toggleKeyString;
         return options;
     }
 
