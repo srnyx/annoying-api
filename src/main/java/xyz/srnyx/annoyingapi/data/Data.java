@@ -106,6 +106,20 @@ public abstract class Data<T> extends Stringable implements Annoyable {
     }
 
     /**
+     * Set the data value for the given key. If the key already exists, it will be overwritten
+     *
+     * @param   key     the key to set the data value for
+     * @param   value   the data value to set, or null to remove the data value
+     *
+     * @return          this {@link Data} instance for chaining
+     */
+    @NotNull
+    public Data<T> setChain(@NotNull String key, @Nullable Object value) {
+        set(key, value);
+        return this;
+    }
+
+    /**
      * Remove the data value with the given key
      *
      * @param   key the key to remove the data value for
@@ -113,6 +127,19 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      * @return      {@code true} if the data value was removed successfully, {@code false} otherwise
      */
     public abstract boolean remove(@NotNull String key);
+
+    /**
+     * Remove the data value with the given key
+     *
+     * @param   key the key to remove the data value for
+     *
+     * @return      this {@link Data} instance for chaining
+     */
+    @NotNull
+    public Data<T> removeChain(@NotNull String key) {
+        remove(key);
+        return this;
+    }
 
     /**
      * Send an error message to the console
