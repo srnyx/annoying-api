@@ -254,7 +254,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         if (categoryString != null) try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid sound category for &4" + path + "&c: &4" + categoryString);
+            log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
         }
 
         // Return SoundData
@@ -290,14 +290,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Get type name
         final String typeString = section.getString("type");
         if (typeString == null) {
-            log(Level.WARNING, path, "&cInvalid potion effect for &4" + path);
+            log(Level.WARNING, path, "&cInvalid potion effect, missing type");
             return def;
         }
 
         // Get type
         final PotionEffectType type = RefRegistry.getEffect(plugin, typeString);
         if (type == null) {
-            log(Level.WARNING, path, "&cInvalid potion effect type for &4" + path + "&c: &4" + typeString);
+            log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
 
@@ -352,7 +352,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         final String name = section.getString("name");
         final String operationString = section.getString("operation");
         if (name == null || operationString == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier for &4" + path);
+            log(Level.WARNING, path, "&cInvalid attribute modifier, missing name and/or operation");
             return def;
         }
 
@@ -361,7 +361,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         try {
             operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier operation for &4" + path + "&c: &4" + operationString);
+            log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
             return def;
         }
 
@@ -376,7 +376,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (equipmentSlotString != null) try {
                 slot = EquipmentSlot.valueOf(equipmentSlotString);
             } catch (final IllegalArgumentException e) {
-                log(Level.WARNING, path, "&cInvalid equipment slot for &4" + path + "&c: &4" + equipmentSlotString);
+                log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
             }
 
             // Return
@@ -426,14 +426,14 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Get material name
         final String materialString = section.getString("material");
         if (materialString == null) {
-            log(Level.WARNING, path, "&cInvalid material for &4" + path);
+            log(Level.WARNING, path, "&cInvalid material, missing material");
             return def;
         }
 
         // Get material
         final Material material = Material.matchMaterial(materialString);
         if (material == null) {
-            log(Level.WARNING, path, "&cInvalid material for &4" + path + "&c: &4" + materialString);
+            log(Level.WARNING, path, "&cInvalid material for: &4" + materialString);
             return def;
         }
 
@@ -466,7 +466,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Enchantment enchantment = RefRegistry.getEnchantment(plugin, enchantmentKey);
                 if (enchantment == null) {
-                    log(Level.WARNING, path, "&cInvalid enchantment for &4" + path + "&c: &4" + enchantmentKey);
+                    log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
                 meta.addEnchant(enchantment, enchantmentsSection.getInt(enchantmentKey), true);
@@ -478,7 +478,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         try {
                             return ItemFlag.valueOf(string.toUpperCase());
                         } catch (final IllegalArgumentException e) {
-                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag for &4" + path + "&c: &4" + string);
+                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
                             return null;
                         }
                     })
@@ -503,7 +503,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                         //noinspection unchecked
                         attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
-                        log(Level.WARNING, pathString, "&cInvalid attribute for &4" + path + "&c: &4" + attributeKey);
+                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
 
@@ -610,7 +610,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             final String value = String.valueOf(entry.getValue());
             final Material material = Material.matchMaterial(value);
             if (material == null) {
-                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material for &4" + path + "&c: &4" + value);
+                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + value);
                 continue;
             }
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);
