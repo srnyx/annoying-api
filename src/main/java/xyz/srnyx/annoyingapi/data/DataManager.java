@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi.data;
 
-import org.bukkit.scheduler.BukkitRunnable;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -82,12 +80,7 @@ public class DataManager {
         // Start cache saver interval
         if (plugin.options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.INTERVAL)) {
             final long interval = plugin.options.dataOptions.cache.saveOnInterval;
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    saveCache();
-                }
-            }.runTaskTimerAsynchronously(plugin, interval, interval);
+            plugin.attemptTimerAsync(this::saveCache, interval, interval);
         }
     }
 

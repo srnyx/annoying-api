@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi.file;
 
-import org.bukkit.Bukkit;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +38,7 @@ public class AnnoyingData extends AnnoyingFile {
     @Override
     public void create() {
         final Path filePath = file.toPath();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.attemptRunAsync(() -> {
             try {
                 Files.createDirectories(filePath.getParent());
                 Files.createFile(filePath);

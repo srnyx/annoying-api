@@ -9,7 +9,6 @@ import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -78,8 +77,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     public void downloadPlugins(@Nullable Runnable finishRunnable) {
         this.finishRunnable = finishRunnable;
         this.remaining = dependencies.size();
-        final BukkitScheduler scheduler = Bukkit.getScheduler();
-        dependencies.forEach(dependency -> scheduler.runTaskAsynchronously(plugin, () -> attemptDownload(dependency)));
+        dependencies.forEach(dependency -> plugin.attemptRunAsync(() -> attemptDownload(dependency)));
     }
 
     /**
