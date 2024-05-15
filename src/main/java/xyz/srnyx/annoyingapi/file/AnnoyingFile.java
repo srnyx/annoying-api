@@ -295,7 +295,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         }
 
         // Get type
-        final PotionEffectType type = RefRegistry.getEffect(plugin, typeString);
+        final PotionEffectType type = RefRegistry.getEffect(typeString);
         if (type == null) {
             log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
@@ -464,7 +464,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Enchantment enchantment = RefRegistry.getEnchantment(plugin, enchantmentKey);
+                final Enchantment enchantment = RefRegistry.getEnchantment(enchantmentKey);
                 if (enchantment == null) {
                     log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;

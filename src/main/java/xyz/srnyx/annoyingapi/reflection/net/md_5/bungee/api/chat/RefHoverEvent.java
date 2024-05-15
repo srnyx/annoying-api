@@ -14,6 +14,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.hover.content.RefContent.CONTENT_ARRAY_CLASS;
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.hover.content.RefContent.CONTENT_CLASS;
 import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.hover.content.RefText.TEXT_CONSTRUCTOR;
 
 
@@ -36,8 +37,8 @@ public class RefHoverEvent {
      */
     @NotNull
     public static HoverEvent createHoverEvent(@NotNull HoverEvent.Action action, @NotNull String content) {
-        if (HOVER_EVENT_CONSTRUCTOR != null && CONTENT_ARRAY_CLASS != null && TEXT_CONSTRUCTOR != null) try {
-            final Object contents = ReflectionUtility.createArray(CONTENT_ARRAY_CLASS, 1);
+        if (HOVER_EVENT_CONSTRUCTOR != null && CONTENT_CLASS != null && TEXT_CONSTRUCTOR != null) try {
+            final Object contents = ReflectionUtility.createArray(CONTENT_CLASS, 1);
             if (contents == null) return getDefaultHoverEvent(action, content);
             Array.set(contents, 0, TEXT_CONSTRUCTOR.newInstance(content));
             return HOVER_EVENT_CONSTRUCTOR.newInstance(action, contents);

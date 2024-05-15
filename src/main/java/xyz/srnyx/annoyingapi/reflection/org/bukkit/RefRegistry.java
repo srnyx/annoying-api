@@ -12,8 +12,7 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CLASS;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.*;
 
 
 /**
@@ -46,11 +45,13 @@ public class RefRegistry {
      * @return          the {@link PotionEffectType}
      */
     @Nullable
-    public static PotionEffectType getEffect(@NotNull AnnoyingPlugin plugin, @NotNull String name) {
+    public static PotionEffectType getEffect(@NotNull String name) {
         // 1.20.3+
-        if (GET_METHOD != null && EFFECT_FIELD != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
-            return (PotionEffectType) GET_METHOD.invoke(EFFECT_FIELD, NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name));
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
+        if (GET_METHOD != null && EFFECT_FIELD != null && MINECRAFT_METHOD != null) try {
+            return (PotionEffectType) GET_METHOD.invoke(EFFECT_FIELD, MINECRAFT_METHOD.invoke(null, name));
+        } catch (final IllegalAccessException | InvocationTargetException ignored) {
+            // Ignored
+        }
         // 1.20.2-
         return PotionEffectType.getByName(name);
     }
@@ -64,11 +65,11 @@ public class RefRegistry {
      * @return          the {@link Enchantment}
      */
     @Nullable
-    public static Enchantment getEnchantment(@NotNull AnnoyingPlugin plugin, @NotNull String name) {
+    public static Enchantment getEnchantment(@NotNull String name) {
         // 1.14+
-        if (GET_METHOD != null && ENCHANTMENT_FIELD != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
-            return (Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name));
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {
+        if (GET_METHOD != null && ENCHANTMENT_FIELD != null && MINECRAFT_METHOD != null) try {
+            return (Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, MINECRAFT_METHOD.invoke(null, name));
+        } catch (final IllegalAccessException | InvocationTargetException ignored) {
             // Ignored
         }
         // 1.13.2-

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 
 /**
@@ -17,11 +18,14 @@ public class RefNamespacedKey {
      * 1.12+ org.bukkit.NamespacedKey
      */
     @Nullable public static final Class<?> NAMESPACED_KEY_CLASS = ReflectionUtility.getClass(1, 12, 0, RefNamespacedKey.class);
-
     /**
      * 1.12+ org.bukkit.NamespacedKey(org.bukkit.plugin.Plugin, String)
      */
     @Nullable public static final Constructor<?> NAMESPACED_KEY_CONSTRUCTOR = ReflectionUtility.getConstructor(1, 12, 0, NAMESPACED_KEY_CLASS, Plugin.class, String.class);
+    /**
+     * 1.12+ org.bukkit.NamespacedKey#minecraft(String)
+     */
+    @Nullable public static final Method MINECRAFT_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "minecraft", String.class);
 
     /**
      * This class cannot be instantiated
