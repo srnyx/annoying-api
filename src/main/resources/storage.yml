@@ -41,6 +41,7 @@ cache:
   # Whether to enable using the cache
   enabled: true
   # The actions that will trigger the cache to save to the database (RELOAD, DISABLE, INTERVAL)
+  # If empty, all actions will trigger the cache to save
   save-on:
     - RELOAD # Save when the plugin (not the server) is reloaded (recommended)
     - DISABLE # Save when the plugin is disabled (highly recommended)

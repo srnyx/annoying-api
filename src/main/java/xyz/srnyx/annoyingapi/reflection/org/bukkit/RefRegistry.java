@@ -39,7 +39,6 @@ public class RefRegistry {
     /**
      * Get a {@link PotionEffectType} by name, using reflection if needed
      *
-     * @param   plugin  the {@link AnnoyingPlugin} instance
      * @param   name    the name of the potion effect
      *
      * @return          the {@link PotionEffectType}
@@ -59,7 +58,6 @@ public class RefRegistry {
     /**
      * Get an {@link Enchantment} by name, using reflection if needed
      *
-     * @param   plugin  the {@link AnnoyingPlugin} instance
      * @param   name    the name of the enchantment
      *
      * @return          the {@link Enchantment}

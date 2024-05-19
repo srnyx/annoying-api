@@ -13,9 +13,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -34,6 +32,9 @@ public class StorageConfig {
      * The {@link Method storage method}
      */
     @NotNull public final Method method;
+    /**
+     * The {@link Cache data cache} options
+     */
     @NotNull public final Cache cache;
     /**
      * The {@link RemoteConnection remote connection} details/properties
@@ -109,13 +110,33 @@ public class StorageConfig {
         }
     }
 
+    /**
+     * Options for the {@link DataManager#dataCache}
+     */
     public class Cache {
+        /**
+         * Whether the cache is enabled
+         */
         public final boolean enabled = resource.getBoolean("cache.enabled");
-        @NotNull public final Set<SaveOn> saveOn = resource.getStringList("cache.save-on").stream()
-                .map(SaveOn::fromString)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        /**
+         * When to save the cache
+         */
+        @NotNull public final Set<SaveOn> saveOn;
+        /**
+         * The interval to save the cache (if {@link #saveOn} contains {@link SaveOn#INTERVAL})
+         */
         public final long interval = resource.getLong("cache.interval");
+
+        /**
+         * Construct a new {@link Cache} instance to parse the {@code cache} section
+         */
+        public Cache() {
+            final Set<SaveOn> providedSaveOns = resource.getStringList("cache.save-on").stream()
+                    .map(SaveOn::fromString)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
+        }
     }
 
     /**
