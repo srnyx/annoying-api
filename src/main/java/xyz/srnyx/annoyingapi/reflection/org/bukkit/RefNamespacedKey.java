@@ -19,13 +19,21 @@ public class RefNamespacedKey {
      */
     @Nullable public static final Class<?> NAMESPACED_KEY_CLASS = ReflectionUtility.getClass(1, 12, 0, RefNamespacedKey.class);
     /**
+     * 1.12+ org.bukkit.NamespacedKey#minecraft(String)
+     */
+    @Nullable public static final Method MINECRAFT_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "minecraft", String.class);
+    /**
      * 1.12+ org.bukkit.NamespacedKey(org.bukkit.plugin.Plugin, String)
      */
     @Nullable public static final Constructor<?> NAMESPACED_KEY_CONSTRUCTOR = ReflectionUtility.getConstructor(1, 12, 0, NAMESPACED_KEY_CLASS, Plugin.class, String.class);
     /**
-     * 1.12+ org.bukkit.NamespacedKey#minecraft(String)
+     * 1.12+ org.bukkit.NamespacedKey#getNamespace()
      */
-    @Nullable public static final Method MINECRAFT_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "minecraft", String.class);
+    @Nullable public static final Method NAMESPACED_KEY_GET_NAMESPACE_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "getNamespace");
+    /**
+     * 1.12+ org.bukkit.NamespacedKey#getKey()
+     */
+    @Nullable public static final Method NAMESPACED_KEY_GET_KEY_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "getKey");
 
     /**
      * This class cannot be instantiated

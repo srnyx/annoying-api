@@ -16,17 +16,18 @@ public class RefPersistentDataContainer {
      * 1.14+ org.bukkit.persistence.PersistentDataContainer
      */
     @Nullable public static final Class<?> PERSISTENT_DATA_CONTAINER_CLASS = ReflectionUtility.getClass(1, 14, 0, RefPersistentDataContainer.class);
-
+    /**
+     * 1.16.1+ org.bukkit.persistence.PersistentDataContainer#getKeys()
+     */
+    @Nullable public static final Method PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD = ReflectionUtility.getMethod(1, 16, 1, PERSISTENT_DATA_CONTAINER_CLASS, "getKeys");
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#get(org.bukkit.NamespacedKey, org.bukkit.persistence.PersistentDataType)
      */
     @Nullable public static final Method PERSISTENT_DATA_CONTAINER_GET_METHOD = ReflectionUtility.getMethod(1, 14, 0, PERSISTENT_DATA_CONTAINER_CLASS, "get", RefNamespacedKey.NAMESPACED_KEY_CLASS, RefPersistentDataType.PERSISTENT_DATA_TYPE_CLASS);
-
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#get(org.bukkit.NamespacedKey, org.bukkit.persistence.PersistentDataType, Object)
      */
     @Nullable public static final Method PERSISTENT_DATA_CONTAINER_SET_METHOD = ReflectionUtility.getMethod(1, 14, 0, PERSISTENT_DATA_CONTAINER_CLASS, "set", RefNamespacedKey.NAMESPACED_KEY_CLASS, RefPersistentDataType.PERSISTENT_DATA_TYPE_CLASS, Object.class);
-
     /**
      * 1.14+ org.bukkit.persistence.PersistentDataContainer#remove(org.bukkit.NamespacedKey)
      */
