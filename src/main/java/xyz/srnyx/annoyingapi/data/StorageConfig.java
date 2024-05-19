@@ -13,9 +13,12 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 
 /**
@@ -26,10 +29,12 @@ public class StorageConfig {
      * The {@link AnnoyingPlugin plugin} instance
      */
     @NotNull private final AnnoyingPlugin plugin;
+    @NotNull private final AnnoyingResource resource;
     /**
      * The {@link Method storage method}
      */
     @NotNull public final Method method;
+    @NotNull public final Cache cache;
     /**
      * The {@link RemoteConnection remote connection} details/properties
      */
@@ -42,7 +47,8 @@ public class StorageConfig {
      */
     public StorageConfig(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
-        final AnnoyingResource resource = new AnnoyingResource(plugin, plugin.options.dataOptions.configFile.fileName, plugin.options.dataOptions.configFile.fileOptions);
+        resource = new AnnoyingResource(plugin, plugin.options.dataOptions.configFile.fileName, plugin.options.dataOptions.configFile.fileOptions);
+        cache = new Cache();
         final Method getMethod = Method.get(resource.getString("method"));
 
         // Local storage
@@ -103,6 +109,15 @@ public class StorageConfig {
         }
     }
 
+    public class Cache {
+        public final boolean enabled = resource.getBoolean("cache.enabled");
+        @NotNull public final Set<SaveOn> saveOn = resource.getStringList("cache.save-on").stream()
+                .map(SaveOn::fromString)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        public final long interval = resource.getLong("cache.interval");
+    }
+
     /**
      * The remote connection details/properties
      */
@@ -122,16 +137,16 @@ public class StorageConfig {
         /**
          * The remote username
          */
-        @Nullable public final String username;
+        @Nullable public final String username = resource.getString("remote-connection.username");
         /**
          * The remote password
          */
-        @Nullable public final String password;
+        @Nullable public final String password = resource.getString("remote-connection.password");
         /**
          * The table prefix for the remote database
          * <br><i>Defaults to the plugin name in lowercase with all non-alphanumeric characters removed + an underscore</i>
          */
-        @NotNull public final String tablePrefix;
+        @NotNull public final String tablePrefix = resource.getString("remote-connection.table-prefix", plugin.getName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase() + "_");
 
         /**
          * Construct a new {@link RemoteConnection} instance to parse the {@code remote-connection} section
@@ -154,11 +169,6 @@ public class StorageConfig {
             final String getDatabase = section.getString("database");
             if (getDatabase == null) throw new IllegalArgumentException("A remote storage method is used but no remote database is specified");
             database = getDatabase;
-
-            // username, password, tablePrefix
-            username = section.getString("username");
-            password = section.getString("password");
-            tablePrefix = section.getString("table-prefix", plugin.getName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase() + "_");
         }
     }
 
@@ -254,6 +264,46 @@ public class StorageConfig {
                 return valueOf(name.toUpperCase());
             } catch (final IllegalArgumentException e) {
                 return H2;
+            }
+        }
+    }
+
+    /**
+     * Valid values for {@code storage.yml}'s {@code cache.save-on} option
+     */
+    public enum SaveOn {
+        /**
+         * Saves the cache on plugin reload
+         *
+         * @see AnnoyingPlugin#reloadPlugin()
+         */
+        RELOAD,
+        /**
+         * Saves the cache on plugin disable
+         *
+         * @see AnnoyingPlugin#disablePlugin()
+         */
+        DISABLE,
+        /**
+         * Saves the cache on an interval
+         *
+         * @see Cache#interval
+         */
+        INTERVAL;
+
+        /**
+         * Converts the specified string to a {@link SaveOn} value
+         *
+         * @param string the string to convert
+         * @return the converted value, or {@code null} if the string is invalid
+         */
+        @Nullable
+        public static SaveOn fromString(@Nullable String string) {
+            if (string == null) return null;
+            try {
+                return valueOf(string);
+            } catch (final IllegalArgumentException e) {
+                return null;
             }
         }
     }

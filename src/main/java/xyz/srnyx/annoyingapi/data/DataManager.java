@@ -1,11 +1,12 @@
 package xyz.srnyx.annoyingapi.data;
 
+import org.bukkit.Bukkit;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
-import xyz.srnyx.annoyingapi.options.DataOptions;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -76,12 +77,6 @@ public class DataManager {
                 if (statement != null) executeUpdate(statement, "Failed to create column " + column + " in table " + table);
             });
         });
-
-        // Start cache saver interval
-        if (plugin.options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.INTERVAL)) {
-            final long interval = plugin.options.dataOptions.cache.saveOnInterval;
-            plugin.attemptTimerAsync(this::saveCache, interval, interval);
-        }
     }
 
     /**
@@ -127,6 +122,15 @@ public class DataManager {
             }
             AnnoyingPlugin.log(Level.SEVERE, errorMessage, e);
         }
+    }
+
+    /**
+     * Starts the asynchronous task to save the cache on an interval
+     *
+     * @param   interval    the interval in ticks to save the cache
+     */
+    public void startCacheSavingOnInterval(long interval) {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveCache, interval, interval);
     }
 
     /**

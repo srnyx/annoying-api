@@ -33,3 +33,17 @@ remote-connection:
   # By default (if left commented out), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore
   # To remove the table prefix, set it to an empty string ('')
   #table-prefix: 'annoying_'
+
+# Options for the data cache, which is used for both LOCAL and REMOTE storage methods
+# The cache greatly improved performance by storing data in memory
+# However, there is a potential risk of data loss if the server crashes before the data is saved to the database
+cache:
+  # Whether to enable using the cache
+  enabled: true
+  # The actions that will trigger the cache to save to the database (RELOAD, DISABLE, INTERVAL)
+  save-on:
+    - RELOAD # Save when the plugin (not the server) is reloaded (recommended)
+    - DISABLE # Save when the plugin is disabled (highly recommended)
+    - INTERVAL # Save every X ticks (see 'interval' below, recommended)
+  # The interval in which the cache will save to the database (only applicable if 'INTERVAL' is in 'save-on')
+  interval: 6000 # ticks (1 tick = 1/20th of a second)

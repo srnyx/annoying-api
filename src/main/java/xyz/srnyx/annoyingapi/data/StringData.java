@@ -46,18 +46,18 @@ public class StringData extends Data<String> {
      * @param   plugin      {@link #plugin}
      * @param   table       {@link #table}
      * @param   string      {@link #target}
-     * @param   useCache    {@link #useCache}, or {@code null} to use {@link xyz.srnyx.annoyingapi.options.DataOptions.Cache#useCacheDefault}
+     * @param   useCache    {@link #useCache}, or {@code null} to use {@link xyz.srnyx.annoyingapi.options.DataOptions#useCacheDefault}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string, @Nullable Boolean useCache) {
         super(plugin, string, string);
         if (plugin.dataManager == null) throw new IllegalStateException(plugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
         this.dataManager = plugin.dataManager;
         this.table = dataManager.getTableName(table);
-        this.useCache = useCache == null ? plugin.options.dataOptions.cache.useCacheDefault : useCache;
+        this.useCache = dataManager.storageConfig.cache.enabled && (useCache == null ? plugin.options.dataOptions.useCacheDefault : useCache);
     }
 
     /**
-     * Construct a new {@link StringData} for the given string with {@link xyz.srnyx.annoyingapi.options.DataOptions.Cache#useCacheDefault} as {@link #useCache}
+     * Construct a new {@link StringData} for the given string with {@link xyz.srnyx.annoyingapi.options.DataOptions#useCacheDefault} as {@link #useCache}
      *
      * @param   plugin  {@link #plugin}
      * @param   table   {@link #table}
@@ -70,8 +70,10 @@ public class StringData extends Data<String> {
     @Override @Nullable
     public String get(@NotNull String key) {
         // Get the data from the cache
-        final String cached = getFromCache(key);
-        if (cached != null) return cached;
+        if (useCache) {
+            final String cached = getFromCache(key);
+            if (cached != null) return cached;
+        }
 
         // Get the data from the database
         try {

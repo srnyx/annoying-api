@@ -22,14 +22,12 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.ConnectionException;
 import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.StorageConfig;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
-import xyz.srnyx.annoyingapi.options.DataOptions;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
-import xyz.srnyx.annoyingapi.options.PluginOptions;
+import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
@@ -152,7 +150,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onDisable() {
-        if (dataManager != null && options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.DISABLE)) dataManager.saveCache();
+        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.saveCache();
         disable();
     }
 
@@ -258,6 +256,9 @@ public class AnnoyingPlugin extends JavaPlugin {
                     }
                 });
 
+        // Start cache saving on interval if enabled
+        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval(dataManager.storageConfig.cache.interval);
+
         // Custom onEnable
         enable();
     }
@@ -271,7 +272,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void reloadPlugin() {
         loadMessages();
-        loadDataManger(options.dataOptions.cache.saveOn.contains(DataOptions.Cache.SaveOn.RELOAD));
+        loadDataManger(dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD));
         reload();
     }
 

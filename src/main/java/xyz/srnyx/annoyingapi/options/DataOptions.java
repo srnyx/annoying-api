@@ -5,7 +5,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
@@ -17,7 +16,6 @@ import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 /**
@@ -36,9 +34,9 @@ public class DataOptions extends Stringable {
      */
     @NotNull public Map<String, Set<String>> tables = new HashMap<>(MapUtility.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN))));
     /**
-     * Options for the {@link DataManager#dataCache data cache}
+     * Whether to use the cache by default for {@link StringData}
      */
-    @NotNull public Cache cache = new Cache();
+    public boolean useCacheDefault = true;
     /**
      * Options for {@link EntityData entity data management}
      */
@@ -129,30 +127,16 @@ public class DataOptions extends Stringable {
     }
 
     /**
-     * Sets {@link #cache}
+     * Sets {@link #useCacheDefault}
      *
-     * @param   cache   the new value
+     * @param   useCacheDefault the new value
      *
-     * @return          this {@link DataOptions} instance for chaining
+     * @return                  this {@link DataOptions} instance for chaining
      */
     @NotNull
-    public DataOptions cache(@NotNull Cache cache) {
-        this.cache = cache;
+    public DataOptions useCacheDefault(boolean useCacheDefault) {
+        this.useCacheDefault = useCacheDefault;
         return this;
-    }
-
-    /**
-     * Sets {@link #cache} using the specified {@link Consumer}
-     *
-     * @param   consumer    the consumer to accept the {@link Cache} instance
-     *
-     * @return              this {@link DataOptions} instance for chaining
-     */
-    @NotNull
-    public DataOptions cache(@NotNull Consumer<Cache> consumer) {
-        final Cache options = new Cache();
-        consumer.accept(options);
-        return cache(options);
     }
 
     /**
@@ -232,135 +216,12 @@ public class DataOptions extends Stringable {
             tablesSection.getKeys(false).forEach(table -> tables.put(table, new HashSet<>(section.getStringList("tables." + table))));
             options.tables(tables);
         }
-        final ConfigurationSection cacheSection = section.getConfigurationSection("cache");
-        if (cacheSection != null) options.cache(Cache.load(cacheSection));
+        if (section.contains("useCacheDefault")) options.useCacheDefault(section.getBoolean("useCacheDefault"));
         final ConfigurationSection entitiesSection = section.getConfigurationSection("entities");
         if (entitiesSection != null) options.entities(Entities.load(entitiesSection));
         final ConfigurationSection configFileSection = section.getConfigurationSection("configFile");
         if (configFileSection != null) options.configFile(ConfigFile.load(configFileSection));
         return options;
-    }
-
-    /**
-     * Options for the {@link DataManager#dataCache data cache}
-     */
-    public static class Cache extends Stringable {
-        /**
-         * Whether to use the cache by default for {@link StringData}
-         */
-        public boolean useCacheDefault = true;
-        /**
-         * The {@link SaveOn save events} for the cache
-         */
-        @NotNull public Set<SaveOn> saveOn = new HashSet<>(Arrays.asList(SaveOn.values()));
-        /**
-         * If {@link SaveOn#INTERVAL} is in {@link #saveOn}, this is the interval in <b>Minecraft ticks</b> to save the cache
-         */
-        public long saveOnInterval = 6000; // 5 minutes
-
-        /**
-         * Loads the options from the specified {@link ConfigurationSection}
-         *
-         * @param   section the section to load the options from
-         *
-         * @return          the loaded options
-         */
-        @NotNull
-        public static Cache load(@NotNull ConfigurationSection section) {
-            final Cache options = new Cache();
-            if (section.contains("defaultValue")) options.useCacheDefault(section.getBoolean("useCacheDefault"));
-            if (section.contains("removeSaveOn")) options.removeSaveOn(section.getStringList("removeSaveOn").stream()
-                    .map(SaveOn::fromString)
-                    .collect(Collectors.toSet()));
-            if (section.contains("saveOnInterval")) options.saveOnInterval = section.getLong("saveOnInterval");
-            return options;
-        }
-
-        /**
-         * Sets {@link #useCacheDefault}
-         *
-         * @param   useCacheDefault the new value
-         *
-         * @return                  this {@link Cache} instance for chaining
-         */
-        @NotNull
-        public Cache useCacheDefault(boolean useCacheDefault) {
-            this.useCacheDefault = useCacheDefault;
-            return this;
-        }
-
-        /**
-         * Removes the specified {@link SaveOn} values from {@link #saveOn}
-         *
-         * @param   saveOn  the values to remove
-         *
-         * @return          this {@link Cache} instance for chaining
-         */
-        @NotNull
-        public Cache removeSaveOn(@NotNull Collection<SaveOn> saveOn) {
-            this.saveOn.removeAll(saveOn);
-            return this;
-        }
-
-        /**
-         * Removes the specified {@link SaveOn} values from {@link #saveOn}
-         *
-         * @param   saveOn  the values to remove
-         *
-         * @return          this {@link Cache} instance for chaining
-         */
-        @NotNull
-        public Cache removeSaveOn(@NotNull SaveOn... saveOn) {
-            return removeSaveOn(Arrays.asList(saveOn));
-        }
-
-        /**
-         * Valid values for {@link Cache#saveOn}
-         */
-        public enum SaveOn {
-            /**
-             * Saves the cache on plugin reload
-             *
-             * @see AnnoyingPlugin#reloadPlugin()
-             */
-            RELOAD,
-            /**
-             * Saves the cache on plugin disable
-             *
-             * @see AnnoyingPlugin#disablePlugin()
-             */
-            DISABLE,
-            /**
-             * Saves the cache on an interval
-             *
-             * @see #saveOnInterval
-             */
-            INTERVAL;
-
-            /**
-             * Converts the specified string to a {@link SaveOn} value
-             *
-             * @param   string  the string to convert
-             *
-             * @return          the converted value, or {@code null} if the string is invalid
-             */
-            @Nullable
-            public static SaveOn fromString(@Nullable String string) {
-                if (string == null) return null;
-                try {
-                    return valueOf(string);
-                } catch (final IllegalArgumentException e) {
-                    return null;
-                }
-            }
-        }
-
-        /**
-         * Constructs a new {@link Cache} instance with default values
-         */
-        public Cache() {
-            // Only exists to give the constructor a Javadoc
-        }
     }
 
     /**
