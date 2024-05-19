@@ -10,11 +10,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -363,32 +363,14 @@ public class AnnoyingPlugin extends JavaPlugin {
      *
      * @return              {@code true} if the task was run asynchronously, {@code false} if it was run synchronously
      */
-    public boolean attemptRunAsync(@NotNull Runnable runnable) {
-        if (isEnabled()) {
+    public boolean attemptAsync(@NotNull Runnable runnable) {
+        try {
             Bukkit.getScheduler().runTaskAsynchronously(this, runnable);
             return true;
+        } catch (final IllegalPluginAccessException e) {
+            runnable.run();
+            return false;
         }
-        runnable.run();
-        return false;
-    }
-
-    /**
-     * Attempt to start a timer asynchronously if the plugin is enabled, otherwise start it synchronously
-     *
-     * @param   runnable    the task to run
-     * @param   delay       the delay before the first run (in ticks)
-     * @param   period      the period between each run (in ticks)
-     *
-     * @return              {@code true} if the timer was started asynchronously, {@code false} if it was started synchronously
-     */
-    public boolean attemptTimerAsync(@NotNull Runnable runnable, long delay, long period) {
-        final BukkitScheduler scheduler = Bukkit.getScheduler();
-        if (isEnabled()) {
-            scheduler.runTaskTimerAsynchronously(this, runnable, delay, period);
-            return true;
-        }
-        scheduler.runTaskTimer(this, runnable, delay, period);
-        return false;
     }
 
     /**

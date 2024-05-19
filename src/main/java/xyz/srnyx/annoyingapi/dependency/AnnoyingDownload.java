@@ -77,7 +77,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     public void downloadPlugins(@Nullable Runnable finishRunnable) {
         this.finishRunnable = finishRunnable;
         this.remaining = dependencies.size();
-        dependencies.forEach(dependency -> plugin.attemptRunAsync(() -> attemptDownload(dependency)));
+        dependencies.forEach(dependency -> plugin.attemptAsync(() -> attemptDownload(dependency)));
     }
 
     /**

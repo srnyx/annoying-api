@@ -38,7 +38,7 @@ public class AnnoyingData extends AnnoyingFile {
     @Override
     public void create() {
         final Path filePath = file.toPath();
-        plugin.attemptRunAsync(() -> {
+        plugin.attemptAsync(() -> {
             try {
                 Files.createDirectories(filePath.getParent());
                 Files.createFile(filePath);
