@@ -10,8 +10,11 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -121,11 +124,12 @@ public class BukkitUtility {
     @Nullable
     public static Integer getPermissionValue(@NotNull Player player, @NotNull String permission) {
         for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
+            if (!info.getValue()) continue;
             final String perm = info.getPermission();
             if (perm.startsWith(permission)) try {
                 return Integer.parseInt(perm.substring(permission.length()));
             } catch (final NumberFormatException e) {
-                e.printStackTrace();
+                AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
             }
         }
         return null;
