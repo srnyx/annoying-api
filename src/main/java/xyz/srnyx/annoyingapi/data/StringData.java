@@ -1,9 +1,12 @@
 package xyz.srnyx.annoyingapi.data;
 
+import org.bukkit.OfflinePlayer;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.options.DataOptions;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,7 +49,7 @@ public class StringData extends Data<String> {
      * @param   plugin      {@link #plugin}
      * @param   table       {@link #table}
      * @param   string      {@link #target}
-     * @param   useCache    {@link #useCache}, or {@code null} to use {@link xyz.srnyx.annoyingapi.options.DataOptions#useCacheDefault}
+     * @param   useCache    {@link #useCache}, or {@code null} to use {@link DataOptions#useCacheDefault}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string, @Nullable Boolean useCache) {
         super(plugin, string, string);
@@ -57,7 +60,7 @@ public class StringData extends Data<String> {
     }
 
     /**
-     * Construct a new {@link StringData} for the given string with {@link xyz.srnyx.annoyingapi.options.DataOptions#useCacheDefault} as {@link #useCache}
+     * Construct a new {@link StringData} for the given string with {@link DataOptions#useCacheDefault} as {@link #useCache}
      *
      * @param   plugin  {@link #plugin}
      * @param   table   {@link #table}
@@ -65,6 +68,29 @@ public class StringData extends Data<String> {
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string) {
         this(plugin, table, string, null);
+    }
+
+    /**
+     * Construct a new {@link StringData} for the given {@link OfflinePlayer}
+     * <br>This uses the same table used for {@link EntityData} ({@link EntityData#TABLE_NAME}) and the player's UUID as the target
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   player  the player to get/store the data for
+     * @param   useCache    {@link #useCache}, or {@code null} to use {@link DataOptions#useCacheDefault}
+     */
+    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player, @Nullable Boolean useCache) {
+        this(plugin, EntityData.TABLE_NAME, player.getUniqueId().toString(), useCache);
+    }
+
+    /**
+     * Construct a new {@link StringData} for the given {@link OfflinePlayer} with {@link DataOptions#useCacheDefault} as {@link #useCache}
+     * <br>This uses the same table used for {@link EntityData} ({@link EntityData#TABLE_NAME}) and the player's UUID as the target
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   player  the player to get/store the data for
+     */
+    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player) {
+        this(plugin, player, null);
     }
 
     @Override @Nullable
