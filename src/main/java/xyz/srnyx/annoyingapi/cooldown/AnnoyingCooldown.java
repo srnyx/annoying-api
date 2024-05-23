@@ -61,18 +61,41 @@ public class AnnoyingCooldown extends Stringable {
     }
 
     /**
-     * Checks if the cooldown is over, if it is, it will {@link #stop() stop the cooldown}
+     * Checks if the cooldown is still going
      *
-     * @return  whether the cooldown is active
+     * @return  whether the cooldown is still going
      */
-    public boolean isOver() {
-        final boolean isOver = getRemaining() <= 0;
-        if (isOver) stop();
-        return isOver;
+    public boolean isOnCooldown() {
+        return getRemaining() > 0;
+    }
+
+    /**
+     * Checks if the cooldown is still going
+     * <br>If it isn't, it will {@link #stop() stop the cooldown}
+     *
+     * @return  whether the cooldown is still going
+     */
+    public boolean isOnCooldownStop() {
+        final boolean onCooldown = isOnCooldown();
+        if (!onCooldown) stop();
+        return onCooldown;
+    }
+
+    /**
+     * Checks if the cooldown is still going
+     * <br>If it isn't, it will {@link #start() start the cooldown}
+     *
+     * @return  whether the cooldown is still going
+     */
+    public boolean isOnCooldownStart() {
+        final boolean onCooldown = isOnCooldown();
+        if (!onCooldown) start();
+        return onCooldown;
     }
 
     /**
      * Starts the cooldown
+     * <br>If the cooldown is already started, it will be restarted
      */
     public void start() {
         final Set<AnnoyingCooldown> set = manager.cooldowns.get(key);
