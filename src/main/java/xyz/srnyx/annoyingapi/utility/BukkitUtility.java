@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.utility;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
@@ -16,7 +17,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefEntity.*;
 
@@ -50,9 +50,9 @@ public class BukkitUtility {
     @NotNull
     public static List<String> colorCollection(@Nullable Collection<?> objects) {
         if (objects == null) return new ArrayList<>();
-        return objects.stream()
-                .map(BukkitUtility::color)
-                .collect(Collectors.toList());
+        final List<String> list = new ArrayList<>();
+        for (final Object object : objects) list.add(color(object));
+        return list;
     }
 
     /**
@@ -137,6 +137,7 @@ public class BukkitUtility {
 
     /**
      * Gets an {@link OfflinePlayer} from the specified name
+     * <br>Returns a {@link Player} if they're online
      *
      * @param   name    the name of the player
      *
@@ -144,9 +145,15 @@ public class BukkitUtility {
      */
     @Nullable
     public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
+        // Check online players
+        final Player online = Bukkit.getPlayerExact(name);
+        if (online != null) return online;
+
+        // Check offline players
+        final String nameLower = name.toLowerCase();
         for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
             final String offlineName = offline.getName();
-            if (offlineName != null && offlineName.equalsIgnoreCase(name)) return offline;
+            if (offlineName != null && offlineName.toLowerCase().equals(nameLower)) return offline;
         }
         return null;
     }
@@ -158,9 +165,9 @@ public class BukkitUtility {
      */
     @NotNull
     public static Set<String> getOnlinePlayerNames() {
-        return Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
-                .collect(Collectors.toSet());
+        final Set<String> set = new HashSet<>();
+        for (final Player player : Bukkit.getOnlinePlayers()) set.add(player.getName());
+        return set;
     }
 
     /**
@@ -170,10 +177,13 @@ public class BukkitUtility {
      */
     @NotNull
     public static Set<String> getOfflinePlayerNames() {
-        return Arrays.stream(Bukkit.getOfflinePlayers())
-                .filter(player -> !player.isOnline())
-                .map(OfflinePlayer::getName)
-                .collect(Collectors.toSet());
+        final Set<String> set = new HashSet<>();
+        for (final OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            if (player.isOnline()) continue;
+            final String name = player.getName();
+            if (name != null) set.add(name);
+        }
+        return set;
     }
 
     /**
@@ -183,9 +193,12 @@ public class BukkitUtility {
      */
     @NotNull
     public static Set<String> getAllPlayerNames() {
-        return Arrays.stream(Bukkit.getOfflinePlayers())
-                .map(OfflinePlayer::getName)
-                .collect(Collectors.toSet());
+        final Set<String> set = new HashSet<>();
+        for (final OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            final String name = player.getName();
+            if (name != null) set.add(name);
+        }
+        return set;
     }
 
     /**
@@ -195,9 +208,9 @@ public class BukkitUtility {
      */
     @NotNull
     public static Set<String> getWorldNames() {
-        return Bukkit.getWorlds().stream()
-                .map(org.bukkit.World::getName)
-                .collect(Collectors.toSet());
+        final Set<String> set = new HashSet<>();
+        for (final World world : Bukkit.getWorlds()) set.add(world.getName());
+        return set;
     }
 
     /**
