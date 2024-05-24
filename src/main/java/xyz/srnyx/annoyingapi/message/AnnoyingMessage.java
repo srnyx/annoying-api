@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi.message;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -22,6 +23,7 @@ import xyz.srnyx.javautilities.parents.Stringable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -56,6 +58,12 @@ public class AnnoyingMessage extends Stringable {
      * The cached splitter for placeholder parameters
      */
     @Nullable private String splitterPlaceholder;
+    /**
+     * Cached components to improve performance
+     * <br>Only used if the message doesn't contain {@code %command%}
+     * <br>This is reset if {@link #replacements} are modified
+     */
+    @Nullable private BaseComponent[] components;
 
     /**
      * Constructs a new {@link AnnoyingMessage} with the specified key
@@ -72,7 +80,7 @@ public class AnnoyingMessage extends Stringable {
     }
 
     /**
-     * Constructs a new {@link AnnoyingMessage} with the specified key
+     * Constructs a new {@link AnnoyingMessage} with the specified key and PAPI placeholders enabled
      *
      * @param   plugin  {@link #plugin}
      * @param   key     {@link #key}
@@ -92,6 +100,7 @@ public class AnnoyingMessage extends Stringable {
         this.parsePapiPlaceholders = message.parsePapiPlaceholders;
         this.replacements.addAll(message.replacements);
         this.splitterPlaceholder = message.splitterPlaceholder;
+        this.components = message.components;
     }
 
     /**
@@ -122,6 +131,7 @@ public class AnnoyingMessage extends Stringable {
      */
     @NotNull
     public AnnoyingMessage replace(@NotNull String placeholder, @Nullable Object value, @Nullable ReplaceType type) {
+        if (components != null) components = null; // Remove cached components
         replacements.add(new Replacement(placeholder, value, type));
         return this;
     }
@@ -152,6 +162,7 @@ public class AnnoyingMessage extends Stringable {
      */
     @NotNull
     public BaseComponent[] getComponents(@Nullable AnnoyingSender sender) {
+        if (components != null) return components; // Use cached components
         final AnnoyingJSON json = new AnnoyingJSON();
 
         // Get messages file
@@ -168,19 +179,35 @@ public class AnnoyingMessage extends Stringable {
         if (section == null) {
             String string = messages.getString(key);
             if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!").build();
+
+            // Process replacements
             for (final Replacement replacement : replacements) string = replacement.process(string);
             if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
+
+            // Build components
             final String[] split = string.split(splitterJson, 3);
-            return json.append(split[0], extractHover(split), net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
+            final BaseComponent[] newComponents = json.append(split[0], extractHover(split), ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
+
+            // Cache (if %command% not present) & return components
+            if (!string.contains("%command%")) components = newComponents;
+            return newComponents;
         }
 
         // Multiple components
-        for (final String subKey : section.getKeys(false)) {
-            String subMessage = section.getString(subKey);
-            if (subMessage == null) {
+        boolean shouldCache = true;
+        for (final Map.Entry<String, Object> entry : section.getValues(false).entrySet()) {
+            final String subKey = entry.getKey();
+            final Object value = entry.getValue();
+            if (!(value instanceof String)) {
                 json.append(key + "." + subKey, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!");
                 continue;
             }
+            String subMessage = (String) value;
+
+            // Only cache if %command% not present
+            if (shouldCache && subMessage.contains("%command%")) shouldCache = false;
+
+            // Process replacements
             for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
             if (parsePapiPlaceholders) subMessage = plugin.parsePapiPlaceholders(player, subMessage);
 
@@ -198,7 +225,7 @@ public class AnnoyingMessage extends Stringable {
 
             // Prompt component
             if (subKey.startsWith("suggest")) {
-                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.SUGGEST_COMMAND, function);
+                json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, function);
                 continue;
             }
 
@@ -210,20 +237,24 @@ public class AnnoyingMessage extends Stringable {
 
             // Chat component
             if (subKey.startsWith("chat")) {
-                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, function);
+                json.append(display, hover, ClickEvent.Action.RUN_COMMAND, function);
                 continue;
             }
 
             // Web component
             if (subKey.startsWith("web")) {
-                json.append(display, hover, net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, function);
+                json.append(display, hover, ClickEvent.Action.OPEN_URL, function);
                 continue;
             }
 
             // Text component
             json.append(display, hover);
         }
-        return json.build();
+
+        // Build, cache, & return components
+        final BaseComponent[] newComponents = json.build();
+        if (shouldCache) components = newComponents;
+        return newComponents;
     }
 
     /**
