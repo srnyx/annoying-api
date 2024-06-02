@@ -20,7 +20,7 @@ repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.CODE_MC)
 dependencies {
     compileOnlyApi("org.jetbrains", "annotations", "24.1.0")
     compileOnly("me.clip", "placeholderapi", "2.11.3")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:1.0.0", "xyz.srnyx.javautilities")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:def34f4186", "xyz.srnyx.javautilities")
     implementationRelocate(project, "org.reflections:reflections:0.10.2") {
         exclude("com.google.code.findbugs", "jsr305")
         exclude("org.slf4j", "slf4j-api")

@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -74,7 +73,7 @@ public class AnnoyingResource extends AnnoyingFile {
      */
     public static class Options extends AnnoyingFile.Options<Options> {
         /**
-         * Whether to create an up-to-date default file called {@code default_}{@link File#getName() name}
+         * Whether to create an up-to-date default file in the {@code default} folder
          */
         public boolean createDefaultFile = true;
 
@@ -114,10 +113,7 @@ public class AnnoyingResource extends AnnoyingFile {
 
         @Override @NotNull
         public String toString() {
-            return "ResourceOptions{" +
-                    "canBeEmpty=" + canBeEmpty +
-                    ", createDefaultFile=" + createDefaultFile +
-                    '}';
+            return "ResourceOptions{canBeEmpty=" + canBeEmpty + ",createDefaultFile=" + createDefaultFile + '}';
         }
     }
 }

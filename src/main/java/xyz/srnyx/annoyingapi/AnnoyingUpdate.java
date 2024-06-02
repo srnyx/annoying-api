@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
+import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -136,7 +136,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @Nullable
     private String modrinth(@NotNull String identifier) {
-        final JsonElement json = HttpConnectionUtility.requestJson(userAgent,
+        final JsonElement json = HttpUtility.getJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
@@ -163,7 +163,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @Nullable
     private String hangar(@NotNull PluginPlatform platform) {
-        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
+        final JsonElement json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.HANGAR);
@@ -185,7 +185,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @Nullable
     private String spigot(@NotNull String identifier) {
-        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
+        final JsonElement json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.SPIGOT);

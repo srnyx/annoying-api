@@ -16,8 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-import xyz.srnyx.annoyingapi.utility.HttpConnectionUtility;
 
+import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.BufferedInputStream;
@@ -143,7 +143,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
      * @param   identifier  the identifier of the plugin on Modrinth
      */
     private void modrinth(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
-        final JsonElement json = HttpConnectionUtility.requestJson(userAgent,
+        final JsonElement json = HttpUtility.getJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
                         "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
@@ -174,7 +174,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         }
         final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
 
-        final String latest = HttpConnectionUtility.requestString(userAgent, url + "latestrelease");
+        final String latest = HttpUtility.getString(userAgent, url + "latestrelease");
         // Request failed
         if (latest == null) {
             fail(dependency, platform.platform);
@@ -195,7 +195,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     private void spigot(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
         final PluginPlatform.Multi platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + identifier;
-        final JsonElement json = HttpConnectionUtility.requestJson(userAgent, url);
+        final JsonElement json = HttpUtility.getJson(userAgent, url);
 
         // Request failed
         if (json == null) {
