@@ -603,7 +603,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
         ItemStack result = getItemStack(path + ".result");
-        if (ingredients == null || shape.isEmpty() || result == null) return def;
+        if (ingredients == null || shape.isEmpty()) return def;
         final Map<Character, Material> ingredientMaterials = new HashMap<>();
         for (final Map.Entry<String, Object> entry : ingredients.getValues(false).entrySet()) {
             final String key = entry.getKey();
