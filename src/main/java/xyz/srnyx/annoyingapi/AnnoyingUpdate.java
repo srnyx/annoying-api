@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,6 +17,9 @@ import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 
@@ -163,17 +167,48 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @Nullable
     private String hangar(@NotNull PluginPlatform platform) {
-        final JsonElement json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions?limit=1&offset=0&platform=PAPER&platformVersion=" + AnnoyingPlugin.MINECRAFT_VERSION.version);
+        final JsonElement json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions");
 
         // Request failed
         if (json == null) return fail(PluginPlatform.Platform.HANGAR);
 
-        // Get versions
-        final JsonArray result = json.getAsJsonObject().get("result").getAsJsonArray();
-        if (result.size() == 0) return fail(PluginPlatform.Platform.HANGAR);
+        // Get supported versions
+        final Map<String, OffsetDateTime> result = new HashMap<>();
+        final String minecraftVersion = AnnoyingPlugin.MINECRAFT_VERSION.version;
+        try {
+            for (final JsonElement versionElement : json.getAsJsonObject().get("versions").getAsJsonArray()) {
+                final JsonObject version = versionElement.getAsJsonObject();
+                final JsonObject platforms = version.getAsJsonObject("platformDependencies");
+                if (platforms == null) continue;
+                final JsonArray paper = platforms.getAsJsonArray("paper");
+                if (paper != null) for (final JsonElement paperElement : paper) {
+                    final String paperVersion = paperElement.getAsString();
+                    if (paperVersion.equals(minecraftVersion)) {
+                        final String name = version.get("name").getAsString();
+                        final OffsetDateTime createdAt = OffsetDateTime.parse(version.get("createdAt").getAsString());
 
-        // Return the latest version
-        return result.get(0).getAsJsonObject().get("name").getAsString();
+                        // If it's a duplicate version, keep the latest
+                        final OffsetDateTime existing = result.get(name);
+                        if (existing != null) {
+                            if (createdAt.isAfter(existing)) result.put(name, createdAt);
+                            break;
+                        }
+
+                        // Add the version to results
+                        result.put(name, createdAt);
+                        break;
+                    }
+                }
+            }
+        } catch (final Exception e) {
+            return fail(PluginPlatform.Platform.HANGAR);
+        }
+
+        // Get the latest version
+        return result.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(fail(PluginPlatform.Platform.HANGAR));
     }
 
     /**
