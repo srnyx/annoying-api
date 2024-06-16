@@ -186,6 +186,18 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      */
     public void log(@NotNull Level level, @Nullable String key, @NotNull String message) {
         AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
+
+    /**
+     * Gets the {@link ConfigurationSection} at the path or creates an empty one it if it doesn't exist
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the {@link ConfigurationSection} at the path or a new one if it doesn't exist
+     */
+    @NotNull
+    public ConfigurationSection getSectionOrCreate(@NotNull String path) {
+        final ConfigurationSection section = getConfigurationSection(path);
+        return section == null ? createSection(path) : section;
     }
 
     /**
