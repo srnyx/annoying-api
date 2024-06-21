@@ -25,7 +25,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefEntity.*;
  * Utility methods relating to Bukkit
  */
 public class BukkitUtility {
-    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)&[0-9A-FK-OR]");
+    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)[&§][0-9A-FK-OR]");
 
     /**
      * Translates {@code &} color codes to {@link ChatColor}
@@ -36,7 +36,6 @@ public class BukkitUtility {
      */
     @NotNull
     public static String color(@Nullable Object object) {
-        if (object == null) return "null";
         return ChatColor.translateAlternateColorCodes('&', String.valueOf(object));
     }
 
@@ -64,8 +63,7 @@ public class BukkitUtility {
      */
     @NotNull
     public static String stripUntranslatedColor(@Nullable String string) {
-        if (string == null) return "null";
-        return STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
+        return string == null ? "null" : STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
     }
 
     /**

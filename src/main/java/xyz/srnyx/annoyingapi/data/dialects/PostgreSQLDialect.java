@@ -26,24 +26,29 @@ public class PostgreSQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public String createTable(@NotNull String table) {
-        return "CREATE TABLE IF NOT EXISTS \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\" TEXT PRIMARY KEY)";
+    public PreparedStatement createTableImpl(@NotNull String table) throws SQLException {
+        return dataManager.connection.prepareStatement("CREATE TABLE IF NOT EXISTS \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\" TEXT PRIMARY KEY)");
     }
 
     @Override @NotNull
-    public String createColumn(@NotNull String table, @NotNull String column) {
-        return "ALTER TABLE \"" + table + "\" ADD COLUMN IF NOT EXISTS \"" + column + "\" TEXT";
+    public PreparedStatement createColumnImpl(@NotNull String table, @NotNull String column) throws SQLException {
+        return dataManager.connection.prepareStatement("ALTER TABLE \"" + table + "\" ADD COLUMN IF NOT EXISTS \"" + column + "\" TEXT");
     }
 
     @Override @NotNull
-    public PreparedStatement getValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+    protected PreparedStatement getValuesImpl(@NotNull String table) throws SQLException {
+        return dataManager.connection.prepareStatement("SELECT * FROM \"" + table + "\"");
+    }
+
+    @Override @NotNull
+    public PreparedStatement getValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("SELECT \"" + column + "\" FROM \"" + table + "\" WHERE " + StringData.TARGET_COLUMN + " = ?");
         statement.setString(1, target);
         return statement;
     }
 
     @Override @NotNull
-    public PreparedStatement setValue(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
+    public PreparedStatement setValueImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("INSERT INTO \"" + table + "\" (" + StringData.TARGET_COLUMN + ", \"" + column + "\") VALUES (?, ?) ON CONFLICT (" + StringData.TARGET_COLUMN + ") DO UPDATE SET \"" + column + "\" = ?");
         statement.setString(1, target);
         statement.setString(2, value);
@@ -52,7 +57,7 @@ public class PostgreSQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
+    public PreparedStatement setValuesImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("INSERT INTO \"" + table + "\" (" + StringData.TARGET_COLUMN);
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
@@ -74,7 +79,7 @@ public class PostgreSQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public PreparedStatement removeValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+    public PreparedStatement removeValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("UPDATE \"" + table + "\" SET \"" + column + "\" = NULL WHERE " + StringData.TARGET_COLUMN + " = ?");
         statement.setString(1, target);
         return statement;

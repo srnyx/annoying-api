@@ -3,8 +3,8 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
-import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
+import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.relocation.Relocation;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -22,10 +22,12 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.ConnectionException;
 import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.data.StorageConfig;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
+import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
@@ -33,9 +35,15 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -45,7 +53,6 @@ import java.util.stream.Collectors;
 /**
  * Represents a plugin using Annoying API
  */
-@SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link Logger} for the plugin
@@ -68,9 +75,20 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
-     * The {@link Metrics bStats} instance for the plugin
+     * The {@link BukkitLibraryManager} for the plugin
      */
-    @Nullable public Metrics bStats;
+    @NotNull public final BukkitLibraryManager libraryManager = new BukkitLibraryManager(this, "libs");
+    /**
+     * Set of loaded {@link RuntimeLibrary libraries}
+     * <br>If a library's files are manually deleted (or something else goes wrong), the plugin will not notice this change until the library is {@link RuntimeLibrary#load(AnnoyingPlugin) loaded again} (usually requires a server restart)
+     * <br>This should really only be used if you want to do a basic check if a library is loaded or not based on what features the API is currently using
+     * <br>Something like {@link ItemData#attemptItemNbtApi(Supplier)} may be a better method when using a runtime library
+     */
+    @NotNull public final Set<RuntimeLibrary> loadedLibraries = new HashSet<>();
+    /**
+     * Wrapper for bStats
+     */
+    @Nullable public AnnoyingStats stats;
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
@@ -204,10 +222,9 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean(options.bStatsOptions.toggleKey)) {
-            final Metrics apiMetrics = new Metrics(this, 18281); // API
-            apiMetrics.addCustomChart(new SimplePie("plugins", this::getName));
-            apiMetrics.addCustomChart(new SimplePie("storage_method", () -> dataManager == null ? "N/A" : dataManager.storageConfig.method.name()));
-            if (options.bStatsOptions.id != null) bStats = new Metrics(this, options.bStatsOptions.id); // Plugin
+            RuntimeLibrary.BSTATS_BASE.load(this);
+            RuntimeLibrary.BSTATS_BUKKIT.load(this);
+            stats = new AnnoyingStats(this);
         }
 
         // Get start message colors
@@ -244,20 +261,28 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Automatic registration
-        final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
-        new AnnoyingReflections(options.registrationOptions.automaticRegistration.packages).getSubTypesOf(Registrable.class).stream()
-                .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !ignoredClasses.contains(clazz))
-                .forEach(clazz -> {
-                    try {
-                        clazz.getConstructor(this.getClass()).newInstance(this).register();
-                    } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName());
-                        e.printStackTrace();
-                    }
-                });
+        final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
+        if (!packages.isEmpty()) {
+            // Load Javassist and Reflections libraries
+            RuntimeLibrary.JAVASSIST.load(this);
+            RuntimeLibrary.REFLECTIONS.load(this);
+
+            // Register classes
+            final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
+            AnnoyingReflections.getSubTypesOf(packages, Registrable.class).stream()
+                    .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !ignoredClasses.contains(clazz))
+                    .forEach(clazz -> {
+                        try {
+                            clazz.getConstructor(this.getClass()).newInstance(this).register();
+                        } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName());
+                            e.printStackTrace();
+                        }
+                    });
+        }
 
         // Start cache saving on interval if enabled
-        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval(dataManager.storageConfig.cache.interval);
+        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval(this, dataManager.storageConfig.cache.interval);
 
         // Custom onEnable
         enable();
@@ -342,18 +367,157 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
+     * <br>If {@code storage-new.yml} exists, it will attempt to migrate the data from {@code storage.yml} to {@code storage-new.yml} using {@link #attemptDatabaseMigration(DataManager)}
      *
      * @param   saveCache   whether to save the cache before loading the data manager
      *                      <br><i>Data may be lost if {@code false}!</i>
      */
     public void loadDataManger(boolean saveCache) {
-        if (dataManager != null && saveCache) dataManager.saveCache();
+        // Check if a manager is already loaded
+        if (dataManager != null) {
+            // Save cache
+            if (saveCache) dataManager.saveCache();
+            // Close previous connection
+            try {
+                dataManager.connection.close();
+            } catch (final SQLException e) {
+                log(Level.SEVERE, "&cFailed to close the database connection, it's recommended to restart the server!", e);
+            }
+        }
+
+        // Cancel if data is disabled
+        if (!options.dataOptions.enabled) {
+            dataManager = null;
+            return;
+        }
+
+        // Connect to database
         try {
-            dataManager = options.dataOptions.enabled ? new DataManager(this) : null;
+            dataManager = new DataManager(new AnnoyingResource(this, "storage.yml"));
         } catch (final ConnectionException e) {
             dataManager = null;
-            AnnoyingPlugin.log(Level.WARNING, "Failed to connect to database! URL: '" + e.url + "' Properties: " + e.getPropertiesRedacted(), e);
+            log(Level.SEVERE, "&4storage.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
+            return;
         }
+
+        // Attempt database migration
+        dataManager = attemptDatabaseMigration(dataManager);
+
+        // Create tables/columns
+        dataManager.createTablesColumns(options.dataOptions.tables);
+    }
+
+    /**
+     * Attempts to migrate data from {@code storage.yml} to {@code storage-new.yml}
+     *
+     * @param   oldManager  the old data manager
+     *
+     * @return              the new data manager
+     */
+    @NotNull
+    private DataManager attemptDatabaseMigration(@NotNull DataManager oldManager) {
+        // Check if migration is needed (storage-new.yml exists)
+        final File dataFolder = getDataFolder();
+        final File storageNew = new File(dataFolder, "storage-new.yml");
+        if (!storageNew.exists()) return oldManager;
+        log(Level.INFO, "&aFound &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
+
+        // NEW: Connect to new database
+        final AnnoyingFile storageNewFile = new AnnoyingFile(this, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
+        if (!storageNewFile.load()) return oldManager;
+        final DataManager newManager;
+        try {
+            newManager = new DataManager(storageNewFile);
+        } catch (final ConnectionException e) {
+            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
+            return oldManager;
+        }
+
+        // OLD: Get tables & columns
+        final Set<String> tables = new HashSet<>();
+        try (final PreparedStatement getTables = oldManager.dialect.getTables()) {
+            final ResultSet resultSet = getTables.executeQuery();
+            while (resultSet.next()) tables.add(resultSet.getString(1));
+        } catch (final SQLException e) {
+            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to get tables!", e);
+            return oldManager;
+        }
+
+        // OLD: Get values
+        final Map<String, Set<String>> tablesColumns = new HashMap<>(); // {Table, Columns}
+        final Map<String, Map<String, Map<String, String>>> values = new HashMap<>(); // {Table, {Target, {Column, Value}}}
+        for (final String table : tables) {
+            final Map<String, Map<String, String>> tableValues = new HashMap<>(); // {Target, {Column, Value}}
+            try (final PreparedStatement getValues = oldManager.dialect.getValues(table)) {
+                final ResultSet resultSet = getValues.executeQuery();
+
+                // Continue if table doesn't have target column
+                final Set<String> columns = new HashSet<>();
+                final ResultSetMetaData metaData = resultSet.getMetaData();
+                final int columnCount = metaData.getColumnCount();
+                if (columnCount == 0) {
+                    log(Level.WARNING, "&4storage.yml &8|&c Table &4" + table + "&c has no columns, skipping...");
+                    continue;
+                }
+                for (int i = 1; i <= columnCount; i++) columns.add(metaData.getColumnName(i));
+                if (!columns.contains("target")) {
+                    log(Level.WARNING, "&4storage.yml &8|&c Table &4" + table + "&c doesn't have a '&4target&c' column, skipping...");
+                    continue;
+                }
+                tablesColumns.put(table, columns);
+
+                // Get values for each target
+                while (resultSet.next()) {
+                    final String target = resultSet.getString("target");
+                    if (target == null) continue;
+                    final Map<String, String> columnValues = new HashMap<>(); // {Column, Value}
+                    for (final String column : columns) if (!column.equals("target")) columnValues.put(column, resultSet.getString(column));
+                    tableValues.put(target, columnValues);
+                }
+            } catch (final SQLException e) {
+                log(Level.SEVERE, "&4storage.yml &8|&c Failed to get values for table &4" + table, e);
+            }
+            if (!tableValues.isEmpty()) values.put(table, tableValues);
+        }
+        if (values.isEmpty()) {
+            log(Level.WARNING, "&4storage.yml &8|&c No data to migrate!");
+            return oldManager;
+        }
+
+        // NEW: Create missing tables/columns
+        newManager.createTablesColumns(tablesColumns);
+
+        // NEW: Save values to new database
+        for (final PreparedStatement statement : newManager.dialect.setValues(values)) try {
+            statement.executeUpdate();
+        } catch (final SQLException e) {
+            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to migrate SOME data to the new database!", e);
+        }
+
+        // OLD: Close old connection
+        try {
+            oldManager.connection.close();
+        } catch (final SQLException e) {
+            log(Level.SEVERE, "&cFailed to close the old database connection, it's recommended to restart the server!", e);
+        }
+
+        // PREV: Delete storage-old.yml if it exists (from a previous migration)
+        final File storageOld = new File(dataFolder, "storage-old.yml");
+        if (storageOld.exists() && !storageOld.delete()) log(Level.SEVERE, "&cFailed to delete previous &4storage-old.yml!");
+
+        // Rename files
+        final File storage = oldManager.storageConfig.file.file;
+        if (storage.renameTo(storageOld)) { // OLD: storage.yml -> storage-old.yml
+            if (!storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
+                log(Level.SEVERE, "Failed to rename &4storage-new.yml&c to &4storage.yml&c! You MUST rename &4storage-new.yml&c to &4storage.yml&c manually!");
+            }
+        } else {
+            log(Level.SEVERE, "Failed to rename &4storage.yml&c to &4storage-old.yml&c! You MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!");
+        }
+
+        // NEW: Use new storage
+        log(Level.INFO, "&aFinished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
+        return newManager;
     }
 
     /**
@@ -374,33 +538,83 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Gets a {@link Relocation} for the specified package
+     *
+     * @param   from    the package to relocate
+     * @param   name    the name of the module being relocated ({@link #getRelocatedLibsPath()} + {@code name})
+     *
+     * @return          the relocation
+     */
+    @NotNull
+    public Relocation getRelocation(@NotNull String from, @NotNull String name) {
+        return new Relocation(from, getRelocatedLibsPath() + name);
+    }
+
+    /**
+     * Gets a {@link Relocation} for the specified package
+     *
+     * @param   from    the package to relocate (use {@code {}} instead of {@code .} for the package separator)
+     *
+     * @return          the relocation
+     */
+    @NotNull
+    public Relocation getRelocation(@NotNull String from) {
+        return getRelocation(from, makePathSafe(from.substring(from.lastIndexOf("{}") + 2)));
+    }
+
+    /**
+     * Makes a relocation package path character-safe
+     * <br>Removes all characters that aren't letters, numbers, periods, underscores, or curly braces
+     *
+     * @param   path    the path to make safe
+     *
+     * @return          the safe path
+     */
+    @NotNull
+    public String makePathSafe(@NotNull String path) {
+        return path.toLowerCase().replaceAll("[^a-zA-Z0-9._{}]", "");
+    }
+
+    /**
+     * Gets the path for the relocated libraries
+     * <br><b>Format:</b> {@code AUTHOR{}PLUGIN{}LIBS{}}
+     *
+     * @return  the path
+     */
+    @NotNull
+    public String getRelocatedLibsPath() {
+        return makePathSafe(getDescription().getAuthors().get(0) + "{}" + getName()) + "{}libs{}";
+    }
+
+    /**
      * Logs a message with the specified level and throwable to the console
      *
      * @param   level       the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message     the message to log
      * @param   throwable   the throwable to log
      */
-    public static void log(@Nullable Level level, @Nullable String message, @Nullable Throwable throwable) {
+    public static void log(@Nullable Level level, @Nullable Object message, @Nullable Throwable throwable) {
         if (level == null) level = Level.INFO;
-        LOGGER.log(level, BukkitUtility.color(message), throwable);
+        // Only color the message if the server version is between 1.12 and 1.20
+        LOGGER.log(level, MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 12, 0) && MINECRAFT_VERSION.isLessThanOrEqualTo(1, 20, 0) ? BukkitUtility.color(message) : BukkitUtility.stripUntranslatedColor(String.valueOf(message)), throwable);
     }
 
     /**
-     * Calls {@link #log(Level, String, Throwable)} with {@code null} as the {@link Throwable throwable}
+     * Calls {@link #log(Level, Object, Throwable)} with {@code null} as the {@link Throwable throwable}
      *
      * @param   level   the level of the message. If {@code null}, {@link Level#INFO} will be used
      * @param   message the message to log
      */
-    public static void log(@Nullable Level level, @Nullable String message) {
+    public static void log(@Nullable Level level, @Nullable Object message) {
         log(level, message, null);
     }
 
     /**
-     * Calls {@link #log(Level, String, Throwable)} with {@code null} as the {@link Level level} and {@link Throwable throwable}
+     * Calls {@link #log(Level, Object, Throwable)} with {@code null} as the {@link Level level} and {@link Throwable throwable}
      *
      * @param   message the message to log
      */
-    public static void log(@Nullable String message) {
+    public static void log(@Nullable Object message) {
         log(null, message, null);
     }
 }

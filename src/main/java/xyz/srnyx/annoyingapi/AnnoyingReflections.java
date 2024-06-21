@@ -32,36 +32,31 @@ import static org.reflections.scanners.Scanners.SubTypes;
  * <p>It has the added bonus of less logic which makes it about 7x faster (about 46ms faster with 2 packages, 19 total classes)
  */
 public class AnnoyingReflections implements NameHelper {
-    @NotNull private final Set<String> packages;
-    @NotNull private final Store store;
-
     /**
-     * Construct a new {@link AnnoyingReflections} for the given packages
-     *
-     * @param   packages    the packages to scan
+     * Constructs a new instance of {@link AnnoyingReflections}
      */
-    public AnnoyingReflections(@NotNull Set<String> packages) {
-        this.packages = packages;
-        this.store = getStore();
+    protected AnnoyingReflections() {
+        // Only exists to give the constructor a Javadoc
     }
 
     /**
      * Get all classes that are assignable to the given type
      *
-     * @param   type    the type to check
+     * @param   packages    the packages to scan
+     * @param   type        the type to check
      *
-     * @return          a set of classes that are assignable to the given type
+     * @return              a set of classes that are assignable to the given type
      *
-     * @param   <T>     the type to check
+     * @param   <T>         the type to check
      */
     @NotNull
-    public <T> Set<Class<? extends T>> getSubTypesOf(@NotNull Class<T> type) {
+    public static <T> Set<Class<? extends T>> getSubTypesOf(@NotNull Set<String> packages, @NotNull Class<T> type) {
         //noinspection unchecked
-        return (Set<Class<? extends T>>) SubTypes.of(type).as((Class<? extends T>) Class.class).apply(store);
+        return (Set<Class<? extends T>>) SubTypes.of(type).as((Class<? extends T>) Class.class).apply(new AnnoyingReflections().getStore(packages));
     }
 
     @NotNull
-    private Store getStore() {
+    private Store getStore(@NotNull Set<String> packages) {
         final Map<String, Set<String>> storeMap = new HashMap<>();
         final Set<Pattern> patterns = packages.stream()
                 .map(pkg -> {
@@ -130,7 +125,7 @@ public class AnnoyingReflections implements NameHelper {
     }
 
     @NotNull @Contract("_ -> new")
-    private ClassFile getClassFile(@NotNull Vfs.File file) {
+    private static ClassFile getClassFile(@NotNull Vfs.File file) {
         try (final DataInputStream dis = new DataInputStream(new BufferedInputStream(file.openInputStream()))) {
             return new ClassFile(dis);
         } catch (final Exception e) {
@@ -138,7 +133,7 @@ public class AnnoyingReflections implements NameHelper {
         }
     }
 
-    private void expandSupertypes(@NotNull Map<String, Set<String>> subTypesStore, @NotNull String key, @NotNull Class<?> type) {
+    private static void expandSupertypes(@NotNull Map<String, Set<String>> subTypesStore, @NotNull String key, @NotNull Class<?> type) {
         for (final Class<?> supertype : ReflectionUtils.getSuperTypes(type)) {
             final String supertypeName = supertype.getName();
             if (subTypesStore.containsKey(supertypeName)) {

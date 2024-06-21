@@ -52,7 +52,7 @@ public class StringData extends Data<String> {
      * @param   useCache    {@link #useCache}, or {@code null} to use {@link DataOptions#useCacheDefault}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string, @Nullable Boolean useCache) {
-        super(plugin, string, string);
+        super(plugin, string);
         if (plugin.dataManager == null) throw new IllegalStateException(plugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
         this.dataManager = plugin.dataManager;
         this.table = dataManager.getTableName(table);

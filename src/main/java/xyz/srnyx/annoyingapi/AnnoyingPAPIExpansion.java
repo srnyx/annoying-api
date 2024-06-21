@@ -30,6 +30,6 @@ public abstract class AnnoyingPAPIExpansion extends PlaceholderExpansion impleme
      * Constructor for the {@link AnnoyingPAPIExpansion} class
      */
     public AnnoyingPAPIExpansion() {
-        // Only exists to provide a Javadoc
+        // Only exists to give the constructor a Javadoc
     }
 }

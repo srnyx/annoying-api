@@ -7,10 +7,12 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 
@@ -18,10 +20,6 @@ import java.util.logging.Level;
  * The data manager for the plugin, used to manage the connection and data storage
  */
 public class DataManager {
-    /**
-     * The {@link AnnoyingPlugin plugin} instance
-     */
-    @NotNull public final AnnoyingPlugin plugin;
     /**
      * The {@link StorageConfig storage.yml config} for the plugin
      */
@@ -56,27 +54,42 @@ public class DataManager {
     /**
      * Connect to the configured database and create the pre-defined tables/columns
      *
-     * @param   plugin              {@link #plugin}
+     * @param   file                the {@link AnnoyingFile file} to get the connection information from
      *
-     * @throws  ConnectionException if the connection to the database fails for any reason
+     * @throws ConnectionException if the connection to the database fails for any reason
      */
-    public DataManager(@NotNull AnnoyingPlugin plugin) throws ConnectionException {
-        this.plugin = plugin;
-        storageConfig = new StorageConfig(plugin);
+    public DataManager(@NotNull AnnoyingFile file) throws ConnectionException {
+        this.storageConfig = new StorageConfig(file);
         connection = storageConfig.createConnection();
         dialect = storageConfig.method.dialect.apply(this);
         tablePrefix = storageConfig.remoteConnection != null ? storageConfig.remoteConnection.tablePrefix : "";
+    }
 
-        // Create tables & columns ahead of time
-        plugin.options.dataOptions.tables.forEach((key, value) -> {
-            final String table = getTableName(key);
-            executeUpdate(dialect.createTable(table), "Failed to create table " + table);
-            value.forEach(column -> {
-                if (column.equals(StringData.TARGET_COLUMN)) return;
-                final String statement = dialect.createColumn(table, column);
-                if (statement != null) executeUpdate(statement, "Failed to create column " + column + " in table " + table);
-            });
-        });
+    /**
+     * Create the given tables and columns in the database
+     *
+     * @param   tablesColumns   the tables and columns to create
+     */
+    public void createTablesColumns(@NotNull Map<String, Set<String>> tablesColumns) {
+        for (final Map.Entry<String, Set<String>> entry : tablesColumns.entrySet()) {
+            final String table = entry.getKey();
+            // Create table
+            try (final PreparedStatement tableStatement = dialect.createTable(table)) {
+                tableStatement.executeUpdate();
+            } catch (final SQLException e) {
+                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create table &4" + table, e);
+                continue;
+            }
+            // Create columns
+            for (final String column : entry.getValue()) {
+                final String columnLower = column.toLowerCase();
+                if (!columnLower.equals(StringData.TARGET_COLUMN)) try (final PreparedStatement columnStatement = dialect.createColumn(table, columnLower)) {
+                    if (columnStatement != null) columnStatement.executeUpdate();
+                } catch (final SQLException e) {
+                    AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create column &4" + columnLower + "&c in table &4" + table, e);
+                }
+            }
+        }
     }
 
     /**
@@ -89,7 +102,7 @@ public class DataManager {
      */
     @NotNull
     public String getTableName(@NotNull String tableName) {
-        return tablePrefix + tableName;
+        return tablePrefix + tableName.toLowerCase();
     }
 
     /**
@@ -127,9 +140,10 @@ public class DataManager {
     /**
      * Starts the asynchronous task to save the cache on an interval
      *
+     * @param   plugin      the plugin to run the task on
      * @param   interval    the interval in ticks to save the cache
      */
-    public void startCacheSavingOnInterval(long interval) {
+    public void startCacheSavingOnInterval(@NotNull AnnoyingPlugin plugin, long interval) {
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveCache, interval, interval);
     }
 
@@ -137,15 +151,10 @@ public class DataManager {
      * Saves the data from the cache to the database
      */
     public void saveCache() {
-        dataCache.forEach((table, targets) -> {
-            final String tableName = getTableName(table);
-            targets.forEach((target, data) -> {
-                try (final PreparedStatement statement = dialect.setValues(tableName, target, data)) {
-                    statement.execute();
-                } catch (final SQLException e) {
-                    AnnoyingPlugin.log(Level.SEVERE, "Failed to save cached data for target " + target + " in table " + table + ": " + data, e);
-                }
-            });
-        });
+        for (final PreparedStatement statement : dialect.setValues(dataCache)) try {
+            statement.executeUpdate();
+        } catch (final SQLException e) {
+            AnnoyingPlugin.log(Level.SEVERE, "Failed to save SOME cached data", e);
+        }
     }
 }

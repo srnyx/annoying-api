@@ -28,6 +28,8 @@ import xyz.srnyx.javautilities.parents.Stringable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,37 +52,62 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect
 /**
  * Represents a file in the plugin's folder
  */
-public abstract class AnnoyingFile extends YamlConfiguration {
+public class AnnoyingFile extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
      */
     @NotNull public final AnnoyingPlugin plugin;
     /**
-     * The path to the file
-     */
-    @NotNull public final String path;
-    /**
-     * The file constructed using the {@link #path}
+     * The {@link File} for the file
      */
     @NotNull public final File file;
     /**
      * The {@link Options} for the file
      */
-    @NotNull protected final AnnoyingFile.Options<?> fileOptions;
+    @NotNull protected final Options<?> fileOptions;
+
+    /**
+     * Constructs a new {@link AnnoyingFile}
+     *
+     * @param   plugin      {@link #plugin}
+     * @param   file        {@link #file}
+     * @param   fileOptions {@link #fileOptions}
+     */
+    public AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull File file, @Nullable Options<?> fileOptions) {
+        this.plugin = plugin;
+        this.file = file;
+        this.fileOptions = fileOptions == null ? new Options<>() : fileOptions;
+    }
+
+    /**
+     * Constructs a new {@link AnnoyingFile}
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   file    {@link #file}
+     */
+    public AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull File file) {
+        this(plugin, file, null);
+    }
 
     /**
      * Constructs a new {@link AnnoyingFile}
      *
      * @param   plugin          {@link #plugin}
-     * @param   path            {@link #path}
+     * @param   path            the path to the file (relative to the plugin's folder)
      * @param   fileOptions     {@link #fileOptions}
      */
-    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.Options<?> fileOptions) {
-        this.plugin = plugin;
-        this.path = path;
-        this.file = new File(plugin.getDataFolder(), path);
-        this.fileOptions = fileOptions == null ? new Options<>() : fileOptions;
-        load();
+    public AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable Options<?> fileOptions) {
+        this(plugin, new File(plugin.getDataFolder(), path), fileOptions);
+    }
+
+    /**
+     * Constructs a new {@link AnnoyingFile}
+     *
+     * @param   plugin  {@link #plugin}
+     * @param   path    the path to the file (relative to the plugin's folder)
+     */
+    public AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
+        this(plugin, path, null);
     }
 
     @Override @NotNull
@@ -89,37 +116,40 @@ public abstract class AnnoyingFile extends YamlConfiguration {
     }
 
     /**
-     * Constructs a new {@link AnnoyingFile}
-     *
-     * @param   plugin          {@link #plugin}
-     * @param   path            {@link #path}
+     * Creates the {@link #file}
      */
-    protected AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
-        this(plugin, path, null);
+    public void create() {
+        final Path filePath = file.toPath();
+        plugin.attemptAsync(() -> {
+            try {
+                Files.createDirectories(filePath.getParent());
+                Files.createFile(filePath);
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
-     * Creates the {@link #file}
+     * Loads the YAML from the path. If the file doesn't exist and {@link Options#canBeEmpty <b>can't</b> be empty}, an empty {@link YamlConfiguration} will be used
+     *
+     * @return  whether the file was loaded successfully
      */
-    public abstract void create();
-
-    /**
-     * Loads the YAML from the path
-     */
-    public void load() {
+    public boolean load() {
         // Create the file if it doesn't exist and can be empty
-        final boolean doesntExist = !file.exists();
-        if (fileOptions.canBeEmpty && doesntExist) {
+        if (!file.exists()) if (fileOptions.canBeEmpty) {
             create();
-        } else if (doesntExist) {
-            return;
+        } else {
+            return true;
         }
 
         // Load
         try {
-            this.load(file);
+            load(file);
+            return true;
         } catch (final IOException | InvalidConfigurationException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -128,19 +158,29 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      *
      * @param   silentFail  whether to fail silently
      *
-     * @see #delete()
+     * @return              whether the file was deleted successfully
+     *
+     * @see                 #delete()
      */
-    public void delete(boolean silentFail) {
-        FileUtility.deleteFile(file.toPath(), silentFail);
+    public boolean delete(boolean silentFail) {
+        return FileUtility.deleteFile(file.toPath(), silentFail);
     }
 
     /**
      * Deletes the {@link #file}, won't fail silently
      *
-     * @see #delete(boolean)
+     * @return  whether the file was deleted successfully
+     *
+     * @see     #delete(boolean)
      */
-    public void delete() {
-        delete(false);
+    public boolean delete() {
+        return delete(false);
+    }
+
+    @NotNull
+    public AnnoyingFile setChain(@NotNull String path, @Nullable Object value) {
+        set(path, value);
+        return this;
     }
 
     /**
@@ -148,21 +188,25 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      *
      * @param   path    the path to the node
      * @param   value   the value to set the node to
+     *
+     * @return          whether the file was saved successfully
      */
-    public void setSave(@NotNull String path, @Nullable Object value) {
+    public boolean setSave(@NotNull String path, @Nullable Object value) {
         set(path, value);
-        save();
+        return save();
     }
 
     /**
      * Saves the YAML to the {@link #file}
+     *
+     * @return  whether the file was saved successfully
      */
-    public void save() {
+    public boolean save() {
         // Stop process if it's empty when it can't be
         if (!fileOptions.canBeEmpty && getKeys(true).isEmpty()) {
             // Delete file if it exists
             if (file.exists()) delete();
-            return;
+            return true;
         }
 
         // Create file if it can be empty and doesn't exist
@@ -171,8 +215,10 @@ public abstract class AnnoyingFile extends YamlConfiguration {
         // Save file
         try {
             save(file);
+            return true;
         } catch (final IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -185,7 +231,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
      * @param   message the message to send
      */
     public void log(@NotNull Level level, @Nullable String key, @NotNull String message) {
-        AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + path + (key == null ? "" : ", " + key) + " | " + message);
+        AnnoyingPlugin.log(level, ChatColor.getLastColors(message) + file.getPath() + (key == null ? "" : ", " + key) + " | " + message);
     }
 
     /**
@@ -704,7 +750,7 @@ public abstract class AnnoyingFile extends YamlConfiguration {
          * Creates a new {@link Options} instance
          */
         public Options() {
-            // Only exists to provide a Javadoc
+            // Only exists to give the constructor a Javadoc
         }
 
         /**

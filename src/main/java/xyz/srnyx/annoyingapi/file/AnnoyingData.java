@@ -5,10 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 
 /**
  * Represents a file in the plugin's folder (in {@code /data/})
@@ -23,6 +19,7 @@ public class AnnoyingData extends AnnoyingFile {
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingFile.Options<?> options) {
         super(plugin, "data/" + path, options);
+        load();
     }
 
     /**
@@ -33,18 +30,5 @@ public class AnnoyingData extends AnnoyingFile {
      */
     public AnnoyingData(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
         this(plugin, path, null);
-    }
-
-    @Override
-    public void create() {
-        final Path filePath = file.toPath();
-        plugin.attemptAsync(() -> {
-            try {
-                Files.createDirectories(filePath.getParent());
-                Files.createFile(filePath);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-        });
     }
 }

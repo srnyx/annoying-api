@@ -1,13 +1,15 @@
 package xyz.srnyx.annoyingapi.data;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.data.dialects.*;
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
 import java.sql.Connection;
@@ -24,10 +26,9 @@ import java.util.stream.Collectors;
  */
 public class StorageConfig {
     /**
-     * The {@link AnnoyingPlugin plugin} instance
+     * The {@link YamlConfiguration storage configuration file}
      */
-    @NotNull private final AnnoyingPlugin plugin;
-    @NotNull private final AnnoyingResource resource;
+    @NotNull public final AnnoyingFile file;
     /**
      * The {@link Method storage method}
      */
@@ -42,15 +43,14 @@ public class StorageConfig {
     @Nullable public final RemoteConnection remoteConnection;
 
     /**
-     * Construct a new {@link StorageConfig} instance to parse the {@code storage.yml} configuration file
+     * Construct a new {@link StorageConfig} instance to parse a storage configuration file
      *
-     * @param   plugin  {@link #plugin}
+     * @param   file    {@link #file}
      */
-    public StorageConfig(@NotNull AnnoyingPlugin plugin) {
-        this.plugin = plugin;
-        resource = new AnnoyingResource(plugin, plugin.options.dataOptions.configFile.fileName, plugin.options.dataOptions.configFile.fileOptions);
+    public StorageConfig(@NotNull AnnoyingFile file) {
+        this.file = file;
         cache = new Cache();
-        final Method getMethod = Method.get(resource.getString("method"));
+        final Method getMethod = Method.get(file.getString("method"));
 
         // Local storage
         if (!getMethod.isRemote()) {
@@ -60,9 +60,9 @@ public class StorageConfig {
         }
 
         // Remote database
-        final ConfigurationSection remoteSection = resource.getConfigurationSection("remote-connection");
+        final ConfigurationSection remoteSection = file.getConfigurationSection("remote-connection");
         if (remoteSection == null) {
-            AnnoyingPlugin.log(Level.WARNING, "A remote storage method is used but no remote connection is specified, using H2 instead");
+            AnnoyingPlugin.log(Level.WARNING, file.file.getPath() + " | A remote storage method is used but no remote connection is specified, using H2 instead");
             method = Method.H2;
             remoteConnection = null;
             return;
@@ -76,12 +76,14 @@ public class StorageConfig {
      *
      * @return                      a new {@link Connection} to the database
      *
-     * @throws  ConnectionException if the connection to the database fails for any reason
+     * @throws ConnectionException if the connection to the database fails for any reason
      */
     @NotNull
     public Connection createConnection() throws ConnectionException {
+        final AnnoyingPlugin plugin = file.plugin;
+
         // Get url & properties
-        String url = method.url.apply(plugin);
+        String url = method.url.apply(plugin.getDataFolder());
         final Properties properties = new Properties();
         if (remoteConnection != null) {
             url += remoteConnection.host + ":" + remoteConnection.port + "/" + remoteConnection.database;
@@ -89,9 +91,12 @@ public class StorageConfig {
             if (remoteConnection.password != null) properties.setProperty("password", remoteConnection.password);
         }
 
+        // Download driver if needed
+        if (method.library != null) method.library.load(plugin);
+
         // Load driver
         try {
-            Class.forName(method.driver);
+            Class.forName(method.getDriver(plugin));
         } catch (final ClassNotFoundException e) {
             throw new ConnectionException(e, url, properties);
         }
@@ -117,7 +122,7 @@ public class StorageConfig {
         /**
          * Whether the cache is enabled
          */
-        public final boolean enabled = resource.getBoolean("cache.enabled");
+        public final boolean enabled = file.getBoolean("cache.enabled");
         /**
          * When to save the cache
          */
@@ -125,13 +130,13 @@ public class StorageConfig {
         /**
          * The interval to save the cache (if {@link #saveOn} contains {@link SaveOn#INTERVAL})
          */
-        public final long interval = resource.getLong("cache.interval");
+        public final long interval = file.getLong("cache.interval");
 
         /**
          * Construct a new {@link Cache} instance to parse the {@code cache} section
          */
         public Cache() {
-            final Set<SaveOn> providedSaveOns = resource.getStringList("cache.save-on").stream()
+            final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
                     .map(SaveOn::fromString)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
@@ -158,16 +163,16 @@ public class StorageConfig {
         /**
          * The remote username
          */
-        @Nullable public final String username = resource.getString("remote-connection.username");
+        @Nullable public final String username = file.getString("remote-connection.username");
         /**
          * The remote password
          */
-        @Nullable public final String password = resource.getString("remote-connection.password");
+        @Nullable public final String password = file.getString("remote-connection.password");
         /**
          * The table prefix for the remote database
          * <br><i>Defaults to the plugin name in lowercase with all non-alphanumeric characters removed + an underscore</i>
          */
-        @NotNull public final String tablePrefix = resource.getString("remote-connection.table-prefix", plugin.getName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase() + "_");
+        @NotNull public final String tablePrefix = file.getString("remote-connection.table-prefix", file.plugin.getName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase() + "_");
 
         /**
          * Construct a new {@link RemoteConnection} instance to parse the {@code remote-connection} section
@@ -200,23 +205,23 @@ public class StorageConfig {
         /**
          * H2 storage method
          */
-        H2(H2Dialect::new, "xyz.srnyx.annoyingapi.libs.h2.Driver", methodPlugin -> "jdbc:h2:file:.\\" + methodPlugin.getDataFolder() + "\\data\\h2\\data"),
+        H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", RuntimeLibrary.H2),
         /**
          * SQLite storage method
          */
-        SQLITE(SQLiteDialect::new, "org.sqlite.JDBC", methodPlugin -> "jdbc:sqlite:" + methodPlugin.getDataFolder() + "\\data\\sqlite\\data.db"),
+        SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db"),
         /**
          * MySQL storage method
          */
-        MYSQL(MySQLDialect::new, "com.mysql.jdbc.Driver", methodPlugin -> "jdbc:mysql://", 3306),
+        MYSQL(MySQLDialect::new, "com{}mysql{}jdbc{}Driver", dataFolder -> "jdbc:mysql://", 3306),
         /**
          * MariaDB storage method
          */
-        MARIADB(MariaDBDialect::new, "com.mysql.jdbc.Driver", methodPlugin -> "jdbc:mysql://", 3306),
+        MARIADB(MariaDBDialect::new, "com{}mysql{}jdbc{}Driver", dataFolder -> "jdbc:mysql://", 3306),
         /**
          * PostgreSQL storage method
          */
-        POSTGRESQL(PostgreSQLDialect::new, "xyz.srnyx.annoyingapi.libs.postgresql.Driver", methodPlugin -> "jdbc:postgresql://", 5432);
+        POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", dataFolder -> "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL);
 
         /**
          * The {@link SQLDialect SQL dialect} constructor for the method
@@ -225,16 +230,37 @@ public class StorageConfig {
         /**
          * The driver class name for the method
          */
-        @NotNull public final String driver;
+        @NotNull private final String driver;
         /**
          * <b>Local:</b> The full URL for the method
          * <br><b>Remote:</b> The beginning of the URL for the method
          */
-        @NotNull public final Function<AnnoyingPlugin, String> url;
+        @NotNull public final Function<File, String> url;
         /**
          * The default port for the method (only for remote connections)
          */
         @Nullable public final Integer defaultPort;
+        /**
+         * The library to be downloaded for the method (if any)
+         */
+        @Nullable public final RuntimeLibrary library;
+
+        /**
+         * Construct a new {@link Method} with the given parameters
+         *
+         * @param   dialect     {@link #dialect}
+         * @param   driver      {@link #driver}
+         * @param   url         {@link #url}
+         * @param   defaultPort {@link #defaultPort}
+         * @param   library     {@link #library}
+         */
+        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
+            this.dialect = dialect;
+            this.driver = driver;
+            this.url = url;
+            this.defaultPort = defaultPort;
+            this.library = library;
+        }
 
         /**
          * Construct a new {@link Method} with the given parameters
@@ -244,11 +270,20 @@ public class StorageConfig {
          * @param   url         {@link #url}
          * @param   defaultPort {@link #defaultPort}
          */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<AnnoyingPlugin, String> url, @Nullable Integer defaultPort) {
-            this.dialect = dialect;
-            this.driver = driver;
-            this.url = url;
-            this.defaultPort = defaultPort;
+        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, int defaultPort) {
+            this(dialect, driver, url, defaultPort, null);
+        }
+
+        /**
+         * Construct a new {@link Method} with the given parameters
+         *
+         * @param   dialect {@link #dialect}
+         * @param   driver  {@link #driver}
+         * @param   url     {@link #url}
+         * @param   library {@link #library}
+         */
+        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, @NotNull RuntimeLibrary library) {
+            this(dialect, driver, url, null, library);
         }
 
         /**
@@ -258,8 +293,13 @@ public class StorageConfig {
          * @param   driver  {@link #driver}
          * @param   url     {@link #url}
          */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<AnnoyingPlugin, String> url) {
-            this(dialect, driver, url, null);
+        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url) {
+            this(dialect, driver, url, null, null);
+        }
+
+        @NotNull
+        public String getDriver(@NotNull AnnoyingPlugin plugin) {
+            return (library != null ? plugin.getRelocatedLibsPath() + driver : driver).replace("{}", ".");
         }
 
         /**

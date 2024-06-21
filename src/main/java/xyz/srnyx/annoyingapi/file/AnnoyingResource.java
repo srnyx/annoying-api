@@ -19,6 +19,11 @@ import java.nio.file.StandardCopyOption;
  */
 public class AnnoyingResource extends AnnoyingFile {
     /**
+     * The path to the file (relative to the plugin's folder)
+     */
+    @NotNull private final String path;
+
+    /**
      * Constructs and loads a new {@link AnnoyingResource} from the path, the file MUST exist in the {@code resources} folder
      *
      * @param   plugin      the {@link AnnoyingPlugin} instance (used in {@link #load()})
@@ -27,7 +32,9 @@ public class AnnoyingResource extends AnnoyingFile {
      */
     public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable AnnoyingResource.Options fileOptions) {
         super(plugin, path, fileOptions);
+        this.path = path;
         fileOptions = fileOptions == null ? new Options() : fileOptions;
+        load();
 
         // Create default file
         if (fileOptions.createDefaultFile) {
@@ -54,7 +61,7 @@ public class AnnoyingResource extends AnnoyingFile {
      * @see #AnnoyingResource(AnnoyingPlugin, String, Options)
      */
     public AnnoyingResource(@NotNull AnnoyingPlugin plugin, @NotNull String path) {
-        this(plugin, path, new Options());
+        this(plugin, path, null);
     }
 
     @Override
@@ -81,7 +88,7 @@ public class AnnoyingResource extends AnnoyingFile {
          * Constructs a new {@link Options} with the default values
          */
         public Options() {
-            // Only exists to provide a Javadoc
+            // Only exists to give the constructor a Javadoc
         }
 
         /**

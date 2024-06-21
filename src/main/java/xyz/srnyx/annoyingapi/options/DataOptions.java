@@ -9,7 +9,6 @@ import xyz.srnyx.annoyingapi.data.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.data.EntityData;
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 
 import xyz.srnyx.javautilities.MapUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -29,6 +28,7 @@ public class DataOptions extends Stringable {
     public boolean enabled = false;
     /**
      * A set of all tables/columns to be created for {@link DataManager}. Do not include the table prefix!
+     * <br>This is case-insensitive, so all keys and values will be converted to lowercase
      * <br><b>All tables will be made with the primary key {@code target}</b>
      * <br><i>Removing {@link EntityData#TABLE_NAME} will break {@link EntityData}</i>
      */
@@ -41,10 +41,6 @@ public class DataOptions extends Stringable {
      * Options for {@link EntityData entity data management}
      */
     @NotNull public Entities entities = new Entities();
-    /**
-     * Options for the storage configuration file
-     */
-    @NotNull public ConfigFile configFile = new ConfigFile();
 
     /**
      * Sets {@link #enabled}
@@ -61,19 +57,24 @@ public class DataOptions extends Stringable {
 
     /**
      * Adds all the specified tables to {@link #tables}
+     * <br>All tables and columns will be converted to lowercase
      *
      * @param   tables  the tables to add
      *
      * @return          this {@link DataOptions} instance for chaining
      */
     @NotNull
-    public DataOptions tables(@NotNull Map<String, Set<String>> tables) {
-        this.tables.putAll(tables);
+    public DataOptions tables(@NotNull Map<String, Collection<String>> tables) {
+        this.tables.putAll(tables.entrySet().stream()
+                .collect(HashMap::new, (map, entry) -> map.put(entry.getKey().toLowerCase(), entry.getValue().stream()
+                        .map(String::toLowerCase)
+                        .collect(HashSet::new, HashSet::add, HashSet::addAll)), HashMap::putAll));
         return this;
     }
 
     /**
      * Adds the specified table to {@link #tables}
+     * <br>The table and all columns will be converted to lowercase
      *
      * @param   table   the table to add
      * @param   columns the columns to add for the table
@@ -81,13 +82,16 @@ public class DataOptions extends Stringable {
      * @return          this {@link DataOptions} instance for chaining
      */
     @NotNull
-    public DataOptions table(@NotNull String table, @NotNull Set<String> columns) {
-        this.tables.put(table, columns);
+    public DataOptions table(@NotNull String table, @NotNull Collection<String> columns) {
+        this.tables.put(table.toLowerCase(), columns.stream()
+                .map(String::toLowerCase)
+                .collect(HashSet::new, HashSet::add, HashSet::addAll));
         return this;
     }
 
     /**
      * Adds the specified table to {@link #tables}
+     * <br>The table and all columns will be converted to lowercase
      *
      * @param   table   the table to add
      * @param   columns the columns to add for the table
@@ -96,7 +100,7 @@ public class DataOptions extends Stringable {
      */
     @NotNull
     public DataOptions table(@NotNull String table, @NotNull String... columns) {
-        return table(table, new HashSet<>(Arrays.asList(columns)));
+        return table(table, Arrays.asList(columns));
     }
 
     /**
@@ -137,33 +141,6 @@ public class DataOptions extends Stringable {
     public DataOptions useCacheDefault(boolean useCacheDefault) {
         this.useCacheDefault = useCacheDefault;
         return this;
-    }
-
-    /**
-     * Sets {@link #configFile}
-     *
-     * @param   configFile  the new value
-     *
-     * @return              this {@link Entities} instance for chaining
-     */
-    @NotNull
-    public DataOptions configFile(@NotNull DataOptions.ConfigFile configFile) {
-        this.configFile = configFile;
-        return this;
-    }
-
-    /**
-     * Sets {@link #configFile} using the specified {@link Consumer}
-     *
-     * @param   consumer    the {@link Consumer} to accept the new {@link #configFile}
-     *
-     * @return              this {@link Entities} instance for chaining
-     */
-    @NotNull
-    public DataOptions configFile(@NotNull Consumer<ConfigFile> consumer) {
-        final ConfigFile options = new ConfigFile();
-        consumer.accept(options);
-        return configFile(options);
     }
 
     /**
@@ -211,16 +188,11 @@ public class DataOptions extends Stringable {
         final DataOptions options = new DataOptions();
         if (section.contains("enabled")) options.enabled(section.getBoolean("enabled"));
         final ConfigurationSection tablesSection = section.getConfigurationSection("tables");
-        if (tablesSection != null) {
-            final Map<String, Set<String>> tables = new HashMap<>();
-            tablesSection.getKeys(false).forEach(table -> tables.put(table, new HashSet<>(section.getStringList("tables." + table))));
-            options.tables(tables);
-        }
+        if (tablesSection != null) options.tables(tablesSection.getKeys(false).stream()
+                .collect(HashMap::new, (map, table) -> map.put(table, tablesSection.getStringList(table)), HashMap::putAll));
         if (section.contains("useCacheDefault")) options.useCacheDefault(section.getBoolean("useCacheDefault"));
         final ConfigurationSection entitiesSection = section.getConfigurationSection("entities");
         if (entitiesSection != null) options.entities(Entities.load(entitiesSection));
-        final ConfigurationSection configFileSection = section.getConfigurationSection("configFile");
-        if (configFileSection != null) options.configFile(ConfigFile.load(configFileSection));
         return options;
     }
 
@@ -332,86 +304,6 @@ public class DataOptions extends Stringable {
         public Entities node(@NotNull String node) {
             this.section = node;
             return this;
-        }
-
-    }
-
-    /**
-     * Options for the storage configuration file for {@link EntityData entity data}
-     */
-    public static class ConfigFile extends Stringable {
-        /**
-         * <i>{@code REQUIRED}</i> The name of the file to use for the entity data configuration file
-         */
-        @NotNull public String fileName = "storage.yml";
-        /**
-         * <i>{@code OPTIONAL}</i> The {@link AnnoyingResource.Options options} for the {@link #fileName entity data configuration file}
-         * <p>If not specified, the {@link AnnoyingResource.Options default options} will be used
-         */
-        @Nullable public AnnoyingResource.Options fileOptions = null;
-
-        /**
-         * Constructs a new {@link ConfigFile} instance with default values
-         */
-        public ConfigFile() {
-            // Only exists to give the constructor a Javadoc
-        }
-
-        /**
-         * Loads the options from the specified {@link ConfigurationSection}
-         *
-         * @param   section the section to load the options from
-         *
-         * @return          the loaded options
-         */
-        @NotNull
-        public static DataOptions.ConfigFile load(@NotNull ConfigurationSection section) {
-            final ConfigFile options = new ConfigFile();
-            final String fileNameString = section.getString("fileName");
-            if (fileNameString != null) options.fileName(fileNameString);
-            final ConfigurationSection fileOptionsSection = section.getConfigurationSection("fileOptions");
-            if (fileOptionsSection != null) options.fileOptions(AnnoyingResource.Options.load(fileOptionsSection));
-            return options;
-        }
-
-        /**
-         * Sets {@link #fileName}
-         *
-         * @param   fileName    the new value
-         *
-         * @return              this {@link ConfigFile} instance for chaining
-         */
-        @NotNull
-        public DataOptions.ConfigFile fileName(@NotNull String fileName) {
-            this.fileName = fileName;
-            return this;
-        }
-
-        /**
-         * Sets {@link #fileOptions}
-         *
-         * @param   fileOptions the new value
-         *
-         * @return              this {@link ConfigFile} instance for chaining
-         */
-        @NotNull
-        public DataOptions.ConfigFile fileOptions(@Nullable AnnoyingResource.Options fileOptions) {
-            this.fileOptions = fileOptions;
-            return this;
-        }
-
-        /**
-         * Sets {@link #fileOptions} using the specified {@link Consumer}
-         *
-         * @param   consumer    the {@link Consumer} to accept the new {@link #fileOptions}
-         *
-         * @return              this {@link ConfigFile} instance for chaining
-         */
-        @NotNull
-        public DataOptions.ConfigFile fileOptions(@NotNull Consumer<AnnoyingResource.Options> consumer) {
-            final AnnoyingResource.Options options = new AnnoyingResource.Options();
-            consumer.accept(options);
-            return fileOptions(options);
         }
     }
 }

@@ -1,7 +1,8 @@
-# This file controls the storage of different data for entities (players, mobs, etc...)
-# This may not be for ALL data! As this is only for SIMPLE ENTITY data, not anything else
+DOCUMENTATION: https://annoying-api.srnyx.com/wiki/data-storage
+
 
 # The method that data will be stored. Available options are listed below
+# If you want to switch to a different storage method, please see the documentation for a guide on how to migrate your data
 #
 # LOCAL (data will be stored on the Minecraft server, connection configuration NOT required)
 # - h2 (default)
@@ -29,7 +30,7 @@ remote-connection:
   username: admin
   password: ''
 
-  # If you're using one database for multiple plugins, it's recommended to have a table prefix
+  # If you're using one database for multiple plugins, it's recommended to have a table prefix (case-insensitive)
   # By default (if left commented out), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore
   # To remove the table prefix, set it to an empty string ('')
   #table-prefix: 'annoying_'

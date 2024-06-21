@@ -8,7 +8,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1.1.3"
+    id("xyz.srnyx.gradle-galaxy") version "1.2.0"
     id("io.github.goooler.shadow") version "8.1.7"
 }
 
@@ -16,31 +16,16 @@ setupMC("xyz.srnyx", "5.0.0", "General purpose API with tons of features")
 spigotAPI("1.8.8")
 
 // Dependencies
-repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.CODE_MC)
+repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.CODE_MC)
 dependencies {
-    compileOnlyApi("org.jetbrains", "annotations", "24.1.0")
     compileOnly("me.clip", "placeholderapi", "2.11.3")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:def34f4186", "xyz.srnyx.javautilities")
-    implementationRelocate(project, "org.reflections:reflections:0.10.2") {
-        exclude("com.google.code.findbugs", "jsr305")
-        exclude("org.slf4j", "slf4j-api")
-    }
-    implementationRelocate(project, "org.bstats:bstats-bukkit:3.0.2")
-    implementationRelocate(project, "de.tr7zw:item-nbt-api:2.13.0", "de.tr7zw.changeme.nbtapi") {
-        exclude("de.tr7zw", "functional-annotations")
-    }
-
-    // Storage methods (MySQL & SQLite provided by Spigot, MariaDB uses MySQL)
-    runtimeOnly("com.h2database:h2:2.2.220")
-    runtimeOnly("org.postgresql:postgresql:42.7.3") {
-        exclude("org.checkerframework")
-    }
+    compileOnly("de.tr7zw", "item-nbt-api", "2.13.1") // Downloaded on runtime
+    compileOnlyApi("org.bstats", "bstats-bukkit", "3.0.2") // Downloaded on runtime
+    compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
+    compileOnlyApi("org.jetbrains", "annotations", "24.1.0")
+    implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.0", "net.byteflux.libby")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:8d23817277", "xyz.srnyx.javautilities")
 }
-
-// Relocations
-relocate("javassist")
-relocate("org.h2")
-relocate("org.postgresql")
 
 // Publishing
 setupPublishing(

@@ -9,7 +9,6 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,9 +52,9 @@ public class CooldownManager extends Stringable implements Annoyable {
      * @return      all cooldowns with the given key
      */
     @NotNull
-    public Set<AnnoyingCooldown> getCooldowns(@NotNull Object key) {
+    public ImmutableSet<AnnoyingCooldown> getCooldowns(@NotNull Object key) {
         final Set<AnnoyingCooldown> set = cooldowns.get(key.toString());
-        return set == null ? Collections.emptySet() : ImmutableSet.copyOf(set);
+        return set == null ? ImmutableSet.of() : ImmutableSet.copyOf(set);
     }
 
     /**

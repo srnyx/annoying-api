@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.logging.Level;
@@ -25,22 +26,16 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      * The target to manage data for
      */
     @NotNull public final T target;
-    /**
-     * The name of the target used for warning messages
-     */
-    @NotNull private final String name;
 
     /**
      * Construct a new {@link Data} for the given target
      *
      * @param   plugin  {@link #plugin}
      * @param   target  {@link #target}
-     * @param   name    {@link #name}
      */
-    protected Data(@NotNull AnnoyingPlugin plugin, @NotNull T target, @NotNull String name) {
+    protected Data(@NotNull AnnoyingPlugin plugin, @NotNull T target) {
         this.plugin = plugin;
         this.target = target;
-        this.name = name;
     }
 
     @Override @NotNull
@@ -145,9 +140,9 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      * Send an error message to the console
      *
      * @param   action  the action that failed
-     * @param   e       the exception that caused the error
+     * @param   t       the {@link Throwable} that caused the error
      */
-    protected void sendError(@NotNull String action, @Nullable Throwable e) {
-        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " data for &4" + name + "&c!", e);
+    protected void sendError(@NotNull String action, @Nullable Throwable t) {
+        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " data for &4" + BukkitUtility.stripUntranslatedColor(target.toString()) + "&c!", t);
     }
 }

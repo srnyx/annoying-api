@@ -11,9 +11,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.RuntimeLibrary;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
@@ -35,20 +37,21 @@ public class ItemData extends Data<ItemStack> {
      * @param   item    {@link #target}
      */
     public ItemData(@NotNull AnnoyingPlugin plugin, @NotNull ItemStack item) {
-        super(plugin, new ItemStack(item), getName(item));
+        super(plugin, new ItemStack(item));
     }
 
     /**
-     * Get the name of the given item stack; the {@link ItemMeta#getDisplayName() display name} if it exists, otherwise the {@link ItemStack#getType() type}
+     * Attempt to run the given runnable, and if a {@link NoClassDefFoundError} is thrown, load the {@link RuntimeLibrary#ITEM_NBT_API} library and try again. If the error is thrown again, send an error message and return null
      *
-     * @param   item    the item stack to get the name of
+     * @param   runnable    the runnable to attempt
      *
-     * @return          the name of the item stack
+     * @return              the result of the runnable
      */
-    @NotNull
-    private static String getName(@NotNull ItemStack item) {
-        final ItemMeta meta = item.getItemMeta();
-        return meta != null && meta.hasDisplayName() ? meta.getDisplayName() : item.getType().toString();
+    @Nullable
+    public String attemptItemNbtApi(@NotNull Supplier<String> runnable) {
+        if (plugin.loadedLibraries.contains(RuntimeLibrary.ITEM_NBT_API)) return runnable.get();
+        RuntimeLibrary.ITEM_NBT_API.load(plugin);
+        return runnable.get();
     }
 
     /**
@@ -82,8 +85,8 @@ public class ItemData extends Data<ItemStack> {
             }
         }
 
-        // 1.13.1- (NBT API)
-        return NBT.get(target, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(key));
+        // 1.13.1- (Item NBT API)
+        return attemptItemNbtApi(() -> NBT.get(target, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(key)));
     }
 
     /**
@@ -125,9 +128,11 @@ public class ItemData extends Data<ItemStack> {
             }
         }
 
-        // 1.13.1- (NBT API)
-        NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.setString(key, value));
-        return true;
+        // 1.13.1- (Item NBT API)
+        return attemptItemNbtApi(() -> {
+            NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.setString(key, value));
+            return "";
+        }) != null;
     }
 
     /**
@@ -168,8 +173,10 @@ public class ItemData extends Data<ItemStack> {
             }
         }
 
-        // 1.13.1- (NBT API)
-        NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.removeKey(key));
-        return true;
+        // 1.13.1- (Item NBT API)
+        return attemptItemNbtApi(() -> {
+            NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.removeKey(key));
+            return "";
+        }) != null;
     }
 }

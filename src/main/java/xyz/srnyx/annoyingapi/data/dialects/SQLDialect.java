@@ -1,14 +1,17 @@
 package xyz.srnyx.annoyingapi.data.dialects;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.DataManager;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.Level;
 
 
 /**
@@ -30,25 +33,59 @@ public abstract class SQLDialect {
     }
 
     /**
-     * Create a new table in the database with the {@code target} primary key column
+     * Get the tables in the database
      *
-     * @param   table   the name of the table to create
+     * @return                  the prepared statement to get the tables
      *
-     * @return          the SQL query to create the table
+     * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    public abstract String createTable(@NotNull String table);
+    public PreparedStatement getTables() throws SQLException {
+        return dataManager.connection.prepareStatement("SHOW TABLES");
+    }
+
+    /**
+     * Create a new table in the database with the {@code target} primary key column
+     *
+     * @param   table           the name of the table to create
+     *
+     * @return                  the {@link PreparedStatement} to create the table
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
+    @NotNull
+    public PreparedStatement createTable(@NotNull String table) throws SQLException {
+        return createTableImpl(table);
+    }
 
     /**
      * Create a new column in a table
      *
-     * @param   table   the name of the table
-     * @param   column  the name of the column to create
+     * @param   table           the name of the table
+     * @param   column          the name of the column to create
      *
-     * @return          the SQL query to create the column
+     * @return                  the prepared statement to create the column
+     *
+     * @throws  SQLException    if a database access error occurs
      */
     @Nullable
-    public abstract String createColumn(@NotNull String table, @NotNull String column);
+    public PreparedStatement createColumn(@NotNull String table, @NotNull String column) throws SQLException {
+        return createColumnImpl(table, column.toLowerCase());
+    }
+
+    /**
+     * Get all the values in a table
+     *
+     * @param   table           the name of the table
+     *
+     * @return                  the prepared statement to get the values
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
+    @NotNull
+    public PreparedStatement getValues(@NotNull String table) throws SQLException {
+        return getValuesImpl(table);
+    }
 
     /**
      * Get the value of a column in a table with respect to the {@code target}
@@ -62,7 +99,9 @@ public abstract class SQLDialect {
      * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    public abstract PreparedStatement getValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
+    public PreparedStatement getValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+        return getValueImpl(table, target, column.toLowerCase());
+    }
 
     /**
      * Set the value of a column in a table with respect to the {@code target}
@@ -77,7 +116,9 @@ public abstract class SQLDialect {
      * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    public abstract PreparedStatement setValue(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException;
+    public PreparedStatement setValue(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
+        return setValueImpl(table, target, column.toLowerCase(), value);
+    }
 
     /**
      * Set the values of columns in a table with respect to the {@code target}
@@ -91,10 +132,73 @@ public abstract class SQLDialect {
      * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    public abstract PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException;
+    public PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
+        return setValuesImpl(table, target, data.entrySet()
+                .stream()
+                .collect(HashMap::new, (m, e) -> m.put(e.getKey().toLowerCase(), e.getValue()), HashMap::putAll));
+    }
 
     /**
-     * Used for {@link #setValue(String, String, String, String)} to set the parameters of the {@link PreparedStatement}
+     * Set the values of columns in a table with respect to the {@code target}
+     *
+     * @param   data    the data to set (table, (target, (column, value)))
+     *
+     * @return          the prepared statements to set the values
+     */
+    @NotNull
+    public ImmutableSet<PreparedStatement> setValues(@NotNull Map<String, Map<String, Map<String, String>>> data) {
+        final Set<PreparedStatement> statements = new HashSet<>();
+        for (final Map.Entry<String, Map<String, Map<String, String>>> entry : data.entrySet()) {
+            final String table = entry.getKey();
+            for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) {
+                final String target = entry1.getKey();
+                final Map<String, String> values = entry1.getValue();
+                try {
+                    statements.add(setValues(table, target, values));
+                } catch (final SQLException e) {
+                    AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set values for &4" + target + "&c in table &4" + table + "&c: &4" + values, e);
+                }
+            }
+        }
+        return ImmutableSet.copyOf(statements);
+    }
+
+    /**
+     * Remove the value of a column in a table with respect to the {@code target}
+     *
+     * @param   table           the name of the table
+     * @param   target          the target to remove the value from
+     * @param   column          the column to remove the value from
+     *
+     * @return                  the prepared statement to remove the value
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
+    @NotNull
+    public PreparedStatement removeValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+        return removeValueImpl(table, target, column.toLowerCase());
+    }
+
+    @NotNull
+    protected abstract PreparedStatement createTableImpl(@NotNull String table) throws SQLException;
+
+    @Nullable
+    protected abstract PreparedStatement createColumnImpl(@NotNull String table, @NotNull String column) throws SQLException;
+
+    @NotNull
+    protected abstract PreparedStatement getValuesImpl(@NotNull String table) throws SQLException;
+
+    @NotNull
+    protected abstract PreparedStatement getValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
+
+    @NotNull
+    protected abstract PreparedStatement setValueImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException;
+
+    @NotNull
+    protected abstract PreparedStatement setValuesImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException;
+
+    /**
+     * Used for {@link #setValueImpl(String, String, String, String)} to set the parameters of the {@link PreparedStatement}
      *
      * @param   target          the target to set the value to
      * @param   values          the values to set
@@ -113,17 +217,6 @@ public abstract class SQLDialect {
         return statement;
     }
 
-    /**
-     * Remove the value of a column in a table with respect to the {@code target}
-     *
-     * @param   table           the name of the table
-     * @param   target          the target to remove the value from
-     * @param   column          the column to remove the value from
-     *
-     * @return                  the prepared statement to remove the value
-     *
-     * @throws  SQLException    if a database access error occurs
-     */
     @NotNull
-    public abstract PreparedStatement removeValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
+    protected abstract PreparedStatement removeValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
 }

@@ -30,29 +30,34 @@ public class MySQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public String createTable(@NotNull String table) {
-        return "CREATE TABLE IF NOT EXISTS `" + table + "` (`" + StringData.TARGET_COLUMN + "` VARCHAR(255) PRIMARY KEY)";
+    public PreparedStatement createTableImpl(@NotNull String table) throws SQLException {
+        return dataManager.connection.prepareStatement("CREATE TABLE IF NOT EXISTS `" + table + "` (`" + StringData.TARGET_COLUMN + "` VARCHAR(255) PRIMARY KEY)");
     }
 
     @Override @Nullable
-    public String createColumn(@NotNull String table, @NotNull String column) {
+    public PreparedStatement createColumnImpl(@NotNull String table, @NotNull String column) throws SQLException {
         try (final ResultSet result = dataManager.connection.createStatement().executeQuery("SHOW COLUMNS FROM `" + table + "`")) {
             if (result != null) while (result.next()) if (result.getString("Field").equals(column)) return null;
         } catch (final SQLException e) {
             AnnoyingPlugin.log(Level.SEVERE, "Failed to get columns for " + table, e);
         }
-        return "ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` TEXT";
+        return dataManager.connection.prepareStatement("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` TEXT");
     }
 
     @Override @NotNull
-    public PreparedStatement getValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+    protected PreparedStatement getValuesImpl(@NotNull String table) throws SQLException {
+        return dataManager.connection.prepareStatement("SELECT * FROM `" + table + "`");
+    }
+
+    @Override @NotNull
+    public PreparedStatement getValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("SELECT `" + column + "` FROM `" + table + "` WHERE " + StringData.TARGET_COLUMN + " = ?");
         statement.setString(1, target);
         return statement;
     }
 
     @Override @NotNull
-    public PreparedStatement setValue(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
+    public PreparedStatement setValueImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`, `" + column + "`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `" + column + "` = ?");
         statement.setString(1, target);
         statement.setString(2, value);
@@ -61,7 +66,7 @@ public class MySQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public PreparedStatement setValues(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
+    public PreparedStatement setValuesImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`");
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
@@ -83,7 +88,7 @@ public class MySQLDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public PreparedStatement removeValue(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
+    public PreparedStatement removeValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("UPDATE `" + table + "` SET `" + column + "` = NULL WHERE " + StringData.TARGET_COLUMN + " = ?");
         statement.setString(1, target);
         return statement;
