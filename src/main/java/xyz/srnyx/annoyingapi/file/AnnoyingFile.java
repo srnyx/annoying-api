@@ -177,6 +177,14 @@ public class AnnoyingFile extends YamlConfiguration {
         return delete(false);
     }
 
+    /**
+     * Sets a value in the YAML and returns the {@link AnnoyingFile} instance
+     *
+     * @param   path    the path to the node
+     * @param   value   the value to set the node to
+     *
+     * @return          the {@link AnnoyingFile} instance
+     */
     @NotNull
     public AnnoyingFile setChain(@NotNull String path, @Nullable Object value) {
         set(path, value);

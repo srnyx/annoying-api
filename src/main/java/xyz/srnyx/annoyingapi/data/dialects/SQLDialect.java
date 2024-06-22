@@ -179,21 +179,83 @@ public abstract class SQLDialect {
         return removeValueImpl(table, target, column.toLowerCase());
     }
 
+    /**
+     * Create a new table in the database with the {@code target} primary key column
+     *
+     * @param   table           the name of the table to create
+     *
+     * @return                  the {@link PreparedStatement} to create the table
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement createTableImpl(@NotNull String table) throws SQLException;
 
+    /**
+     * Create a new column in a table
+     *
+     * @param   table           the name of the table
+     * @param   column          the name of the column to create
+     *
+     * @return                  the prepared statement to create the column
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @Nullable
     protected abstract PreparedStatement createColumnImpl(@NotNull String table, @NotNull String column) throws SQLException;
 
+    /**
+     * Get all the values in a table
+     *
+     * @param   table           the name of the table
+     *
+     * @return                  the prepared statement to get the values
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement getValuesImpl(@NotNull String table) throws SQLException;
 
+    /**
+     * Get the value of a column in a table with respect to the {@code target}
+     *
+     * @param   table           the name of the table
+     * @param   target          the target to get the value from
+     * @param   column          the column to get the value from
+     *
+     * @return                  the prepared statement to get the value
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement getValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
 
+    /**
+     * Set the value of a column in a table with respect to the {@code target}
+     *
+     * @param   table           the name of the table
+     * @param   target          the target to set the value to
+     * @param   column          the column to set the value to
+     * @param   value           the value to set
+     *
+     * @return                  the prepared statement to set the value
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement setValueImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException;
 
+    /**
+     * Set the values of columns in a table with respect to the {@code target}
+     *
+     * @param   table           the name of the table
+     * @param   target          the target to set the values to
+     * @param   data            the data to set (column, value)
+     *
+     * @return                  the prepared statement to set the values
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement setValuesImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException;
 
@@ -217,6 +279,17 @@ public abstract class SQLDialect {
         return statement;
     }
 
+    /**
+     * Remove the value of a column in a table with respect to the {@code target}
+     *
+     * @param   table           the name of the table
+     * @param   target          the target to remove the value from
+     * @param   column          the column to remove the value from
+     *
+     * @return                  the prepared statement to remove the value
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
     @NotNull
     protected abstract PreparedStatement removeValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
 }

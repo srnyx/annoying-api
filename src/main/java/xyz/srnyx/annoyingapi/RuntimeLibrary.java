@@ -106,6 +106,13 @@ public enum RuntimeLibrary {
         this.library = library;
     }
 
+    /**
+     * Gets the library to load
+     *
+     * @param   plugin  the plugin to load the library into
+     *
+     * @return          the library to load
+     */
     @NotNull
     public Library getLibrary(@NotNull AnnoyingPlugin plugin) {
         return library.apply(plugin);

@@ -297,6 +297,13 @@ public class StorageConfig {
             this(dialect, driver, url, null, null);
         }
 
+        /**
+         * Get the driver class name for the method
+         *
+         * @param   plugin  the {@link AnnoyingPlugin plugin} to get the driver for
+         *
+         * @return          the driver class name for the method
+         */
         @NotNull
         public String getDriver(@NotNull AnnoyingPlugin plugin) {
             return (library != null ? plugin.getRelocatedLibsPath() + driver : driver).replace("{}", ".");
