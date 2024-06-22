@@ -16,14 +16,14 @@ import java.util.Map;
  */
 public class ConfigurationUtility {
     /**
-     * Converts a {@link Map} to a {@link ConfigurationSection}
+     * Converts a {@link Map} to a {@link MemoryConfiguration}
      *
      * @param   map the map to convert
      *
      * @return      the converted configuration section
      */
     @NotNull
-    public static ConfigurationSection toConfiguration(@NotNull Map<?, ?> map) {
+    public static MemoryConfiguration toConfiguration(@NotNull Map<?, ?> map) {
         final MemoryConfiguration configuration = new MemoryConfiguration();
         map.forEach((key, value) -> {
             if (value instanceof Map) {
@@ -36,15 +36,15 @@ public class ConfigurationUtility {
     }
 
     /**
-     * Converts a {@link List} of {@link Map Maps} to a {@link List} of {@link ConfigurationSection ConfigurationSections}
+     * Converts a {@link List} of {@link Map Maps} to a {@link List} of {@link MemoryConfiguration MemoryConfigurations}
      *
      * @param   maps    the maps to convert
      *
      * @return          the converted configuration sections
      */
     @NotNull
-    public static List<ConfigurationSection> toConfigurationList(@NotNull List<Map<?, ?>> maps) {
-        final List<ConfigurationSection> configurations = new ArrayList<>();
+    public static List<MemoryConfiguration> toConfigurationList(@NotNull List<Map<?, ?>> maps) {
+        final List<MemoryConfiguration> configurations = new ArrayList<>();
         maps.forEach(map -> configurations.add(toConfiguration(map)));
         return configurations;
     }
