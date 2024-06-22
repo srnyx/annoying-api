@@ -51,8 +51,13 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect
 
 /**
  * Represents a file in the plugin's folder
+ *
+ * @param   <T> the type of the {@link AnnoyingFile} instance
+ *
+ * @see         AnnoyingResource
+ * @see         AnnoyingData
  */
-public class AnnoyingFile extends YamlConfiguration {
+public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
      */
@@ -186,9 +191,9 @@ public class AnnoyingFile extends YamlConfiguration {
      * @return          the {@link AnnoyingFile} instance
      */
     @NotNull
-    public AnnoyingFile setChain(@NotNull String path, @Nullable Object value) {
+    public T setChain(@NotNull String path, @Nullable Object value) {
         set(path, value);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -392,12 +397,12 @@ public class AnnoyingFile extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or {@code null} if it's invalid
      *
-     * @param   <T>     the {@code AttributeModifier} class
+     * @param   <G>     the {@code AttributeModifier} class
      */
     @Nullable
-    public <T> T getAttributeModifier(@NotNull String path) {
+    public <G> G getAttributeModifier(@NotNull String path) {
         final Object def = getDefault(path);
-        return (T) getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? ATTRIBUTE_MODIFIER_CLASS.cast(def) : null);
+        return (G) getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? ATTRIBUTE_MODIFIER_CLASS.cast(def) : null);
     }
 
     /**
@@ -406,12 +411,12 @@ public class AnnoyingFile extends YamlConfiguration {
      * @param   path    the path to the node
      * @param   def     the default value
      *
-     * @param   <T>     the {@code AttributeModifier} class
+     * @param   <G>     the {@code AttributeModifier} class
      *
      * @return          the {@code AttributeModifier} or {@code def} if it's invalid
      */
     @Nullable @SuppressWarnings("unchecked")
-    public <T> T getAttributeModifier(@NotNull String path, @Nullable T def) {
+    public <G> G getAttributeModifier(@NotNull String path, @Nullable G def) {
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
@@ -448,7 +453,7 @@ public class AnnoyingFile extends YamlConfiguration {
 
             // Return
             try {
-                return (T) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
+                return (G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -457,7 +462,7 @@ public class AnnoyingFile extends YamlConfiguration {
 
         // Return
         if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 != null) try {
-            return (T) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation);
+            return (G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation);
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -746,9 +751,9 @@ public class AnnoyingFile extends YamlConfiguration {
      *     <li>{@link #canBeEmpty} = {@code true}
      * </ul>
      *
-     * @param   <T> the type of the {@link Options} instance
+     * @param   <G> the type of the {@link Options} instance
      */
-    public static class Options<T extends Options<T>> extends Stringable {
+    public static class Options<G extends Options<G>> extends Stringable {
         /**
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
@@ -769,10 +774,10 @@ public class AnnoyingFile extends YamlConfiguration {
          *
          * @return          the {@link Options} instance
          *
-         * @param   <G>     the type of the {@link Options} instance
+         * @param   <H>     the type of the {@link Options} instance
          */
         @NotNull
-        public static <G extends Options<G>> G load(@NotNull G options, @NotNull ConfigurationSection section) {
+        public static <H extends Options<H>> H load(@NotNull H options, @NotNull ConfigurationSection section) {
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
             return options;
         }
@@ -799,9 +804,9 @@ public class AnnoyingFile extends YamlConfiguration {
          * @return              the {@link Options} instance
          */
         @NotNull
-        public T canBeEmpty(boolean canBeEmpty) {
+        public G canBeEmpty(boolean canBeEmpty) {
             this.canBeEmpty = canBeEmpty;
-            return (T) this;
+            return (G) this;
         }
     }
 }

@@ -9,7 +9,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 /**
  * Represents a file in the plugin's folder (in {@code /data/})
  */
-public class AnnoyingData extends AnnoyingFile {
+public class AnnoyingData extends AnnoyingFile<AnnoyingData> {
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path
      *

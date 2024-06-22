@@ -423,7 +423,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(Level.INFO, "&aFound &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
 
         // NEW: Connect to new database
-        final AnnoyingFile storageNewFile = new AnnoyingFile(this, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
+        final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(this, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
         if (!storageNewFile.load()) return oldManager;
         final DataManager newManager;
         try {

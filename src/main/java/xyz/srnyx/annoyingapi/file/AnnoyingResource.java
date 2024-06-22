@@ -17,7 +17,7 @@ import java.nio.file.StandardCopyOption;
 /**
  * Represents a file in the plugin's folder (usually a config file), the file MUST exist in the {@code resources} folder
  */
-public class AnnoyingResource extends AnnoyingFile {
+public class AnnoyingResource extends AnnoyingFile<AnnoyingResource> {
     /**
      * The path to the file (relative to the plugin's folder)
      */
