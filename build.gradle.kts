@@ -8,7 +8,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1.2.0"
+    id("xyz.srnyx.gradle-galaxy") version "1.2.1"
     id("io.github.goooler.shadow") version "8.1.7"
 }
 

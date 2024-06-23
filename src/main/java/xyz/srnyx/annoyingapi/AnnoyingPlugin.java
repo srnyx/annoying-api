@@ -541,49 +541,35 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Gets a {@link Relocation} for the specified package
      *
      * @param   from    the package to relocate
-     * @param   name    the name of the module being relocated ({@link #getRelocatedLibsPath()} + {@code name})
+     * @param   name    the name of the module being relocated ({@link #getLibsPackage()} + {@code name})
      *
      * @return          the relocation
      */
     @NotNull
     public Relocation getRelocation(@NotNull String from, @NotNull String name) {
-        return new Relocation(from, getRelocatedLibsPath() + name);
+        return new Relocation(from, getLibsPackage() + name);
     }
 
     /**
      * Gets a {@link Relocation} for the specified package
      *
-     * @param   from    the package to relocate (use {@code {}} instead of {@code .} for the package separator)
+     * @param   from    the package to relocate
      *
      * @return          the relocation
      */
     @NotNull
     public Relocation getRelocation(@NotNull String from) {
-        return getRelocation(from, makePathSafe(from.substring(from.lastIndexOf("{}") + 2)));
+        return getRelocation(from, from.substring(from.lastIndexOf("{}") + 2).toLowerCase().replaceAll("[^a-z0-9._{}]", ""));
     }
 
     /**
-     * Makes a relocation package path character-safe
-     * <br>Removes all characters that aren't letters, numbers, periods, underscores, or curly braces
-     *
-     * @param   path    the path to make safe
-     *
-     * @return          the safe path
-     */
-    @NotNull
-    public String makePathSafe(@NotNull String path) {
-        return path.toLowerCase().replaceAll("[^a-zA-Z0-9._{}]", "");
-    }
-
-    /**
-     * Gets the path for the relocated libraries
-     * <br><b>Format:</b> {@code AUTHOR{}PLUGIN{}LIBS{}}
+     * Gets the package path for relocated libraries
      *
      * @return  the path
      */
     @NotNull
-    public String getRelocatedLibsPath() {
-        return makePathSafe(getDescription().getAuthors().get(0) + "{}" + getName()) + "{}libs{}";
+    public String getLibsPackage() {
+        return getClass().getPackage().getName() + "{}libs{}";
     }
 
     /**

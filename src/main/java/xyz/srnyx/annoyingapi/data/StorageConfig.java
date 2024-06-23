@@ -28,7 +28,7 @@ public class StorageConfig {
     /**
      * The {@link YamlConfiguration storage configuration file}
      */
-    @NotNull public final AnnoyingFile file;
+    @NotNull public final AnnoyingFile<?> file;
     /**
      * The {@link Method storage method}
      */
@@ -47,7 +47,7 @@ public class StorageConfig {
      *
      * @param   file    {@link #file}
      */
-    public StorageConfig(@NotNull AnnoyingFile file) {
+    public StorageConfig(@NotNull AnnoyingFile<?> file) {
         this.file = file;
         cache = new Cache();
         final Method getMethod = Method.get(file.getString("method"));
@@ -306,7 +306,7 @@ public class StorageConfig {
          */
         @NotNull
         public String getDriver(@NotNull AnnoyingPlugin plugin) {
-            return (library != null ? plugin.getRelocatedLibsPath() + driver : driver).replace("{}", ".");
+            return (library != null ? plugin.getLibsPackage() + driver : driver).replace("{}", ".");
         }
 
         /**
