@@ -199,6 +199,12 @@ public class StorageConfig {
     }
 
     /**
+     * The driver class for MySQL/MariaDB depending on MySQL Java Connector version
+     * <br>1.16.5 uses 8.x.x ({@code com.mysql.cj.jdbc.Driver}), 1.16.4- doesn't ({@code com.mysql.jdbc.Driver})
+     */
+    @NotNull private static final String MYSQL_MARIADB_DRIVER = AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 16, 5) ? "com{}mysql{}cj{}jdbc{}Driver" : "com{}mysql{}jdbc{}Driver";
+
+    /**
      * The storage method
      */
     public enum Method {
@@ -213,11 +219,11 @@ public class StorageConfig {
         /**
          * MySQL storage method
          */
-        MYSQL(MySQLDialect::new, "com{}mysql{}jdbc{}Driver", dataFolder -> "jdbc:mysql://", 3306),
+        MYSQL(MySQLDialect::new, MYSQL_MARIADB_DRIVER, dataFolder -> "jdbc:mysql://", 3306),
         /**
          * MariaDB storage method
          */
-        MARIADB(MariaDBDialect::new, "com{}mysql{}jdbc{}Driver", dataFolder -> "jdbc:mysql://", 3306),
+        MARIADB(MariaDBDialect::new, MYSQL_MARIADB_DRIVER, dataFolder -> "jdbc:mysql://", 3306),
         /**
          * PostgreSQL storage method
          */
