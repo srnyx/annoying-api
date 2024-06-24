@@ -72,6 +72,17 @@ public class StorageConfig {
     }
 
     /**
+     * Friendly name when migrating between methods
+     * <br><b>Format:</b> {@code FILE_PATH (METHOD)}
+     *
+     * @return  the migration name
+     */
+    @NotNull
+    public String getMigrationName() {
+        return file.file.getPath() + " (" + method + ")";
+    }
+
+    /**
      * Create a new {@link Connection} to the configured database
      *
      * @return                      a new {@link Connection} to the database

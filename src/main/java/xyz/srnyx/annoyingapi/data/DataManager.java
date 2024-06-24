@@ -151,10 +151,10 @@ public class DataManager {
      * Saves the data from the cache to the database
      */
     public void saveCache() {
-        for (final PreparedStatement statement : dialect.setValues(dataCache)) try {
-            statement.executeUpdate();
+        for (final SQLDialect.SetValueStatement statement : dialect.setValues(dataCache)) try {
+            statement.statement.executeUpdate();
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "Failed to save SOME cached data", e);
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached values for &4" + statement.target + "&c in table &4" + statement.table + "&c: &4" + statement.values, e);
         }
     }
 }

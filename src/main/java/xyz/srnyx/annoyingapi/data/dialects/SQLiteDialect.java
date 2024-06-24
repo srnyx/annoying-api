@@ -79,7 +79,7 @@ public class SQLiteDialect extends SQLDialect {
         valuesBuilder.append(")");
 
         // Create statement
-        return setValuesParameters(target, values, insertBuilder.append(valuesBuilder).toString());
+        return setValuesParameters(target, values, insertBuilder, valuesBuilder, null);
     }
 
     @Override @NotNull

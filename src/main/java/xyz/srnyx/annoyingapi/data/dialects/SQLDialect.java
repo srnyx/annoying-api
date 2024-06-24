@@ -146,15 +146,15 @@ public abstract class SQLDialect {
      * @return          the prepared statements to set the values
      */
     @NotNull
-    public ImmutableSet<PreparedStatement> setValues(@NotNull Map<String, Map<String, Map<String, String>>> data) {
-        final Set<PreparedStatement> statements = new HashSet<>();
+    public ImmutableSet<SetValueStatement> setValues(@NotNull Map<String, Map<String, Map<String, String>>> data) {
+        final Set<SetValueStatement> statements = new HashSet<>();
         for (final Map.Entry<String, Map<String, Map<String, String>>> entry : data.entrySet()) {
             final String table = entry.getKey();
             for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) {
                 final String target = entry1.getKey();
                 final Map<String, String> values = entry1.getValue();
                 try {
-                    statements.add(setValues(table, target, values));
+                    statements.add(new SetValueStatement(table, target, values));
                 } catch (final SQLException e) {
                     AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set values for &4" + target + "&c in table &4" + table + "&c: &4" + values, e);
                 }
@@ -264,18 +264,29 @@ public abstract class SQLDialect {
      *
      * @param   target          the target to set the value to
      * @param   values          the values to set
-     * @param   query           the query to set the values to
+     * @param   insertBuilder   the insert query builder
+     * @param   valuesBuilder   the values query builder
+     * @param   updateBuilder   the update query builder
      *
      * @return                  the prepared statement with the set parameters
      *
      * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    protected PreparedStatement setValuesParameters(@NotNull String target, @NotNull List<String> values, @NotNull String query) throws SQLException {
-        final PreparedStatement statement = dataManager.connection.prepareStatement(query);
+    protected PreparedStatement setValuesParameters(@NotNull String target, @NotNull List<String> values, @NotNull StringBuilder insertBuilder, @NotNull StringBuilder valuesBuilder, @Nullable StringBuilder updateBuilder) throws SQLException {
+        final boolean hasUpdate = updateBuilder != null;
+
+        // Get query
+        final StringBuilder query = insertBuilder.append(valuesBuilder);
+        if (hasUpdate) query.append(updateBuilder);
+
+        // Create statement & set parameters
+        final PreparedStatement statement = dataManager.connection.prepareStatement(query.toString());
         statement.setString(1, target);
         int i = 2;
         for (final String value : values) statement.setString(i++, value);
+        if (hasUpdate) for (final String value : values) statement.setString(i++, value);
+
         return statement;
     }
 
@@ -292,4 +303,42 @@ public abstract class SQLDialect {
      */
     @NotNull
     protected abstract PreparedStatement removeValueImpl(@NotNull String table, @NotNull String target, @NotNull String column) throws SQLException;
+
+    /**
+     * Holds information about a {@link #setValues(String, String, Map) set values} statement
+     */
+    public class SetValueStatement {
+        /**
+         * The name of the table
+         */
+        @NotNull public final String table;
+        /**
+         * The target to set the values to
+         */
+        @NotNull public final String target;
+        /**
+         * The values to set
+         */
+        @NotNull public final Map<String, String> values;
+        /**
+         * The {@link PreparedStatement} to use for setting the values
+         */
+        @NotNull public final PreparedStatement statement;
+
+        /**
+         * Construct a new {@link SetValueStatement} with the given parameters
+         *
+         * @param   table           {@link #table}
+         * @param   target          {@link #target}
+         * @param   values          {@link #values}
+         *
+         * @throws  SQLException    if a database access error occurs
+         */
+        public SetValueStatement(@NotNull String table, @NotNull String target, @NotNull Map<String, String> values) throws SQLException {
+            this.table = table;
+            this.target = target;
+            this.values = values;
+            this.statement = setValues(table, target, values);
+        }
+    }
 }

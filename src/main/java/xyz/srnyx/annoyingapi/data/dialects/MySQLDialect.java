@@ -84,7 +84,7 @@ public class MySQLDialect extends SQLDialect {
         updateBuilder.setLength(updateBuilder.length() - 2);
 
         // Create statement
-        return setValuesParameters(target, values, insertBuilder.append(valuesBuilder).append(updateBuilder).toString());
+        return setValuesParameters(target, values, insertBuilder, valuesBuilder, updateBuilder);
     }
 
     @Override @NotNull

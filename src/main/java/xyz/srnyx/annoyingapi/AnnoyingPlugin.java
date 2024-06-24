@@ -24,6 +24,7 @@ import xyz.srnyx.annoyingapi.data.ConnectionException;
 import xyz.srnyx.annoyingapi.data.DataManager;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.data.StorageConfig;
+import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.EventHandlers;
@@ -439,7 +440,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             final ResultSet resultSet = getTables.executeQuery();
             while (resultSet.next()) tables.add(resultSet.getString(1));
         } catch (final SQLException e) {
-            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to get tables!", e);
+            log(Level.SEVERE, "&4" + newManager.storageConfig.getMigrationName() + " &8|&c Failed to get tables!", e);
             return oldManager;
         }
 
@@ -456,12 +457,12 @@ public class AnnoyingPlugin extends JavaPlugin {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 final int columnCount = metaData.getColumnCount();
                 if (columnCount == 0) {
-                    log(Level.WARNING, "&4storage.yml &8|&c Table &4" + table + "&c has no columns, skipping...");
+                    log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Table &4" + table + "&c has no columns, skipping...");
                     continue;
                 }
                 for (int i = 1; i <= columnCount; i++) columns.add(metaData.getColumnName(i));
                 if (!columns.contains("target")) {
-                    log(Level.WARNING, "&4storage.yml &8|&c Table &4" + table + "&c doesn't have a '&4target&c' column, skipping...");
+                    log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Table &4" + table + "&c doesn't have a '&4target&c' column, skipping...");
                     continue;
                 }
                 tablesColumns.put(table, columns);
@@ -475,23 +476,23 @@ public class AnnoyingPlugin extends JavaPlugin {
                     tableValues.put(target, columnValues);
                 }
             } catch (final SQLException e) {
-                log(Level.SEVERE, "&4storage.yml &8|&c Failed to get values for table &4" + table, e);
+                log(Level.SEVERE, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Failed to get values for table &4" + table, e);
             }
             if (!tableValues.isEmpty()) values.put(table, tableValues);
         }
-        if (values.isEmpty()) {
-            log(Level.WARNING, "&4storage.yml &8|&c No data to migrate!");
-            return oldManager;
-        }
 
-        // NEW: Create missing tables/columns
-        newManager.createTablesColumns(tablesColumns);
+        if (!values.isEmpty()) {
+            // NEW: Create missing tables/columns
+            newManager.createTablesColumns(tablesColumns);
 
-        // NEW: Save values to new database
-        for (final PreparedStatement statement : newManager.dialect.setValues(values)) try {
-            statement.executeUpdate();
-        } catch (final SQLException e) {
-            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to migrate SOME data to the new database!", e);
+            // NEW: Save values to new database
+            for (final SQLDialect.SetValueStatement statement : newManager.dialect.setValues(values)) try {
+                statement.statement.executeUpdate();
+            } catch (final SQLException e) {
+                log(Level.SEVERE, "&4" + newManager.storageConfig.getMigrationName() + " &8|&c Failed to migrate values for &4" + statement.target + "&c in table &4" + statement.table + "&c: &4" + statement.values, e);
+            }
+        } else {
+            log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Found no data to migrate! This may or may not be an error...");
         }
 
         // OLD: Close old connection
