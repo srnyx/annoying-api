@@ -116,35 +116,6 @@ public class StorageConfig {
     }
 
     /**
-     * Options for the {@link DataManager#dataCache}
-     */
-    public class Cache {
-        /**
-         * Whether the cache is enabled
-         */
-        public final boolean enabled = file.getBoolean("cache.enabled");
-        /**
-         * When to save the cache
-         */
-        @NotNull public final Set<SaveOn> saveOn;
-        /**
-         * The interval to save the cache (if {@link #saveOn} contains {@link SaveOn#INTERVAL})
-         */
-        public final long interval = file.getLong("cache.interval");
-
-        /**
-         * Construct a new {@link Cache} instance to parse the {@code cache} section
-         */
-        public Cache() {
-            final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
-                    .map(SaveOn::fromString)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
-        }
-    }
-
-    /**
      * The remote connection details/properties
      */
     public class RemoteConnection {
@@ -172,7 +143,7 @@ public class StorageConfig {
          * The table prefix for the remote database
          * <br><i>Defaults to the plugin name in lowercase with all non-alphanumeric characters removed + an underscore</i>
          */
-        @NotNull public final String tablePrefix = file.getString("remote-connection.table-prefix", file.plugin.getName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase() + "_");
+        @NotNull public final String tablePrefix = file.getString("remote-connection.table-prefix", file.plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_");
 
         /**
          * Construct a new {@link RemoteConnection} instance to parse the {@code remote-connection} section
@@ -195,6 +166,35 @@ public class StorageConfig {
             final String getDatabase = section.getString("database");
             if (getDatabase == null) throw new IllegalArgumentException("A remote storage method is used but no remote database is specified");
             database = getDatabase;
+        }
+    }
+
+    /**
+     * Options for the {@link DataManager#dataCache}
+     */
+    public class Cache {
+        /**
+         * Whether the cache is enabled
+         */
+        public final boolean enabled = file.getBoolean("cache.enabled");
+        /**
+         * When to save the cache
+         */
+        @NotNull public final Set<SaveOn> saveOn;
+        /**
+         * The interval to save the cache (if {@link #saveOn} contains {@link SaveOn#INTERVAL})
+         */
+        public final long interval = file.getLong("cache.interval");
+
+        /**
+         * Construct a new {@link Cache} instance to parse the {@code cache} section
+         */
+        public Cache() {
+            final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
+                    .map(SaveOn::fromString)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
         }
     }
 
