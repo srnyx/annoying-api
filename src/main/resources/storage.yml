@@ -23,7 +23,8 @@ remote-connection:
   # Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL
   #port: 3306
 
-  # The name of the database (must already exist)
+  # The name of the database
+  # THE DATABASE MUST ALREADY EXIST
   database: minecraft
 
   # The username and password of the database
@@ -33,10 +34,11 @@ remote-connection:
   # If you're using one database for multiple plugins, it's recommended to have a table prefix (case-insensitive)
   # By default (if left commented out), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore
   # To remove the table prefix, set it to an empty string ('')
+  # DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)
   #table-prefix: 'annoying_'
 
 # Options for the data cache, which is used for both LOCAL and REMOTE storage methods
-# The cache greatly improved performance by storing data in memory
+# The cache greatly improves performance by storing data in memory
 # However, there is a potential risk of data loss if the server crashes before the data is saved to the database
 cache:
   # Whether to enable using the cache

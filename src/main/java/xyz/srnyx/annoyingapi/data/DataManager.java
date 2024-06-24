@@ -58,7 +58,7 @@ public class DataManager {
      *
      * @throws ConnectionException if the connection to the database fails for any reason
      */
-    public DataManager(@NotNull AnnoyingFile file) throws ConnectionException {
+    public DataManager(@NotNull AnnoyingFile<?> file) throws ConnectionException {
         this.storageConfig = new StorageConfig(file);
         connection = storageConfig.createConnection();
         dialect = storageConfig.method.dialect.apply(this);
@@ -72,7 +72,7 @@ public class DataManager {
      */
     public void createTablesColumns(@NotNull Map<String, Set<String>> tablesColumns) {
         for (final Map.Entry<String, Set<String>> entry : tablesColumns.entrySet()) {
-            final String table = entry.getKey();
+            final String table = getTableName(entry.getKey());
             // Create table
             try (final PreparedStatement tableStatement = dialect.createTable(table)) {
                 tableStatement.executeUpdate();

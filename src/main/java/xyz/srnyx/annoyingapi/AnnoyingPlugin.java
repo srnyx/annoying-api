@@ -447,7 +447,9 @@ public class AnnoyingPlugin extends JavaPlugin {
         // OLD: Get values
         final Map<String, Set<String>> tablesColumns = new HashMap<>(); // {Table, Columns}
         final Map<String, Map<String, Map<String, String>>> values = new HashMap<>(); // {Table, {Target, {Column, Value}}}
+        final int oldPrefixLength = oldManager.tablePrefix.length();
         for (final String table : tables) {
+            final String tableWithoutPrefix = table.substring(oldPrefixLength);
             final Map<String, Map<String, String>> tableValues = new HashMap<>(); // {Target, {Column, Value}}
             try (final PreparedStatement getValues = oldManager.dialect.getValues(table)) {
                 final ResultSet resultSet = getValues.executeQuery();
@@ -465,7 +467,7 @@ public class AnnoyingPlugin extends JavaPlugin {
                     log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Table &4" + table + "&c doesn't have a '&4target&c' column, skipping...");
                     continue;
                 }
-                tablesColumns.put(table, columns);
+                tablesColumns.put(tableWithoutPrefix, columns);
 
                 // Get values for each target
                 while (resultSet.next()) {
@@ -478,7 +480,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             } catch (final SQLException e) {
                 log(Level.SEVERE, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Failed to get values for table &4" + table, e);
             }
-            if (!tableValues.isEmpty()) values.put(table, tableValues);
+            if (!tableValues.isEmpty()) values.put(newManager.getTableName(tableWithoutPrefix), tableValues);
         }
 
         if (!values.isEmpty()) {
