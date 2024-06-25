@@ -129,18 +129,17 @@ public class PluginPlatform extends Stringable {
     /**
      * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
      *
-     * @param   identifier  {@link #identifier}
-     * @param   plugin      the plugin to get the {@link #author} from
+     * @param   identifier                  {@link #identifier}
+     * @param   plugin                      the plugin to get the {@link #author} from
      *
-     * @return              a new {@link PluginPlatform}
+     * @return                              a new {@link PluginPlatform}
+     *
+     * @throws  IllegalArgumentException    if the plugin has no authors
      */
-    @Nullable
-    public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) {
+    @NotNull
+    public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) throws IllegalArgumentException {
         final List<String> authors = plugin.getDescription().getAuthors();
-        if (authors.isEmpty()) {
-            AnnoyingPlugin.log(Level.WARNING, "&eNo authors found for plugin &6" + plugin.getName() + "&e, but Hangar requires an author for identifier &6" + identifier);
-            return null;
-        }
+        if (authors.isEmpty()) throw new IllegalArgumentException("No authors found for plugin " + plugin.getName() + ", but Hangar requires an author for identifier " + identifier);
         return hangar(identifier, authors.get(0));
     }
 
@@ -160,12 +159,14 @@ public class PluginPlatform extends Stringable {
     /**
      * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
      *
-     * @param   plugin  the plugin to get the {@link #identifier} and {@link #author} from
+     * @param   plugin                      the plugin to get the {@link #identifier} and {@link #author} from
      *
-     * @return          a new {@link PluginPlatform}
+     * @return                              a new {@link PluginPlatform}
+     *
+     * @throws  IllegalArgumentException    if the plugin has no authors
      */
-    @Nullable
-    public static PluginPlatform hangar(@NotNull Plugin plugin) {
+    @NotNull
+    public static PluginPlatform hangar(@NotNull Plugin plugin) throws IllegalArgumentException {
         return hangar(plugin.getName(), plugin);
     }
 
