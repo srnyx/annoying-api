@@ -96,6 +96,7 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      *
      * @return          {@code true} if the data value was set successfully, {@code false} otherwise
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean set(@NotNull String key, @Nullable Object value) {
         return value == null ? remove(key) : set(key, value.toString());
     }

@@ -57,6 +57,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect
  * @see         AnnoyingResource
  * @see         AnnoyingData
  */
+@SuppressWarnings("unchecked")
 public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
@@ -178,6 +179,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @see     #delete(boolean)
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean delete() {
         return delete(false);
     }

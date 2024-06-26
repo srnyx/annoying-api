@@ -220,25 +220,25 @@ public class StorageConfig {
      */
     public enum Method {
         /**
-         * H2 storage method
+         * H2's storage method
          */
-        H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", RuntimeLibrary.H2),
+        H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", null, RuntimeLibrary.H2),
         /**
-         * SQLite storage method
+         * SQLite's storage method
          */
-        SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db"),
+        SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null, null),
         /**
-         * MySQL storage method
+         * MySQL's storage method
          */
-        MYSQL(MySQLDialect::new, MYSQL_MARIADB_DRIVER, dataFolder -> "jdbc:mysql://", 3306),
+        MYSQL(MySQLDialect::new, MYSQL_MARIADB_DRIVER, "jdbc:mysql://", 3306, null),
         /**
-         * MariaDB storage method
+         * MariaDB's storage method
          */
-        MARIADB(MariaDBDialect::new, MYSQL_MARIADB_DRIVER, dataFolder -> "jdbc:mysql://", 3306),
+        MARIADB(MariaDBDialect::new, MYSQL_MARIADB_DRIVER, "jdbc:mysql://", 3306, null),
         /**
-         * PostgreSQL storage method
+         * PostgreSQL's storage method
          */
-        POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", dataFolder -> "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL);
+        POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL);
 
         /**
          * The {@link SQLDialect SQL dialect} constructor for the method
@@ -286,32 +286,10 @@ public class StorageConfig {
          * @param   driver      {@link #driver}
          * @param   url         {@link #url}
          * @param   defaultPort {@link #defaultPort}
+         * @param   library     {@link #library}
          */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, int defaultPort) {
-            this(dialect, driver, url, defaultPort, null);
-        }
-
-        /**
-         * Construct a new {@link Method} with the given parameters
-         *
-         * @param   dialect {@link #dialect}
-         * @param   driver  {@link #driver}
-         * @param   url     {@link #url}
-         * @param   library {@link #library}
-         */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, @NotNull RuntimeLibrary library) {
-            this(dialect, driver, url, null, library);
-        }
-
-        /**
-         * Construct a new {@link Method} with the given parameters
-         *
-         * @param   dialect {@link #dialect}
-         * @param   driver  {@link #driver}
-         * @param   url     {@link #url}
-         */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url) {
-            this(dialect, driver, url, null, null);
+        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull String url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
+            this(dialect, driver, dataFolder -> url, defaultPort, library);
         }
 
         /**

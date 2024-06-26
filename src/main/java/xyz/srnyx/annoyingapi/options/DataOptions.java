@@ -32,7 +32,7 @@ public class DataOptions extends Stringable {
      * <br><b>All tables will be made with the primary key {@code target}</b>
      * <br><i>Removing {@link EntityData#TABLE_NAME} will break {@link EntityData}</i>
      */
-    @NotNull public Map<String, Set<String>> tables = new HashMap<>(MapUtility.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN))));
+    @NotNull @SuppressWarnings("CanBeFinal") public Map<String, Set<String>> tables = new HashMap<>(MapUtility.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN))));
     /**
      * Whether to use the cache by default for {@link StringData}
      */
@@ -199,6 +199,7 @@ public class DataOptions extends Stringable {
     /**
      * Options for {@link EntityData entity data management}
      */
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public static class Entities extends Stringable {
         /**
          * The path to the folder (inside {@code plugins/PLUGIN/data/}) where the entity data files will be stored

@@ -77,6 +77,7 @@ public class BukkitUtility {
     public static boolean toggleScoreboardTag(@NotNull Entity entity, @NotNull String scoreboardTag) {
         if (ENTITY_GET_SCOREBOARD_TAGS_METHOD == null || ENTITY_REMOVE_SCOREBOARD_TAG_METHOD == null || ENTITY_ADD_SCOREBOARD_TAG_METHOD == null) return false;
         try {
+            //noinspection unchecked
             if (((Set<String>) ENTITY_GET_SCOREBOARD_TAGS_METHOD.invoke(entity)).contains(scoreboardTag)) {
                 ENTITY_REMOVE_SCOREBOARD_TAG_METHOD.invoke(entity, scoreboardTag);
                 return false;

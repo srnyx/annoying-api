@@ -35,7 +35,7 @@ public class RegistrationOptions extends Stringable {
     /**
      * <i>{@code OPTIONAL}</i> The {@link Registrable}s to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      */
-    @NotNull public Set<Registrable> toRegister = new HashSet<>();
+    @NotNull @SuppressWarnings("CanBeFinal") public Set<Registrable> toRegister = new HashSet<>();
     /**
      * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>

@@ -162,7 +162,9 @@ public class AnnoyingMessage extends Stringable {
      */
     @NotNull
     public BaseComponent[] getComponents(@Nullable AnnoyingSender sender) {
-        if (components != null) return components; // Use cached components
+        if (components != null) { //noinspection NullableProblems
+            return components; // Use cached components
+        }
         final AnnoyingJSON json = new AnnoyingJSON();
 
         // Get messages file

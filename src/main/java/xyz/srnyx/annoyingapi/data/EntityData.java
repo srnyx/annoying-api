@@ -57,7 +57,7 @@ public class EntityData extends StringData {
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      */
-    @Nullable
+    @Nullable @SuppressWarnings("deprecation")
     public Map<String, String> convertOldData(boolean onlyTryOnce, @Nullable Collection<String> keys) {
         // 1.14+ (persistent data container)
         if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {

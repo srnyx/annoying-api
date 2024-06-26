@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a command that can be executed by a player or the console
  */
+@SuppressWarnings("SameReturnValue")
 public abstract class AnnoyingCommand extends Registrable implements TabExecutor {
     /**
      * Constructs a new command instance for registration

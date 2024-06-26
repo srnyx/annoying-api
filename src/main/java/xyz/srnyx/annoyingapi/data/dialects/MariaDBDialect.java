@@ -47,7 +47,7 @@ public class MariaDBDialect extends SQLDialect {
         return statement;
     }
 
-    @Override @NotNull
+    @Override @NotNull @SuppressWarnings("DuplicatedCode")
     public PreparedStatement setValueImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) throws SQLException {
         final PreparedStatement statement = dataManager.connection.prepareStatement("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`, `" + column + "`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `" + column + "` = ?");
         statement.setString(1, target);
@@ -56,7 +56,7 @@ public class MariaDBDialect extends SQLDialect {
         return statement;
     }
 
-    @Override @NotNull
+    @Override @NotNull @SuppressWarnings("DuplicatedCode")
     public PreparedStatement setValuesImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) throws SQLException {
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`");

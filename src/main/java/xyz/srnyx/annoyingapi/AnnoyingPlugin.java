@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 /**
  * Represents a plugin using Annoying API
  */
+@SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link Logger} for the plugin
@@ -530,6 +531,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      *
      * @return              {@code true} if the task was run asynchronously, {@code false} if it was run synchronously
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean attemptAsync(@NotNull Runnable runnable) {
         try {
             Bukkit.getScheduler().runTaskAsynchronously(this, runnable);

@@ -227,7 +227,7 @@ public class PluginPlatform extends Stringable {
          * <p>Project ID <i>or</i> slug
          * <p><b>Example:</b> {@code gzktm9GG} <i>or</i> {@code annoying-api}
          */
-        MODRINTH,
+        MODRINTH(false),
         /**
          * <a href="https://hangar.papermc.io/">{@code https://hangar.papermc.io/}</a>
          * <p>Slug
@@ -239,33 +239,34 @@ public class PluginPlatform extends Stringable {
          * <p>Project ID
          * <p><b>Example:</b> {@code 106637}
          */
-        SPIGOT,
+        SPIGOT(false),
         /**
          * <a href="https://dev.bukkit.org/projects">{@code https://dev.bukkit.org/projects}</a>
          * <p>Project ID <i>or</i> slug
          * <p><b>Example:</b> {@code 728930} <i>or</i> {@code annoying-api}
          */
-        BUKKIT,
+        BUKKIT(false),
         /**
          * An external direct-download URL
          * <p><b>Example:</b> {@code https://ci.dmulloy2.net/job/ProtocolLib/lastSuccessfulBuild/artifact/target/ProtocolLib.jar}
          */
-        EXTERNAL,
+        EXTERNAL(false),
         /**
          * A URL that the user can manually download the plugin from
          * <p><b>Example:</b> {@code https://github.com/srnyx/annoying-api/releases/latest}
          */
-        MANUAL;
+        MANUAL(false);
 
         /**
          * Whether this {@link Platform} requires an author
          */
         public final boolean requiresAuthor;
 
-        Platform() {
-            requiresAuthor = false;
-        }
-
+        /**
+         * Creates a new {@link Platform}
+         *
+         * @param   requiresAuthor  {@link #requiresAuthor}
+         */
         Platform(boolean requiresAuthor) {
             this.requiresAuthor = requiresAuthor;
         }
@@ -274,6 +275,7 @@ public class PluginPlatform extends Stringable {
     /**
      * A collection of {@link PluginPlatform}s
      */
+    @SuppressWarnings("UnusedReturnValue")
     public static class Multi extends Stringable {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}

@@ -89,6 +89,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      *
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
         if (update && latestVersion != null) new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messagesOptions.keys.updateAvailable)
