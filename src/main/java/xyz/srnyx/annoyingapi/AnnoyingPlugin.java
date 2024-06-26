@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -27,13 +28,15 @@ import xyz.srnyx.annoyingapi.data.StorageConfig;
 import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
-import xyz.srnyx.annoyingapi.events.EventHandlers;
+import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
+import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
+import xyz.srnyx.javautilities.MapUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
@@ -109,6 +112,12 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Set of registered {@link Registrable}s by the plugin
      */
     @NotNull public final Set<Registrable> registeredClasses = new HashSet<>();
+    /**
+     * Custom events/listeners for the API
+     */
+    @NotNull public final Map<Class<? extends Event>, AnnoyingListener> customEvents = MapUtility.mapOf(
+            AdvancedPlayerMoveEvent.class, new AdvancedPlayerMoveEvent.Handler(this),
+            PlayerDamageByPlayerEvent.class, new PlayerDamageByPlayerEvent.Handler(this));
     /**
      * The {@link CooldownManager} for the plugin
      */
@@ -253,8 +262,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Check for updates
         checkUpdate();
 
-        // Register custom events, manually-defined Registrables, & PAPI expansion
-        if (options.registrationOptions.registerCustomEvents) new EventHandlers(this).register();
+        // Register manually-defined Registrables & PAPI expansion
         options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papiInstalled) {

@@ -1,14 +1,18 @@
 package xyz.srnyx.annoyingapi.events;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityEvent;
 
 import org.jetbrains.annotations.NotNull;
+
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -167,5 +171,35 @@ public class PlayerDamageByPlayerEvent extends EntityEvent implements Cancellabl
      */
     public void setDamage(double damage) {
         this.damage = damage;
+    }
+
+    /**
+     * Handles {@link PlayerDamageByPlayerEvent}
+     */
+    public static class Handler extends CustomEventHandler {
+        /**
+         * Constructs a new handler for {@link PlayerDamageByPlayerEvent}
+         *
+         * @param   plugin  the plugin
+         */
+        public Handler(@NotNull AnnoyingPlugin plugin) {
+            super(plugin);
+        }
+
+        /**
+         * Called when an entity is damaged by an entity
+         *
+         * @param   event   the event
+         *
+         * @see             PlayerDamageByPlayerEvent
+         */
+        @EventHandler
+        public void onEntityDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
+            if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) return;
+            final PlayerDamageByPlayerEvent newEvent = new PlayerDamageByPlayerEvent(event);
+            Bukkit.getPluginManager().callEvent(newEvent);
+            event.setCancelled(newEvent.isCancelled());
+            event.setDamage(newEvent.getDamage());
+        }
     }
 }

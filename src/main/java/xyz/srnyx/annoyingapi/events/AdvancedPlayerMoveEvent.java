@@ -1,12 +1,16 @@
 package xyz.srnyx.annoyingapi.events;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -14,7 +18,7 @@ import xyz.srnyx.javautilities.parents.Stringable;
 /**
  * A more advanced version of {@link PlayerMoveEvent}
  */
-public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
+public class AdvancedPlayerMoveEvent extends PlayerMoveEvent {
     /**
      * The {@link HandlerList} for this event.
      */
@@ -26,22 +30,22 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
     @Nullable private MovementType movementType;
 
     /**
-     * Constructs a new {@link AnnoyingPlayerMoveEvent}
+     * Constructs a new {@link AdvancedPlayerMoveEvent}
      *
      * @param   player  {@link #getPlayer()}
      * @param   from    {@link #getFrom()}
      * @param   to      {@link #getTo()}
      */
-    public AnnoyingPlayerMoveEvent(@NotNull Player player, @NotNull Location from, @Nullable Location to) {
+    public AdvancedPlayerMoveEvent(@NotNull Player player, @NotNull Location from, @Nullable Location to) {
         super(player, from, to);
     }
 
     /**
-     * Constructs a new {@link AnnoyingPlayerMoveEvent} from a {@link PlayerMoveEvent}
+     * Constructs a new {@link AdvancedPlayerMoveEvent} from a {@link PlayerMoveEvent}
      *
      * @param   event   the {@link PlayerMoveEvent} to construct from
      */
-    public AnnoyingPlayerMoveEvent(@NotNull PlayerMoveEvent event) {
+    public AdvancedPlayerMoveEvent(@NotNull PlayerMoveEvent event) {
         this(event.getPlayer(), event.getFrom(), event.getTo());
         setCancelled(event.isCancelled());
     }
@@ -108,5 +112,36 @@ public class AnnoyingPlayerMoveEvent extends PlayerMoveEvent {
          * The player has changed both their position (X, Y, or Z) and their rotation (yaw or pitch)
          */
         BOTH
+    }
+
+    /**
+     * Handles {@link AdvancedPlayerMoveEvent}
+     */
+    public static class Handler extends CustomEventHandler {
+        /**
+         * Constructs a new handler for {@link AdvancedPlayerMoveEvent}
+         *
+         * @param   plugin  the plugin
+         */
+        public Handler(@NotNull AnnoyingPlugin plugin) {
+            super(plugin);
+        }
+
+        /**
+         * Holds information for player movement events
+         *
+         * @param   event   the event
+         *
+         * @see             AdvancedPlayerMoveEvent
+         */
+        @EventHandler
+        public void onPlayerMove(@NotNull PlayerMoveEvent event) {
+            final AdvancedPlayerMoveEvent newEvent = new AdvancedPlayerMoveEvent(event);
+            Bukkit.getPluginManager().callEvent(newEvent);
+            event.setCancelled(newEvent.isCancelled());
+            event.setFrom(newEvent.getFrom());
+            final Location to = newEvent.getTo();
+            if (to != null) event.setTo(to);
+        }
     }
 }
