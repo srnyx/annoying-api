@@ -24,7 +24,7 @@ dependencies {
     compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
     compileOnlyApi("org.jetbrains", "annotations", "24.1.0")
     implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.0", "net.byteflux.libby")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:8d23817277", "xyz.srnyx.javautilities")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:1.1.0", "xyz.srnyx.javautilities")
 }
 
 // Publishing
