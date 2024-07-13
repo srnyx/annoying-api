@@ -66,7 +66,7 @@ public class AnnoyingResource extends AnnoyingFile<AnnoyingResource> {
 
     @Override
     public void create() {
-        plugin.saveResource(path, false);
+        plugin.saveResource(path, fileOptions.replace);
     }
 
     /**
@@ -120,7 +120,7 @@ public class AnnoyingResource extends AnnoyingFile<AnnoyingResource> {
 
         @Override @NotNull
         public String toString() {
-            return "ResourceOptions{canBeEmpty=" + canBeEmpty + ",createDefaultFile=" + createDefaultFile + '}';
+            return "ResourceOptions{canBeEmpty=" + canBeEmpty + ",replace=" + replace + ",createDefaultFile=" + createDefaultFile + '}';
         }
     }
 }

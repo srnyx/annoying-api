@@ -142,11 +142,14 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * @return  whether the file was loaded successfully
      */
     public boolean load() {
-        // Create the file if it doesn't exist and can be empty
-        if (!file.exists()) if (fileOptions.canBeEmpty) {
+        if (fileOptions.replace) { // Recreate file if it's set to replace
             create();
-        } else {
-            return true;
+        } else if (!file.exists()) { // Create the file if it doesn't exist and can be empty
+            if (fileOptions.canBeEmpty) {
+                create();
+            } else {
+                return true;
+            }
         }
 
         // Load
@@ -516,13 +519,14 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final int damage = section.getInt("damage", 0);
 
         // Material, amount, & durability (1.12.2-)
-        final ItemStack item = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
+        final boolean useDamageable = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null;
+        final ItemStack item = useDamageable ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) damage);
 
         // Durability (1.13+), name, lore, unbreakable, enchantments, flags, attribute modifiers, & custom model data
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             // Durability (1.13+)
-            if (DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null && DAMAGEABLE_CLASS.isInstance(meta)) try {
+            if (useDamageable && DAMAGEABLE_CLASS.isInstance(meta)) try {
                 DAMAGEABLE_SET_DAMAGE_METHOD.invoke(meta, damage);
             } catch (final IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
@@ -749,6 +753,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * <br><b>Default options:</b>
      * <ul>
      *     <li>{@link #canBeEmpty} = {@code true}
+     *     <li>{@link #replace} = {@code false}
      * </ul>
      *
      * @param   <G> the type of the {@link Options} instance
@@ -758,6 +763,10 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
          * Whether the file can be empty. If false, the file will be deleted if it's empty when {@link #save()} is used
          */
         public boolean canBeEmpty = true;
+        /**
+         * Whether to replace the file if it already exists. Works best with {@link #canBeEmpty} set to {@code true}
+         */
+        public boolean replace = false;
 
         /**
          * Creates a new {@link Options} instance
@@ -779,6 +788,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         @NotNull
         public static <H extends Options<H>> H load(@NotNull H options, @NotNull ConfigurationSection section) {
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
+            if (section.contains("replace")) options.replace = section.getBoolean("replace");
             return options;
         }
 
@@ -806,6 +816,19 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         @NotNull
         public G canBeEmpty(boolean canBeEmpty) {
             this.canBeEmpty = canBeEmpty;
+            return (G) this;
+        }
+
+        /**
+         * Sets the {@link #replace}
+         *
+         * @param   replace {@link #replace}
+         *
+         * @return          the {@link Options} instance
+         */
+        @NotNull
+        public G replace(boolean replace) {
+            this.replace = replace;
             return (G) this;
         }
     }
