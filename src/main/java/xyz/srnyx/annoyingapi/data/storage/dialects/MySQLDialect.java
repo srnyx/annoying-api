@@ -1,27 +1,31 @@
-package xyz.srnyx.annoyingapi.data.dialects;
+package xyz.srnyx.annoyingapi.data.storage.dialects;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.data.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 
 /**
- * SQL dialect for MariaDB database
+ * SQL dialect for MySQL database
  */
-public class MariaDBDialect extends SQLDialect {
+public class MySQLDialect extends SQLDialect {
     /**
-     * Creates a new MariaDB dialect
+     * Creates a new MySQL dialect
      *
      * @param   dataManager {@link #dataManager}
      */
-    public MariaDBDialect(@NotNull DataManager dataManager) {
+    public MySQLDialect(@NotNull DataManager dataManager) {
         super(dataManager);
     }
 
@@ -30,9 +34,14 @@ public class MariaDBDialect extends SQLDialect {
         return dataManager.connection.prepareStatement("CREATE TABLE IF NOT EXISTS `" + table + "` (`" + StringData.TARGET_COLUMN + "` VARCHAR(255) PRIMARY KEY)");
     }
 
-    @Override @NotNull
+    @Override @Nullable
     public PreparedStatement createColumnImpl(@NotNull String table, @NotNull String column) throws SQLException {
-        return dataManager.connection.prepareStatement("ALTER TABLE `" + table + "` ADD COLUMN IF NOT EXISTS `" + column + "` TEXT");
+        try (final ResultSet result = dataManager.connection.createStatement().executeQuery("SHOW COLUMNS FROM `" + table + "`")) {
+            if (result != null) while (result.next()) if (result.getString("Field").equals(column)) return null;
+        } catch (final SQLException e) {
+            AnnoyingPlugin.log(Level.SEVERE, "Failed to get columns for " + table, e);
+        }
+        return dataManager.connection.prepareStatement("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` TEXT");
     }
 
     @Override @NotNull

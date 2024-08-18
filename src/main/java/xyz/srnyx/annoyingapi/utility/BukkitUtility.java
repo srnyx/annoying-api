@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
+import xyz.srnyx.javautilities.manipulation.Mapper;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.logging.Level;
@@ -93,45 +95,25 @@ public class BukkitUtility {
 
     /**
      * Gets the value of a permission node from a {@link Player}
-     * <br>See {@link BukkitUtility#getPermissionValue(Player, String)} for an example
-     *
-     * @param   player          the {@link Player} to get the permission value from
-     * @param   permission      the permission node to get the value of
-     * @param   defaultValue    the default value to return if the permission node is not found or is invalid
-     *
-     * @return                  the value of the permission node, or the default value if not found
-     *
-     * @see                     BukkitUtility#getPermissionValue(Player, String)
-     */
-    public static int getPermissionValue(@NotNull Player player, @NotNull String permission, int defaultValue) {
-        final Integer value = getPermissionValue(player, permission);
-        return value != null ? value : defaultValue;
-    }
-
-    /**
-     * Gets the value of a permission node from a {@link Player}
      * <br><br>
      * <b>Example:</b> {@code player} has {@code friends.max.5} permission, {@code getPermissionValue(player, "friends.max.")} would return {@code 5}
      *
      * @param   player      the {@link Player} to get the permission value from
      * @param   permission  the permission node to get the value of
      *
-     * @return              the value of the permission node, or null if not found
-     *
-     * @see                 BukkitUtility#getPermissionValue(Player, String, int)
+     * @return              the value of the permission node, or empty if not found
      */
-    @Nullable
-    public static Integer getPermissionValue(@NotNull Player player, @NotNull String permission) {
+    @NotNull
+    public static Optional<Integer> getPermissionValue(@NotNull Player player, @NotNull String permission) {
         for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
             if (!info.getValue()) continue;
             final String perm = info.getPermission();
-            if (perm.startsWith(permission)) try {
-                return Integer.parseInt(perm.substring(permission.length()));
-            } catch (final NumberFormatException e) {
-                AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
-            }
+            if (!perm.startsWith(permission)) continue;
+            final Optional<Integer> value = Mapper.toInt(perm.substring(permission.length()));
+            if (!value.isPresent()) AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
+            return value;
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -140,21 +122,21 @@ public class BukkitUtility {
      *
      * @param   name    the name of the player
      *
-     * @return          the {@link OfflinePlayer}, or null if not found
+     * @return          the {@link OfflinePlayer}, or empty if not found
      */
-    @Nullable
-    public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
+    @NotNull
+    public static Optional<OfflinePlayer> getOfflinePlayer(@NotNull String name) {
         // Check online players
         final Player online = Bukkit.getPlayerExact(name);
-        if (online != null) return online;
+        if (online != null) return Optional.of(online);
 
         // Check offline players
         final String nameLower = name.toLowerCase();
         for (final OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
             final String offlineName = offline.getName();
-            if (offlineName != null && offlineName.toLowerCase().equals(nameLower)) return offline;
+            if (offlineName != null && offlineName.toLowerCase().equals(nameLower)) return Optional.of(offline);
         }
-        return null;
+        return Optional.empty();
     }
 
     /**

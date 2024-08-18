@@ -1,8 +1,8 @@
-package xyz.srnyx.annoyingapi.data.dialects;
+package xyz.srnyx.annoyingapi.data.storage.dialects;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 
 import java.sql.PreparedStatement;

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.data;
+package xyz.srnyx.annoyingapi.data.storage;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -7,8 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.RuntimeLibrary;
-import xyz.srnyx.annoyingapi.data.dialects.*;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
@@ -16,7 +14,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -30,9 +27,9 @@ public class StorageConfig {
      */
     @NotNull public final AnnoyingFile<?> file;
     /**
-     * The {@link Method storage method}
+     * The {@link StorageMethod storage method}
      */
-    @NotNull public final Method method;
+    @NotNull public final StorageMethod method;
     /**
      * The {@link Cache data cache} options
      */
@@ -50,7 +47,7 @@ public class StorageConfig {
     public StorageConfig(@NotNull AnnoyingFile<?> file) {
         this.file = file;
         cache = new Cache();
-        final Method getMethod = Method.get(file.getString("method"));
+        final StorageMethod getMethod = StorageMethod.get(file.getString("method"));
 
         // Local storage
         if (!getMethod.isRemote()) {
@@ -63,7 +60,7 @@ public class StorageConfig {
         final ConfigurationSection remoteSection = file.getConfigurationSection("remote-connection");
         if (remoteSection == null) {
             AnnoyingPlugin.log(Level.WARNING, file.file.getPath() + " | A remote storage method is used but no remote connection is specified, using H2 instead");
-            method = Method.H2;
+            method = StorageMethod.H2;
             remoteConnection = null;
             return;
         }
@@ -113,7 +110,7 @@ public class StorageConfig {
         }
 
         // SQLite: create parent directories
-        if (method == Method.SQLITE) {
+        if (method == StorageMethod.SQLITE) {
             final File folder = new File(plugin.getDataFolder(), "data/sqlite");
             if (!folder.exists() && !folder.mkdirs()) throw new ConnectionException("Failed to create SQLite parent directories", url, properties);
         }
@@ -203,131 +200,10 @@ public class StorageConfig {
         public Cache() {
             final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
                     .map(SaveOn::fromString)
-                    .filter(Objects::nonNull)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .collect(Collectors.toSet());
             saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
-        }
-    }
-
-    /**
-     * The driver class for MySQL/MariaDB depending on MySQL Java Connector version
-     * <br>1.16.5 uses 8.x.x ({@code com.mysql.cj.jdbc.Driver}), 1.16.4- doesn't ({@code com.mysql.jdbc.Driver})
-     */
-    @NotNull private static final String MYSQL_MARIADB_DRIVER = AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 16, 5) ? "com{}mysql{}cj{}jdbc{}Driver" : "com{}mysql{}jdbc{}Driver";
-
-    /**
-     * The storage method
-     */
-    public enum Method {
-        /**
-         * H2's storage method
-         */
-        H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", null, RuntimeLibrary.H2),
-        /**
-         * SQLite's storage method
-         */
-        SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null, null),
-        /**
-         * MySQL's storage method
-         */
-        MYSQL(MySQLDialect::new, MYSQL_MARIADB_DRIVER, "jdbc:mysql://", 3306, null),
-        /**
-         * MariaDB's storage method
-         */
-        MARIADB(MariaDBDialect::new, MYSQL_MARIADB_DRIVER, "jdbc:mysql://", 3306, null),
-        /**
-         * PostgreSQL's storage method
-         */
-        POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL);
-
-        /**
-         * The {@link SQLDialect SQL dialect} constructor for the method
-         */
-        @NotNull public final Function<DataManager, SQLDialect> dialect;
-        /**
-         * The driver class name for the method
-         */
-        @NotNull private final String driver;
-        /**
-         * <b>Local:</b> The full URL for the method
-         * <br><b>Remote:</b> The beginning of the URL for the method
-         */
-        @NotNull public final Function<File, String> url;
-        /**
-         * The default port for the method (only for remote connections)
-         */
-        @Nullable public final Integer defaultPort;
-        /**
-         * The library to be downloaded for the method (if any)
-         */
-        @Nullable public final RuntimeLibrary library;
-
-        /**
-         * Construct a new {@link Method} with the given parameters
-         *
-         * @param   dialect     {@link #dialect}
-         * @param   driver      {@link #driver}
-         * @param   url         {@link #url}
-         * @param   defaultPort {@link #defaultPort}
-         * @param   library     {@link #library}
-         */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
-            this.dialect = dialect;
-            this.driver = driver;
-            this.url = url;
-            this.defaultPort = defaultPort;
-            this.library = library;
-        }
-
-        /**
-         * Construct a new {@link Method} with the given parameters
-         *
-         * @param   dialect     {@link #dialect}
-         * @param   driver      {@link #driver}
-         * @param   url         {@link #url}
-         * @param   defaultPort {@link #defaultPort}
-         * @param   library     {@link #library}
-         */
-        Method(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull String url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
-            this(dialect, driver, dataFolder -> url, defaultPort, library);
-        }
-
-        /**
-         * Get the driver class name for the method
-         *
-         * @param   plugin  the {@link AnnoyingPlugin plugin} to get the driver for
-         *
-         * @return          the driver class name for the method
-         */
-        @NotNull
-        public String getDriver(@NotNull AnnoyingPlugin plugin) {
-            return (library != null ? plugin.getLibsPackage() + driver : driver).replace("{}", ".");
-        }
-
-        /**
-         * Whether the method is remote (just checks if {@link #defaultPort} is not {@code null})
-         *
-         * @return  {@code true} if the method is remote, {@code false} otherwise
-         */
-        public boolean isRemote() {
-            return defaultPort != null;
-        }
-
-        /**
-         * Get the {@link Method} with the given name
-         *
-         * @param   name    the name of the method
-         *
-         * @return          the {@link Method} with the given name, or {@link #H2} if the name is {@code null} or invalid
-         */
-        @NotNull
-        public static Method get(@Nullable String name) {
-            if (name == null) return H2;
-            try {
-                return valueOf(name.toUpperCase());
-            } catch (final IllegalArgumentException e) {
-                return H2;
-            }
         }
     }
 
@@ -357,16 +233,17 @@ public class StorageConfig {
         /**
          * Converts the specified string to a {@link SaveOn} value
          *
-         * @param string the string to convert
-         * @return the converted value, or {@code null} if the string is invalid
+         * @param   string  the string to convert
+         *
+         * @return          the converted value, or empty if the string is invalid
          */
-        @Nullable
-        public static SaveOn fromString(@Nullable String string) {
-            if (string == null) return null;
+        @NotNull
+        public static Optional<SaveOn> fromString(@Nullable String string) {
+            if (string == null) return Optional.empty();
             try {
-                return valueOf(string);
+                return Optional.of(valueOf(string.toUpperCase()));
             } catch (final IllegalArgumentException e) {
-                return null;
+                return Optional.empty();
             }
         }
     }

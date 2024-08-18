@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.data;
+package xyz.srnyx.annoyingapi.data.storage;
 
 import org.jetbrains.annotations.NotNull;
 

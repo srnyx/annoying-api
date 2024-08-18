@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -265,36 +262,26 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         return section == null ? createSection(path) : section;
     }
 
-    /**
-     * Gets a {@link Sound} from the path
-     *
-     * @param   path    the path to the node
-     *
-     * @return          the {@link Sound} or {@code null} if it doesn't exist
-     */
-    @Nullable
-    public Sound getSound(@NotNull String path) {
-        final Object def = getDefault(path);
-        return getSound(path, def instanceof Sound ? (Sound) def : null);
+    @NotNull
+    public <G> Optional<G> getDef(@NotNull String path) {
+        final Object value = getDefault(path);
+        return value != null ? Optional.of((G) value) : Optional.empty();
     }
 
     /**
      * Gets a {@link Sound} from the path
      *
      * @param   path    the path to the node
-     * @param   def     the default value
      *
-     * @return          the {@link Sound} or {@code def} if it doesn't exist
+     * @return          the {@link Sound} or empty if it's invalid
      */
-    @Nullable
-    public Sound getSound(@NotNull String path, @Nullable Sound def) {
+    @NotNull
+    public Optional<Sound> getSound(@NotNull String path) {
         final String sound = getString(path);
-        if (sound == null) return def;
-        try {
-            return Sound.valueOf(sound.toUpperCase());
-        } catch (final IllegalArgumentException e) {
-            return def;
-        }
+        if (sound != null) try {
+            return Optional.of(Sound.valueOf(sound.toUpperCase()));
+        } catch (final IllegalArgumentException ignored) {}
+        return getDef(path);
     }
 
     /**
@@ -302,26 +289,13 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @param   path    the path to the node
      *
-     * @return          the {@link PlayableSound} or {@code null} if it's invalid
+     * @return          the {@link PlayableSound} or empty if it's invalid
      */
-    @Nullable
-    public PlayableSound getPlayableSound(@NotNull String path) {
-        final Object def = getDefault(path);
-        return getPlayableSound(path, def instanceof PlayableSound ? (PlayableSound) def : null);
-    }
-
-    /**
-     * Gets a {@link PlayableSound} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
-     *
-     * @param   path    the path to the node
-     * @param   def     the default value
-     *
-     * @return          the {@link PlayableSound} or {@code def} if it's invalid
-     */
-    @Nullable
-    public PlayableSound getPlayableSound(@NotNull String path, @Nullable PlayableSound def) {
-        final Sound sound = getSound(path + ".sound");
-        if (sound == null) return def;
+    @NotNull
+    public Optional<PlayableSound> getPlayableSound(@NotNull String path) {
+        final Optional<PlayableSound> def = getDef(path);
+        final Optional<Sound> sound = getSound(path + ".sound");
+        if (!sound.isPresent()) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
@@ -335,7 +309,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Return SoundData
-        return new PlayableSound(sound, category, (float) section.getDouble("volume", 1), (float) section.getDouble("pitch", 1));
+        return Optional.of(new PlayableSound(sound.get(), category, (float) section.getDouble("volume", 1), (float) section.getDouble("pitch", 1)));
     }
 
     /**
@@ -343,24 +317,11 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @param   path    the path to the node
      *
-     * @return          the {@link PotionEffect} or {@code null} if it's invalid
+     * @return          the {@link PotionEffect} or empty if it's invalid
      */
-    @Nullable
-    public PotionEffect getPotionEffect(@NotNull String path) {
-        final Object def = getDefault(path);
-        return getPotionEffect(path, def instanceof PotionEffect ? (PotionEffect) def : null);
-    }
-
-    /**
-     * Gets a {@link PotionEffect} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
-     *
-     * @param   path    the path to the node
-     * @param   def     the default value
-     *
-     * @return          the {@link PotionEffect} or {@code def} if it's invalid
-     */
-    @Nullable
-    public PotionEffect getPotionEffect(@NotNull String path, @Nullable PotionEffect def) {
+    @NotNull
+    public Optional<PotionEffect> getPotionEffect(@NotNull String path) {
+        final Optional<PotionEffect> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
@@ -372,11 +333,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Get type
-        final PotionEffectType type = RefRegistry.getEffect(typeString);
-        if (type == null) {
+        final Optional<PotionEffectType> typeOptional = RefRegistry.getEffect(typeString);
+        if (!typeOptional.isPresent()) {
             log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
+        final PotionEffectType type = typeOptional.get();
 
         // Get duration, amplifier, ambient, & particles
         final int duration = section.getInt("duration", 1);
@@ -386,13 +348,13 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
         // 1.13+ icon
         if (POTION_EFFECT_CONSTRUCTOR_6 != null) try {
-            return POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true));
+            return Optional.of(POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
 
         // 1.12.2-
-        return new PotionEffect(type, duration, amplifier, ambient, particles);
+        return Optional.of(new PotionEffect(type, duration, amplifier, ambient, particles));
     }
 
     /**
@@ -400,28 +362,13 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @param   path    the path to the node
      *
-     * @return          the {@code AttributeModifier} or {@code null} if it's invalid
-     *
-     * @param   <G>     the {@code AttributeModifier} class
-     */
-    @Nullable
-    public <G> G getAttributeModifier(@NotNull String path) {
-        final Object def = getDefault(path);
-        return (G) getAttributeModifier(path, ATTRIBUTE_MODIFIER_CLASS != null && ATTRIBUTE_MODIFIER_CLASS.isInstance(def) ? ATTRIBUTE_MODIFIER_CLASS.cast(def) : null);
-    }
-
-    /**
-     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
-     *
-     * @param   path    the path to the node
-     * @param   def     the default value
-     *
      * @param   <G>     the {@code AttributeModifier} class
      *
-     * @return          the {@code AttributeModifier} or {@code def} if it's invalid
+     * @return          the {@code AttributeModifier} or empty if it's invalid
      */
-    @Nullable @SuppressWarnings("unchecked")
-    public <G> G getAttributeModifier(@NotNull String path, @Nullable G def) {
+    @NotNull @SuppressWarnings("unchecked")
+    public <G> Optional<G> getAttributeModifier(@NotNull String path) {
+        final Optional<G> def = getDef(path);
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
@@ -458,7 +405,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
             // Return
             try {
-                return (G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
+                return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot));
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -467,7 +414,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
         // Return
         if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 != null) try {
-            return (G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation);
+            return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -483,8 +430,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @Override @Nullable
     public ItemStack getItemStack(@NotNull String path) {
-        final Object def = getDefault(path);
-        return getItemStack(path, def instanceof ItemStack ? (ItemStack) def : null);
+        return getItemStackOptional(path).orElse(null);
     }
 
     /**
@@ -493,10 +439,23 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * @param   path    the path to the node
      * @param   def     the default value
      *
-     * @return the {@link ItemStack} or {@code def} if it's invalid
+     * @return          the {@link ItemStack} or {@code def} if it's invalid
      */
     @Override @Nullable
     public ItemStack getItemStack(@NotNull String path, @Nullable ItemStack def) {
+        return getItemStackOptional(path).orElse(def);
+    }
+
+    /**
+     * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     *
+     * @return the {@link ItemStack} or empty if it's invalid
+     */
+    @NotNull
+    public Optional<ItemStack> getItemStackOptional(@NotNull String path) {
+        final Optional<ItemStack> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
@@ -542,12 +501,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Enchantment enchantment = RefRegistry.getEnchantment(enchantmentKey);
-                if (enchantment == null) {
+                final Optional<Enchantment> enchantment = RefRegistry.getEnchantment(enchantmentKey);
+                if (!enchantment.isPresent()) {
                     log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
-                meta.addEnchant(enchantment, enchantmentsSection.getInt(enchantmentKey), true);
+                meta.addEnchant(enchantment.get(), enchantmentsSection.getInt(enchantmentKey), true);
             }
 
             // Flags
@@ -586,12 +545,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                     }
 
                     // Get attribute modifier
-                    final Object attributeModifier = getAttributeModifier(pathString);
-                    if (attributeModifier == null) continue;
+                    final Optional<?> attributeModifier = getAttributeModifier(pathString);
+                    if (!attributeModifier.isPresent()) continue;
 
                     // Add attribute modifier
                     try {
-                        ITEM_META_ADD_ATTRIBUTE_MODIFIER.invoke(meta, attribute, attributeModifier);
+                        ITEM_META_ADD_ATTRIBUTE_MODIFIER.invoke(meta, attribute, attributeModifier.get());
                     } catch (final IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -618,7 +577,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         if (dataSection != null) for (final String key : dataSection.getKeys(false)) dataUtility.set(key, dataSection.getString(key));
 
         // Return
-        return dataUtility.target;
+        return Optional.of(dataUtility.target);
     }
 
     /**
@@ -628,8 +587,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
      */
-    @Nullable
-    public Recipe getRecipe(@NotNull String path) {
+    @NotNull
+    public Optional<Recipe> getRecipe(@NotNull String path) {
         return getRecipe(path, null, null);
     }
 
@@ -639,12 +598,11 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * @param   path            the path to get the recipe from
      * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
      *
-     * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
+     * @return          the {@link Recipe} or empty if it's invalid
      */
-    @Nullable
-    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction) {
-        final Object def = getDefault(path);
-        return getRecipe(path, itemFunction, def instanceof Recipe ? (Recipe) def : null, null);
+    @NotNull
+    public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction) {
+        return getRecipe(path, itemFunction, null);
     }
 
     /**
@@ -652,27 +610,14 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @param   path            the path to get the recipe from
      * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
-     * @param   def             the default {@link Recipe} to return if the recipe doesn't exist / is invalid / something went wrong
-     *
-     * @return          the {@link Recipe} or {@code null} if it doesn't exist / is invalid / something went wrong
-     */
-    @Nullable
-    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable Recipe def) {
-        return getRecipe(path, itemFunction, def, null);
-    }
-
-    /**
-     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
-     *
-     * @param   path            the path to get the recipe from
-     * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
-     * @param   def             the default {@link Recipe} to return if the recipe doesn't exist / is invalid / something went wrong
      * @param   name            the name of the recipe (only used in 1.12+ for the {@code NamespacedKey}), or {@code null} to use the node name
      *
-     * @return          the {@link Recipe} or the {@code def} if it doesn't exist / is invalid / something went wrong
+     * @return          the {@link Recipe} or the {@code def} if it's invalid
      */
-    @Nullable
-    public Recipe getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable Recipe def, @Nullable String name) {
+    @NotNull
+    public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable String name) {
+        final Optional<Recipe> def = getDef(path);
+
         // section, shape, result, & ingredientMaterials
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
@@ -723,7 +668,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             for (Map.Entry<Character, Material> entry : ingredientMaterials.entrySet()) shapeless.addIngredient(shape.stream()
                     .mapToInt(s -> s.length() - s.replace(entry.getKey().toString(), "").length())
                     .sum(), entry.getValue());
-            return shapeless;
+            return Optional.of(shapeless);
         }
 
         // Shaped
@@ -744,7 +689,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                 .map(string -> string.replace("-", " "))
                 .toArray(String[]::new));
         ingredientMaterials.forEach(shaped::setIngredient);
-        return shaped;
+        return Optional.of(shaped);
     }
 
     /**

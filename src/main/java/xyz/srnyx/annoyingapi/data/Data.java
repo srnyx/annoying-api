@@ -5,10 +5,11 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
+
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.util.Optional;
 import java.util.logging.Level;
 
 
@@ -76,6 +77,18 @@ public abstract class Data<T> extends Stringable implements Annoyable {
     public String get(@NotNull String key, @NotNull String def) {
         final String value = get(key);
         return value == null ? def : value;
+    }
+
+    /**
+     * Get the data value for the given key as an {@link Optional}
+     *
+     * @param   key the key to get the data value for
+     *
+     * @return      the data value as an {@link Optional}
+     */
+    @NotNull
+    public Optional<String> getOptional(@NotNull String key) {
+        return Optional.ofNullable(get(key));
     }
 
     /**

@@ -64,28 +64,28 @@ public class PluginPlatform extends Stringable {
      *
      * @return          the loaded {@link PluginPlatform}
      */
-    @Nullable
-    public static PluginPlatform load(@NotNull ConfigurationSection section) {
+    @NotNull
+    public static Optional<PluginPlatform> load(@NotNull ConfigurationSection section) {
         // platform
         final String name = section.getName();
         final String platformName = name.isEmpty() ? section.getString("platform") : name;
         if (platformName == null) {
             AnnoyingPlugin.log(Level.WARNING, "&6platform&e is null for section &6" + section.getCurrentPath());
-            return null;
+            return Optional.empty();
         }
         final Platform platform;
         try {
             platform = Platform.valueOf(platformName.toUpperCase());
         } catch (final IllegalArgumentException e) {
             AnnoyingPlugin.log(Level.WARNING, "&eInvalid platform &6" + platformName + "&e for section &6" + section.getCurrentPath());
-            return null;
+            return Optional.empty();
         }
 
         // identifier
         final String identifier = section.getString("identifier");
         if (identifier == null) {
             AnnoyingPlugin.log(Level.WARNING, "&eidentifier&e is null for platform &6" + platform.name());
-            return null;
+            return Optional.empty();
         }
 
         // author
@@ -93,12 +93,12 @@ public class PluginPlatform extends Stringable {
             final String author = section.getString("author");
             if (author == null) {
                 AnnoyingPlugin.log(Level.WARNING, "&eauthor&e is null for author-required platform &6" + platform.name() + "&e with identifier &6" + identifier);
-                return null;
+                return Optional.empty();
             }
-            return new PluginPlatform(platform, identifier, author);
+            return Optional.of(new PluginPlatform(platform, identifier, author));
         }
 
-        return new PluginPlatform(platform, identifier);
+        return Optional.of(new PluginPlatform(platform, identifier));
     }
 
     /**
@@ -324,6 +324,8 @@ public class PluginPlatform extends Stringable {
             if (platformsSection == null) {
                 ConfigurationUtility.toConfigurationList(section.getMapList(key)).stream()
                         .map(PluginPlatform::load)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
                         .forEach(multi::addIfAbsent);
                 return multi;
             }
@@ -340,8 +342,8 @@ public class PluginPlatform extends Stringable {
                     continue;
                 }
                 // Section
-                final PluginPlatform pluginPlatform = PluginPlatform.load(platformSection);
-                if (pluginPlatform != null) multi.addIfAbsent(pluginPlatform);
+                final Optional<PluginPlatform> pluginPlatform = PluginPlatform.load(platformSection);
+                pluginPlatform.ifPresent(multi::addIfAbsent);
             }
 
             return multi;
@@ -354,12 +356,11 @@ public class PluginPlatform extends Stringable {
          *
          * @return              the {@link PluginPlatform} for the given {@link Platform}
          */
-        @Nullable
-        public PluginPlatform get(@NotNull Platform platform) {
+        @NotNull
+        public Optional<PluginPlatform> get(@NotNull Platform platform) {
             return pluginPlatforms.stream()
                     .filter(filter -> filter.platform == platform)
-                    .findFirst()
-                    .orElse(null);
+                    .findFirst();
         }
 
         /**
@@ -369,10 +370,9 @@ public class PluginPlatform extends Stringable {
          *
          * @return              the {@link PluginPlatform#identifier} for the given {@link Platform}
          */
-        @Nullable
-        public String getIdentifier(@NotNull Platform platform) {
-            final PluginPlatform pluginPlatform = get(platform);
-            return pluginPlatform == null ? null : pluginPlatform.identifier;
+        @NotNull
+        public Optional<String> getIdentifier(@NotNull Platform platform) {
+            return get(platform).map(filter -> filter.identifier);
         }
 
         /**
@@ -395,7 +395,7 @@ public class PluginPlatform extends Stringable {
          */
         public boolean addIfAbsent(@NotNull PluginPlatform... pluginPlatforms) {
             final Set<PluginPlatform> toAdd = Arrays.stream(pluginPlatforms)
-                    .filter(filter -> get(filter.platform) == null)
+                    .filter(filter -> !get(filter.platform).isPresent())
                     .collect(Collectors.toSet());
             return this.pluginPlatforms.addAll(toAdd);
         }

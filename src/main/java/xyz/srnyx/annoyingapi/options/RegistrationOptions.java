@@ -5,7 +5,6 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
@@ -14,10 +13,7 @@ import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -65,12 +61,12 @@ public class RegistrationOptions extends Stringable {
     /**
      * Casts the {@link #papiExpansionToRegister} to a {@link PlaceholderExpansion} and returns it
      *
-     * @return  the {@link #papiExpansionToRegister} as a {@link PlaceholderExpansion} or {@code null} if it is not a {@link PlaceholderExpansion}
+     * @return  the {@link #papiExpansionToRegister} as a {@link PlaceholderExpansion} or empty if it isn't
      */
-    @Nullable
-    public PlaceholderExpansion getPapiExpansionToRegister() {
+    @NotNull
+    public Optional<PlaceholderExpansion> getPapiExpansionToRegister() {
         final Object expansion = papiExpansionToRegister.get();
-        return expansion instanceof PlaceholderExpansion ? (PlaceholderExpansion) expansion : null;
+        return expansion instanceof PlaceholderExpansion ? Optional.of((PlaceholderExpansion) expansion) : Optional.empty();
     }
 
     /**

@@ -21,11 +21,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
-import xyz.srnyx.annoyingapi.data.ConnectionException;
-import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.data.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.ItemData;
-import xyz.srnyx.annoyingapi.data.StorageConfig;
-import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.data.storage.StorageConfig;
+import xyz.srnyx.annoyingapi.data.storage.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
@@ -40,8 +40,10 @@ import xyz.srnyx.javautilities.MapUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -265,10 +267,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Register manually-defined Registrables & PAPI expansion
         options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
-        if (papiInstalled) {
-            final PlaceholderExpansion expansion = options.registrationOptions.getPapiExpansionToRegister();
-            if (expansion != null) expansion.register();
-        }
+        if (papiInstalled) options.registrationOptions.getPapiExpansionToRegister().ifPresent(PlaceholderExpansion::register);
 
         // Automatic registration
         final Set<String> packages = options.registrationOptions.automaticRegistration.packages;

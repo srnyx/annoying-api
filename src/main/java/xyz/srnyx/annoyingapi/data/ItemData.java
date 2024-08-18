@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.RuntimeLibrary;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -41,17 +42,26 @@ public class ItemData extends Data<ItemStack> {
     }
 
     /**
-     * Attempt to run the given runnable, and if a {@link NoClassDefFoundError} is thrown, load the {@link RuntimeLibrary#ITEM_NBT_API} library and try again. If the error is thrown again, send an error message and return null
+     * If the {@link RuntimeLibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given supplier and return the result
      *
-     * @param   runnable    the runnable to attempt
+     * @param   supplier    the supplier to attempt
      *
      * @return              the result of the runnable
      */
-    @Nullable
-    public String attemptItemNbtApi(@NotNull Supplier<String> runnable) {
-        if (plugin.loadedLibraries.contains(RuntimeLibrary.ITEM_NBT_API)) return runnable.get();
-        RuntimeLibrary.ITEM_NBT_API.load(plugin);
-        return runnable.get();
+    @NotNull
+    public Optional<String> attemptItemNbtApi(@NotNull Supplier<String> supplier) {
+        if (!plugin.loadedLibraries.contains(RuntimeLibrary.ITEM_NBT_API)) RuntimeLibrary.ITEM_NBT_API.load(plugin);
+        return Optional.ofNullable(supplier.get());
+    }
+
+    /**
+     * If the {@link RuntimeLibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given runnable
+     *
+     * @param   runnable    the runnable to attempt
+     */
+    public void attemptItemNbtApi(@NotNull Runnable runnable) {
+        if (!plugin.loadedLibraries.contains(RuntimeLibrary.ITEM_NBT_API)) RuntimeLibrary.ITEM_NBT_API.load(plugin);
+        runnable.run();
     }
 
     /**
@@ -86,7 +96,7 @@ public class ItemData extends Data<ItemStack> {
         }
 
         // 1.13.1- (Item NBT API)
-        return attemptItemNbtApi(() -> NBT.get(target, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(key)));
+        return attemptItemNbtApi(() -> NBT.get(target, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(key))).orElse(null);
     }
 
     /**
@@ -95,7 +105,7 @@ public class ItemData extends Data<ItemStack> {
      * @param   key     the key to set the data value for
      * @param   value   the data value to set
      *
-     * @return          this {@link ItemData} instance
+     * @return          true if the data value was set, false if it failed
      */
     @Override
     protected boolean set(@NotNull String key, @NotNull String value) {
@@ -129,10 +139,8 @@ public class ItemData extends Data<ItemStack> {
         }
 
         // 1.13.1- (Item NBT API)
-        return attemptItemNbtApi(() -> {
-            NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.setString(key, value));
-            return "";
-        }) != null;
+        attemptItemNbtApi(() -> NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.setString(key, value)));
+        return true;
     }
 
     /**
@@ -140,7 +148,7 @@ public class ItemData extends Data<ItemStack> {
      *
      * @param   key the key to remove the data value for
      *
-     * @return      this {@link ItemData} instance
+     * @return      true if the data value was removed, false if it failed
      */
     @Override
     public boolean remove(@NotNull String key) {
@@ -174,9 +182,7 @@ public class ItemData extends Data<ItemStack> {
         }
 
         // 1.13.1- (Item NBT API)
-        return attemptItemNbtApi(() -> {
-            NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.removeKey(key));
-            return "";
-        }) != null;
+        attemptItemNbtApi(() -> NBT.modify(target, (Consumer<ReadWriteItemNBT>) nbt -> nbt.removeKey(key)));
+        return true;
     }
 }

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.data.dialects;
+package xyz.srnyx.annoyingapi.data.storage.dialects;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.DataManager;
+import xyz.srnyx.annoyingapi.data.storage.DataManager;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

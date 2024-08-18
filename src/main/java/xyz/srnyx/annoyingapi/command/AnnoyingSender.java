@@ -14,6 +14,8 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.util.Optional;
+
 
 /**
  * This class is typically used in conjunction with {@link AnnoyingCommand}
@@ -76,7 +78,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     public AnnoyingPlugin getAnnoyingPlugin() {
         return plugin;
     }
-
 
     /**
      * Checks if the provided {@link CommandSender} is the same as the {@link #cmdSender}
@@ -157,6 +158,19 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     @Nullable
     public Player getPlayerOrNull() {
         return isPlayer ? (Player) cmdSender : null;
+    }
+
+    /**
+     * Returns the {@link Player} as an {@link Optional}, empty if the {@link CommandSender} is not a {@link Player}
+     * <br>If you know that the {@link CommandSender} is a {@link Player}, use {@link #getPlayer()} instead
+     *
+     * @return  the {@link Player} as an {@link Optional}
+     *
+     * @see     #getPlayer()
+     */
+    @NotNull
+    public Optional<Player> getPlayerOptional() {
+        return Optional.ofNullable(getPlayerOrNull());
     }
 
     /**

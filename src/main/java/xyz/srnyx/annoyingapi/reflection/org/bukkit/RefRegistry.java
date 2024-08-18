@@ -10,6 +10,7 @@ import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.*;
 
@@ -42,16 +43,16 @@ public class RefRegistry {
      *
      * @return          the {@link PotionEffectType}
      */
-    @Nullable
-    public static PotionEffectType getEffect(@NotNull String name) {
+    @NotNull
+    public static Optional<PotionEffectType> getEffect(@NotNull String name) {
         // 1.20.3+
         if (GET_METHOD != null && EFFECT_FIELD != null && MINECRAFT_METHOD != null) try {
-            return (PotionEffectType) GET_METHOD.invoke(EFFECT_FIELD, MINECRAFT_METHOD.invoke(null, name));
+            return Optional.ofNullable((PotionEffectType) GET_METHOD.invoke(EFFECT_FIELD, MINECRAFT_METHOD.invoke(null, name)));
         } catch (final IllegalAccessException | InvocationTargetException ignored) {
             // Ignored
         }
         // 1.20.2-
-        return PotionEffectType.getByName(name);
+        return Optional.ofNullable(PotionEffectType.getByName(name));
     }
 
     /**
@@ -61,16 +62,16 @@ public class RefRegistry {
      *
      * @return          the {@link Enchantment}
      */
-    @Nullable
-    public static Enchantment getEnchantment(@NotNull String name) {
+    @NotNull
+    public static Optional<Enchantment> getEnchantment(@NotNull String name) {
         // 1.14+
         if (GET_METHOD != null && ENCHANTMENT_FIELD != null && MINECRAFT_METHOD != null) try {
-            return (Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, MINECRAFT_METHOD.invoke(null, name));
+            return Optional.ofNullable((Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, MINECRAFT_METHOD.invoke(null, name)));
         } catch (final IllegalAccessException | InvocationTargetException ignored) {
             // Ignored
         }
         // 1.13.2-
-        return Enchantment.getByName(name);
+        return Optional.ofNullable(Enchantment.getByName(name));
     }
 
     /**

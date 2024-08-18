@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.DataOptions;
+import xyz.srnyx.annoyingapi.data.storage.DataManager;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

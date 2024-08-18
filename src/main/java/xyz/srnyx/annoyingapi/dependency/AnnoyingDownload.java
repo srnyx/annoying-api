@@ -27,6 +27,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 
@@ -88,44 +89,44 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         final PluginPlatform.Multi platforms = dependency.platforms;
         
         // Modrinth
-        final String modrinth = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
-        if (modrinth != null) {
-            modrinth(dependency, modrinth);
+        final Optional<String> modrinth = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
+        if (modrinth.isPresent()) {
+            modrinth(dependency, modrinth.get());
             return;
         }
 
         // Hangar
-        final PluginPlatform hangar = platforms.get(PluginPlatform.Platform.HANGAR);
-        if (hangar != null) {
-            hangar(dependency, hangar);
+        final Optional<PluginPlatform> hangar = platforms.get(PluginPlatform.Platform.HANGAR);
+        if (hangar.isPresent()) {
+            hangar(dependency, hangar.get());
             return;
         }
 
         // Spigot
-        final String spigot = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
-        if (spigot != null) {
-            spigot(dependency, spigot);
+        final Optional<String> spigot = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
+        if (spigot.isPresent()) {
+            spigot(dependency, spigot.get());
             return;
         }
 
         // Bukkit
-        final String bukkit = platforms.getIdentifier(PluginPlatform.Platform.BUKKIT);
-        if (bukkit != null) {
-            downloadFile(dependency, PluginPlatform.Platform.BUKKIT, "https://dev.bukkit.org/projects/" + bukkit + "/files/latest");
+        final Optional<String> bukkit = platforms.getIdentifier(PluginPlatform.Platform.BUKKIT);
+        if (bukkit.isPresent()) {
+            downloadFile(dependency, PluginPlatform.Platform.BUKKIT, "https://dev.bukkit.org/projects/" + bukkit.get() + "/files/latest");
             return;
         }
 
         // External
-        final String external = platforms.getIdentifier(PluginPlatform.Platform.EXTERNAL);
-        if (external != null) {
-            downloadFile(dependency, PluginPlatform.Platform.EXTERNAL, external);
+        final Optional<String> external = platforms.getIdentifier(PluginPlatform.Platform.EXTERNAL);
+        if (external.isPresent()) {
+            downloadFile(dependency, PluginPlatform.Platform.EXTERNAL, external.get());
             return;
         }
 
         // Manual
-        final String manual = platforms.getIdentifier(PluginPlatform.Platform.MANUAL);
-        if (manual != null) {
-            AnnoyingPlugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual);
+        final Optional<String> manual = platforms.getIdentifier(PluginPlatform.Platform.MANUAL);
+        if (manual.isPresent()) {
+            AnnoyingPlugin.log(Level.WARNING, "&6" + name + " &8|&e Please install this plugin manually at &6" + manual.get());
             finish(dependency, false);
             return;
         }
@@ -143,21 +144,22 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
      * @param   identifier  the identifier of the plugin on Modrinth
      */
     private void modrinth(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
-        final JsonElement json = HttpUtility.getJson(userAgent,
+        final Optional<String> latest = HttpUtility.getJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
+                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D")
+                .map(element -> element.getAsJsonArray().get(0).getAsJsonObject()
+                        .getAsJsonArray("files").get(0).getAsJsonObject()
+                        .get("url").getAsString());
 
         // Request failed
-        if (json == null) {
+        if (!latest.isPresent()) {
             fail(dependency, PluginPlatform.Platform.MODRINTH);
             return;
         }
 
         // Download file
-        downloadFile(dependency, PluginPlatform.Platform.MODRINTH, json.getAsJsonArray().get(0).getAsJsonObject()
-                .getAsJsonArray("files").get(0).getAsJsonObject()
-                .get("url").getAsString());
+        downloadFile(dependency, PluginPlatform.Platform.MODRINTH, latest.get());
     }
 
     /**
@@ -174,15 +176,15 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         }
         final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
 
-        final String latest = HttpUtility.getString(userAgent, url + "latestrelease");
+        final Optional<String> latest = HttpUtility.getString(userAgent, url + "latestrelease");
         // Request failed
-        if (latest == null) {
+        if (!latest.isPresent()) {
             fail(dependency, platform.platform);
             return;
         }
 
         // Download file
-        downloadFile(dependency, platform.platform, url + "versions/" + latest + "/PAPER/download");
+        downloadFile(dependency, platform.platform, url + "versions/" + latest.get() + "/PAPER/download");
     }
 
     /**
@@ -195,14 +197,14 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     private void spigot(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
         final PluginPlatform.Multi platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + identifier;
-        final JsonElement json = HttpUtility.getJson(userAgent, url);
+        final Optional<JsonObject> json = HttpUtility.getJson(userAgent, url).map(JsonElement::getAsJsonObject);
 
         // Request failed
-        if (json == null) {
+        if (!json.isPresent()) {
             fail(dependency, PluginPlatform.Platform.SPIGOT);
             return;
         }
-        final JsonObject object = json.getAsJsonObject();
+        final JsonObject object = json.get();
 
         // Resource is premium
         if (object.get("premium").getAsBoolean()) {

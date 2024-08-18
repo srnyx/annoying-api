@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.data;
+package xyz.srnyx.annoyingapi.data.storage;
 
 import org.bukkit.Bukkit;
 
@@ -6,7 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.data.StringData;
+import xyz.srnyx.annoyingapi.data.storage.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.sql.*;

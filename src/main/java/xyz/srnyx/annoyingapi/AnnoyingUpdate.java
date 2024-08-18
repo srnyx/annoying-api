@@ -21,6 +21,7 @@ import xyz.srnyx.javautilities.parents.Stringable;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 
@@ -66,8 +67,9 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         this.currentVersion = new SemanticVersion(pluginDescription.getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
-        final String latestVersionString = getLatestVersion();
-        this.latestVersion = latestVersionString == null ? null : new SemanticVersion(latestVersionString);
+        this.latestVersion = getLatestVersion()
+                .map(SemanticVersion::new)
+                .orElse(null);
     }
 
     /**
@@ -121,27 +123,25 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         return latestVersion != null && latestVersion.isGreaterThan(currentVersion);
     }
 
-    @Nullable
-    private String getLatestVersion() {
+    @NotNull
+    private Optional<String> getLatestVersion() {
         // Modrinth
-        final String modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
-        if (modrinthIdentifier != null) {
-            final String modrinth = modrinth(modrinthIdentifier);
-            if (modrinth != null) return modrinth;
+        final Optional<String> modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
+        if (modrinthIdentifier.isPresent()) {
+            final Optional<String> modrinth = modrinth(modrinthIdentifier.get());
+            if (modrinth.isPresent()) return modrinth;
         }
 
         // Hangar
-        final PluginPlatform hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
-        if (hangarPlatform != null) {
-            final String hangar = hangar(hangarPlatform);
-            if (hangar != null) return hangar;
+        final Optional<PluginPlatform> hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
+        if (hangarPlatform.isPresent()) {
+            final Optional<String> hangar = hangar(hangarPlatform.get());
+            if (hangar.isPresent()) return hangar;
         }
 
         // Spigot
-        final String spigotIdentifier = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
-        if (spigotIdentifier != null) return spigot(spigotIdentifier);
-
-        return null;
+        final Optional<String> spigotIdentifier = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
+        return spigotIdentifier.flatMap(this::spigot);
     }
 
     /**
@@ -149,23 +149,22 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      *
      * @param   identifier  the identifier of the plugin on Modrinth
      *
-     * @return              the latest version, or {@code null} if an error occurred
+     * @return              the latest version, or empty if an error occurred
      */
-    @Nullable
-    private String modrinth(@NotNull String identifier) {
-        final JsonElement json = HttpUtility.getJson(userAgent,
-                "https://api.modrinth.com/v2/project/" + identifier + "/version" +
-                        "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D");
-
-        // Request failed
-        if (json == null) return fail(PluginPlatform.Platform.MODRINTH);
-
-        // Return the latest version
+    @NotNull
+    private Optional<String> modrinth(@NotNull String identifier) {
         try {
-            final JsonArray versions = json.getAsJsonArray();
-            if (versions.size() == 0) return fail(PluginPlatform.Platform.MODRINTH);
-            return versions.get(0).getAsJsonObject().get("version_number").getAsString();
+            final Optional<JsonArray> json = HttpUtility.getJson(userAgent,
+                    "https://api.modrinth.com/v2/project/" + identifier + "/version" +
+                            "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
+                            "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D")
+                    .map(JsonElement::getAsJsonArray);
+
+            // Request failed
+            if (!json.isPresent()) return fail(PluginPlatform.Platform.MODRINTH);
+
+            // Return the latest version
+            return json.get().size() != 0 ? json.map(versions -> versions.get(0).getAsJsonObject().get("version_number").getAsString()) : fail(PluginPlatform.Platform.MODRINTH);
         } catch (final IllegalStateException e) {
             return fail(PluginPlatform.Platform.MODRINTH);
         }
@@ -176,24 +175,25 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      *
      * @param   platform    the {@link PluginPlatform} information
      *
-     * @return              the latest version, or {@code null} if an error occurred
+     * @return              the latest version, or empty if an error occurred
      */
-    @Nullable
-    private String hangar(@NotNull PluginPlatform platform) {
-        final JsonElement json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions");
+    @NotNull
+    private Optional<String> hangar(@NotNull PluginPlatform platform) {
+        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions")
+                .map(element -> element.getAsJsonObject().get("versions").getAsJsonArray());
 
         // Request failed
-        if (json == null) return fail(PluginPlatform.Platform.HANGAR);
+        if (!json.isPresent()) return fail(PluginPlatform.Platform.HANGAR);
 
         // Get supported versions
         final Map<String, OffsetDateTime> result = new HashMap<>();
         final String minecraftVersion = AnnoyingPlugin.MINECRAFT_VERSION.version;
         try {
-            for (final JsonElement versionElement : json.getAsJsonObject().get("versions").getAsJsonArray()) {
+            for (final JsonElement versionElement : json.get()) {
                 final JsonObject version = versionElement.getAsJsonObject();
-                final JsonObject platforms = version.getAsJsonObject("platformDependencies");
-                if (platforms == null) continue;
-                final JsonArray paper = platforms.getAsJsonArray("paper");
+                final JsonObject platformsObject = version.getAsJsonObject("platformDependencies");
+                if (platformsObject == null) continue;
+                final JsonArray paper = platformsObject.getAsJsonArray("paper");
                 if (paper != null) for (final JsonElement paperElement : paper) {
                     final String paperVersion = paperElement.getAsString();
                     if (paperVersion.equals(minecraftVersion)) {
@@ -218,10 +218,10 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         }
 
         // Get the latest version
-        return result.entrySet().stream()
+        final Optional<String> latest = result.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(fail(PluginPlatform.Platform.HANGAR));
+                .map(Map.Entry::getKey);
+        return latest.isPresent() ? latest : fail(PluginPlatform.Platform.HANGAR);
     }
 
     /**
@@ -229,17 +229,18 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      *
      * @param   identifier  the identifier of the plugin on Spigot
      *
-     * @return              the latest version, or {@code null} if an error occurred
+     * @return              the latest version, or empty if an error occurred
      */
-    @Nullable
-    private String spigot(@NotNull String identifier) {
-        final JsonElement json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest");
+    @NotNull
+    private Optional<String> spigot(@NotNull String identifier) {
+        final Optional<String> json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest")
+                .map(element -> element.getAsJsonObject().get("name").getAsString());
 
         // Request failed
-        if (json == null) return fail(PluginPlatform.Platform.SPIGOT);
+        if (!json.isPresent()) return fail(PluginPlatform.Platform.SPIGOT);
 
         // Return the latest version
-        return json.getAsJsonObject().get("name").getAsString();
+        return json;
     }
 
     /**
@@ -247,10 +248,10 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      *
      * @param   platform    the platform that failed
      *
-     * @return              the latest version, or {@code null} if an error occurred
+     * @return              the latest version, or empty if an error occurred
      */
-    @Nullable
-    private String fail(@NotNull PluginPlatform.Platform platform) {
+    @NotNull
+    private Optional<String> fail(@NotNull PluginPlatform.Platform platform) {
         platforms.remove(platform);
         return getLatestVersion();
     }
