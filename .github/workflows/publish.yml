@@ -15,3 +15,5 @@ jobs:
         build/libs/AnnoyingAPI-*[!a-z].jar
         build/libs/AnnoyingAPI-*-@(javadoc|sources).jar
     secrets: inherit
+    permissions:
+      contents: write
