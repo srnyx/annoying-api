@@ -8,8 +8,8 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1.2.2"
-    id("io.github.goooler.shadow") version "8.1.8"
+    id("xyz.srnyx.gradle-galaxy") version "1.2.3"
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 setupMC("xyz.srnyx", "5.0.0", "General purpose API with tons of features")
