@@ -56,7 +56,7 @@ public enum RuntimeLibrary {
     ITEM_NBT_API("https://repo.codemc.org/repository/maven-public/", plugin -> Library.builder()
             .groupId("de{}tr7zw")
             .artifactId("item-nbt-api")
-            .version("2.13.1")
+            .version("2.13.2")
             .relocate(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi")).build()),
     /**
      * com.h2database:h2
