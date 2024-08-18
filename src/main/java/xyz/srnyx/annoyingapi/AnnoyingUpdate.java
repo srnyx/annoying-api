@@ -4,7 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.PluginBase;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,9 +33,9 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @NotNull private final AnnoyingPlugin annoyingPlugin;
     /**
-     * The {@link JavaPlugin plugin} to check for updates
+     * The name of the plugin to check for updates
      */
-    @NotNull private final JavaPlugin plugin;
+    @NotNull private final String pluginName;
     /**
      * The current version of the plugin
      */
@@ -55,14 +56,14 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     /**
      * Creates a new {@link AnnoyingUpdate} object
      *
-     * @param   annoyingPlugin  {@link #annoyingPlugin}
-     * @param   plugin          {@link #plugin}
-     * @param   platforms       {@link #platforms}
+     * @param   annoyingPlugin      {@link #annoyingPlugin}
+     * @param   pluginDescription   {@link #pluginName} and {@link #currentVersion}
+     * @param   platforms           {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull JavaPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginDescriptionFile pluginDescription, @NotNull PluginPlatform.Multi platforms) {
         this.annoyingPlugin = annoyingPlugin;
-        this.plugin = plugin;
-        this.currentVersion = new SemanticVersion(plugin.getDescription().getVersion());
+        this.pluginName = pluginDescription.getName();
+        this.currentVersion = new SemanticVersion(pluginDescription.getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
         final String latestVersionString = getLatestVersion();
@@ -72,7 +73,18 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     /**
      * Creates a new {@link AnnoyingUpdate} object
      *
-     * @param   plugin      {@link #annoyingPlugin} and {@link #plugin}
+     * @param   annoyingPlugin  {@link #annoyingPlugin}
+     * @param   plugin          {@link #pluginName} and {@link #currentVersion}
+     * @param   platforms       {@link #platforms}
+     */
+    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginBase plugin, @NotNull PluginPlatform.Multi platforms) {
+        this(annoyingPlugin, plugin.getDescription(), platforms);
+    }
+
+    /**
+     * Creates a new {@link AnnoyingUpdate} object
+     *
+     * @param   plugin      {@link #annoyingPlugin}, {@link #pluginName}, and {@link #currentVersion}
      * @param   platforms   {@link #platforms}
      */
     public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
@@ -93,7 +105,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
         if (update && latestVersion != null) new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messagesOptions.keys.updateAvailable)
-                .replace("%plugin%", plugin.getName())
+                .replace("%plugin%", pluginName)
                 .replace("%current%", currentVersion.version)
                 .replace("%new%", latestVersion.version)
                 .log(Level.WARNING);

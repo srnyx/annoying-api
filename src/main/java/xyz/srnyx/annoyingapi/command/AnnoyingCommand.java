@@ -42,7 +42,7 @@ public abstract class AnnoyingCommand extends Registrable implements TabExecutor
      */
     @NotNull
     public String getName() {
-        return getClass().getSimpleName().toLowerCase().replace("command", "").replace("cmd", "");
+        return getClass().getSimpleName().replace("Command", "").replace("Cmd", "").toLowerCase();
     }
 
     /**

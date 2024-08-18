@@ -515,7 +515,11 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // PREV: Delete storage-old.yml if it exists (from a previous migration)
         final File storageOld = new File(dataFolder, "storage-old.yml");
-        if (storageOld.exists() && !storageOld.delete()) log(Level.SEVERE, "&cFailed to delete previous &4storage-old.yml!");
+        if (storageOld.exists()) try {
+            Files.delete(storageOld.toPath());
+        } catch (final IOException e) {
+            log(Level.SEVERE, "&cFailed to delete previous &4storage-old.yml!");
+        }
 
         // Rename files
         final File storage = oldManager.storageConfig.file.file;

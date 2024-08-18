@@ -343,13 +343,13 @@ public class AnnoyingMessage extends Stringable {
                     fadeIn, stay, fadeOut);
             return;
         }
-        final BaseComponent[] components = getComponents(sender);
+        final BaseComponent[] compiledComponents = getComponents(sender);
 
         // Action bar
         if (type.equals(BroadcastType.ACTIONBAR) && PLAYER_SPIGOT_SEND_MESSAGE_METHOD != null) {
             Bukkit.getOnlinePlayers().forEach(player -> {
                 try {
-                    PLAYER_SPIGOT_SEND_MESSAGE_METHOD.invoke(player.spigot(), ChatMessageType.ACTION_BAR, components);
+                    PLAYER_SPIGOT_SEND_MESSAGE_METHOD.invoke(player.spigot(), ChatMessageType.ACTION_BAR, compiledComponents);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -358,7 +358,7 @@ public class AnnoyingMessage extends Stringable {
         }
 
         // Chat
-        Bukkit.spigot().broadcast(components);
+        Bukkit.spigot().broadcast(compiledComponents);
     }
 
     /**
