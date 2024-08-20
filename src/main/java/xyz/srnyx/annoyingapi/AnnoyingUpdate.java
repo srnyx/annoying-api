@@ -30,6 +30,11 @@ import java.util.logging.Level;
  */
 public class AnnoyingUpdate extends Stringable implements Annoyable {
     /**
+     * The current version of Minecraft in short form (ex: 1.17 instead of 1.17.0)
+     */
+    @NotNull private static final String MINECRAFT_VERSION_SHORT = AnnoyingPlugin.MINECRAFT_VERSION.patch != 0 ? AnnoyingPlugin.MINECRAFT_VERSION.version : AnnoyingPlugin.MINECRAFT_VERSION.major + "." + AnnoyingPlugin.MINECRAFT_VERSION.minor;
+
+    /**
      * The {@link AnnoyingPlugin plugin} instance
      */
     @NotNull private final AnnoyingPlugin annoyingPlugin;
@@ -128,20 +133,41 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
         // Modrinth
         final Optional<String> modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
         if (modrinthIdentifier.isPresent()) {
-            final Optional<String> modrinth = modrinth(modrinthIdentifier.get());
-            if (modrinth.isPresent()) return modrinth;
+            try {
+                final Optional<String> modrinth = modrinth(modrinthIdentifier.get());
+                if (modrinth.isPresent()) return modrinth;
+            } catch (final Exception e) {
+                AnnoyingPlugin.log(Level.WARNING, "Failed to check Modrinth for the latest version of " + pluginName, e);
+                return fail(PluginPlatform.Platform.MODRINTH);
+            }
         }
 
         // Hangar
         final Optional<PluginPlatform> hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
         if (hangarPlatform.isPresent()) {
-            final Optional<String> hangar = hangar(hangarPlatform.get());
-            if (hangar.isPresent()) return hangar;
+            try {
+                final Optional<String> hangar = hangar(hangarPlatform.get());
+                if (hangar.isPresent()) return hangar;
+            } catch (final Exception e) {
+                AnnoyingPlugin.log(Level.WARNING, "Failed to check Hangar for the latest version of " + pluginName, e);
+                return fail(PluginPlatform.Platform.HANGAR);
+            }
         }
 
         // Spigot
         final Optional<String> spigotIdentifier = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
-        return spigotIdentifier.flatMap(this::spigot);
+        if (spigotIdentifier.isPresent()) {
+            try {
+                final Optional<String> spigot = spigot(spigotIdentifier.get());
+                if (spigot.isPresent()) return spigot;
+            } catch (final Exception e) {
+                AnnoyingPlugin.log(Level.WARNING, "Failed to check Spigot for the latest version of " + pluginName, e);
+                return fail(PluginPlatform.Platform.SPIGOT);
+            }
+        }
+
+        // No platforms left
+        return Optional.empty();
     }
 
     /**
@@ -157,7 +183,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
             final Optional<JsonArray> json = HttpUtility.getJson(userAgent,
                     "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                             "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                            "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D")
+                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D")
                     .map(JsonElement::getAsJsonArray);
 
             // Request failed
@@ -180,23 +206,22 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     @NotNull
     private Optional<String> hangar(@NotNull PluginPlatform platform) {
         final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions")
-                .map(element -> element.getAsJsonObject().get("versions").getAsJsonArray());
+                .map(element -> element.getAsJsonObject().getAsJsonArray("result"));
 
         // Request failed
         if (!json.isPresent()) return fail(PluginPlatform.Platform.HANGAR);
 
         // Get supported versions
         final Map<String, OffsetDateTime> result = new HashMap<>();
-        final String minecraftVersion = AnnoyingPlugin.MINECRAFT_VERSION.version;
         try {
             for (final JsonElement versionElement : json.get()) {
                 final JsonObject version = versionElement.getAsJsonObject();
                 final JsonObject platformsObject = version.getAsJsonObject("platformDependencies");
                 if (platformsObject == null) continue;
-                final JsonArray paper = platformsObject.getAsJsonArray("paper");
+                final JsonArray paper = platformsObject.getAsJsonArray("PAPER");
                 if (paper != null) for (final JsonElement paperElement : paper) {
                     final String paperVersion = paperElement.getAsString();
-                    if (paperVersion.equals(minecraftVersion)) {
+                    if (paperVersion.equals(MINECRAFT_VERSION_SHORT)) {
                         final String name = version.get("name").getAsString();
                         final OffsetDateTime createdAt = OffsetDateTime.parse(version.get("createdAt").getAsString());
 
