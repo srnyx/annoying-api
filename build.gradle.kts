@@ -18,7 +18,7 @@ spigotAPI("1.8.8")
 // Dependencies
 repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.CODE_MC)
 dependencies {
-    compileOnly("me.clip", "placeholderapi", "2.11.3")
+    compileOnly("me.clip", "placeholderapi", "2.11.6")
     compileOnly("de.tr7zw", "item-nbt-api", "2.13.2") // Downloaded on runtime
     compileOnlyApi("org.bstats", "bstats-bukkit", "3.1.0") // Downloaded on runtime
     compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
