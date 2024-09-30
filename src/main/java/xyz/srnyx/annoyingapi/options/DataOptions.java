@@ -10,7 +10,7 @@ import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.data.EntityData;
 
-import xyz.srnyx.javautilities.MapUtility;
+import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
@@ -32,7 +32,7 @@ public class DataOptions extends Stringable {
      * <br><b>All tables will be made with the primary key {@code target}</b>
      * <br><i>Removing {@link EntityData#TABLE_NAME} will break {@link EntityData}</i>
      */
-    @NotNull @SuppressWarnings("CanBeFinal") public Map<String, Set<String>> tables = new HashMap<>(MapUtility.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN))));
+    @NotNull @SuppressWarnings("CanBeFinal") public Map<String, Set<String>> tables = MapGenerator.HASH_MAP.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN)));
     /**
      * Whether to use the cache by default for {@link StringData}
      */

@@ -36,7 +36,7 @@ import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
-import xyz.srnyx.javautilities.MapUtility;
+import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
@@ -117,7 +117,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Custom events/listeners for the API
      */
-    @NotNull public final Map<Class<? extends Event>, AnnoyingListener> customEvents = MapUtility.mapOf(
+    @NotNull public final Map<Class<? extends Event>, AnnoyingListener> customEvents = MapGenerator.HASH_MAP.mapOf(
             AdvancedPlayerMoveEvent.class, new AdvancedPlayerMoveEvent.Handler(this),
             PlayerDamageByPlayerEvent.class, new PlayerDamageByPlayerEvent.Handler(this));
     /**

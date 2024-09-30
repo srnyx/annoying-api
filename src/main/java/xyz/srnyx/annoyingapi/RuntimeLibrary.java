@@ -23,7 +23,7 @@ public enum RuntimeLibrary {
     BSTATS_BASE("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}bstats")
             .artifactId("bstats-base")
-            .version("3.0.2")
+            .version("3.1.0")
             .relocate(plugin.getRelocation("org{}bstats")).build()),
     /**
      * org.bstats:bstats-bukkit
@@ -31,7 +31,7 @@ public enum RuntimeLibrary {
     BSTATS_BUKKIT("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}bstats")
             .artifactId("bstats-bukkit")
-            .version("3.0.2")
+            .version("3.1.0")
             .relocate(plugin.getRelocation("org{}bstats")).build()),
     /**
      * org.javassist:javassist
@@ -124,6 +124,7 @@ public enum RuntimeLibrary {
      * @param   plugin  the plugin to load the library into
      */
     public void load(@NotNull AnnoyingPlugin plugin) {
+        if (plugin.loadedLibraries.contains(this)) return;
         final LibraryManager manager = plugin.libraryManager;
         for (final String repository : repositories) manager.addRepository(repository);
         manager.loadLibrary(getLibrary(plugin));
