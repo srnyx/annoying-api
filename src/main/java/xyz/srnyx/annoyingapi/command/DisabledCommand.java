@@ -4,11 +4,13 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 
 
 /**
  * Represents a command that is disabled by the API
  */
+@Registrable.Ignore
 public class DisabledCommand extends AnnoyingCommand {
     /**
      * The {@link AnnoyingPlugin} instance

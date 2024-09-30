@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -117,6 +118,7 @@ public class AdvancedPlayerMoveEvent extends PlayerMoveEvent {
     /**
      * Handles {@link AdvancedPlayerMoveEvent}
      */
+    @Registrable.Ignore
     public static class Handler extends CustomEventHandler {
         /**
          * Constructs a new handler for {@link AdvancedPlayerMoveEvent}

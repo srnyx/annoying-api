@@ -13,6 +13,7 @@ import org.bukkit.event.entity.EntityEvent;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -176,6 +177,7 @@ public class PlayerDamageByPlayerEvent extends EntityEvent implements Cancellabl
     /**
      * Handles {@link PlayerDamageByPlayerEvent}
      */
+    @Registrable.Ignore
     public static class Handler extends CustomEventHandler {
         /**
          * Constructs a new handler for {@link PlayerDamageByPlayerEvent}

@@ -9,6 +9,7 @@ import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.reflections.ReflectionsException;
 import org.reflections.Store;
+import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.NameHelper;
 import org.reflections.vfs.Vfs;
@@ -22,8 +23,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.reflections.scanners.Scanners.SubTypes;
 
 
 /**
@@ -52,7 +51,7 @@ public class AnnoyingReflections implements NameHelper {
     @NotNull
     public static <T> Set<Class<? extends T>> getSubTypesOf(@NotNull Set<String> packages, @NotNull Class<T> type) {
         //noinspection unchecked
-        return (Set<Class<? extends T>>) SubTypes.of(type).as((Class<? extends T>) Class.class).apply(new AnnoyingReflections().getStore(packages));
+        return (Set<Class<? extends T>>) Scanners.SubTypes.of(type).as((Class<? extends T>) Class.class).apply(new AnnoyingReflections().getStore(packages));
     }
 
     @NotNull
@@ -83,8 +82,8 @@ public class AnnoyingReflections implements NameHelper {
                             if (!filter.test(path) && !filter.test(path.replace('/', '.'))) continue;
 
                             try {
-                                List<Map.Entry<String, String>> entries = SubTypes.scan(file);
-                                if (entries == null) entries = SubTypes.scan(getClassFile(file));
+                                List<Map.Entry<String, String>> entries = Scanners.SubTypes.scan(file);
+                                if (entries == null) entries = Scanners.SubTypes.scan(getClassFile(file));
                                 if (entries != null) for (final Map.Entry<String, String> entry : entries) {
                                     final String key = entry.getKey();
                                     if (key == null) continue;
@@ -120,7 +119,7 @@ public class AnnoyingReflections implements NameHelper {
 
         // wrap
         final Map<String, Map<String, Set<String>>> finalMap = new HashMap<>();
-        finalMap.put(SubTypes.index(), storeMap);
+        finalMap.put(Scanners.SubTypes.index(), storeMap);
         return new Store(finalMap);
     }
 

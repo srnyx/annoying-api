@@ -4,11 +4,13 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingListener;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 
 
 /**
  * Convenience class for creating handlers for custom events
  */
+@Registrable.Ignore
 public class CustomEventHandler extends AnnoyingListener {
     /**
      * The {@link AnnoyingPlugin} that this handler is for

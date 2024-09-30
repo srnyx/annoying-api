@@ -174,6 +174,8 @@ public class RegistrationOptions extends Stringable {
         @NotNull public final Set<String> packages = new HashSet<>();
         /**
          * The classes to ignore when scanning for {@link Registrable}s
+         *
+         * @see Registrable.Ignore
          */
         @NotNull public final Set<Class<? extends Registrable>> ignoredClasses = new HashSet<>();
 

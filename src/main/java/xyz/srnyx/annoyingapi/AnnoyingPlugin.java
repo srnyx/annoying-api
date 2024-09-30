@@ -279,7 +279,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
             AnnoyingReflections.getSubTypesOf(packages, Registrable.class).stream()
-                    .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !ignoredClasses.contains(clazz))
+                    .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnnotationPresent(Registrable.Ignore.class) && !ignoredClasses.contains(clazz))
                     .forEach(clazz -> {
                         try {
                             clazz.getConstructor(this.getClass()).newInstance(this).register();

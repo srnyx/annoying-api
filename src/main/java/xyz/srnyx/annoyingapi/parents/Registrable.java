@@ -1,6 +1,10 @@
 package xyz.srnyx.annoyingapi.parents;
 
+import xyz.srnyx.annoyingapi.options.RegistrationOptions;
 import xyz.srnyx.javautilities.parents.Stringable;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 
 /**
@@ -49,4 +53,12 @@ public abstract class Registrable extends Stringable implements Annoyable {
     public void unregister() {
         getAnnoyingPlugin().registeredClasses.remove(this);
     }
+
+    /**
+     * An annotation to ignore a class from being automatically registered via {@link RegistrationOptions.AutomaticRegistration}
+     *
+     * @see RegistrationOptions.AutomaticRegistration#ignoredClasses
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Ignore {}
 }
