@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence.RefPersistentDataContainer.*;
@@ -51,75 +51,76 @@ public class EntityData extends StringData {
      * <br>All old data (PDC/file) will be removed after conversion (to avoid duplicate/overwriting data)
      *
      * @param   onlyTryOnce 1.14+ only. {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen), all old data will be removed even if it fails. If {@code false} and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
-     * @param   keys        only applicable for 1.14.x, otherwise it will convert all keys (no matter what is provided)
+     * @param   keys        only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      */
     @Nullable @SuppressWarnings("deprecation")
     public Map<String, String> convertOldData(boolean onlyTryOnce, @Nullable Collection<String> keys) {
         // 1.14+ (persistent data container)
-        if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR_STRING != null && NAMESPACED_KEY_CONSTRUCTOR_PLUGIN != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
             final Object persistentDataContainer;
             final Object convertedKey;
             try {
                 // Get PDC
                 persistentDataContainer = PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity);
                 // Check if already converted
-                convertedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, "api_converted");
+                convertedKey = NAMESPACED_KEY_CONSTRUCTOR_STRING.newInstance("annoyingapi", "converted");
                 if (PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE) != null) return Collections.emptyMap();
+                // Set converted key if onlyTryOnce is true
+                if (onlyTryOnce) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
             } catch (final ReflectiveOperationException e) {
                 sendError("convert", e);
                 return null;
             }
 
             // Get keys
-            final Set<Map.Entry<String, ?>> namespacedKeys;
+            final Map<String, Object> namespacedKeys = new HashMap<>();
             if (PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD != null && NAMESPACED_KEY_GET_NAMESPACE_METHOD != null && NAMESPACED_KEY_GET_KEY_METHOD != null) {
                 // 1.16.1+ (getKeys)
                 final String pluginName = plugin.getName().toLowerCase();
                 try {
-                    namespacedKeys = ((Set<?>) PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD.invoke(persistentDataContainer)).stream()
-                            .map(namespacedKey -> {
-                                try {
-                                    return pluginName.equals(((String) NAMESPACED_KEY_GET_NAMESPACE_METHOD.invoke(namespacedKey)).toLowerCase()) ? new AbstractMap.SimpleEntry<>((String) NAMESPACED_KEY_GET_KEY_METHOD.invoke(namespacedKey), namespacedKey) : null;
-                                } catch (final ReflectiveOperationException e) {
-                                    sendError("convert", e);
-                                    return null;
-                                }
-                            })
-                            .collect(Collectors.toSet());
+                    for (final Object namespacedKey : (Set<?>) PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD.invoke(persistentDataContainer)) {
+                        final String namespace = (String) NAMESPACED_KEY_GET_NAMESPACE_METHOD.invoke(namespacedKey);
+                        if (!pluginName.equals(namespace.toLowerCase())) continue;
+                        final String key = (String) NAMESPACED_KEY_GET_KEY_METHOD.invoke(namespacedKey);
+                        namespacedKeys.put(key, namespacedKey);
+                    }
                 } catch (final ReflectiveOperationException e) {
                     sendError("convert", e);
                     return null;
                 }
             } else {
-                // 1.14.x (provided keys)
+                // 1.14-1.16 (provided keys)
                 if (keys == null || keys.isEmpty()) return Collections.emptyMap();
-                namespacedKeys = keys.stream()
-                        .map(key -> {
-                            try {
-                                return new AbstractMap.SimpleEntry<>(key, NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
-                            } catch (final ReflectiveOperationException e) {
-                                sendError("convert", e);
-                                return null;
-                            }
-                        })
-                        .collect(Collectors.toSet());
+                try {
+                     for (final String key : keys) {
+                         final Object namespacedKey = NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key);
+                         namespacedKeys.put(key, namespacedKey);
+                     }
+                } catch (final ReflectiveOperationException e) {
+                    sendError("convert", e);
+                    return null;
+                }
             }
 
             try {
                 // Convert
                 final Map<String, String> failed = new HashMap<>();
-                for (final Map.Entry<String, ?> entry : namespacedKeys) {
-                    if (entry == null) continue;
-                    final Object namespacedKey = entry.getValue();
-                    final String value = (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, namespacedKey, PERSISTENT_DATA_TYPE_STRING);
-                    if (value == null) continue;
+                for (final Map.Entry<String, Object> entry : namespacedKeys.entrySet()) {
                     final String key = entry.getKey();
-                    if (!set(key, value)) failed.put(key, value);
+                    final Object namespacedKey = entry.getValue();
+                    final String value;
+                    try {
+                        value = (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, namespacedKey, PERSISTENT_DATA_TYPE_STRING);
+                    } catch (final InvocationTargetException e) {
+                        failed.put(key, null);
+                        continue;
+                    }
+                    if (value != null && !set(key, value)) failed.put(key, value);
                 }
-                // Set converted key
-                if (failed.isEmpty() || onlyTryOnce) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
+                // Set converted key (set earlier if onlyTryOnce is true)
+                if (!onlyTryOnce && failed.isEmpty()) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
                 // Return failures
                 return failed;
             } catch (final ReflectiveOperationException e) {
@@ -131,7 +132,7 @@ public class EntityData extends StringData {
         // 1.13.2- (file)
         final AnnoyingData file = new AnnoyingData(plugin, plugin.options.dataOptions.entities.path + "/" + target + ".yml", plugin.options.dataOptions.entities.fileOptions);
         final ConfigurationSection section = file.getConfigurationSection(plugin.options.dataOptions.entities.section);
-        if (section == null || section.getBoolean("api_converted")) return Collections.emptyMap();
+        if (section == null || section.getBoolean("annoyingapi.converted")) return Collections.emptyMap();
         // Convert
         final Map<String, String> failed = new HashMap<>();
         for (final String key : section.getKeys(false)) {
@@ -140,7 +141,7 @@ public class EntityData extends StringData {
         }
         // Set converted key
         if (failed.isEmpty() || onlyTryOnce) {
-            section.set("api_converted", true);
+            section.set("annoyingapi.converted", true);
             file.save();
         }
         // Return failures
@@ -151,7 +152,7 @@ public class EntityData extends StringData {
      * Calls {@link #convertOldData(boolean, Collection)} with the given keys
      *
      * @param   onlyTryOnce 1.14+ only. {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen), all old data will be removed even if it fails. If {@code false} and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
-     * @param   keys        only applicable for 1.14.x, otherwise it will convert all keys (no matter what is provided)
+     * @param   keys        only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      *
@@ -165,7 +166,7 @@ public class EntityData extends StringData {
     /**
      * Calls {@link #convertOldData(boolean, Collection)} with {@code onlyTryOnce} set to {@code false} and the given keys
      *
-     * @param   keys    only applicable for 1.14.x, otherwise it will convert all keys (no matter what is provided)
+     * @param   keys    only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return          a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      *
@@ -179,7 +180,7 @@ public class EntityData extends StringData {
     /**
      * Calls {@link #convertOldData(boolean, Collection)} with {@code onlyTryOnce} set to {@code false} and the given keys
      *
-     * @param   keys    only applicable for 1.14.x, otherwise it will convert all keys (no matter what is provided)
+     * @param   keys    only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return          a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      *

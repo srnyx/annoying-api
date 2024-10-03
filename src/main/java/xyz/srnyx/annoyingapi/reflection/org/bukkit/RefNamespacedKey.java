@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 
 
 /**
- * org.bukkit.NamespacedKey
+ * 1.12+ org.bukkit.NamespacedKey
  */
 public class RefNamespacedKey {
     /**
@@ -23,9 +23,13 @@ public class RefNamespacedKey {
      */
     @Nullable public static final Method MINECRAFT_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "minecraft", String.class);
     /**
+     * 1.12+ org.bukkit.NamespacedKey(String, String)
+     */
+    @Nullable public static final Constructor<?> NAMESPACED_KEY_CONSTRUCTOR_STRING = ReflectionUtility.getConstructor(1, 12, 0, NAMESPACED_KEY_CLASS, String.class, String.class);
+    /**
      * 1.12+ org.bukkit.NamespacedKey(org.bukkit.plugin.Plugin, String)
      */
-    @Nullable public static final Constructor<?> NAMESPACED_KEY_CONSTRUCTOR = ReflectionUtility.getConstructor(1, 12, 0, NAMESPACED_KEY_CLASS, Plugin.class, String.class);
+    @Nullable public static final Constructor<?> NAMESPACED_KEY_CONSTRUCTOR_PLUGIN = ReflectionUtility.getConstructor(1, 12, 0, NAMESPACED_KEY_CLASS, Plugin.class, String.class);
     /**
      * 1.12+ org.bukkit.NamespacedKey#getNamespace()
      */
