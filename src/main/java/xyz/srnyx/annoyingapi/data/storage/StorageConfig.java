@@ -95,6 +95,7 @@ public class StorageConfig {
         final Properties properties = new Properties();
         if (remoteConnection != null) {
             url += remoteConnection.host + ":" + remoteConnection.port + "/" + remoteConnection.database;
+            properties.putAll(remoteConnection.properties);
             if (remoteConnection.username != null) properties.setProperty("user", remoteConnection.username);
             if (remoteConnection.password != null) properties.setProperty("password", remoteConnection.password);
         }
@@ -152,6 +153,10 @@ public class StorageConfig {
          * <br><i>Defaults to the plugin name in lowercase with all non-alphanumeric characters removed + an underscore</i>
          */
         @NotNull public final String tablePrefix = file.getString("remote-connection.table-prefix", file.plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_");
+        /**
+         * Additional custom properties for the remote connection
+         */
+        @NotNull public final Map<String, String> properties = new HashMap<>();
 
         /**
          * Construct a new {@link RemoteConnection} instance to parse the {@code remote-connection} section
@@ -174,6 +179,11 @@ public class StorageConfig {
             final String getDatabase = section.getString("database");
             if (getDatabase == null) throw new IllegalArgumentException("A remote storage method is used but no remote database is specified");
             database = getDatabase;
+
+            // properties
+            final ConfigurationSection propertiesSection = section.getConfigurationSection("properties");
+            if (propertiesSection != null) properties.putAll(propertiesSection.getValues(false).entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
         }
     }
 

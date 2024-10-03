@@ -37,6 +37,14 @@ remote-connection:
   # DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)
   #table-prefix: 'annoying_'
 
+  # Additional properties for the connection
+  # You may need to remove useUnicode and characterEncoding if you're using PostgreSQL
+  properties:
+    autoReconnect: true # It's recommended to keep this enabled
+    useUnicode: true
+    characterEncoding: UTF-8
+    #useSSL: false
+
 # Options for the data cache, which is used for both LOCAL and REMOTE storage methods
 # The cache greatly improves performance by storing data in memory
 # However, there is a potential risk of data loss if the server crashes before the data is saved to the database
