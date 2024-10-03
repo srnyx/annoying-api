@@ -3,17 +3,17 @@ package xyz.srnyx.annoyingapi.data.storage;
 import org.bukkit.Bukkit;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.StringData;
-import xyz.srnyx.annoyingapi.data.storage.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
-import java.sql.*;
-import java.util.HashMap;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.sql.SQLException;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 
@@ -22,35 +22,21 @@ import java.util.logging.Level;
  */
 public class DataManager {
     /**
+     * The {@link AnnoyingPlugin plugin} to use for the data manager
+     */
+    @NotNull public final AnnoyingPlugin plugin;
+    /**
      * The {@link StorageConfig storage.yml config} for the plugin
      */
     @NotNull public final StorageConfig storageConfig;
     /**
-     * The {@link Connection connection} to the database
+     * The {@link Dialect dialect} for the database
      */
-    @NotNull public final Connection connection;
-    /**
-     * The {@link SQLDialect SQL dialect} for the database
-     */
-    @NotNull public final SQLDialect dialect;
+    @NotNull public final Dialect dialect;
     /**
      * The table prefix for the database (only for remote connections)
      */
     @NotNull public final String tablePrefix;
-    /**
-     * Cached data from {@link StringData}
-     * <ul>
-     *     <li>Key: table name
-     *     <li>Value:<ul>
-     *         <li>Key: target
-     *         <li>Value:<ul>
-     *             <li>Key: data key
-     *             <li>Value: data value
-     *        </ul>
-     *     </ul>
-     * </ul>
-     */
-    @NotNull public final Map<String, Map<String, Map<String, String>>> dataCache = new HashMap<>();
 
     /**
      * Connect to the configured database and create the pre-defined tables/columns
@@ -60,37 +46,10 @@ public class DataManager {
      * @throws ConnectionException if the connection to the database fails for any reason
      */
     public DataManager(@NotNull AnnoyingFile<?> file) throws ConnectionException {
-        this.storageConfig = new StorageConfig(file);
-        connection = storageConfig.createConnection();
+        plugin = file.plugin;
+        storageConfig = new StorageConfig(file);
         dialect = storageConfig.method.dialect.apply(this);
         tablePrefix = storageConfig.remoteConnection != null ? storageConfig.remoteConnection.tablePrefix : "";
-    }
-
-    /**
-     * Create the given tables and columns in the database
-     *
-     * @param   tablesColumns   the tables and columns to create
-     */
-    public void createTablesColumns(@NotNull Map<String, Set<String>> tablesColumns) {
-        for (final Map.Entry<String, Set<String>> entry : tablesColumns.entrySet()) {
-            final String table = getTableName(entry.getKey());
-            // Create table
-            try (final PreparedStatement tableStatement = dialect.createTable(table)) {
-                tableStatement.executeUpdate();
-            } catch (final SQLException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create table &4" + table, e);
-                continue;
-            }
-            // Create columns
-            for (final String column : entry.getValue()) {
-                final String columnLower = column.toLowerCase();
-                if (!columnLower.equals(StringData.TARGET_COLUMN)) try (final PreparedStatement columnStatement = dialect.createColumn(table, columnLower)) {
-                    if (columnStatement != null) columnStatement.executeUpdate();
-                } catch (final SQLException e) {
-                    AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create column &4" + columnLower + "&c in table &4" + table, e);
-                }
-            }
-        }
     }
 
     /**
@@ -107,55 +66,80 @@ public class DataManager {
     }
 
     /**
-     * Execute a query on the database
+     * Starts the asynchronous task to save the cache on an interval
+     */
+    public void startCacheSavingOnInterval() {
+        final long interval = storageConfig.cache.interval;
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, dialect::saveCache, interval, interval);
+    }
+
+    /**
+     * Attempts to migrate data from {@code storage.yml} to {@code storage-new.yml}
      *
-     * @param   query           the query to execute <i>(careful of SQL injection!)</i>
-     *
-     * @return                  the {@link ResultSet result} of the query
-     *
-     * @throws  SQLException    if the query fails for any reason
+     * @return              the new data manager
      */
     @NotNull
-    public ResultSet executeQuery(@NotNull String query) throws SQLException {
-        return connection.createStatement().executeQuery(query);
-    }
+    public DataManager attemptDatabaseMigration() {
+        // Check if migration is needed (storage-new.yml exists)
+        final File dataFolder = plugin.getDataFolder();
+        final File storageNew = new File(dataFolder, "storage-new.yml");
+        if (!storageNew.exists()) return this;
+        AnnoyingPlugin.log(Level.INFO, "&aFound &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
 
-    /**
-     * Execute an update on the database
-     *
-     * @param   query           the query to execute <i>(careful of SQL injection!)</i>
-     * @param   errorMessage    the error message to print if the query fails
-     */
-    public void executeUpdate(@NotNull String query, @Nullable String errorMessage) {
-        try (final Statement statement = connection.createStatement()) {
-            statement.executeUpdate(query);
-        } catch (final SQLException e) {
-            if (errorMessage == null) {
-                e.printStackTrace();
-                return;
+        // NEW: Connect to new database
+        final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(plugin, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
+        if (!storageNewFile.load()) return this;
+        final DataManager newManager;
+        try {
+            newManager = new DataManager(storageNewFile);
+        } catch (final ConnectionException e) {
+            AnnoyingPlugin.log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
+            return this;
+        }
+
+        // OLD: Get migration data
+        final Dialect.MigrationData migrationData = dialect.getMigrationDataFromDatabase(newManager).orElse(null);
+        if (migrationData == null) return this;
+
+        if (!migrationData.data.isEmpty()) {
+            // NEW: Create missing tables/columns
+            if (newManager.dialect instanceof SQLDialect) ((SQLDialect) newManager.dialect).createTablesKeys(migrationData.tablesKeys);
+            // NEW: Save values to new database (log failures)
+            for (final Map.Entry<String, Map<String, Map<String, String>>> entry : newManager.dialect.setToDatabase(migrationData.data).entrySet()) {
+                final String table = entry.getKey();
+                for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set values for &4" + entry1.getKey() + "&c in table &4" + table + "&c: &4" + entry1.getValue());
             }
-            AnnoyingPlugin.log(Level.SEVERE, errorMessage, e);
+        } else {
+            AnnoyingPlugin.log(Level.WARNING, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
         }
-    }
 
-    /**
-     * Starts the asynchronous task to save the cache on an interval
-     *
-     * @param   plugin      the plugin to run the task on
-     * @param   interval    the interval in ticks to save the cache
-     */
-    public void startCacheSavingOnInterval(@NotNull AnnoyingPlugin plugin, long interval) {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveCache, interval, interval);
-    }
-
-    /**
-     * Saves the data from the cache to the database
-     */
-    public void saveCache() {
-        for (final SQLDialect.SetValueStatement statement : dialect.setValues(dataCache)) try {
-            statement.statement.executeUpdate();
+        // OLD: Close old connection
+        if (dialect instanceof SQLDialect) try {
+            ((SQLDialect) dialect).connection.close();
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached values for &4" + statement.target + "&c in table &4" + statement.table + "&c: &4" + statement.values, e);
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to close the old database connection, it's recommended to restart the server!", e);
         }
+
+        // PREV: Delete storage-old.yml if it exists (from a previous migration)
+        final File storageOld = new File(dataFolder, "storage-old.yml");
+        if (storageOld.exists()) try {
+            Files.delete(storageOld.toPath());
+        } catch (final IOException e) {
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to delete previous &4storage-old.yml!");
+        }
+
+        // Rename files
+        final File storage = storageConfig.file.file;
+        if (storage.renameTo(storageOld)) { // OLD: storage.yml -> storage-old.yml
+            if (!storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
+                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to rename &4storage-new.yml&c to &4storage.yml&c! You MUST rename &4storage-new.yml&c to &4storage.yml&c manually!");
+            }
+        } else {
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to rename &4storage.yml&c to &4storage-old.yml&c! You MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!");
+        }
+
+        // NEW: Use new storage
+        AnnoyingPlugin.log(Level.INFO, "&aFinished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
+        return newManager;
     }
 }

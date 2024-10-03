@@ -5,50 +5,63 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.RuntimeLibrary;
-import xyz.srnyx.annoyingapi.data.storage.dialects.*;
+import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.JSONDialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.YAMLDialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.sql.*;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.function.Function;
 
 
 /**
- * The storage method
+ * Available storage methods for the plugin
  */
 public enum StorageMethod {
     /**
-     * H2's storage method
+     * H2 storage method
      */
     H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", null, RuntimeLibrary.H2),
     /**
-     * SQLite's storage method
+     * SQLite storage method
      */
     SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null, null),
     /**
-     * MySQL's storage method
+     * MySQL storage method
      */
     MYSQL(MySQLDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", 3306, null),
     /**
-     * MariaDB's storage method
+     * MariaDB storage method
      */
     MARIADB(MariaDBDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", 3306, null),
     /**
-     * PostgreSQL's storage method
+     * PostgreSQL storage method
      */
-    POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL);
+    POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL),
+    /**
+     * JSON storage method
+     */
+    JSON(JSONDialect::new),
+    /**
+     * YAML storage method
+     */
+    YAML(YAMLDialect::new);
 
     /**
-     * The {@link SQLDialect SQL dialect} constructor for the method
+     * The {@link Dialect} constructor for the method
      */
-    @NotNull public final Function<DataManager, SQLDialect> dialect;
+    @NotNull public final DialectFunction dialect;
     /**
-     * The driver class name for the method
+     * The driver class name for the method. {@code null} if the method is not SQL
      */
-    @NotNull private final String driver;
+    @Nullable private final String driver;
     /**
-     * <b>Local:</b> The full URL for the method
-     * <br><b>Remote:</b> The beginning of the URL for the method
+     * <b>Local SQL:</b> The full URL for the method
+     * <br><b>Remote SQL:</b> The beginning of the URL for the method
+     * <br><b>Local Readable:</b> {@code null}
      */
-    @NotNull public final Function<File, String> url;
+    @Nullable public final Function<File, String> url;
     /**
      * The default port for the method (only for remote connections)
      */
@@ -57,7 +70,7 @@ public enum StorageMethod {
      * The library to be downloaded for the method (if any)
      */
     @Nullable public final RuntimeLibrary library;
-    
+
     /**
      * Construct a new {@link StorageMethod} with the given parameters
      *
@@ -67,7 +80,7 @@ public enum StorageMethod {
      * @param defaultPort {@link #defaultPort}
      * @param library     {@link #library}
      */
-    StorageMethod(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull Function<File, String> url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @Nullable String driver, @Nullable Function<File, String> url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
@@ -84,8 +97,12 @@ public enum StorageMethod {
      * @param defaultPort {@link #defaultPort}
      * @param library     {@link #library}
      */
-    StorageMethod(@NotNull Function<DataManager, SQLDialect> dialect, @NotNull String driver, @NotNull String url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
         this(dialect, driver, dataFolder -> url, defaultPort, library);
+    }
+
+    StorageMethod(@NotNull DialectFunction dialect) {
+        this(dialect, null, (Function<File, String>) null, null, null);
     }
 
     /**
@@ -95,8 +112,8 @@ public enum StorageMethod {
      * @return the driver class name for the method
      */
     @NotNull
-    public String getDriver(@NotNull AnnoyingPlugin plugin) {
-        return (library != null ? plugin.getLibsPackage() + driver : driver).replace("{}", ".");
+    public Optional<String> getDriver(@NotNull AnnoyingPlugin plugin) {
+        return driver != null ? Optional.of((library != null ? plugin.getLibsPackage() + driver : driver).replace("{}", ".")) : Optional.empty();
     }
 
     /**
@@ -109,6 +126,15 @@ public enum StorageMethod {
     }
 
     /**
+     * Whether the method is SQL (just checks if {@link #driver} is not {@code null})
+     *
+     * @return  {@code true} if the method is SQL, {@code false} otherwise
+     */
+    public boolean isSQL() {
+        return driver != null;
+    }
+
+    /**
      * Get the {@link StorageMethod} with the given name
      *
      * @param name the name of the method
@@ -116,12 +142,10 @@ public enum StorageMethod {
      */
     @NotNull
     public static StorageMethod get(@Nullable String name) {
-        if (name == null) return H2;
-        try {
+        if (name != null) try {
             return valueOf(name.toUpperCase());
-        } catch (final IllegalArgumentException e) {
-            return H2;
-        }
+        } catch (final IllegalArgumentException ignored) {}
+        return H2;
     }
 
     /**
@@ -133,5 +157,22 @@ public enum StorageMethod {
     @NotNull
     private static String getMysqlMariadbDriver() {
         return AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 16, 5) ? "com{}mysql{}cj{}jdbc{}Driver" : "com{}mysql{}jdbc{}Driver";
+    }
+
+    /**
+     * A function to create a new {@link Dialect}
+     */
+    public interface DialectFunction {
+        /**
+         * Apply the function to create a new {@link Dialect}
+         *
+         * @param   dataManager         the {@link DataManager} to use for the dialect
+         *
+         * @return                      the new {@link Dialect}
+         *
+         * @throws  ConnectionException if the connection to the database fails for any reason (SQL only)
+         */
+        @NotNull
+        Dialect apply(@NotNull DataManager dataManager) throws ConnectionException;
     }
 }

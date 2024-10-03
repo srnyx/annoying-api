@@ -38,6 +38,11 @@ public class StorageConfig {
      * The {@link RemoteConnection remote connection} details/properties
      */
     @Nullable public final RemoteConnection remoteConnection;
+    /**
+     * Friendly name when migrating between methods for logging
+     * <br><b>Format:</b> {@code FILE_PATH (METHOD)}
+     */
+    @NotNull public final String migrationLogPrefix;
 
     /**
      * Construct a new {@link StorageConfig} instance to parse a storage configuration file
@@ -48,6 +53,7 @@ public class StorageConfig {
         this.file = file;
         cache = new Cache();
         final StorageMethod getMethod = StorageMethod.get(file.getString("method"));
+        migrationLogPrefix = "&4" + file.file.getName() + " (" + getMethod + ") &8|&c ";
 
         // Local storage
         if (!getMethod.isRemote()) {
@@ -69,17 +75,6 @@ public class StorageConfig {
     }
 
     /**
-     * Friendly name when migrating between methods
-     * <br><b>Format:</b> {@code FILE_PATH (METHOD)}
-     *
-     * @return  the migration name
-     */
-    @NotNull
-    public String getMigrationName() {
-        return file.file.getPath() + " (" + method + ")";
-    }
-
-    /**
      * Create a new {@link Connection} to the configured database
      *
      * @return                      a new {@link Connection} to the database
@@ -88,6 +83,7 @@ public class StorageConfig {
      */
     @NotNull
     public Connection createConnection() throws ConnectionException {
+        if (method.url == null) throw new IllegalStateException("The storage method " + method + " is not an SQL method");
         final AnnoyingPlugin plugin = file.plugin;
 
         // Get url & properties
@@ -104,8 +100,10 @@ public class StorageConfig {
         if (method.library != null) method.library.load(plugin);
 
         // Load driver
+        final Optional<String> driver = method.getDriver(plugin);
+        if (!driver.isPresent()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
         try {
-            Class.forName(method.getDriver(plugin));
+            Class.forName(driver.get());
         } catch (final ClassNotFoundException e) {
             throw new ConnectionException(e, url, properties);
         }
@@ -188,7 +186,7 @@ public class StorageConfig {
     }
 
     /**
-     * Options for the {@link DataManager#dataCache}
+     * Options for the data cache (stored differently per method)
      */
     public class Cache {
         /**
@@ -209,9 +207,8 @@ public class StorageConfig {
          */
         public Cache() {
             final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
-                    .map(SaveOn::fromString)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
+                    .map(string -> SaveOn.fromString(string).orElse(null))
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
         }

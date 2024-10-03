@@ -25,12 +25,11 @@ import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.data.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.data.storage.StorageConfig;
-import xyz.srnyx.annoyingapi.data.storage.dialects.SQLDialect;
+import xyz.srnyx.annoyingapi.data.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
-import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
@@ -39,14 +38,8 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.nio.file.Files;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Supplier;
@@ -181,7 +174,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onDisable() {
-        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.saveCache();
+        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.dialect.saveCache();
         disable();
     }
 
@@ -291,7 +284,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Start cache saving on interval if enabled
-        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval(this, dataManager.storageConfig.cache.interval);
+        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval();
 
         // Custom onEnable
         enable();
@@ -328,7 +321,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void disablePlugin() {
         new HashSet<>(registeredClasses).forEach(Registrable::unregister);
         Bukkit.getScheduler().cancelTasks(this);
-        if (dataManager != null) dataManager.saveCache();
+        if (dataManager != null) dataManager.dialect.saveCache();
         Bukkit.getPluginManager().disablePlugin(this);
     }
 
@@ -376,7 +369,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
-     * <br>If {@code storage-new.yml} exists, it will attempt to migrate the data from {@code storage.yml} to {@code storage-new.yml} using {@link #attemptDatabaseMigration(DataManager)}
+     * <br>If {@code storage-new.yml} exists, it will attempt to migrate the data from {@code storage.yml} to {@code storage-new.yml} using {@link DataManager#attemptDatabaseMigration()}
      *
      * @param   saveCache   whether to save the cache before loading the data manager
      *                      <br><i>Data may be lost if {@code false}!</i>
@@ -385,10 +378,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Check if a manager is already loaded
         if (dataManager != null) {
             // Save cache
-            if (saveCache) dataManager.saveCache();
+            if (saveCache) dataManager.dialect.saveCache();
             // Close previous connection
-            try {
-                dataManager.connection.close();
+            if (dataManager.dialect instanceof SQLDialect) try {
+                ((SQLDialect) dataManager.dialect).connection.close();
             } catch (final SQLException e) {
                 log(Level.SEVERE, "&cFailed to close the database connection, it's recommended to restart the server!", e);
             }
@@ -410,129 +403,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Attempt database migration
-        dataManager = attemptDatabaseMigration(dataManager);
+        dataManager = dataManager.attemptDatabaseMigration();
 
         // Create tables/columns
-        dataManager.createTablesColumns(options.dataOptions.tables);
-    }
-
-    /**
-     * Attempts to migrate data from {@code storage.yml} to {@code storage-new.yml}
-     *
-     * @param   oldManager  the old data manager
-     *
-     * @return              the new data manager
-     */
-    @NotNull
-    private DataManager attemptDatabaseMigration(@NotNull DataManager oldManager) {
-        // Check if migration is needed (storage-new.yml exists)
-        final File dataFolder = getDataFolder();
-        final File storageNew = new File(dataFolder, "storage-new.yml");
-        if (!storageNew.exists()) return oldManager;
-        log(Level.INFO, "&aFound &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
-
-        // NEW: Connect to new database
-        final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(this, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
-        if (!storageNewFile.load()) return oldManager;
-        final DataManager newManager;
-        try {
-            newManager = new DataManager(storageNewFile);
-        } catch (final ConnectionException e) {
-            log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
-            return oldManager;
-        }
-
-        // OLD: Get tables & columns
-        final Set<String> tables = new HashSet<>();
-        try (final PreparedStatement getTables = oldManager.dialect.getTables()) {
-            final ResultSet resultSet = getTables.executeQuery();
-            while (resultSet.next()) tables.add(resultSet.getString(1));
-        } catch (final SQLException e) {
-            log(Level.SEVERE, "&4" + newManager.storageConfig.getMigrationName() + " &8|&c Failed to get tables!", e);
-            return oldManager;
-        }
-
-        // OLD: Get values
-        final Map<String, Set<String>> tablesColumns = new HashMap<>(); // {Table, Columns}
-        final Map<String, Map<String, Map<String, String>>> values = new HashMap<>(); // {Table, {Target, {Column, Value}}}
-        final int oldPrefixLength = oldManager.tablePrefix.length();
-        for (final String table : tables) {
-            final String tableWithoutPrefix = table.substring(oldPrefixLength);
-            final Map<String, Map<String, String>> tableValues = new HashMap<>(); // {Target, {Column, Value}}
-            try (final PreparedStatement getValues = oldManager.dialect.getValues(table)) {
-                final ResultSet resultSet = getValues.executeQuery();
-
-                // Continue if table doesn't have target column
-                final Set<String> columns = new HashSet<>();
-                final ResultSetMetaData metaData = resultSet.getMetaData();
-                final int columnCount = metaData.getColumnCount();
-                if (columnCount == 0) {
-                    log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Table &4" + table + "&c has no columns, skipping...");
-                    continue;
-                }
-                for (int i = 1; i <= columnCount; i++) columns.add(metaData.getColumnName(i));
-                if (!columns.contains("target")) {
-                    log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Table &4" + table + "&c doesn't have a '&4target&c' column, skipping...");
-                    continue;
-                }
-                tablesColumns.put(tableWithoutPrefix, columns);
-
-                // Get values for each target
-                while (resultSet.next()) {
-                    final String target = resultSet.getString("target");
-                    if (target == null) continue;
-                    final Map<String, String> columnValues = new HashMap<>(); // {Column, Value}
-                    for (final String column : columns) if (!column.equals("target")) columnValues.put(column, resultSet.getString(column));
-                    tableValues.put(target, columnValues);
-                }
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Failed to get values for table &4" + table, e);
-            }
-            if (!tableValues.isEmpty()) values.put(newManager.getTableName(tableWithoutPrefix), tableValues);
-        }
-
-        if (!values.isEmpty()) {
-            // NEW: Create missing tables/columns
-            newManager.createTablesColumns(tablesColumns);
-
-            // NEW: Save values to new database
-            for (final SQLDialect.SetValueStatement statement : newManager.dialect.setValues(values)) try {
-                statement.statement.executeUpdate();
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&4" + newManager.storageConfig.getMigrationName() + " &8|&c Failed to migrate values for &4" + statement.target + "&c in table &4" + statement.table + "&c: &4" + statement.values, e);
-            }
-        } else {
-            log(Level.WARNING, "&4" + oldManager.storageConfig.getMigrationName() + " &8|&c Found no data to migrate! This may or may not be an error...");
-        }
-
-        // OLD: Close old connection
-        try {
-            oldManager.connection.close();
-        } catch (final SQLException e) {
-            log(Level.SEVERE, "&cFailed to close the old database connection, it's recommended to restart the server!", e);
-        }
-
-        // PREV: Delete storage-old.yml if it exists (from a previous migration)
-        final File storageOld = new File(dataFolder, "storage-old.yml");
-        if (storageOld.exists()) try {
-            Files.delete(storageOld.toPath());
-        } catch (final IOException e) {
-            log(Level.SEVERE, "&cFailed to delete previous &4storage-old.yml!");
-        }
-
-        // Rename files
-        final File storage = oldManager.storageConfig.file.file;
-        if (storage.renameTo(storageOld)) { // OLD: storage.yml -> storage-old.yml
-            if (!storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
-                log(Level.SEVERE, "Failed to rename &4storage-new.yml&c to &4storage.yml&c! You MUST rename &4storage-new.yml&c to &4storage.yml&c manually!");
-            }
-        } else {
-            log(Level.SEVERE, "Failed to rename &4storage.yml&c to &4storage-old.yml&c! You MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!");
-        }
-
-        // NEW: Use new storage
-        log(Level.INFO, "&aFinished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
-        return newManager;
+        if (dataManager.dialect instanceof SQLDialect) ((SQLDialect) dataManager.dialect).createTablesKeys(options.dataOptions.tables);
     }
 
     /**

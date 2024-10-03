@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi.data;
 
-import com.google.common.collect.ImmutableMap;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 
@@ -60,7 +58,7 @@ public class EntityData extends StringData {
     @Nullable @SuppressWarnings("deprecation")
     public Map<String, String> convertOldData(boolean onlyTryOnce, @Nullable Collection<String> keys) {
         // 1.14+ (persistent data container)
-        if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
             final Object persistentDataContainer;
             final Object convertedKey;
             try {
@@ -76,8 +74,8 @@ public class EntityData extends StringData {
 
             // Get keys
             final Set<Map.Entry<String, ?>> namespacedKeys;
-            // 1.16.1+ (getKeys)
             if (PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD != null && NAMESPACED_KEY_GET_NAMESPACE_METHOD != null && NAMESPACED_KEY_GET_KEY_METHOD != null) {
+                // 1.16.1+ (getKeys)
                 final String pluginName = plugin.getName().toLowerCase();
                 try {
                     namespacedKeys = ((Set<?>) PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD.invoke(persistentDataContainer)).stream()
@@ -94,8 +92,8 @@ public class EntityData extends StringData {
                     sendError("convert", e);
                     return null;
                 }
-            // 1.14.x (provided keys)
             } else {
+                // 1.14.x (provided keys)
                 if (keys == null || keys.isEmpty()) return Collections.emptyMap();
                 namespacedKeys = keys.stream()
                         .map(key -> {
@@ -118,15 +116,12 @@ public class EntityData extends StringData {
                     final String value = (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, namespacedKey, PERSISTENT_DATA_TYPE_STRING);
                     if (value == null) continue;
                     final String key = entry.getKey();
-                    if (!set(key, value)) {
-                        failed.put(key, value);
-                        if (!onlyTryOnce) continue;
-                    }
-                    PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(persistentDataContainer, namespacedKey);
+                    if (!set(key, value)) failed.put(key, value);
                 }
                 // Set converted key
                 if (failed.isEmpty() || onlyTryOnce) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
-                return ImmutableMap.copyOf(failed);
+                // Return failures
+                return failed;
             } catch (final ReflectiveOperationException e) {
                 sendError("convert", e);
                 return null;
@@ -136,20 +131,20 @@ public class EntityData extends StringData {
         // 1.13.2- (file)
         final AnnoyingData file = new AnnoyingData(plugin, plugin.options.dataOptions.entities.path + "/" + target + ".yml", plugin.options.dataOptions.entities.fileOptions);
         final ConfigurationSection section = file.getConfigurationSection(plugin.options.dataOptions.entities.section);
-        if (section == null) return Collections.emptyMap();
+        if (section == null || section.getBoolean("api_converted")) return Collections.emptyMap();
+        // Convert
         final Map<String, String> failed = new HashMap<>();
         for (final String key : section.getKeys(false)) {
             final String value = section.getString(key);
-            if (value == null) continue;
-            if (!set(key, value)) {
-                failed.put(key, value);
-                continue;
-            }
-            section.set(key, null);
+            if (value != null && !set(key, value)) failed.put(key, value);
         }
-        if (section.getKeys(false).isEmpty()) file.set(plugin.options.dataOptions.entities.section, null);
-        file.save();
-        return ImmutableMap.copyOf(failed);
+        // Set converted key
+        if (failed.isEmpty() || onlyTryOnce) {
+            section.set("api_converted", true);
+            file.save();
+        }
+        // Return failures
+        return failed;
     }
 
     /**
