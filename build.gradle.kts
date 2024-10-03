@@ -8,7 +8,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1.3.1"
+    id("xyz.srnyx.gradle-galaxy") version "1.3.2"
     id("com.gradleup.shadow") version "8.3.3"
 }
 
@@ -22,9 +22,9 @@ dependencies {
     compileOnly("de.tr7zw", "item-nbt-api", "2.13.2") // Downloaded on runtime
     compileOnlyApi("org.bstats", "bstats-bukkit", "3.1.0") // Downloaded on runtime
     compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
-    compileOnlyApi("org.jetbrains", "annotations", "24.1.0")
+    compileOnlyApi("org.jetbrains", "annotations", "25.0.0")
     implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:0ee049d52d", "xyz.srnyx.javautilities")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:2.0.0", "xyz.srnyx.javautilities")
 }
 
 // Publishing
