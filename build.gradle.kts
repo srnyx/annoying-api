@@ -9,7 +9,7 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "1.3.1"
-    id("com.gradleup.shadow") version "8.3.2"
+    id("com.gradleup.shadow") version "8.3.3"
 }
 
 setupMC("xyz.srnyx", "5.0.0", "General purpose API with tons of features")
