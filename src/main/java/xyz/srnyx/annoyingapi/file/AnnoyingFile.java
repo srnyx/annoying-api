@@ -262,6 +262,15 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         return section == null ? createSection(path) : section;
     }
 
+    /**
+     * Gets the default value from the path
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the default value or empty if it doesn't exist
+     *
+     * @param   <G>     the type of the default value
+     */
     @NotNull
     public <G> Optional<G> getDef(@NotNull String path) {
         final Object value = getDefault(path);
@@ -743,10 +752,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
          * @param   section the {@link ConfigurationSection} to load from
          *
          * @return          the {@link Options} instance
+         *
+         * @param   <R>     the type of the {@link Options} instance
          */
         @NotNull
-        public static Options<?> load(@NotNull ConfigurationSection section) {
-            final Options<?> options = new Options<>();
+        public static <R extends Options<R>> Options<R> load(@NotNull ConfigurationSection section) {
+            final Options<R> options = new Options<>();
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
             return options;
         }
