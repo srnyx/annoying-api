@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR_PLUGIN;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.RefCustomItemTagContainer.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags.RefItemTagType.ITEM_TAG_TYPE_STRING;
@@ -74,13 +74,13 @@ public class ItemData extends Data<ItemStack> {
     @Override @Nullable
     public String get(@NotNull String key) {
         // 1.13.2+ (persistent data container or custom item tag container)
-        if (NAMESPACED_KEY_CONSTRUCTOR_PLUGIN != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
             if (meta == null) return null;
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null) try {
-                return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
+                return (String) PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
                 sendError("get", e);
                 return null;
@@ -88,7 +88,7 @@ public class ItemData extends Data<ItemStack> {
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD != null) try {
-                return (String) CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key), ITEM_TAG_TYPE_STRING);
+                return (String) CUSTOM_ITEM_TAG_CONTAINER_GET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING);
             } catch (final ReflectiveOperationException e) {
                 sendError("get", e);
                 return null;
@@ -110,7 +110,7 @@ public class ItemData extends Data<ItemStack> {
     @Override
     protected boolean set(@NotNull String key, @NotNull String value) {
         // 1.13.2+ (persistent data container or custom item tag container)
-        if (NAMESPACED_KEY_CONSTRUCTOR_PLUGIN != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
             if (meta == null) {
                 sendError("set", null);
@@ -119,7 +119,7 @@ public class ItemData extends Data<ItemStack> {
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null) try {
-                PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
+                PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), PERSISTENT_DATA_TYPE_STRING, value);
                 target.setItemMeta(meta);
                 return true;
             } catch (final ReflectiveOperationException e) {
@@ -129,7 +129,7 @@ public class ItemData extends Data<ItemStack> {
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD != null) try {
-                CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, value);
+                CUSTOM_ITEM_TAG_CONTAINER_SET_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key), ITEM_TAG_TYPE_STRING, value);
                 target.setItemMeta(meta);
                 return true;
             } catch (final ReflectiveOperationException e) {
@@ -153,7 +153,7 @@ public class ItemData extends Data<ItemStack> {
     @Override
     public boolean remove(@NotNull String key) {
         // 1.13.2+ (persistent data container or custom item tag container)
-        if (NAMESPACED_KEY_CONSTRUCTOR_PLUGIN != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null) {
             final ItemMeta meta = target.getItemMeta();
             if (meta == null) {
                 sendError("remove", null);
@@ -162,7 +162,7 @@ public class ItemData extends Data<ItemStack> {
 
             // 1.14+ (persistent data container)
             if (PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_REMOVE_METHOD != null) try {
-                PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key));
+                PERSISTENT_DATA_CONTAINER_REMOVE_METHOD.invoke(PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 target.setItemMeta(meta);
                 return true;
             } catch (final ReflectiveOperationException e) {
@@ -172,7 +172,7 @@ public class ItemData extends Data<ItemStack> {
 
             // 1.13.2 (custom item tag container)
             if (ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD != null && CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD != null) try {
-                CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key));
+                CUSTOM_ITEM_TAG_CONTAINER_REMOVE_CUSTOM_TAG_METHOD.invoke(ITEM_META_GET_CUSTOM_TAG_CONTAINER_METHOD.invoke(meta), NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key));
                 target.setItemMeta(meta);
                 return true;
             } catch (final ReflectiveOperationException e) {

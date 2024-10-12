@@ -50,7 +50,7 @@ public class EntityData extends StringData {
      * <br>For 1.14+ (PDC), the entity will receive the {@code api_converted} key which indicates that the data has been converted, this will avoid duplicate conversion checks
      * <br>All old data (PDC/file) will be removed after conversion (to avoid duplicate/overwriting data)
      *
-     * @param   onlyTryOnce 1.14+ only. {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen), all old data will be removed even if it fails. If {@code false} and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
+     * @param   onlyTryOnce 1.14+ only | {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen). If {@code false}, the conversion failed previously, and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
      * @param   keys        only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
@@ -58,14 +58,14 @@ public class EntityData extends StringData {
     @Nullable @SuppressWarnings("deprecation")
     public Map<String, String> convertOldData(boolean onlyTryOnce, @Nullable Collection<String> keys) {
         // 1.14+ (persistent data container)
-        if (NAMESPACED_KEY_CONSTRUCTOR_STRING != null && NAMESPACED_KEY_CONSTRUCTOR_PLUGIN != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR != null && PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD != null && PERSISTENT_DATA_CONTAINER_GET_METHOD != null && PERSISTENT_DATA_CONTAINER_SET_METHOD != null && PERSISTENT_DATA_TYPE_STRING != null && PERSISTENT_DATA_TYPE_BYTE != null) {
             final Object persistentDataContainer;
             final Object convertedKey;
             try {
                 // Get PDC
                 persistentDataContainer = PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity);
                 // Check if already converted
-                convertedKey = NAMESPACED_KEY_CONSTRUCTOR_STRING.newInstance("annoyingapi", "converted");
+                convertedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, "annoyingapi_converted");
                 if (PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE) != null) return Collections.emptyMap();
                 // Set converted key if onlyTryOnce is true
                 if (onlyTryOnce) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
@@ -95,7 +95,7 @@ public class EntityData extends StringData {
                 if (keys == null || keys.isEmpty()) return Collections.emptyMap();
                 try {
                      for (final String key : keys) {
-                         final Object namespacedKey = NAMESPACED_KEY_CONSTRUCTOR_PLUGIN.newInstance(plugin, key);
+                         final Object namespacedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key);
                          namespacedKeys.put(key, namespacedKey);
                      }
                 } catch (final ReflectiveOperationException e) {
@@ -151,7 +151,7 @@ public class EntityData extends StringData {
     /**
      * Calls {@link #convertOldData(boolean, Collection)} with the given keys
      *
-     * @param   onlyTryOnce 1.14+ only. {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen), all old data will be removed even if it fails. If {@code false} and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
+     * @param   onlyTryOnce 1.14+ only | {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen). If {@code false}, the conversion failed previously, and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
      * @param   keys        only applicable for 1.14-1.16, otherwise it will convert all keys (no matter what is provided)
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
@@ -194,7 +194,7 @@ public class EntityData extends StringData {
     /**
      * Calls {@link #convertOldData(boolean, Collection)} with {@code onlyTryOnce} set to {@code true} and {@code keys} set to {@code null}
      *
-     * @param   onlyTryOnce 1.14+ only. {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen), all old data will be removed even if it fails. If {@code false} and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
+     * @param   onlyTryOnce 1.14+ only | {@code true} to only try once to convert the data, even if it fails (so if run again, nothing will happen). If {@code false}, the conversion failed previously, and this is run again, it will try to convert again. If the data is successfully converted, this option doesn't matter
      *
      * @return              a map of keys that failed to convert (key, value) or {@code null} if an error occurred (only returns {@code null} if 1.14+ fails)
      *
