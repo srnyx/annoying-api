@@ -16,6 +16,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -414,16 +415,15 @@ public class AnnoyingPlugin extends JavaPlugin {
      *
      * @param   runnable    the task to run
      *
-     * @return              {@code true} if the task was run asynchronously, {@code false} if it was run synchronously
+     * @return              the {@link BukkitTask} if the task was run asynchronously, otherwise {@link Optional#empty()}
      */
-    @SuppressWarnings("UnusedReturnValue")
-    public boolean attemptAsync(@NotNull Runnable runnable) {
+    @NotNull @SuppressWarnings("UnusedReturnValue")
+    public Optional<BukkitTask> attemptAsync(@NotNull Runnable runnable) {
         try {
-            Bukkit.getScheduler().runTaskAsynchronously(this, runnable);
-            return true;
+            return Optional.of(Bukkit.getScheduler().runTaskAsynchronously(this, runnable));
         } catch (final IllegalPluginAccessException e) {
             runnable.run();
-            return false;
+            return Optional.empty();
         }
     }
 

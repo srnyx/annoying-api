@@ -123,14 +123,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     public void create() {
         final Path filePath = file.toPath();
-        plugin.attemptAsync(() -> {
-            try {
-                Files.createDirectories(filePath.getParent());
-                Files.createFile(filePath);
-            } catch (final IOException e) {
-                e.printStackTrace();
-            }
-        });
+        try {
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
