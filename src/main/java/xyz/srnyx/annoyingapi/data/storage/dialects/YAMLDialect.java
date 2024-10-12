@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.data.storage.DataManager;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
-import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import xyz.srnyx.javautilities.FileUtility;
 
@@ -35,13 +34,19 @@ public class YAMLDialect extends Dialect {
     }
 
     @Override @NotNull
-    public Optional<String > getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+    public Optional<String> getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         return getTableFromCache(table).map(file -> file.getString(target + "." + key));
     }
 
     @Override
     public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        getTableFromCache(table).ifPresent(file -> file.set(target + "." + key, value));
+        getTableFromCache(table)
+                .orElseGet(() -> {
+                    final AnnoyingData file = getTableFromDatabase(table);
+                    tables.put(table, file);
+                    return file;
+                })
+                .set(target + "." + key, value);
     }
 
     @Override
@@ -61,13 +66,7 @@ public class YAMLDialect extends Dialect {
 
     @NotNull
     private AnnoyingData getTableFromDatabase(@NotNull String table) {
-        // Save cache
-        getTableFromCache(table).ifPresent(AnnoyingFile::save);
-        // Add to cache
-        final AnnoyingData newFile = new AnnoyingData(dataManager.plugin, "yaml/" + table + ".yaml");
-        tables.put(table, newFile);
-        // Return new file
-        return newFile;
+        return new AnnoyingData(dataManager.plugin, "yaml/" + table + ".yaml");
     }
 
     @Override @NotNull

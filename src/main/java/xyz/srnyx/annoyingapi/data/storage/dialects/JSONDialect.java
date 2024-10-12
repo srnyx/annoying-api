@@ -49,7 +49,13 @@ public class JSONDialect extends Dialect {
 
     @Override
     public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        getTableFromCache(table).ifPresent(file -> file.set(target, key, value));
+        getTableFromCache(table)
+                .orElseGet(() -> {
+                    final JsonFile newFile = getTableFromDatabase(table);
+                    tables.put(table, newFile);
+                    return newFile;
+                })
+                .set(target, key, value);
     }
 
     @Override
@@ -68,40 +74,20 @@ public class JSONDialect extends Dialect {
     }
 
     @NotNull
-    private Optional<JsonFile> getTableFromDatabase(@NotNull String table) {
-        // Save cache
-        getTableFromCache(table).ifPresent(JsonFile::save);
-
-        // Get file
+    private JsonFile getTableFromDatabase(@NotNull String table) {
         final File file = new File(folder, table + ".json");
-        final JsonObject json;
+        JsonObject json = new JsonObject();
 
         // Read the file if it exists
         if (file.exists()) try (final FileReader fileReader = new FileReader(file)) {
             json = GSON.fromJson(fileReader, JsonObject.class);
-        // Reading failed, log error and don't store the table
+        // Reading failed, log error
         } catch (final IOException | JsonParseException e) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to read file for table &4" + table, e);
-            tables.remove(table);
-            return Optional.empty();
-        // Create the file (and parents) if it doesn't exist
-        } else try {
-            Files.createDirectories(file.getParentFile().toPath());
-            Files.createFile(file.toPath());
-            json = new JsonObject();
-        // Creating failed, log error and don't store the table
-        } catch (final IOException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create file for table &4" + table, e);
-            tables.remove(table);
-            return Optional.empty();
         }
 
-        // Add to cache
-        final JsonFile newFile = new JsonFile(file, json);
-        tables.put(table, newFile);
-
         // Return new file
-        return Optional.of(newFile);
+        return new JsonFile(file, json);
     }
 
     @Override @NotNull
@@ -109,11 +95,9 @@ public class JSONDialect extends Dialect {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
         final Map<String, Map<String, Map<String, String>>> data = new HashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(folder, "json")) {
-            final Optional<Set<Map.Entry<String, JsonElement>>> entries = getTableFromDatabase(table).map(file -> file.json.entrySet());
-            if (!entries.isPresent()) continue;
             final Set<String> keys = new HashSet<>();
             final Map<String, Map<String, String>> targetData = new HashMap<>(); // [target, [key, value]]
-            for (final Map.Entry<String, JsonElement> entry : entries.get()) {
+            for (final Map.Entry<String, JsonElement> entry : getTableFromDatabase(table).json.entrySet()) {
                 final JsonElement entryElement = entry.getValue();
                 if (!entryElement.isJsonObject()) continue;
                 final Map<String, String> targetMap = new HashMap<>(); // [key, value]
@@ -132,34 +116,27 @@ public class JSONDialect extends Dialect {
 
     @Override @NotNull
     protected Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getTableFromDatabase(table).flatMap(file -> file.get(target, key));
+        return getTableFromDatabase(table).get(target, key);
     }
 
     @Override
     protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        final JsonFile file = getTableFromDatabase(table).orElse(null);
-        if (file == null) return false;
+        final JsonFile file = getTableFromDatabase(table);
         file.set(target, key, value);
         return file.save();
     }
 
     @Override
     protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
-        final JsonFile file = getTableFromDatabase(table).orElse(null);
-        if (file == null) return false;
-        final JsonObject targetData = file.getTargetData(target).orElseGet(() -> {
-            final JsonObject jsonObject = new JsonObject();
-            file.json.add(target, jsonObject);
-            return jsonObject;
-        });
+        final JsonFile file = getTableFromDatabase(table);
+        final JsonObject targetData = file.getTargetDataCreate(target);
         for (final Map.Entry<String, String> entry : data.entrySet()) targetData.addProperty(entry.getKey(), entry.getValue());
         return file.save();
     }
 
     @Override
     protected boolean removeFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        final JsonFile file = getTableFromDatabase(table).orElse(null);
-        if (file == null) return false;
+        final JsonFile file = getTableFromDatabase(table);
         file.remove(target, key);
         return file.save();
     }
@@ -167,7 +144,7 @@ public class JSONDialect extends Dialect {
     /**
      * A wrapper for a JSON file with utility methods
      */
-    private static class JsonFile {
+    public static class JsonFile {
         /**
          * The file
          */
@@ -175,7 +152,7 @@ public class JSONDialect extends Dialect {
         /**
          * The JSON object containing the data
          */
-        @NotNull private final JsonObject json;
+        @NotNull public final JsonObject json;
 
         /**
          * Creates a new JSON file
@@ -201,6 +178,22 @@ public class JSONDialect extends Dialect {
         }
 
         /**
+         * Gets the target data
+         *
+         * @param   target  the target to get the data from
+         *
+         * @return          the data of the target, or {@link Optional#empty()} if the target doesn't exist
+         */
+        @NotNull
+        private JsonObject getTargetDataCreate(@NotNull String target) {
+            return MiscUtility.handleException(() -> json.getAsJsonObject(target)).orElseGet(() -> {
+                final JsonObject jsonObject = new JsonObject();
+                json.add(target, jsonObject);
+                return jsonObject;
+            });
+        }
+
+        /**
          * Gets a key from the target
          *
          * @param   target  the target to get the key from
@@ -221,7 +214,7 @@ public class JSONDialect extends Dialect {
          * @param   value   the value to set
          */
         private void set(@NotNull String target, @NotNull String key, @NotNull String value) {
-            getTargetData(target).ifPresent(jsonObject -> jsonObject.addProperty(key, value));
+            getTargetDataCreate(target).addProperty(key, value);
         }
 
         /**
@@ -240,6 +233,16 @@ public class JSONDialect extends Dialect {
          * @return  {@code true} if the file was saved successfully, {@code false} otherwise
          */
         private boolean save() {
+            // Create file if it doesn't exist
+            if (!file.exists()) try {
+                Files.createDirectories(file.getParentFile().toPath());
+                Files.createFile(file.toPath());
+            } catch (final IOException e) {
+                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
+                return false;
+            }
+
+            // Write data to file
             try (final FileWriter fileWriter = new FileWriter(file)) {
                 fileWriter.write(GSON.toJson(json));
                 return true;
