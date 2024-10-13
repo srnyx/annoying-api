@@ -15,6 +15,7 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -210,6 +211,47 @@ public class AnnoyingSender extends Stringable implements Annoyable {
             if (value == null) invalidArgument(argument);
             return value;
         });
+    }
+
+    /**
+     * Gets multiple arguments joined together starting from the specified index and ending at the specified index (if too high, it will stop at the last argument)
+     * <br>If no arguments are found, it returns an empty string
+     *
+     * @param   start   the starting index
+     * @param   end     the ending index
+     *
+     * @return          the arguments joined together
+     */
+    @NotNull
+    public String getArgumentsJoined(int start, int end) {
+        if (args == null || args.length <= start) return "";
+        final StringJoiner joiner = new StringJoiner(" ");
+        for (int i = start; i < args.length && i < end; i++) joiner.add(args[i]);
+        return joiner.toString();
+    }
+
+    /**
+     * Gets multiple arguments joined together starting from the specified index
+     * <br>If no arguments are found, it returns an empty string
+     *
+     * @param   start   the starting index
+     *
+     * @return          the arguments joined together
+     */
+    @NotNull
+    public String getArgumentsJoined(int start) {
+        return args == null ? "" : getArgumentsJoined(start, args.length);
+    }
+
+    /**
+     * Gets all arguments joined together
+     * <br>If no arguments are found, it returns an empty string
+     *
+     * @return  all arguments joined together
+     */
+    @NotNull
+    public String getArgumentsJoined() {
+        return args == null ? "" : String.join(" ", args);
     }
 
     /**
