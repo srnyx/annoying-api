@@ -221,13 +221,13 @@ public class StorageConfig {
         /**
          * Saves the cache on plugin reload
          *
-         * @see AnnoyingPlugin#reloadPlugin()
+         * @see AnnoyingPlugin#reload()
          */
         RELOAD,
         /**
          * Saves the cache on plugin disable
          *
-         * @see AnnoyingPlugin#disablePlugin()
+         * @see AnnoyingPlugin#disable()
          */
         DISABLE,
         /**

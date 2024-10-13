@@ -175,19 +175,35 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onDisable() {
-        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.dialect.saveCache();
+        if (dataManager != null) {
+            // Save cache
+            if (dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.dialect.saveCache();
+            // Close connection (if SQL)
+            if (dataManager.dialect instanceof SQLDialect) try {
+                ((SQLDialect) dataManager.dialect).connection.close();
+            } catch (final SQLException e) {
+                log(Level.SEVERE, "Failed to close the database connection", e);
+            }
+        }
+
+        // Run custom onDisable
         disable();
     }
 
     /**
      * Called when the plugin is loaded
+     *
+     * @see #onLoad()
      */
     public void load() {
         // This method is meant to be overridden
     }
 
     /**
-     * Called after dependency checks, start-up messages, and command/listener registration.
+     * Called after dependency checks, start-up messages, and command/listener registration
+     *
+     * @see #onEnable()
+     * @see #enablePlugin()
      */
     public void enable() {
         // This method is meant to be overridden
@@ -195,6 +211,9 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Called when the plugin is disabled
+     *
+     * @see #onDisable()
+     * @see #disablePlugin()
      */
     public void disable() {
         // This method is meant to be overridden
@@ -211,7 +230,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     /**
      * Plugin enabling stuff
-     * <b><p>Do not try to override this method! Override {@link #enable()} instead</b>
+     * <b><p>Do not override this method! Override {@link #enable()} instead</b>
      *
      * @see #enable()
      */
@@ -292,9 +311,19 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Runs {@link PluginManager#disablePlugin(Plugin)} with {@code this} as the plugin
+     * <br><b>Do not override this method! Override {@link #disable()} instead</b>
+     *
+     * @see #disable()
+     */
+    public void disablePlugin() {
+        Bukkit.getPluginManager().disablePlugin(this);
+    }
+
+    /**
      * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
      * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
-     * <p><b>Do not try to override this method! Override {@link #reload()} instead</b>
+     * <p><b>Do not override this method! Override {@link #reload()} instead</b>
      *
      * @see #reload()
      */
@@ -313,17 +342,6 @@ public class AnnoyingPlugin extends JavaPlugin {
         globalPlaceholders.clear();
         final ConfigurationSection section = messages.getConfigurationSection(options.messagesOptions.keys.globalPlaceholders);
         if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
-    }
-
-    /**
-     * Disables the plugin. Unregisters commands/listeners, cancels tasks, and then runs {@link PluginManager#disablePlugin(Plugin)}
-     * <p><i>This is not meant to be overriden, only override if you know what you're doing!</i>
-     */
-    public void disablePlugin() {
-        new HashSet<>(registeredClasses).forEach(Registrable::unregister);
-        Bukkit.getScheduler().cancelTasks(this);
-        if (dataManager != null) dataManager.dialect.saveCache();
-        Bukkit.getPluginManager().disablePlugin(this);
     }
 
     /**
