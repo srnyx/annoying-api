@@ -15,6 +15,8 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.logging.Level;
 
 
 /**
@@ -174,6 +176,43 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     }
 
     /**
+     * Gets the argument at the specified index as an {@link Optional}
+     *
+     * @param   index   the argument index
+     *
+     * @return          the argument at the specified index as an {@link Optional}
+     */
+    @NotNull
+    public Optional<String> getArgument(int index) {
+        return args == null || args.length <= index ? Optional.empty() : Optional.ofNullable(args[index]);
+    }
+
+    /**
+     * Gets the argument at the specified index as an {@link Optional} after applying the specified function
+     * <br>If it's empty after the function, send the invalid argument message
+     * <br><b>Example usage:</b>
+     * <pre>{@code
+     * final Player target = sender.getArgument(2, Bukkit::getPlayer).orElse(null);
+     * if (target == null) return;
+     * }</pre>
+     *
+     * @param   index       the argument index
+     * @param   function    the function to apply to the argument
+     *
+     * @return              the argument at the specified index as an {@link Optional} after applying the specified function
+     *
+     * @param   <T>         the type of the argument
+     */
+    @NotNull
+    public <T> Optional<T> getArgument(int index, @NotNull Function<String, T> function) {
+        return getArgument(index).map(argument -> {
+            final T value = function.apply(argument);
+            if (value == null) invalidArgument(argument);
+            return value;
+        });
+    }
+
+    /**
      * Sends the invalid argument message, replacing {@code %argument%} with the specified argument
      *
      * @param   argument    the argument to replace {@code %argument%} with
@@ -186,11 +225,14 @@ public class AnnoyingSender extends Stringable implements Annoyable {
 
     /**
      * Sends the invalid argument message, replacing {@code %argument%} with the specified argument
+     * <br>If {@link #args} is {@code null} or the specified index is out of bounds, it logs a warning to console
      *
      * @param   index   the argument index
      */
     public void invalidArgumentByIndex(int index) {
-        invalidArgument(args == null || args.length <= index ? index : args[index]);
+        final boolean invalid = args == null || args.length <= index;
+        if (invalid) AnnoyingPlugin.log(Level.WARNING, "&4[" + label + "]&c Invalid argument index for invalidArgumentByIndex: &4" + index);
+        invalidArgument(invalid ? index : args[index]);
     }
 
     /**
