@@ -8,10 +8,6 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.javautilities.manipulation.DurationFormatter;
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 
 /**
  * This class is used to create and manage cooldowns
@@ -23,30 +19,48 @@ public class AnnoyingCooldown extends Stringable {
      */
     @NotNull private final CooldownManager manager;
     /**
+     * A string indicating the type of cooldown (examples: {@code command.play}, {@code use_ability}, etc...)
+     */
+    @NotNull public final String type;
+    /**
      * The key that "owns" this cooldown
      */
     @NotNull public final String key;
     /**
-     * The {@link CooldownType} that was used to create this cooldown
+     * The duration of the cooldown (in milliseconds)
      */
-    @NotNull public final CooldownType type;
+    public final long duration;
     /**
      * The time that this cooldown will expire
+     * <br>{@code null} if the cooldown hasn't started
      */
-    private final long time;
+    @Nullable private Long expires;
 
     /**
-     * Creates a new cooldown with the given key and type
+     * Creates a new cooldown with the given type, key, and duration
      *
-     * @param   plugin  the plugin that is creating the cooldown (used to get the {@link #manager})
-     * @param   key     {@link #key}
-     * @param   type    {@link #type}
+     * @param   manager     {@link #manager}
+     * @param   type        {@link #type}
+     * @param   key         {@link #key}
+     * @param   duration    the duration of the cooldown (in milliseconds)
      */
-    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull String key, @NotNull CooldownType type) {
-        this.manager = plugin.cooldownManager;
+    public AnnoyingCooldown(@NotNull CooldownManager manager, @NotNull Object type, @NotNull String key, long duration) {
+        this.manager = manager;
         this.key = key;
-        this.type = type;
-        this.time = System.currentTimeMillis() + type.getDuration();
+        this.type = type.toString();
+        this.duration = duration;
+    }
+
+    /**
+     * Creates a new cooldown with the given type, key, and duration
+     *
+     * @param   plugin      the plugin that is creating the cooldown (used to get the {@link #manager})
+     * @param   type        {@link #type}
+     * @param   key         {@link #key}
+     * @param   duration    the duration of the cooldown (in milliseconds)
+     */
+    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull Object type, @NotNull String key, long duration) {
+        this(plugin.cooldownManager, type, key, duration);
     }
 
     /**
@@ -57,7 +71,7 @@ public class AnnoyingCooldown extends Stringable {
      * @see     DurationFormatter#formatDuration(long, String, boolean)
      */
     public long getRemaining() {
-        return time - System.currentTimeMillis();
+        return expires == null ? 0 : expires - System.currentTimeMillis();
     }
 
     /**
@@ -98,23 +112,16 @@ public class AnnoyingCooldown extends Stringable {
      * <br>If the cooldown is already started, it will be restarted
      */
     public void start() {
-        final Set<AnnoyingCooldown> set = manager.cooldowns.get(key);
-        if (set == null) {
-            manager.cooldowns.put(key, new HashSet<>(Collections.singleton(this)));
-            return;
-        }
-        set.remove(this);
-        set.add(this);
+        expires = System.currentTimeMillis() + duration;
+        manager.cooldowns.add(this);
     }
 
     /**
      * Stops the cooldown
      */
     public void stop() {
-        final Set<AnnoyingCooldown> set = manager.cooldowns.get(key);
-        if (set == null) return;
-        set.remove(this);
-        if (set.isEmpty()) manager.cooldowns.remove(key);
+        expires = null;
+        manager.cooldowns.remove(this);
     }
 
     /**
@@ -130,17 +137,17 @@ public class AnnoyingCooldown extends Stringable {
         if (this == other) return true;
         if (!(other instanceof AnnoyingCooldown)) return false;
         final AnnoyingCooldown cooldown = (AnnoyingCooldown) other;
-        return key.equals(cooldown.key) && type.equals(cooldown.type);
+        return type.equals(cooldown.type) && key.equals(cooldown.key);
     }
 
     /**
      * Returns the hash code of this cooldown
-     * <br>It is the sum of the hash codes of the {@link #key} and {@link #type}
+     * <br>It is the sum of the hash codes of the {@link #type} and {@link #key}
      *
      * @return  the hash code of this cooldown
      */
     @Override
     public int hashCode() {
-        return key.hashCode() + type.hashCode();
+        return type.hashCode() + key.hashCode();
     }
 }
