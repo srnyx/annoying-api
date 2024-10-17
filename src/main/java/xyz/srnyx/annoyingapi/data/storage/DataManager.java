@@ -84,7 +84,7 @@ public class DataManager {
         final File dataFolder = plugin.getDataFolder();
         final File storageNew = new File(dataFolder, "storage-new.yml");
         if (!storageNew.exists()) return this;
-        AnnoyingPlugin.log(Level.INFO, "&aFound &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
+        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
 
         // NEW: Connect to new database
         final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(plugin, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
@@ -110,7 +110,7 @@ public class DataManager {
                 for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set values for &4" + entry1.getKey() + "&c in table &4" + table + "&c: &4" + entry1.getValue());
             }
         } else {
-            AnnoyingPlugin.log(Level.WARNING, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
+            AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
         }
 
         // OLD: Close old connection
@@ -139,7 +139,7 @@ public class DataManager {
         }
 
         // NEW: Use new storage
-        AnnoyingPlugin.log(Level.INFO, "&aFinished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
+        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully finished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
         return newManager;
     }
 }

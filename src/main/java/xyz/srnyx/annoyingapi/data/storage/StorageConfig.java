@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi.data.storage;
 
+import net.byteflux.libby.classloader.IsolatedClassLoader;
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -10,6 +12,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -97,14 +100,27 @@ public class StorageConfig {
         }
 
         // Download driver if needed
-        if (method.library != null) method.library.load(plugin);
+        ClassLoader classLoader = getClass().getClassLoader();
+        if (method.library != null) {
+            final Optional<IsolatedClassLoader> isolatedClassLoader = plugin.libraryManager.loadLibrary(method.library);
+            if (isolatedClassLoader.isPresent()) classLoader = isolatedClassLoader.get();
+        }
 
         // Load driver
-        final Optional<String> driver = method.getDriver(plugin);
+        final Optional<String> driver = method.getDriver();
         if (!driver.isPresent()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
         try {
-            Class.forName(driver.get());
+            classLoader.loadClass(driver.get());
         } catch (final ClassNotFoundException e) {
+            throw new ConnectionException(e, url, properties);
+        }
+
+        // H2: Connect using isolated class loader
+        if (method == StorageMethod.H2) try {
+            return (Connection) classLoader.loadClass("org.h2.jdbc.JdbcConnection")
+                    .getConstructor(String.class, Properties.class, String.class, Object.class, boolean.class)
+                    .newInstance(url, properties, null, null, false);
+        } catch (final ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new ConnectionException(e, url, properties);
         }
 

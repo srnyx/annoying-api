@@ -50,7 +50,7 @@ public class ItemData extends Data<ItemStack> {
      */
     @NotNull
     public Optional<String> attemptItemNbtApi(@NotNull Supplier<String> supplier) {
-        RuntimeLibrary.ITEM_NBT_API.load(plugin);
+        plugin.libraryManager.loadLibrary(RuntimeLibrary.ITEM_NBT_API);
         return Optional.ofNullable(supplier.get());
     }
 
@@ -60,7 +60,7 @@ public class ItemData extends Data<ItemStack> {
      * @param   runnable    the runnable to attempt
      */
     public void attemptItemNbtApi(@NotNull Runnable runnable) {
-        RuntimeLibrary.ITEM_NBT_API.load(plugin);
+        plugin.libraryManager.loadLibrary(RuntimeLibrary.ITEM_NBT_API);
         runnable.run();
     }
 

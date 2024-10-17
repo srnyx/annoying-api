@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
-import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.relocation.Relocation;
 
 import org.bukkit.Bukkit;
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.data.storage.DataManager;
-import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.data.storage.StorageConfig;
 import xyz.srnyx.annoyingapi.data.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
@@ -43,7 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -76,16 +73,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
-     * The {@link BukkitLibraryManager} for the plugin
+     * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
      */
-    @NotNull public final BukkitLibraryManager libraryManager = new BukkitLibraryManager(this, "libs");
-    /**
-     * Set of loaded {@link RuntimeLibrary libraries}
-     * <br>If a library's files are manually deleted (or something else goes wrong), the plugin will not notice this change until the library is {@link RuntimeLibrary#load(AnnoyingPlugin) loaded again} (usually requires a server restart)
-     * <br>This should really only be used if you want to do a basic check if a library is loaded or not based on what features the API is currently using
-     * <br>Something like {@link ItemData#attemptItemNbtApi(Supplier)} may be a better method when using a runtime library
-     */
-    @NotNull public final Set<RuntimeLibrary> loadedLibraries = new HashSet<>();
+    @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
     /**
      * Wrapper for bStats
      */
@@ -248,8 +238,8 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean(options.bStatsOptions.toggleKey)) {
-            RuntimeLibrary.BSTATS_BASE.load(this);
-            RuntimeLibrary.BSTATS_BUKKIT.load(this);
+            libraryManager.loadLibrary(RuntimeLibrary.BSTATS_BASE);
+            libraryManager.loadLibrary(RuntimeLibrary.BSTATS_BUKKIT);
             stats = new AnnoyingStats(this);
         }
 
@@ -286,8 +276,8 @@ public class AnnoyingPlugin extends JavaPlugin {
         final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
         if (!packages.isEmpty()) {
             // Load Javassist and Reflections libraries
-            RuntimeLibrary.JAVASSIST.load(this);
-            RuntimeLibrary.REFLECTIONS.load(this);
+            libraryManager.loadLibrary(RuntimeLibrary.JAVASSIST);
+            libraryManager.loadLibrary(RuntimeLibrary.REFLECTIONS);
 
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;

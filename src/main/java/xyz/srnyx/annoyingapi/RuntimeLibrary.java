@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi;
 import com.google.common.collect.ImmutableSortedSet;
 
 import net.byteflux.libby.Library;
-import net.byteflux.libby.LibraryManager;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -18,116 +17,108 @@ import java.util.function.Function;
  */
 public enum RuntimeLibrary {
     /**
-     * org.bstats:bstats-base
+     * {@code org.bstats:bstats-base}
      */
     BSTATS_BASE("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}bstats")
             .artifactId("bstats-base")
             .version("3.1.0")
-            .relocate(plugin.getRelocation("org{}bstats")).build()),
+            .relocate(plugin.getRelocation("org{}bstats"))),
     /**
-     * org.bstats:bstats-bukkit
+     * {@code org.bstats:bstats-bukkit}
      */
     BSTATS_BUKKIT("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}bstats")
             .artifactId("bstats-bukkit")
             .version("3.1.0")
-            .relocate(plugin.getRelocation("org{}bstats")).build()),
+            .relocate(plugin.getRelocation("org{}bstats"))),
     /**
-     * org.javassist:javassist
+     * {@code org.javassist:javassist}
      */
     JAVASSIST("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}javassist")
             .artifactId("javassist")
             .version("3.28.0-GA")
-            .relocate(plugin.getRelocation("javassist{}", "javassist{}")).build()),
+            .relocate(plugin.getRelocation("javassist{}", "javassist{}"))),
     /**
-     * org.reflections:reflections
+     * {@code org.reflections:reflections}
      */
     REFLECTIONS("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}reflections")
             .artifactId("reflections")
             .version("0.10.2")
             .relocate(plugin.getRelocation("javassist{}", "javassist{}"))
-            .relocate(plugin.getRelocation("org{}reflections")).build()),
+            .relocate(plugin.getRelocation("org{}reflections"))),
     /**
-     * de.tr7zw:item-nbt-api
+     * {@code de.tr7zw:item-nbt-api}
      */
     ITEM_NBT_API("https://repo.codemc.org/repository/maven-public/", plugin -> Library.builder()
             .groupId("de{}tr7zw")
             .artifactId("item-nbt-api")
             .version("2.13.2")
-            .relocate(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi")).build()),
+            .relocate(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi"))),
     /**
-     * com.h2database:h2
+     * {@code com.h2database:h2}
+     * <br>Isolated load by default
      */
     H2("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("com{}h2database")
             .artifactId("h2")
             .version("2.2.220")
-            .relocate(plugin.getRelocation("org{}h2")).build()),
+            .isolatedLoad(true)),
     /**
-     * org.postgresql:postgresql
+     * {@code org.postgresql:postgresql}
      */
     POSTGRESQL("https://repo1.maven.org/maven2/", plugin -> Library.builder()
             .groupId("org{}postgresql")
             .artifactId("postgresql")
             .version("42.7.3")
-            .relocate(plugin.getRelocation("org{}postgresql")).build());
+            .relocate(plugin.getRelocation("org{}postgresql")));
 
+    /**
+     * The unique ID of the library (used for identification with {@link AnnoyingLibraryManager#getIsolatedClassLoaderOf(RuntimeLibrary)})
+     */
+    @NotNull public final String id;
     /**
      * The repositories to add before loading the library (immutable)
      */
     @NotNull public final SortedSet<String> repositories;
     /**
-     * The library to load
+     * The builder to create the library with
      */
-    @NotNull public final Function<AnnoyingPlugin, Library> library;
+    @NotNull public final Function<AnnoyingPlugin, Library.Builder> libraryBuilder;
 
     /**
      * Creates a new {@link RuntimeLibrary}
      *
      * @param   repositories    {@link #repositories}
-     * @param   library         {@link #library}
+     * @param   libraryBuilder  {@link #libraryBuilder}
      */
-    RuntimeLibrary(@NotNull Collection<String> repositories, @NotNull Function<AnnoyingPlugin, Library> library) {
+    RuntimeLibrary(@NotNull Collection<String> repositories, @NotNull Function<AnnoyingPlugin, Library.Builder> libraryBuilder) {
+        this.id = getClass().getSimpleName() + "." + name();
         this.repositories = ImmutableSortedSet.copyOf(repositories);
-        this.library = library;
+        this.libraryBuilder = plugin -> libraryBuilder.apply(plugin).id(id);
     }
 
     /**
      * Creates a new {@link RuntimeLibrary} with a single repository
      *
-     * @param   repository  the repository to add
-     * @param   library     the library to load
+     * @param   repository      {@link #repositories}
+     * @param   libraryBuilder  {@link #libraryBuilder}
      */
-    RuntimeLibrary(@NotNull String repository, @NotNull Function<AnnoyingPlugin, Library> library) {
-        this.repositories = ImmutableSortedSet.of(repository);
-        this.library = library;
+    RuntimeLibrary(@NotNull String repository, @NotNull Function<AnnoyingPlugin, Library.Builder> libraryBuilder) {
+        this(ImmutableSortedSet.of(repository), libraryBuilder);
     }
 
     /**
-     * Gets the library to load
+     * Builds and returns the library to load from the {@link #libraryBuilder}
      *
-     * @param   plugin  the plugin to load the library into
+     * @param   plugin  the plugin to build the library with
      *
-     * @return          the library to load
+     * @return          the library to build/get
      */
     @NotNull
     public Library getLibrary(@NotNull AnnoyingPlugin plugin) {
-        return library.apply(plugin);
-    }
-
-    /**
-     * Downloads and loads the library into the specified plugin
-     *
-     * @param   plugin  the plugin to load the library into
-     */
-    public void load(@NotNull AnnoyingPlugin plugin) {
-        if (plugin.loadedLibraries.contains(this)) return;
-        final LibraryManager manager = plugin.libraryManager;
-        for (final String repository : repositories) manager.addRepository(repository);
-        manager.loadLibrary(getLibrary(plugin));
-        plugin.loadedLibraries.add(this);
+        return libraryBuilder.apply(plugin).build();
     }
 }

@@ -22,23 +22,23 @@ public enum StorageMethod {
     /**
      * H2 storage method
      */
-    H2(H2Dialect::new, "h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", null, RuntimeLibrary.H2),
+    H2(H2Dialect::new, "org{}h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", RuntimeLibrary.H2),
     /**
      * SQLite storage method
      */
-    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null, null),
+    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null),
     /**
      * MySQL storage method
      */
-    MYSQL(MySQLDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", 3306, null),
+    MYSQL(MySQLDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
     /**
      * MariaDB storage method
      */
-    MARIADB(MariaDBDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", 3306, null),
+    MARIADB(MariaDBDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
     /**
      * PostgreSQL storage method
      */
-    POSTGRESQL(PostgreSQLDialect::new, "postgresql{}Driver", "jdbc:postgresql://", 5432, RuntimeLibrary.POSTGRESQL),
+    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", RuntimeLibrary.POSTGRESQL, 5432),
     /**
      * JSON storage method
      */
@@ -63,57 +63,63 @@ public enum StorageMethod {
      */
     @Nullable public final Function<File, String> url;
     /**
-     * The default port for the method (only for remote connections)
-     */
-    @Nullable public final Integer defaultPort;
-    /**
      * The library to be downloaded for the method (if any)
      */
     @Nullable public final RuntimeLibrary library;
+    /**
+     * The default port for the method (only for remote connections)
+     */
+    @Nullable public final Integer defaultPort;
 
     /**
-     * Construct a new {@link StorageMethod} with the given parameters
+     * Construct a new {@link StorageMethod} with the given parameters (non-remote types)
      *
      * @param dialect     {@link #dialect}
      * @param driver      {@link #driver}
      * @param url         {@link #url}
-     * @param defaultPort {@link #defaultPort}
      * @param library     {@link #library}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @Nullable String driver, @Nullable Function<File, String> url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @Nullable String driver, @Nullable Function<File, String> url, @Nullable RuntimeLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
-        this.defaultPort = defaultPort;
         this.library = library;
+        this.defaultPort = null;
     }
 
     /**
-     * Construct a new {@link StorageMethod} with the given parameters
+     * Construct a new {@link StorageMethod} with the given parameters (remote types)
      *
      * @param dialect     {@link #dialect}
      * @param driver      {@link #driver}
      * @param url         {@link #url}
-     * @param defaultPort {@link #defaultPort}
      * @param library     {@link #library}
+     * @param defaultPort {@link #defaultPort}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable Integer defaultPort, @Nullable RuntimeLibrary library) {
-        this(dialect, driver, dataFolder -> url, defaultPort, library);
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable RuntimeLibrary library, @Nullable Integer defaultPort) {
+        this.dialect = dialect;
+        this.driver = driver;
+        this.url = file -> url;
+        this.library = library;
+        this.defaultPort = defaultPort;
     }
 
     StorageMethod(@NotNull DialectFunction dialect) {
-        this(dialect, null, (Function<File, String>) null, null, null);
+        this.dialect = dialect;
+        this.driver = null;
+        this.url = null;
+        this.library = null;
+        this.defaultPort = null;
     }
 
     /**
      * Get the driver class name for the method
      *
-     * @param plugin the {@link AnnoyingPlugin plugin} to get the driver for
-     * @return the driver class name for the method
+     * @return  the driver class name for the method
      */
     @NotNull
-    public Optional<String> getDriver(@NotNull AnnoyingPlugin plugin) {
-        return driver != null ? Optional.of((library != null ? plugin.getLibsPackage() + driver : driver).replace("{}", ".")) : Optional.empty();
+    public Optional<String> getDriver() {
+        return driver != null ? Optional.of(driver.replace("{}", ".")) : Optional.empty();
     }
 
     /**
