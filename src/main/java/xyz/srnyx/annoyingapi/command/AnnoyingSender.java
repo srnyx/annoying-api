@@ -177,6 +177,46 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     }
 
     /**
+     * Gets the argument at the specified index
+     *
+     * @param   index   the argument index
+     *
+     * @return          the argument at the specified index
+     */
+    @Nullable
+    public String getArgument(int index) {
+        return args == null || args.length <= index ? null : args[index];
+    }
+
+    /**
+     * Gets the argument at the specified index after applying the specified function
+     * <br>If it's {@code null} before/after the function, send the invalid argument message
+     * <br><b>Example usage:</b>
+     * <pre>{@code
+     * final Player target = sender.getArgument(2, Bukkit::getPlayer);
+     * if (target == null) return;
+     * }</pre>
+     *
+     * @param   index       the argument index
+     * @param   function    the function to apply to the argument
+     *
+     * @return              the argument at the specified index after applying the specified function
+     *
+     * @param   <T>         the type of the argument
+     */
+    @Nullable
+    public <T> T getArgument(int index, @NotNull Function<String, T> function) {
+        final String argument = getArgument(index);
+        if (argument == null) {
+            invalidArgumentByIndex(index);
+            return null;
+        }
+        final T value = function.apply(argument);
+        if (value == null) invalidArgument(argument);
+        return value;
+    }
+
+    /**
      * Gets the argument at the specified index as an {@link Optional}
      *
      * @param   index   the argument index
@@ -184,13 +224,13 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      * @return          the argument at the specified index as an {@link Optional}
      */
     @NotNull
-    public Optional<String> getArgument(int index) {
-        return args == null || args.length <= index ? Optional.empty() : Optional.ofNullable(args[index]);
+    public Optional<String> getArgumentOptional(int index) {
+        return Optional.ofNullable(getArgument(index));
     }
 
     /**
      * Gets the argument at the specified index as an {@link Optional} after applying the specified function
-     * <br>If it's empty after the function, send the invalid argument message
+     * <br>If it's {@link Optional#empty() empty} before/after the function, send the invalid argument message
      * <br><b>Example usage:</b>
      * <pre>{@code
      * final Player target = sender.getArgument(2, Bukkit::getPlayer).orElse(null);
@@ -205,12 +245,10 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      * @param   <T>         the type of the argument
      */
     @NotNull
-    public <T> Optional<T> getArgument(int index, @NotNull Function<String, T> function) {
-        return getArgument(index).map(argument -> {
-            final T value = function.apply(argument);
-            if (value == null) invalidArgument(argument);
-            return value;
-        });
+    public <T> Optional<T> getArgumentOptional(int index, @NotNull Function<String, T> function) {
+        final Optional<T> optional = getArgumentOptional(index).map(function);
+        if (!optional.isPresent()) invalidArgumentByIndex(index);
+        return optional;
     }
 
     /**
