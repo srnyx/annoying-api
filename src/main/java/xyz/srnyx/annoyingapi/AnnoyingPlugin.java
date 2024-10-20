@@ -21,15 +21,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
-import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
-import xyz.srnyx.annoyingapi.data.storage.StorageConfig;
-import xyz.srnyx.annoyingapi.data.storage.dialects.sql.SQLDialect;
+import xyz.srnyx.annoyingapi.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.StorageConfig;
+import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
+import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
@@ -404,7 +406,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Connect to database
         try {
-            dataManager = new DataManager(new AnnoyingResource(this, "storage.yml"));
+            dataManager = new DataManager(new StorageConfig(new AnnoyingResource(this, "storage.yml")));
         } catch (final ConnectionException e) {
             dataManager = null;
             log(Level.SEVERE, "&4storage.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
@@ -500,5 +502,18 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public static void log(@Nullable Object message) {
         log(null, message, null);
+    }
+
+    /**
+     * Replaces all instances of {@code {}} in a string with {@code .}
+     * <br>Used for replacing brackets in package names
+     *
+     * @param   string  the string to replace brackets in
+     *
+     * @return          the string with brackets replaced
+     */
+    @NotNull
+    public static String replaceBrackets(@NotNull String string) {
+        return string.replace("{}", ".");
     }
 }

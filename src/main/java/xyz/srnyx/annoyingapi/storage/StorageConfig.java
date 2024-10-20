@@ -1,6 +1,4 @@
-package xyz.srnyx.annoyingapi.data.storage;
-
-import net.byteflux.libby.classloader.IsolatedClassLoader;
+package xyz.srnyx.annoyingapi.storage;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -12,7 +10,6 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -99,30 +96,9 @@ public class StorageConfig {
             if (remoteConnection.password != null) properties.setProperty("password", remoteConnection.password);
         }
 
-        // Download driver if needed
-        ClassLoader classLoader = getClass().getClassLoader();
-        if (method.library != null) {
-            final Optional<IsolatedClassLoader> isolatedClassLoader = plugin.libraryManager.loadLibrary(method.library);
-            if (isolatedClassLoader.isPresent()) classLoader = isolatedClassLoader.get();
-        }
-
-        // Load driver
+        // Get driver
         final Optional<String> driver = method.getDriver();
         if (!driver.isPresent()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
-        try {
-            classLoader.loadClass(driver.get());
-        } catch (final ClassNotFoundException e) {
-            throw new ConnectionException(e, url, properties);
-        }
-
-        // H2: Connect using isolated class loader
-        if (method == StorageMethod.H2) try {
-            return (Connection) classLoader.loadClass("org.h2.jdbc.JdbcConnection")
-                    .getConstructor(String.class, Properties.class, String.class, Object.class, boolean.class)
-                    .newInstance(url, properties, null, null, false);
-        } catch (final ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
-            throw new ConnectionException(e, url, properties);
-        }
 
         // SQLite: create parent directories
         if (method == StorageMethod.SQLITE) {
@@ -130,10 +106,19 @@ public class StorageConfig {
             if (!folder.exists() && !folder.mkdirs()) throw new ConnectionException("Failed to create SQLite parent directories", url, properties);
         }
 
-        // Connect
+        // If downloading library, connect using an IsolatedClassLoader
+        if (method.library != null) try {
+            final Class<?> driverClass = plugin.libraryManager.loadLibraryIsolated(method.library).loadClass(driver.get());
+            return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.newInstance(), url, properties);
+        } catch (final Exception e) {
+            throw new ConnectionException(e, url, properties);
+        }
+
+        // Load driver and connect
         try {
+            Class.forName(driver.get());
             return DriverManager.getConnection(url, properties);
-        } catch (final SQLException e) {
+        } catch (final ClassNotFoundException | SQLException e) {
             throw new ConnectionException(e, url, properties);
         }
     }

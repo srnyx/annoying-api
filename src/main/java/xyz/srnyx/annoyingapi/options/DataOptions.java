@@ -5,7 +5,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 import xyz.srnyx.annoyingapi.data.EntityData;

@@ -1,14 +1,14 @@
-package xyz.srnyx.annoyingapi.data.storage;
+package xyz.srnyx.annoyingapi.storage;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.RuntimeLibrary;
-import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
-import xyz.srnyx.annoyingapi.data.storage.dialects.JSONDialect;
-import xyz.srnyx.annoyingapi.data.storage.dialects.YAMLDialect;
-import xyz.srnyx.annoyingapi.data.storage.dialects.sql.*;
+import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.sql.*;
 
 import java.io.File;
 import java.util.Optional;
@@ -63,7 +63,7 @@ public enum StorageMethod {
      */
     @Nullable public final Function<File, String> url;
     /**
-     * The library to be downloaded for the method (if any)
+     * The {@link RuntimeLibrary} to download/load if the method requires one
      */
     @Nullable public final RuntimeLibrary library;
     /**
@@ -74,12 +74,12 @@ public enum StorageMethod {
     /**
      * Construct a new {@link StorageMethod} with the given parameters (non-remote types)
      *
-     * @param dialect     {@link #dialect}
-     * @param driver      {@link #driver}
-     * @param url         {@link #url}
-     * @param library     {@link #library}
+     * @param dialect   {@link #dialect}
+     * @param driver    {@link #driver}
+     * @param library   {@link #library}
+     * @param url       {@link #url}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @Nullable String driver, @Nullable Function<File, String> url, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<File, String> url, @Nullable RuntimeLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
@@ -96,7 +96,7 @@ public enum StorageMethod {
      * @param library     {@link #library}
      * @param defaultPort {@link #defaultPort}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable RuntimeLibrary library, @Nullable Integer defaultPort) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable RuntimeLibrary library, int defaultPort) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = file -> url;
@@ -104,6 +104,11 @@ public enum StorageMethod {
         this.defaultPort = defaultPort;
     }
 
+    /**
+     * Construct a new {@link StorageMethod} with the given {@link Dialect} (non-SQL types)
+     *
+     * @param   dialect {@link #dialect}
+     */
     StorageMethod(@NotNull DialectFunction dialect) {
         this.dialect = dialect;
         this.driver = null;
@@ -119,7 +124,7 @@ public enum StorageMethod {
      */
     @NotNull
     public Optional<String> getDriver() {
-        return driver != null ? Optional.of(driver.replace("{}", ".")) : Optional.empty();
+        return driver != null ? Optional.of(AnnoyingPlugin.replaceBrackets(driver)) : Optional.empty();
     }
 
     /**

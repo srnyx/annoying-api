@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.options.DataOptions;
 
 import java.util.Optional;

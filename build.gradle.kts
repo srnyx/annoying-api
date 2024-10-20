@@ -19,10 +19,12 @@ spigotAPI("1.8.8")
 repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.CODE_MC)
 dependencies {
     compileOnly("me.clip", "placeholderapi", "2.11.6")
-    compileOnly("de.tr7zw", "item-nbt-api", "2.13.2") // Downloaded on runtime
     compileOnlyApi("org.bstats", "bstats-bukkit", "3.1.0") // Downloaded on runtime
     compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
-    compileOnlyApi("org.jetbrains", "annotations", "25.0.0")
+    compileOnly("de.tr7zw", "item-nbt-api", "2.13.2") // Downloaded on runtime
+    compileOnlyApi("com.h2database", "h2", "2.3.232") // Downloaded on runtime
+    compileOnlyApi("org.postgresql", "postgresql", "42.7.4") // Downloaded on runtime
+    compileOnlyApi("org.jetbrains", "annotations", "26.0.1")
     implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby")
     implementationRelocate(project, "xyz.srnyx:java-utilities:2.0.0", "xyz.srnyx.javautilities")
 }

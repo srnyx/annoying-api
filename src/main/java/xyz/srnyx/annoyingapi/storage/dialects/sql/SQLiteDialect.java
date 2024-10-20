@@ -1,11 +1,11 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects.sql;
+package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 
 import java.sql.PreparedStatement;
@@ -31,6 +31,11 @@ public class SQLiteDialect extends SQLDialect {
      */
     public SQLiteDialect(@NotNull DataManager dataManager) throws ConnectionException {
         super(dataManager);
+    }
+
+    @Override @NotNull
+    public PreparedStatement getTablesImpl() throws SQLException {
+        return connection.prepareStatement("SELECT name FROM sqlite_master WHERE type='table'");
     }
 
     @Override @NotNull

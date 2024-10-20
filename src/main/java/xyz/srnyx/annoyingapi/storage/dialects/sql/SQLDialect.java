@@ -1,13 +1,13 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects.sql;
+package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.StringData;
-import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
-import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 
 import java.sql.*;
 import java.util.*;
@@ -93,7 +93,7 @@ public abstract class SQLDialect extends Dialect {
     public Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         // Get tables
         final Set<String> tables = new HashSet<>();
-        try (final PreparedStatement getTables = connection.prepareStatement("SHOW TABLES")) {
+        try (final PreparedStatement getTables = getTables()) {
             final ResultSet resultSet = getTables.executeQuery();
             while (resultSet.next()) tables.add(resultSet.getString(1));
         } catch (final SQLException e) {
@@ -202,6 +202,18 @@ public abstract class SQLDialect extends Dialect {
     }
 
     /**
+     * Get all tables from the database
+     *
+     * @return                  the {@link PreparedStatement} with the set parameters
+     *
+     * @throws  SQLException    if a database error occurs
+     */
+    @NotNull
+    public final PreparedStatement getTables() throws SQLException {
+        return getTablesImpl();
+    }
+
+    /**
      * Create a table in the database
      *
      * @param   table           the table to create
@@ -243,6 +255,16 @@ public abstract class SQLDialect extends Dialect {
     public final PreparedStatement getAllValuesFromDatabase(@NotNull String table) throws SQLException {
         return getAllValuesFromDatabaseImpl(table);
     }
+
+    /**
+     * Get all tables from the database
+     *
+     * @return                  the {@link PreparedStatement} with the set parameters
+     *
+     * @throws  SQLException    if a database error occurs
+     */
+    @NotNull
+    protected abstract PreparedStatement getTablesImpl() throws SQLException;
 
     /**
      * Create a table in the database

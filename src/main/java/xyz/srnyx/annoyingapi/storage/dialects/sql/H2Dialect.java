@@ -1,11 +1,10 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects.sql;
+package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.storage.ConnectionException;
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 
 import java.sql.PreparedStatement;
@@ -19,43 +18,43 @@ import java.util.logging.Level;
 
 
 /**
- * SQL dialect for MySQL database
+ * SQL dialect for H2 database
  */
-public class MySQLDialect extends SQLDialect {
+public class H2Dialect extends SQLDialect {
     /**
-     * Creates a new MySQL dialect
+     * Creates a new H2 dialect
      *
-     * @param   dataManager {@link #dataManager}
+     * @param   dataManager         {@link #dataManager}
      *
      * @throws  ConnectionException if a database connection error occurs
      */
-    public MySQLDialect(@NotNull DataManager dataManager) throws ConnectionException {
+    public H2Dialect(@NotNull DataManager dataManager) throws ConnectionException {
         super(dataManager);
     }
 
     @Override @NotNull
-    public PreparedStatement createTableImpl(@NotNull String table) throws SQLException {
-        return connection.prepareStatement("CREATE TABLE IF NOT EXISTS `" + table + "` (`" + StringData.TARGET_COLUMN + "` VARCHAR(255) PRIMARY KEY)");
+    public PreparedStatement getTablesImpl() throws SQLException {
+        return connection.prepareStatement("SHOW TABLES");
     }
 
-    @Override @Nullable
+    @Override @NotNull
+    public PreparedStatement createTableImpl(@NotNull String table) throws SQLException {
+        return connection.prepareStatement("CREATE TABLE IF NOT EXISTS \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\" TEXT PRIMARY KEY)");
+    }
+
+    @Override @NotNull
     public PreparedStatement createKeyImpl(@NotNull String table, @NotNull String key) throws SQLException {
-        try (final ResultSet result = connection.createStatement().executeQuery("SHOW COLUMNS FROM `" + table + "`")) {
-            if (result != null) while (result.next()) if (result.getString("Field").equals(key)) return null;
-        } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "Failed to get columns for " + table, e);
-        }
-        return connection.prepareStatement("ALTER TABLE `" + table + "` ADD COLUMN `" + key + "` TEXT");
+        return connection.prepareStatement("ALTER TABLE \"" + table + "\" ADD COLUMN IF NOT EXISTS \"" + key + "\" TEXT");
     }
 
     @Override @NotNull
     protected PreparedStatement getAllValuesFromDatabaseImpl(@NotNull String table) throws SQLException {
-        return connection.prepareStatement("SELECT * FROM `" + table + "`");
+        return connection.prepareStatement("SELECT * FROM \"" + table + "\"");
     }
 
     @Override @NotNull
     public Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String column) {
-        try (final PreparedStatement statement = connection.prepareStatement("SELECT `" + column + "` FROM `" + table + "` WHERE " + StringData.TARGET_COLUMN + " = ?")) {
+        try (final PreparedStatement statement = connection.prepareStatement("SELECT \"" + column + "\" FROM \"" + table + "\" WHERE \"" + StringData.TARGET_COLUMN + "\" = ?")) {
             statement.setString(1, target);
             final ResultSet result = statement.executeQuery();
             if (result.next()) return Optional.ofNullable(result.getString(column));
@@ -65,12 +64,11 @@ public class MySQLDialect extends SQLDialect {
         return Optional.empty();
     }
 
-    @Override @SuppressWarnings("DuplicatedCode")
+    @Override
     public boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) {
-        try (final PreparedStatement statement = connection.prepareStatement("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`, `" + column + "`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `" + column + "` = ?")) {
+        try (final PreparedStatement statement = connection.prepareStatement("MERGE INTO \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\", \"" + column + "\") KEY(\"" + StringData.TARGET_COLUMN + "\") VALUES(?, ?)")) {
             statement.setString(1, target);
             statement.setString(2, value);
-            statement.setString(3, value);
             statement.executeUpdate();
             return true;
         } catch (final SQLException e) {
@@ -78,26 +76,22 @@ public class MySQLDialect extends SQLDialect {
         }
     }
 
-    @Override @SuppressWarnings("DuplicatedCode")
+    @Override
     public boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
         // Get builders
-        final StringBuilder insertBuilder = new StringBuilder("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`");
+        final StringBuilder insertBuilder = new StringBuilder("MERGE INTO \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\"");
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
-        final StringBuilder updateBuilder = new StringBuilder(" ON DUPLICATE KEY UPDATE ");
         final List<String> values = new ArrayList<>();
         for (final Map.Entry<String, String> entry : data.entrySet()) {
-            final String column = entry.getKey();
-            insertBuilder.append(", `").append(column).append("`");
+            insertBuilder.append(", \"").append(entry.getKey()).append("\"");
             valuesBuilder.append(", ?");
-            updateBuilder.append("`").append(column).append("` = ?, ");
             values.add(entry.getValue());
         }
-        insertBuilder.append(")");
+        insertBuilder.append(") KEY(\"").append(StringData.TARGET_COLUMN).append("\")");
         valuesBuilder.append(")");
-        updateBuilder.setLength(updateBuilder.length() - 2);
 
         // Create statement
-        try (final PreparedStatement statement = setValuesParameters(target, values, insertBuilder, valuesBuilder, updateBuilder)) {
+        try (final PreparedStatement statement = setValuesParameters(target, values, insertBuilder, valuesBuilder, null)) {
             statement.executeUpdate();
             return true;
         } catch (final SQLException e) {
@@ -107,7 +101,7 @@ public class MySQLDialect extends SQLDialect {
 
     @Override
     public boolean removeFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String column) {
-        try (final PreparedStatement statement = connection.prepareStatement("UPDATE `" + table + "` SET `" + column + "` = NULL WHERE " + StringData.TARGET_COLUMN + " = ?")) {
+        try (final PreparedStatement statement = connection.prepareStatement("UPDATE \"" + table + "\" SET \"" + column + "\" = NULL WHERE \"" + StringData.TARGET_COLUMN + "\" = ?")) {
             statement.setString(1, target);
             statement.executeUpdate();
             return true;

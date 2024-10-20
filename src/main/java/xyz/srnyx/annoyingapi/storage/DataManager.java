@@ -1,12 +1,12 @@
-package xyz.srnyx.annoyingapi.data.storage;
+package xyz.srnyx.annoyingapi.storage;
 
 import org.bukkit.Bukkit;
 
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.storage.dialects.Dialect;
-import xyz.srnyx.annoyingapi.data.storage.dialects.sql.SQLDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
+import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
@@ -41,13 +41,13 @@ public class DataManager {
     /**
      * Connect to the configured database and create the pre-defined tables/columns
      *
-     * @param   file                the {@link AnnoyingFile file} to get the connection information from
+     * @param   config              the {@link StorageConfig storage.yml config} to use for the data manager
      *
-     * @throws ConnectionException if the connection to the database fails for any reason
+     * @throws  ConnectionException if the connection to the database fails for any reason
      */
-    public DataManager(@NotNull AnnoyingFile<?> file) throws ConnectionException {
-        plugin = file.plugin;
-        storageConfig = new StorageConfig(file);
+    public DataManager(@NotNull StorageConfig config) throws ConnectionException {
+        plugin = config.file.plugin;
+        storageConfig = config;
         dialect = storageConfig.method.dialect.apply(this);
         tablePrefix = storageConfig.remoteConnection != null ? storageConfig.remoteConnection.tablePrefix : "";
     }
@@ -84,14 +84,17 @@ public class DataManager {
         final File dataFolder = plugin.getDataFolder();
         final File storageNew = new File(dataFolder, "storage-new.yml");
         if (!storageNew.exists()) return this;
-        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2storage-new.yml&a, attempting to migrate data from &2storage.yml&a to &2storage-new.yml&a...");
 
-        // NEW: Connect to new database
+        // NEW: Load storage-new.yml
         final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(plugin, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
         if (!storageNewFile.load()) return this;
+        final StorageConfig storageNewConfig = new StorageConfig(storageNewFile);
+        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2storage-new.yml&a, attempting to migrate data from &2" + storageConfig.method + "&a to &2" + storageNewConfig.method + "&a...");
+
+        // NEW: Connect to new database
         final DataManager newManager;
         try {
-            newManager = new DataManager(storageNewFile);
+            newManager = new DataManager(storageNewConfig);
         } catch (final ConnectionException e) {
             AnnoyingPlugin.log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
             return this;
@@ -139,7 +142,7 @@ public class DataManager {
         }
 
         // NEW: Use new storage
-        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully finished migrating data from &2storage.yml&a to &2storage-new.yml&a!");
+        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully finished migrating data from &2" + storageConfig.method + "&a to &2" + storageNewConfig.method + "&a!");
         return newManager;
     }
 }

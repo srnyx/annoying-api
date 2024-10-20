@@ -1,11 +1,11 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects;
+package xyz.srnyx.annoyingapi.storage.dialects;
 
 import com.google.gson.*;
 
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 
 import xyz.srnyx.javautilities.FileUtility;
 import xyz.srnyx.javautilities.MiscUtility;

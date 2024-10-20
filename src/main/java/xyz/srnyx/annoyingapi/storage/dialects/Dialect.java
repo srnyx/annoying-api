@@ -1,9 +1,9 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects;
+package xyz.srnyx.annoyingapi.storage.dialects;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 
 import java.util.*;
 

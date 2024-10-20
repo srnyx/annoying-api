@@ -1,10 +1,10 @@
-package xyz.srnyx.annoyingapi.data.storage.dialects;
+package xyz.srnyx.annoyingapi.storage.dialects;
 
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.data.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 
 import xyz.srnyx.javautilities.FileUtility;
