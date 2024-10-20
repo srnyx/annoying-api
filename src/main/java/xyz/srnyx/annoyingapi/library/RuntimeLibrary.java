@@ -48,7 +48,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .groupId("org{}javassist")
                     .artifactId("javassist")
                     .version("3.28.0-GA"),
-            plugin -> Collections.singleton(plugin.getRelocation("javassist{}"))),
+            plugin -> Collections.singleton(plugin.getRelocation("javassist{}", "javassist{}"))),
     /**
      * {@code org.reflections:reflections}
      */
@@ -59,7 +59,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .artifactId("reflections")
                     .version("0.10.2"),
             plugin -> Arrays.asList(
-                    plugin.getRelocation("javassist{}"),
+                    plugin.getRelocation("javassist{}", "javassist{}"),
                     plugin.getRelocation("org{}reflections"))),
     /**
      * {@code de.tr7zw:item-nbt-api}
