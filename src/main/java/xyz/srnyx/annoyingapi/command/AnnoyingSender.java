@@ -233,8 +233,8 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      * <br>If it's {@link Optional#empty() empty} before/after the function, send the invalid argument message
      * <br><b>Example usage:</b>
      * <pre>{@code
-     * final Player target = sender.getArgument(2, Bukkit::getPlayer).orElse(null);
-     * if (target == null) return;
+     * final Optional<Player> target = sender.getArgument(2, Bukkit::getPlayer);
+     * if (!target.isPresent()) return;
      * }</pre>
      *
      * @param   index       the argument index
@@ -247,6 +247,29 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     @NotNull
     public <T> Optional<T> getArgumentOptional(int index, @NotNull Function<String, T> function) {
         final Optional<T> optional = getArgumentOptional(index).map(function);
+        if (!optional.isPresent()) invalidArgumentByIndex(index);
+        return optional;
+    }
+
+    /**
+     * Gets the argument at the specified index as an {@link Optional} after applying the specified function and flattening it
+     * <br>If it's {@link Optional#empty() empty} before/after the function, send the invalid argument message
+     * <br><b>Example usage:</b>
+     * <pre>{@code
+     * final Optional<OfflinePlayer> target = sender.getArgumentFlat(2, BukkitUtility::getOfflinePlayer);
+     * if (!target.isPresent()) return;
+     * }</pre>
+     *
+     * @param   index       the argument index
+     * @param   function    the function to apply to the argument
+     *
+     * @return              the argument at the specified index as an {@link Optional} after applying the specified function and flattening it
+     *
+     * @param   <T>         the type of the argument
+     */
+    @NotNull
+    public <T> Optional<T> getArgumentOptionalFlat(int index, @NotNull Function<String, Optional<T>> function) {
+        final Optional<T> optional = getArgumentOptional(index).flatMap(function);
         if (!optional.isPresent()) invalidArgumentByIndex(index);
         return optional;
     }
