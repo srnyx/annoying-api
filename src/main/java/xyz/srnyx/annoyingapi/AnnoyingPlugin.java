@@ -109,7 +109,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The {@link CooldownManager} for the plugin
      */
-    @NotNull public final CooldownManager cooldownManager = new CooldownManager(this);
+    @NotNull public final CooldownManager cooldownManager = new CooldownManager();
     /**
      * Whether PlaceholderAPI is installed
      */

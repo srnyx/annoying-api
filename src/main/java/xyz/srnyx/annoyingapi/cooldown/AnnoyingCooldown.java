@@ -8,6 +8,8 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.javautilities.manipulation.DurationFormatter;
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.util.UUID;
+
 
 /**
  * This class is used to create and manage cooldowns
@@ -23,13 +25,9 @@ public class AnnoyingCooldown extends Stringable {
      */
     @NotNull public final String type;
     /**
-     * The key that "owns" this cooldown
+     * The key that "owns" this cooldown (example: a player's {@link UUID})
      */
     @NotNull public final String key;
-    /**
-     * The duration of the cooldown (in milliseconds)
-     */
-    public final long duration;
     /**
      * The time that this cooldown will expire
      * <br>{@code null} if the cooldown hasn't started
@@ -42,13 +40,11 @@ public class AnnoyingCooldown extends Stringable {
      * @param   manager     {@link #manager}
      * @param   type        {@link #type}
      * @param   key         {@link #key}
-     * @param   duration    the duration of the cooldown (in milliseconds)
      */
-    public AnnoyingCooldown(@NotNull CooldownManager manager, @NotNull Object type, @NotNull String key, long duration) {
+    public AnnoyingCooldown(@NotNull CooldownManager manager, @NotNull Object type, @NotNull String key) {
         this.manager = manager;
         this.key = key;
         this.type = type.toString();
-        this.duration = duration;
     }
 
     /**
@@ -57,10 +53,9 @@ public class AnnoyingCooldown extends Stringable {
      * @param   plugin      the plugin that is creating the cooldown (used to get the {@link #manager})
      * @param   type        {@link #type}
      * @param   key         {@link #key}
-     * @param   duration    the duration of the cooldown (in milliseconds)
      */
-    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull Object type, @NotNull String key, long duration) {
-        this(plugin.cooldownManager, type, key, duration);
+    public AnnoyingCooldown(@NotNull AnnoyingPlugin plugin, @NotNull Object type, @NotNull String key) {
+        this(plugin.cooldownManager, type, key);
     }
 
     /**
@@ -85,33 +80,37 @@ public class AnnoyingCooldown extends Stringable {
 
     /**
      * Checks if the cooldown is still going
-     * <br>If it isn't, it will {@link #stop() stop the cooldown}
+     * <br>If it isn't, it will {@link #start(long) start the cooldown}
      *
-     * @return  whether the cooldown is still going
+     * @param   duration    the duration of the cooldown (in milliseconds)
+     *
+     * @return              whether the cooldown was still going
      */
-    public boolean isOnCooldownStop() {
+    public boolean isOnCooldownStart(long duration) {
         final boolean onCooldown = isOnCooldown();
-        if (!onCooldown) stop();
+        if (!onCooldown) start(duration);
         return onCooldown;
     }
 
     /**
      * Checks if the cooldown is still going
-     * <br>If it isn't, it will {@link #start() start the cooldown}
+     * <br>If it is, it will {@link #stop() stop the cooldown}
      *
-     * @return  whether the cooldown is still going
+     * @return  whether the cooldown was still going
      */
-    public boolean isOnCooldownStart() {
+    public boolean isOnCooldownStop() {
         final boolean onCooldown = isOnCooldown();
-        if (!onCooldown) start();
+        if (onCooldown) stop();
         return onCooldown;
     }
 
     /**
      * Starts the cooldown
      * <br>If the cooldown is already started, it will be restarted
+     *
+     * @param   duration    the duration of the cooldown (in milliseconds)
      */
-    public void start() {
+    public void start(long duration) {
         expires = System.currentTimeMillis() + duration;
         manager.cooldowns.add(this);
     }
