@@ -12,7 +12,7 @@ plugins {
     id("com.gradleup.shadow") version "8.3.3"
 }
 
-setupMC("xyz.srnyx", "5.1.1", "General purpose API with tons of features")
+setupMC("xyz.srnyx", "5.1.2", "General purpose API with tons of features")
 spigotAPI("1.8.8")
 
 // Dependencies
