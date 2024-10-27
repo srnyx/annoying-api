@@ -12,7 +12,8 @@ plugins {
     id("com.gradleup.shadow") version "8.3.3"
 }
 
-setupMC("xyz.srnyx", "5.1.2", "General purpose API with tons of features")
+// Don't forget to change AnnoyingPlugin#ANNOYING_API_VERSION when updating
+setupMC("xyz.srnyx", "5.1.2", "General purpose API with tons of features", replacementFiles = setOf("plugin.yml", "AnnoyingStats.class"))
 spigotAPI("1.8.8")
 
 // Dependencies

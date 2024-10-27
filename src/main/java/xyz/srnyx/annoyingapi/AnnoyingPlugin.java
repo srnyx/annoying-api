@@ -66,6 +66,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     };
     /**
+     * The version of the Annoying API the plugin is using
+     */
+    @NotNull public static final SemanticVersion ANNOYING_API_VERSION = new SemanticVersion(5, 1, 2);
+    /**
      * The Minecraft version the server is running
      */
     @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
