@@ -4,8 +4,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -35,8 +38,8 @@ public abstract class Dialect {
      *
      * @return          the value, empty if not found
      */
-    @NotNull
-    public Optional<String> getFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
+    @Nullable
+    public Value getFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
         return getFromCacheImpl(table, target, key);
     }
 
@@ -48,23 +51,23 @@ public abstract class Dialect {
      * @param   key     the key
      * @param   value   the value
      */
-    public void setToCache(@NotNull String table, @NotNull String target, @NotNull String key, @Nullable String value) {
+    public void setToCache(@NotNull String table, @NotNull String target, @NotNull String key, @Nullable Value value) {
         if (value == null) {
-            removeFromCache(table, target, key);
+            markRemovedInCache(table, target, key);
             return;
         }
         setToCacheImpl(table, target, key, value);
     }
 
     /**
-     * Remove a value from the cache
+     * Mark a value as removed in the cache
      *
      * @param   table   the table
      * @param   target  the target
      * @param   key     the key
      */
-    public void removeFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
-        removeFromCacheImpl(table, target, key);
+    public void markRemovedInCache(@NotNull String table, @NotNull String target, @NotNull String key) {
+        markRemovedInCacheImpl(table, target, key);
     }
 
     /**
@@ -118,9 +121,10 @@ public abstract class Dialect {
      * @param   key     the key
      * @param   value   the value
      *
-     * @return          true if the value was successfully set, false otherwise
+     * @return          the failed value information, null if successful
      */
-    public final boolean setToDatabase(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
+    @Nullable
+    public final FailedSet setToDatabase(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
         return setToDatabaseImpl(table, target, key.toLowerCase(), value);
     }
 
@@ -131,11 +135,12 @@ public abstract class Dialect {
      * @param   target  the target
      * @param   data    the data to set
      *
-     * @return          a map of failed values
+     * @return          set of failed values as {@link FailedSet FailedSets}
      */
-    public final boolean setToDatabase(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
-        final Map<String, String> dataLower = new HashMap<>();
-        for (final Map.Entry<String, String> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue());
+    @NotNull
+    public final Set<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
+        final ConcurrentHashMap<String, Value> dataLower = new ConcurrentHashMap<>();
+        for (final ConcurrentHashMap.Entry<String, Value> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue());
         return setToDatabaseImpl(table, target, dataLower);
     }
 
@@ -144,20 +149,17 @@ public abstract class Dialect {
      *
      * @param   data    the data to set
      *
-     * @return          a map of failed values
+     * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Map<String, Map<String, Map<String, String>>> setToDatabase(@NotNull Map<String, Map<String, Map<String, String>>> data) {
-        final Map<String, Map<String, Map<String, String>>> failed = new HashMap<>();
-        for (final Map.Entry<String, Map<String, Map<String, String>>> entry : data.entrySet()) {
-            final Map<String, Map<String, String>> failed1 = new HashMap<>();
+    public final Set<FailedSet> setToDatabase(@NotNull Map<String, Map<String, ConcurrentHashMap<String, Value>>> data) {
+        final Set<FailedSet> failed = new HashSet<>();
+        for (final Map.Entry<String, Map<String, ConcurrentHashMap<String, Value>>> entry : data.entrySet()) {
             final String table = entry.getKey();
-            for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) {
-                final String target = entry1.getKey();
-                final Map<String, String> values = entry1.getValue();
-                if (!setToDatabase(table, target, values)) failed1.put(target, values);
+            for (final Map.Entry<String, ConcurrentHashMap<String, Value>> entry1 : entry.getValue().entrySet()) {
+                final Set<FailedSet> failedSet = setToDatabase(table, entry1.getKey(), entry1.getValue());
+                if (!failedSet.isEmpty()) failed.addAll(failedSet);
             }
-            if (!failed1.isEmpty()) failed.put(table, failed1);
         }
         return failed;
     }
@@ -182,10 +184,10 @@ public abstract class Dialect {
      * @param   target  the target
      * @param   key     the key
      *
-     * @return          the value, empty if not found
+     * @return          the value inside a {@link Value}, null if it isn't cached
      */
-    @NotNull
-    protected abstract Optional<String> getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
+    @Nullable
+    protected abstract Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
 
     /**
      * Set a value to the cache
@@ -193,18 +195,18 @@ public abstract class Dialect {
      * @param   table   the table
      * @param   target  the target
      * @param   key     the key
-     * @param   value   the value
+     * @param   value   the value inside a {@link Value}
      */
-    protected abstract void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value);
+    protected abstract void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value);
 
     /**
-     * Remove a value from the cache
+     * Mark a value as removed in the cache
      *
      * @param   table   the table
      * @param   target  the target
      * @param   key     the key
      */
-    protected abstract void removeFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
+    protected abstract void markRemovedInCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
 
     /**
      * Save all cache data to the database
@@ -249,9 +251,10 @@ public abstract class Dialect {
      * @param   key     the key to set
      * @param   value   the value to set
      *
-     * @return          true if the value was successfully set, false otherwise
+     * @return          the failed value information, null if successful
      */
-    protected abstract boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value);
+    @Nullable
+    protected abstract FailedSet setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value);
 
     /**
      * Set multiple values to the database
@@ -260,9 +263,10 @@ public abstract class Dialect {
      * @param   target  the target to set to
      * @param   data    the data to set
      *
-     * @return          true if all values were successfully set, false otherwise
+     * @return          set of failed values as {@link FailedSet FailedSets}
      */
-    protected abstract boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data);
+    @NotNull
+    protected abstract Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data);
 
     /**
      * Remove a value from the database
@@ -288,7 +292,7 @@ public abstract class Dialect {
         /**
          * [table, [target, [key, value]]]
          */
-        @NotNull public final Map<String, Map<String, Map<String, String>>> data;
+        @NotNull public final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data;
 
         /**
          * Construct a new {@link MigrationData} with the given data
@@ -296,7 +300,7 @@ public abstract class Dialect {
          * @param   tablesKeys  {@link #tablesKeys}
          * @param   data        {@link #data}
          */
-        public MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull Map<String, Map<String, Map<String, String>>> data) {
+        public MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull Map<String, Map<String, ConcurrentHashMap<String, Value>>> data) {
             this.tablesKeys = tablesKeys;
             this.data = data;
         }

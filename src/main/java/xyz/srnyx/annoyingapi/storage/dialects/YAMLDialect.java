@@ -3,14 +3,18 @@ package xyz.srnyx.annoyingapi.storage.dialects;
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 
 import xyz.srnyx.javautilities.FileUtility;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -33,24 +37,24 @@ public class YAMLDialect extends Dialect {
         return Optional.ofNullable(tables.get(table));
     }
 
-    @Override @NotNull
-    public Optional<String> getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getTableFromCache(table).map(file -> file.getString(target + "." + key));
+    @Override @Nullable
+    public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+        return getTableFromCache(table).map(file -> new Value(file.getString(target + "." + key))).orElse(null);
     }
 
     @Override
-    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
+    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
         getTableFromCache(table)
                 .orElseGet(() -> {
                     final AnnoyingData file = getTableFromDatabase(table);
                     tables.put(table, file);
                     return file;
                 })
-                .set(target + "." + key, value);
+                .set(target + "." + key, value.value);
     }
 
     @Override
-    public void removeFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+    public void markRemovedInCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         getTableFromCache(table).ifPresent(file -> file.set(target + "." + key, null));
     }
 
@@ -72,18 +76,18 @@ public class YAMLDialect extends Dialect {
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final Map<String, Map<String, Map<String, String>>> data = new HashMap<>(); // [table, [target, [key, value]]]
+        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data = new HashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(new File(dataManager.plugin.getDataFolder(), "data/yaml"), "yaml")) {
             final AnnoyingData file = getTableFromDatabase(table);
             final Set<String> keys = new HashSet<>();
-            final Map<String, Map<String, String>> tableData = new HashMap<>(); // [target, [key, value]]
+            final Map<String, ConcurrentHashMap<String, Value>> tableData = new HashMap<>(); // [target, [key, value]]
             for (final String target : file.getKeys(false)) {
                 final ConfigurationSection targetData = file.getConfigurationSection(target);
                 if (targetData == null) continue;
-                final Map<String, String> targetMap = new HashMap<>(); // [key, value]
+                final ConcurrentHashMap<String, Value> targetMap = new ConcurrentHashMap<>(); // [key, value]
                 for (final String key : targetData.getKeys(false)) {
                     keys.add(key);
-                    targetMap.put(key, targetData.getString(key));
+                    targetMap.put(key, new Value(targetData.getString(key)));
                 }
                 tableData.put(target, targetMap);
             }
@@ -98,18 +102,26 @@ public class YAMLDialect extends Dialect {
         return Optional.ofNullable(getTableFromDatabase(table).getString(target + "." + key));
     }
 
-    @Override
-    protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        return getTableFromDatabase(table).setSave(target + "." + key, value);
+    @Override @Nullable
+    protected FailedSet setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
+        return getTableFromDatabase(table).setSave(target + "." + key, value) ? null : new FailedSet(table, target, key, value);
     }
 
-    @Override
-    protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
+    @Override @NotNull
+    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
+        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+
+        // Set data in file
         final AnnoyingData file = getTableFromDatabase(table);
         ConfigurationSection targetData = file.getConfigurationSection(target);
         if (targetData == null) targetData = file.createSection(target);
-        for (final Map.Entry<String, String> entry : data.entrySet()) targetData.set(entry.getKey(), entry.getValue());
-        return file.save();
+        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) targetData.set(entry.getKey(), entry.getValue().value);
+
+        // Return failures if saving fails
+        final Set<FailedSet> failed = new HashSet<>();
+        if (file.save()) return failed;
+        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value));
+        return failed;
     }
 
     @Override

@@ -25,6 +25,13 @@ public class CooldownManager extends Stringable {
     @NotNull public final Set<AnnoyingCooldown> cooldowns = new HashSet<>();
 
     /**
+     * Constructs a new cooldown manager
+     */
+    public CooldownManager() {
+        // Only exists to give the constructor a Javadoc
+    }
+
+    /**
      * Get all cooldowns with the given type
      *
      * @param   type    the type of the cooldowns

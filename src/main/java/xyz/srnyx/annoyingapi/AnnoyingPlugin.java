@@ -66,9 +66,9 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     };
     /**
-     * The version of the Annoying API the plugin is using
+     * The version of Annoying API the plugin is using
      */
-    @NotNull public static final SemanticVersion ANNOYING_API_VERSION = new SemanticVersion(5, 1, 2);
+    @NotNull public static final SemanticVersion ANNOYING_API_VERSION = new SemanticVersion(5, 1, 3);
     /**
      * The Minecraft version the server is running
      */
@@ -178,7 +178,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             if (dataManager.dialect instanceof SQLDialect) try {
                 ((SQLDialect) dataManager.dialect).connection.close();
             } catch (final SQLException e) {
-                log(Level.SEVERE, "Failed to close the database connection", e);
+                log(Level.SEVERE, "&cFailed to close the database connection", e);
             }
         }
 
@@ -299,8 +299,8 @@ public class AnnoyingPlugin extends JavaPlugin {
                     });
         }
 
-        // Start cache saving on interval if enabled
-        if (dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) dataManager.startCacheSavingOnInterval();
+        // Enable/disable interval cache saving (depending on config)
+        if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
         // Custom onEnable
         enable();
@@ -326,6 +326,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void reloadPlugin() {
         loadMessages();
         loadDataManger(dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD));
+        if (dataManager != null) dataManager.toggleIntervalCacheSaving();
         reload();
     }
 
@@ -419,7 +420,6 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Attempt database migration
         dataManager = dataManager.attemptDatabaseMigration();
-
         // Create tables/columns
         if (dataManager.dialect instanceof SQLDialect) ((SQLDialect) dataManager.dialect).createTablesKeys(options.dataOptions.tables);
     }

@@ -3,9 +3,12 @@ package xyz.srnyx.annoyingapi.storage.dialects;
 import com.google.gson.*;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 
 import xyz.srnyx.javautilities.FileUtility;
 import xyz.srnyx.javautilities.MiscUtility;
@@ -16,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 
@@ -42,24 +46,24 @@ public class JSONDialect extends Dialect {
         return Optional.ofNullable(tables.get(table));
     }
 
-    @Override @NotNull
-    public Optional<String> getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getTableFromCache(table).flatMap(file -> file.get(target, key));
+    @Override @Nullable
+    public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+        return getTableFromCache(table).map(file -> file.get(target, key)).orElse(null);
     }
 
     @Override
-    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
+    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
         getTableFromCache(table)
                 .orElseGet(() -> {
                     final JsonFile newFile = getTableFromDatabase(table);
                     tables.put(table, newFile);
                     return newFile;
                 })
-                .set(target, key, value);
+                .set(target, key, value.value);
     }
 
     @Override
-    public void removeFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+    public void markRemovedInCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         getTableFromCache(table).ifPresent(file -> file.remove(target, key));
     }
 
@@ -93,18 +97,18 @@ public class JSONDialect extends Dialect {
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final Map<String, Map<String, Map<String, String>>> data = new HashMap<>(); // [table, [target, [key, value]]]
+        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data = new HashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(folder, "json")) {
             final Set<String> keys = new HashSet<>();
-            final Map<String, Map<String, String>> targetData = new HashMap<>(); // [target, [key, value]]
+            final Map<String, ConcurrentHashMap<String, Value>> targetData = new HashMap<>(); // [target, [key, value]]
             for (final Map.Entry<String, JsonElement> entry : getTableFromDatabase(table).json.entrySet()) {
                 final JsonElement entryElement = entry.getValue();
                 if (!entryElement.isJsonObject()) continue;
-                final Map<String, String> targetMap = new HashMap<>(); // [key, value]
+                final ConcurrentHashMap<String, Value> targetMap = new ConcurrentHashMap<>(); // [key, value]
                 for (final Map.Entry<String, JsonElement> targetEntry : entryElement.getAsJsonObject().entrySet()) {
                     final String key = targetEntry.getKey();
                     keys.add(key);
-                    targetMap.put(key, targetEntry.getValue().getAsString());
+                    targetMap.put(key, new Value(targetEntry.getValue().getAsString()));
                 }
                 targetData.put(entry.getKey(), targetMap);
             }
@@ -116,22 +120,30 @@ public class JSONDialect extends Dialect {
 
     @Override @NotNull
     protected Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getTableFromDatabase(table).get(target, key);
+        return Optional.ofNullable(getTableFromDatabase(table).get(target, key)).map(value -> value.value);
     }
 
-    @Override
-    protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
+    @Override @Nullable
+    protected FailedSet setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
         final JsonFile file = getTableFromDatabase(table);
         file.set(target, key, value);
-        return file.save();
+        return file.save() ? null : new FailedSet(table, target, key, value);
     }
 
-    @Override
-    protected boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
+    @Override @NotNull
+    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
+        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+
+        // Set data in file
         final JsonFile file = getTableFromDatabase(table);
         final JsonObject targetData = file.getTargetDataCreate(target);
-        for (final Map.Entry<String, String> entry : data.entrySet()) targetData.addProperty(entry.getKey(), entry.getValue());
-        return file.save();
+        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) targetData.addProperty(entry.getKey(), entry.getValue().value);
+
+        // Return failures if saving fails
+        final Set<FailedSet> failed = new HashSet<>();
+        if (file.save()) return failed;
+        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value));
+        return failed;
     }
 
     @Override
@@ -194,16 +206,19 @@ public class JSONDialect extends Dialect {
         }
 
         /**
-         * Gets a key from the target
+         * Gets a key's value from the target
          *
-         * @param   target  the target to get the key from
+         * @param   target  the target to get the key's value from
          * @param   key     the key to get
          *
-         * @return          the value of the key, or {@link Optional#empty()} if the key doesn't exist
+         * @return          the value of the key in a {@link Value}, or null if the key doesn't exist
          */
-        @NotNull
-        private Optional<String> get(@NotNull String target, @NotNull String key) {
-            return getTargetData(target).flatMap(jsonObject -> MiscUtility.handleException(() -> jsonObject.get(key).getAsString()));
+        @Nullable
+        private Value get(@NotNull String target, @NotNull String key) {
+            return getTargetData(target)
+                    .flatMap(jsonObject -> MiscUtility.handleException(() -> jsonObject.get(key).getAsString()))
+                    .map(Value::new)
+                    .orElse(null);
         }
 
         /**
@@ -213,7 +228,7 @@ public class JSONDialect extends Dialect {
          * @param   key     the key to set
          * @param   value   the value to set
          */
-        private void set(@NotNull String target, @NotNull String key, @NotNull String value) {
+        private void set(@NotNull String target, @NotNull String key, @Nullable String value) {
             getTargetDataCreate(target).addProperty(key, value);
         }
 

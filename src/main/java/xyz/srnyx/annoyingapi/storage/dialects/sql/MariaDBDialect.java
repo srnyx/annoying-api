@@ -1,19 +1,20 @@
 package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 
@@ -64,27 +65,29 @@ public class MariaDBDialect extends SQLDialect {
         return Optional.empty();
     }
 
-    @Override @SuppressWarnings("DuplicatedCode")
-    public boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) {
+    @Override @Nullable @SuppressWarnings("DuplicatedCode")
+    public FailedSet setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String column, @NotNull String value) {
         try (final PreparedStatement statement = connection.prepareStatement("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`, `" + column + "`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `" + column + "` = ?")) {
             statement.setString(1, target);
             statement.setString(2, value);
             statement.setString(3, value);
             statement.executeUpdate();
-            return true;
+            return null;
         } catch (final SQLException e) {
-            return false;
+            return new FailedSet(table, target, column, value, e);
         }
     }
 
-    @Override @SuppressWarnings("DuplicatedCode")
-    public boolean setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
+    @Override @NotNull @SuppressWarnings("DuplicatedCode")
+    public Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
+        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("INSERT INTO `" + table + "` (`" + StringData.TARGET_COLUMN + "`");
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
         final StringBuilder updateBuilder = new StringBuilder(" ON DUPLICATE KEY UPDATE ");
-        final List<String> values = new ArrayList<>();
-        for (final Map.Entry<String, String> entry : data.entrySet()) {
+        final List<Value> values = new ArrayList<>();
+        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) {
             final String column = entry.getKey();
             insertBuilder.append(", `").append(column).append("`");
             valuesBuilder.append(", ?");
@@ -96,12 +99,13 @@ public class MariaDBDialect extends SQLDialect {
         updateBuilder.setLength(updateBuilder.length() - 2);
 
         // Create statement
+        final Set<FailedSet> failed = new HashSet<>();
         try (final PreparedStatement statement = setValuesParameters(target, values, insertBuilder, valuesBuilder, updateBuilder)) {
             statement.executeUpdate();
-            return true;
         } catch (final SQLException e) {
-            return false;
+            for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value, e));
         }
+        return failed;
     }
 
     @Override

@@ -6,10 +6,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.options.DataOptions;
 
-import java.util.Optional;
 import java.util.logging.Level;
 
 
@@ -89,13 +90,13 @@ public class StringData extends Data<String> {
     public String get(@NotNull String key) {
         // Get the data from the cache
         if (useCache) {
-            final Optional<String> cached = dialect.getFromCache(table, target, key);
-            if (cached.isPresent()) return cached.get();
+            final Value cached = dialect.getFromCache(table, target, key);
+            if (cached != null) return cached.value;
         }
 
         // Get the data from the database
         final String data = dialect.getFromDatabase(table, target, key).orElse(null);
-        if (useCache) dialect.setToCache(table, target, key, data);
+        if (useCache) dialect.setToCache(table, target, key, new Value(data));
         return data;
     }
 
@@ -103,13 +104,14 @@ public class StringData extends Data<String> {
     protected boolean set(@NotNull String key, @NotNull String value) {
         // Set the data in the cache
         if (useCache) {
-            dialect.setToCache(table, target, key, value);
+            dialect.setToCache(table, target, key, new Value(value));
             return true;
         }
 
         // Set the data in the database
-        if (!dialect.setToDatabase(table, target, key, value)) {
-            AnnoyingPlugin.log(Level.SEVERE, "Failed to set " + key + " for " + target + " in " + table + ". Make sure you added the table/column to DataOptions!");
+        final FailedSet failed = dialect.setToDatabase(table, target, key, value);
+        if (failed != null) {
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!", failed.exception);
             return false;
         }
         return true;
@@ -119,13 +121,13 @@ public class StringData extends Data<String> {
     public boolean remove(@NotNull String key) {
         // Remove the data from the cache
         if (useCache) {
-            dialect.removeFromCache(table, target, key);
+            dialect.markRemovedInCache(table, target, key);
             return true;
         }
 
         // Remove the data from the database
         if (!dialect.removeValueFromDatabase(table, target, key)) {
-            AnnoyingPlugin.log(Level.SEVERE, "Failed to remove " + key + " for " + target + " in " + table + ". Make sure you added the table/column to DataOptions!");
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to remove &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!");
             return false;
         }
         return true;

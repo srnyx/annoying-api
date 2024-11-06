@@ -1,8 +1,10 @@
 package xyz.srnyx.annoyingapi.storage;
 
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitTask;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
@@ -13,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.logging.Level;
 
 
@@ -37,6 +38,12 @@ public class DataManager {
      * The table prefix for the database (only for remote connections)
      */
     @NotNull public final String tablePrefix;
+    /**
+     * The task that saves the cache on an interval
+     *
+     * @see DataManager#toggleIntervalCacheSaving()
+     */
+    @Nullable public BukkitTask cacheSavingTask;
 
     /**
      * Connect to the configured database and create the pre-defined tables/columns
@@ -66,11 +73,19 @@ public class DataManager {
     }
 
     /**
-     * Starts the asynchronous task to save the cache on an interval
+     * If saving the cache on an interval is enabled, this will start the asynchronous task to do that
+     * <br>If the feature is disabled, this will cancel the task if it exists
      */
-    public void startCacheSavingOnInterval() {
-        final long interval = storageConfig.cache.interval;
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, dialect::saveCache, interval, interval);
+    public void toggleIntervalCacheSaving() {
+        // Cancel ongoing task if one exists
+        if (cacheSavingTask != null) cacheSavingTask.cancel();
+        // Disable
+        if (!storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) {
+            cacheSavingTask = null;
+            return;
+        }
+        // Enable
+        cacheSavingTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, dialect::saveCache, storageConfig.cache.interval, storageConfig.cache.interval);
     }
 
     /**
@@ -108,10 +123,7 @@ public class DataManager {
             // NEW: Create missing tables/columns
             if (newManager.dialect instanceof SQLDialect) ((SQLDialect) newManager.dialect).createTablesKeys(migrationData.tablesKeys);
             // NEW: Save values to new database (log failures)
-            for (final Map.Entry<String, Map<String, Map<String, String>>> entry : newManager.dialect.setToDatabase(migrationData.data).entrySet()) {
-                final String table = entry.getKey();
-                for (final Map.Entry<String, Map<String, String>> entry1 : entry.getValue().entrySet()) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set values for &4" + entry1.getKey() + "&c in table &4" + table + "&c: &4" + entry1.getValue());
-            }
+            for (final FailedSet failure : newManager.dialect.setToDatabase(migrationData.data)) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set &4" + failure.column + "&c for &4" + failure.target + "&c in table &4" + failure.table + "&c to &4" + failure.value, failure.exception);
         } else {
             AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
         }

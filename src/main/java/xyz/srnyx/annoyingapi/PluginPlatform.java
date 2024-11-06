@@ -231,7 +231,7 @@ public class PluginPlatform extends Stringable {
         /**
          * <a href="https://hangar.papermc.io/">{@code https://hangar.papermc.io/}</a>
          * <p>Slug
-         * <p><b>Example:</b> {@code AnnoyingAPI}
+         * <p><b>Example:</b> {@code srnyx/AnnoyingAPI}
          */
         HANGAR(true),
         /**

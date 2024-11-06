@@ -7,10 +7,13 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.Value;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 
@@ -34,7 +37,7 @@ public abstract class SQLDialect extends Dialect {
      *     </ul>
      * </ul>
      */
-    @NotNull public final Map<String, Map<String, Map<String, String>>> cache = new HashMap<>();
+    @NotNull public final Map<String, Map<String, ConcurrentHashMap<String, Value>>> cache = new HashMap<>();
 
     /**
      * Construct a new {@link SQLDialect} with the given {@link DataManager}
@@ -48,45 +51,35 @@ public abstract class SQLDialect extends Dialect {
         connection = dataManager.storageConfig.createConnection();
     }
 
-    @Override @NotNull
-    public Optional<String> getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        final Map<String, Map<String, String>> tableMap = cache.get(table);
-        if (tableMap == null) return Optional.empty();
-        final Map<String, String> targetMap = tableMap.get(target);
-        return targetMap == null ? Optional.empty() : Optional.ofNullable(targetMap.get(key));
+    @Override @Nullable
+    public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+        final Map<String, ConcurrentHashMap<String, Value>> tableMap = cache.get(table);
+        if (tableMap == null) return null;
+        final Map<String, Value> targetMap = tableMap.get(target);
+        return targetMap == null ? null : targetMap.get(key);
     }
 
     @Override
-    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        cache.computeIfAbsent(table, k -> new HashMap<>()).computeIfAbsent(target, k -> new HashMap<>()).put(key, value);
+    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
+        cache.computeIfAbsent(table, k -> new HashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, value);
     }
 
     @Override
-    public void removeFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        final Map<String, Map<String, String>> tableMap = cache.get(table);
-        if (tableMap == null) return;
-        final Map<String, String> targetMap = tableMap.get(target);
-        if (targetMap != null) targetMap.remove(key);
+    public void markRemovedInCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+        cache.computeIfAbsent(table, k -> new HashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, new Value());
     }
 
     @Override
     public void saveCacheImpl() {
-        final Map<String, Map<String, Map<String, String>>> failed = setToDatabase(cache);
-        if (!failed.isEmpty()) for (final Map.Entry<String, Map<String, Map<String, String>>> entry : failed.entrySet()) {
-            final String table = entry.getKey();
-            for (final Map.Entry<String, Map<String, String>> targetEntry : entry.getValue().entrySet()) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached values for &4" + targetEntry.getKey() + "&c in table &4" + table + "&c: &4" + targetEntry.getValue());
-            }
-        }
+        for (final FailedSet failure : setToDatabase(cache)) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached &4" + failure.column + "&c for &4" + failure.target + "&c in table &4" + failure.table + "&c: &4" + failure.value, failure.exception);
     }
 
     @Override
     public void saveCacheImpl(@NotNull String table, @NotNull String target) {
-        final Map<String, Map<String, String>> tableMap = cache.get(table);
+        final Map<String, ConcurrentHashMap<String, Value>> tableMap = cache.get(table);
         if (tableMap == null) return;
-        final Map<String, String> targetMap = tableMap.get(target);
-        if (targetMap == null || setToDatabase(table, target, targetMap)) return;
-        AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached values for &4" + target + "&c in table &4" + table + "&c: &4" + targetMap);
+        final ConcurrentHashMap<String, Value> targetMap = tableMap.get(target);
+        if (targetMap != null) for (final FailedSet failure : setToDatabase(table, target, targetMap)) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached &4" + failure.column + "&c for &4" + failure.target + "&c in table &4" + failure.table + "&c: &4" + failure.value, failure.exception);
     }
 
     @Override @NotNull
@@ -103,11 +96,11 @@ public abstract class SQLDialect extends Dialect {
 
         // Get migration data
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // {Table, Keys}
-        final Map<String, Map<String, Map<String, String>>> values = new HashMap<>(); // {Table, {Target, {Key, Value}}}
+        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> values = new HashMap<>(); // {Table, {Target, {Key, Value}}}
         final int oldPrefixLength = dataManager.tablePrefix.length();
         for (final String table : tables) {
             final String tableWithoutPrefix = table.substring(oldPrefixLength);
-            final Map<String, Map<String, String>> tableValues = new HashMap<>(); // {Target, {Key, Value}}
+            final Map<String, ConcurrentHashMap<String, Value>> tableValues = new HashMap<>(); // {Target, {Key, Value}}
             try (final PreparedStatement getValues = getAllValuesFromDatabase(table)) {
                 final ResultSet resultSet = getValues.executeQuery();
 
@@ -130,8 +123,8 @@ public abstract class SQLDialect extends Dialect {
                 while (resultSet.next()) {
                     final String target = resultSet.getString("target");
                     if (target == null) continue;
-                    final Map<String, String> keyValues = new HashMap<>(); // {Key, Value}
-                    for (final String key : keys) if (!key.equals("target")) keyValues.put(key, resultSet.getString(key));
+                    final ConcurrentHashMap<String, Value> keyValues = new ConcurrentHashMap<>(); // {Key, Value}
+                    for (final String key : keys) if (!key.equals("target")) keyValues.put(key, new Value(resultSet.getString(key)));
                     tableValues.put(target, keyValues);
                 }
             } catch (final SQLException e) {
@@ -174,7 +167,7 @@ public abstract class SQLDialect extends Dialect {
      * Used for {@link #setToDatabaseImpl(String, String, String, String)} to set the parameters of the {@link PreparedStatement}
      *
      * @param   target          the target to set the value to
-     * @param   values          the values to set
+     * @param   values          the values to set as {@link Value Values}
      * @param   insertBuilder   the insert query builder
      * @param   valuesBuilder   the values query builder
      * @param   updateBuilder   the update query builder
@@ -184,7 +177,7 @@ public abstract class SQLDialect extends Dialect {
      * @throws  SQLException    if a database access error occurs
      */
     @NotNull
-    protected PreparedStatement setValuesParameters(@NotNull String target, @NotNull List<String> values, @NotNull StringBuilder insertBuilder, @NotNull StringBuilder valuesBuilder, @Nullable StringBuilder updateBuilder) throws SQLException {
+    protected PreparedStatement setValuesParameters(@NotNull String target, @NotNull List<Value> values, @NotNull StringBuilder insertBuilder, @NotNull StringBuilder valuesBuilder, @Nullable StringBuilder updateBuilder) throws SQLException {
         final boolean hasUpdate = updateBuilder != null;
 
         // Get query
@@ -194,11 +187,30 @@ public abstract class SQLDialect extends Dialect {
         // Create statement & set parameters
         final PreparedStatement statement = connection.prepareStatement(query.toString());
         statement.setString(1, target);
-        int i = 2;
-        for (final String value : values) statement.setString(i++, value);
-        if (hasUpdate) for (final String value : values) statement.setString(i++, value);
+        final int i = setValuesParameters(statement, values, 2);
+        if (hasUpdate) setValuesParameters(statement, values, i);
 
         return statement;
+    }
+
+    /**
+     * Set the values parameters of the {@link PreparedStatement} for {@link #setValuesParameters(String, List, StringBuilder, StringBuilder, StringBuilder)}
+     *
+     * @param   statement       the {@link PreparedStatement} to set the parameters to
+     * @param   values          the values to set as {@link Value Values}
+     * @param   i               the index to start setting the parameters from
+     *
+     * @return                  the index after setting the parameters
+     *
+     * @throws  SQLException    if a database access error occurs
+     */
+    private int setValuesParameters(@NotNull PreparedStatement statement, @NotNull List<Value> values, int i) throws SQLException {
+        for (final Value value : values) if (value.value == null) {
+            statement.setNull(i++, Types.VARCHAR);
+        } else {
+            statement.setString(i++, value.value);
+        }
+        return i;
     }
 
     /**

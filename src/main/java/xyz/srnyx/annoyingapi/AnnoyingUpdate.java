@@ -51,7 +51,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @NotNull private final String userAgent;
     /**
-     * The platforms the plugin is available on. Currently only {@link PluginPlatform.Platform#MODRINTH} and {@link PluginPlatform.Platform#SPIGOT} are supported
+     * The platforms the plugin is available on. Currently only {@link PluginPlatform.Platform#MODRINTH Modrinth}, {@link PluginPlatform.Platform#HANGAR Hangar}, and {@link PluginPlatform.Platform#SPIGOT Spigot} are supported
      */
     @NotNull private final PluginPlatform.Multi platforms;
     /**
