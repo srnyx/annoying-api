@@ -248,19 +248,6 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     }
 
     /**
-     * Gets the {@link ConfigurationSection} at the path or creates an empty one it if it doesn't exist
-     *
-     * @param   path    the path to the node
-     *
-     * @return          the {@link ConfigurationSection} at the path or a new one if it doesn't exist
-     */
-    @NotNull
-    public ConfigurationSection getSectionOrCreate(@NotNull String path) {
-        final ConfigurationSection section = getConfigurationSection(path);
-        return section == null ? createSection(path) : section;
-    }
-
-    /**
      * Gets the default value from the path
      *
      * @param   path    the path to the node
@@ -273,6 +260,18 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     public <G> Optional<G> getDef(@NotNull String path) {
         final Object value = getDefault(path);
         return value != null ? Optional.of((G) value) : Optional.empty();
+    }
+
+    /**
+     * Get a {@link ConfigurationSection} from the path in an {@link Optional}
+     *
+     * @param   path    the path to the node
+     *
+     * @return          the {@link ConfigurationSection} or empty if it doesn't exist
+     */
+    @NotNull
+    public Optional<ConfigurationSection> getConfigurationSectionOptional(@NotNull String path) {
+        return Optional.ofNullable(getConfigurationSection(path));
     }
 
     /**
