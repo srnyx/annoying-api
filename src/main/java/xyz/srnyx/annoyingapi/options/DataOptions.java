@@ -30,7 +30,7 @@ public class DataOptions extends Stringable {
      * A set of all tables/columns to be created for {@link DataManager}. Do not include the table prefix!
      * <br>This is case-insensitive, so all keys and values will be converted to lowercase
      * <br><b>All tables will be made with the primary key {@code target}</b>
-     * <br><i>Removing {@link EntityData#TABLE_NAME} will break {@link EntityData}</i>
+     * <br><i>If no custom columns are added to {@link EntityData#TABLE_NAME}, it won't be created. Manually removing it will break {@link EntityData}</i>
      */
     @NotNull @SuppressWarnings("CanBeFinal") public Map<String, Set<String>> tables = MapGenerator.HASH_MAP.mapOf(EntityData.TABLE_NAME, new HashSet<>(Collections.singleton(StringData.TARGET_COLUMN)));
     /**

@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
+import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.StorageConfig;
@@ -421,7 +422,15 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Attempt database migration
         dataManager = dataManager.attemptDatabaseMigration();
         // Create tables/columns
-        if (dataManager.dialect instanceof SQLDialect) ((SQLDialect) dataManager.dialect).createTablesKeys(options.dataOptions.tables);
+        if (dataManager.dialect instanceof SQLDialect) {
+            final Map<String, Set<String>> tablesCopy = new HashMap<>(options.dataOptions.tables);
+
+            // Remove entities table if it has no custom columns
+            final Set<String> entitiesTable = tablesCopy.get(EntityData.TABLE_NAME);
+            if (entitiesTable != null && entitiesTable.size() == 1) tablesCopy.remove(EntityData.TABLE_NAME);
+
+            ((SQLDialect) dataManager.dialect).createTablesKeys(tablesCopy);
+        }
     }
 
     /**
