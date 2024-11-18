@@ -69,7 +69,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * The version of Annoying API the plugin is using
      */
-    @NotNull public static final SemanticVersion ANNOYING_API_VERSION = new SemanticVersion(5, 1, 3);
+    @NotNull public static final SemanticVersion ANNOYING_API_VERSION = new SemanticVersion("{{BLOSSOM-DO_NOT_CHANGE-ANNOYING_API_VERSION}}");
     /**
      * The Minecraft version the server is running
      */

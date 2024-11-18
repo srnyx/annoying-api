@@ -10,6 +10,7 @@ plugins {
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "1.3.2"
     id("com.gradleup.shadow") version "8.3.5"
+    id("net.kyori.blossom") version "1.3.1"
 }
 
 // Don't forget to change AnnoyingPlugin#ANNOYING_API_VERSION when updating
@@ -36,3 +37,6 @@ setupPublishing(
     url = "https://annoying-api.srnyx.com",
     licenses = listOf(LicenseData.MIT),
     developers = listOf(DeveloperData.srnyx))
+
+// Blossom (insert API version)
+blossom.replaceToken("{{BLOSSOM-DO_NOT_CHANGE-ANNOYING_API_VERSION}}", version, "src/main/java/xyz/srnyx/annoyingapi/AnnoyingPlugin.java")
