@@ -137,7 +137,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         loadMessages();
-        loadDataManger(false);
+        loadDataManger(null, false);
         load();
     }
 
@@ -326,8 +326,19 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void reloadPlugin() {
         loadMessages();
-        loadDataManger(dataManager != null && dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD));
+
+        // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
+        StorageConfig storageConfig = null;
+        boolean saveCache = false;
+        if (options.dataOptions.enabled) {
+            storageConfig = new StorageConfig(new AnnoyingResource(this, "storage.yml"));
+            saveCache = storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD) || (dataManager != null && dataManager.storageConfig.cache.enabled && !storageConfig.cache.enabled);
+        }
+        // Load data manager
+        loadDataManger(storageConfig, saveCache);
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
+
+        // Custom reload
         reload();
     }
 
@@ -388,10 +399,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
      * <br>If {@code storage-new.yml} exists, it will attempt to migrate the data from {@code storage.yml} to {@code storage-new.yml} using {@link DataManager#attemptDatabaseMigration()}
      *
-     * @param   saveCache   whether to save the cache before loading the data manager
-     *                      <br><i>Data may be lost if {@code false}!</i>
+     * @param   storageConfig   the {@link StorageConfig} to load the data manager with. If {@code null}, {@code storage.yml} will be used
+     * @param   saveCache       whether to save the cache before loading the data manager <b>(data may be lost if {@code false})</b>
      */
-    public void loadDataManger(boolean saveCache) {
+    public void loadDataManger(@Nullable StorageConfig storageConfig, boolean saveCache) {
         // Check if a manager is already loaded
         if (dataManager != null) {
             // Save cache
@@ -412,7 +423,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Connect to database
         try {
-            dataManager = new DataManager(new StorageConfig(new AnnoyingResource(this, "storage.yml")));
+            dataManager = new DataManager(storageConfig == null ? new StorageConfig(new AnnoyingResource(this, "storage.yml")) : storageConfig);
         } catch (final ConnectionException e) {
             dataManager = null;
             log(Level.SEVERE, "&4storage.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
