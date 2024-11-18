@@ -34,33 +34,21 @@ public class StringData extends Data<String> {
     /**
      * Whether to use the cache for this data
      */
-    public final boolean useCache;
+    public boolean useCache;
 
     /**
      * Construct a new {@link StringData} for the given string
-     *
-     * @param   plugin      {@link #plugin}
-     * @param   table       {@link #table}
-     * @param   string      {@link #target}
-     * @param   useCache    {@link #useCache}, or {@code null} to use {@link DataOptions#useCacheDefault}
-     */
-    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string, @Nullable Boolean useCache) {
-        super(plugin, string);
-        if (plugin.dataManager == null) throw new IllegalStateException(plugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
-        this.dialect = plugin.dataManager.dialect;
-        this.table = plugin.dataManager.getTableName(table);
-        this.useCache = plugin.dataManager.storageConfig.cache.enabled && (useCache == null ? plugin.options.dataOptions.useCacheDefault : useCache);
-    }
-
-    /**
-     * Construct a new {@link StringData} for the given string with {@link DataOptions#useCacheDefault} as {@link #useCache}
      *
      * @param   plugin  {@link #plugin}
      * @param   table   {@link #table}
      * @param   string  {@link #target}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string) {
-        this(plugin, table, string, null);
+        super(plugin, string);
+        if (plugin.dataManager == null) throw new IllegalStateException(plugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
+        this.dialect = plugin.dataManager.dialect;
+        this.table = plugin.dataManager.getTableName(table);
+        useCache(null);
     }
 
     /**
@@ -69,21 +57,23 @@ public class StringData extends Data<String> {
      *
      * @param   plugin  {@link #plugin}
      * @param   player  the player to get/store the data for
-     * @param   useCache    {@link #useCache}, or {@code null} to use {@link DataOptions#useCacheDefault}
      */
-    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player, @Nullable Boolean useCache) {
-        this(plugin, EntityData.TABLE_NAME, player.getUniqueId().toString(), useCache);
+    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player) {
+        this(plugin, EntityData.TABLE_NAME, player.getUniqueId().toString());
     }
 
     /**
-     * Construct a new {@link StringData} for the given {@link OfflinePlayer} with {@link DataOptions#useCacheDefault} as {@link #useCache}
-     * <br>This uses the same table used for {@link EntityData} ({@link EntityData#TABLE_NAME}) and the player's UUID as the target
+     * Whether to use the cache for this data (if caching is enabled in the storage config)
+     * <br>Defaults to {@link DataOptions#useCacheDefault}
      *
-     * @param   plugin  {@link #plugin}
-     * @param   player  the player to get/store the data for
+     * @param   useCache    the new value or {@code null} to use {@link DataOptions#useCacheDefault}
+     *
+     * @return              {@code this} for chaining
      */
-    public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player) {
-        this(plugin, player, null);
+    @NotNull
+    public StringData useCache(@Nullable Boolean useCache) {
+        this.useCache = plugin.dataManager != null && plugin.dataManager.storageConfig.cache.enabled && (useCache == null ? plugin.options.dataOptions.useCacheDefault : useCache);
+        return this;
     }
 
     @Override @Nullable
