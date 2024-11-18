@@ -413,6 +413,8 @@ public class AnnoyingPlugin extends JavaPlugin {
             } catch (final SQLException e) {
                 log(Level.SEVERE, "&cFailed to close the database connection, it's recommended to restart the server!", e);
             }
+            // Stop cache saving task
+            if (dataManager.cacheSavingTask != null) dataManager.cacheSavingTask.cancel();
         }
 
         // Cancel if data is disabled
