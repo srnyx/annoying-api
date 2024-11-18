@@ -7,15 +7,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.Arguments;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
-import xyz.srnyx.javautilities.parents.Stringable;
-
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -23,7 +21,7 @@ import java.util.logging.Level;
 /**
  * This class is typically used in conjunction with {@link AnnoyingCommand}
  */
-public class AnnoyingSender extends Stringable implements Annoyable {
+public class AnnoyingSender extends Arguments implements Annoyable {
     /**
      * The {@link AnnoyingPlugin} instance
      */
@@ -41,10 +39,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      */
     @Nullable public final String label;
     /**
-     * The {@link Command}'s arguments that were used
-     */
-    @Nullable public final String[] args;
-    /**
      * Whether the {@link #cmdSender} is a {@link Player}
      */
     public final boolean isPlayer;
@@ -59,11 +53,11 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      * @param   args        the {@link Command}'s arguments that were used
      */
     public AnnoyingSender(@NotNull AnnoyingPlugin plugin, @NotNull CommandSender cmdSender, @Nullable Command command, @Nullable String label, @Nullable String[] args) {
+        super(args);
         this.plugin = plugin;
         this.cmdSender = cmdSender;
         this.command = command;
         this.label = label;
-        this.args = args;
         this.isPlayer = cmdSender instanceof Player;
     }
 
@@ -91,22 +85,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
      */
     public boolean equalsSender(@NotNull CommandSender sender) {
         return cmdSender.equals(sender);
-    }
-
-    /**
-     * Returns if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
-     *
-     * @param   index   the argument index
-     * @param   strings the strings to compare to
-     *
-     * @return          {@code true} if the specified {@link #args} index is equal to <b>any</b> of the specified strings (case-insensitive)
-     */
-    public boolean argEquals(int index, @Nullable String... strings) {
-        if (args == null || args.length <= index) return false;
-        final String arg = args[index];
-        if (arg == null) return false;
-        for (final String string : strings) if (arg.equalsIgnoreCase(string)) return true;
-        return false;
     }
 
     /**
@@ -177,18 +155,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
     }
 
     /**
-     * Gets the argument at the specified index
-     *
-     * @param   index   the argument index
-     *
-     * @return          the argument at the specified index
-     */
-    @Nullable
-    public String getArgument(int index) {
-        return args == null || args.length <= index ? null : args[index];
-    }
-
-    /**
      * Gets the argument at the specified index after applying the specified function
      * <br>If it's {@code null} before/after the function, send the invalid argument message
      * <br><b>Example usage:</b>
@@ -214,18 +180,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
         final T value = function.apply(argument);
         if (value == null) invalidArgument(argument);
         return value;
-    }
-
-    /**
-     * Gets the argument at the specified index as an {@link Optional}
-     *
-     * @param   index   the argument index
-     *
-     * @return          the argument at the specified index as an {@link Optional}
-     */
-    @NotNull
-    public Optional<String> getArgumentOptional(int index) {
-        return Optional.ofNullable(getArgument(index));
     }
 
     /**
@@ -272,47 +226,6 @@ public class AnnoyingSender extends Stringable implements Annoyable {
         final Optional<T> optional = getArgumentOptional(index).flatMap(function);
         if (!optional.isPresent()) invalidArgumentByIndex(index);
         return optional;
-    }
-
-    /**
-     * Gets multiple arguments joined together starting from the specified index and ending at the specified index (if too high, it will stop at the last argument)
-     * <br>If no arguments are found, it returns an empty string
-     *
-     * @param   start   the starting index
-     * @param   end     the ending index
-     *
-     * @return          the arguments joined together
-     */
-    @NotNull
-    public String getArgumentsJoined(int start, int end) {
-        if (args == null || args.length <= start) return "";
-        final StringJoiner joiner = new StringJoiner(" ");
-        for (int i = start; i < args.length && i < end; i++) joiner.add(args[i]);
-        return joiner.toString();
-    }
-
-    /**
-     * Gets multiple arguments joined together starting from the specified index
-     * <br>If no arguments are found, it returns an empty string
-     *
-     * @param   start   the starting index
-     *
-     * @return          the arguments joined together
-     */
-    @NotNull
-    public String getArgumentsJoined(int start) {
-        return args == null ? "" : getArgumentsJoined(start, args.length);
-    }
-
-    /**
-     * Gets all arguments joined together
-     * <br>If no arguments are found, it returns an empty string
-     *
-     * @return  all arguments joined together
-     */
-    @NotNull
-    public String getArgumentsJoined() {
-        return args == null ? "" : String.join(" ", args);
     }
 
     /**
