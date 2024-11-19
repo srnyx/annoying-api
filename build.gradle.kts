@@ -13,8 +13,7 @@ plugins {
     id("net.kyori.blossom") version "1.3.1"
 }
 
-// Don't forget to change AnnoyingPlugin#ANNOYING_API_VERSION when updating
-setupMC("xyz.srnyx", "5.1.3", "General purpose API with tons of features")
+setupMC("xyz.srnyx", "5.1.4", "General purpose API with tons of features")
 spigotAPI("1.8.8")
 
 // Dependencies
