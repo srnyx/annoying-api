@@ -79,7 +79,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("com{}h2database")
                     .artifactId("h2")
-                    .version("2.3.232"),
+                    .version("2.2.224"), // Don't update to keep support for Java 8
             plugin -> Collections.singleton(plugin.getRelocation("org{}h2"))),
     /**
      * {@code org.postgresql:postgresql}
