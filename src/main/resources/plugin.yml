@@ -4,7 +4,7 @@ authors:
   - srnyx
 website: https://srnyx.com
 
-main: ${mainPackage}.${name}
+main: ${mainPackage}.AnnoyingPlugin
 version: ${version}
 api-version: 1.13
 

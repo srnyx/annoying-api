@@ -40,8 +40,10 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
@@ -232,6 +234,17 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @see #enable()
      */
     private void enablePlugin() {
+        // Check if they're trying to use API as standalone plugin
+        if (getName().equals("AnnoyingAPI")) {
+            String hideMessage = "";
+            try {
+                hideMessage = " To hide this message: delete &4" + new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            } catch (final URISyntaxException ignored) {}
+            log(Level.SEVERE, "&cDisabling &4AnnoyingAPI&c because it's not meant to be used as a standalone plugin, your plugins will still work!" + hideMessage);
+            disablePlugin();
+            return;
+        }
+
         // Check if required dependencies are installed
         final String missing = options.pluginOptions.dependencies.stream()
                 .filter(dependency -> dependency.required && dependency.isNotInstalled())
