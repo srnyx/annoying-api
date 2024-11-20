@@ -9,6 +9,7 @@ jobs:
   build:
     uses: srnyx/tools/.github/workflows/publish.yml@main
     with:
+      java: 11
       modrinth: gzktm9GG
       curseforge: 728930
       files: |
