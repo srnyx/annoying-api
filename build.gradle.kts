@@ -10,11 +10,15 @@ plugins {
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "1.3.2"
     id("com.gradleup.shadow") version "8.3.5"
-    id("net.kyori.blossom") version "1.3.1"
+    id("net.kyori.blossom") version "2.1.0"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.9"
 }
 
 setupMC("xyz.srnyx", "5.1.4", "General purpose API with tons of features")
 spigotAPI("1.8.8")
+
+// Blossom (see java-templates module)
+sourceSets.main { blossom.javaSources { property("annoying_api_version", version.toString()) } }
 
 // Dependencies
 repository(Repository.JITPACK, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.CODE_MC)
@@ -36,6 +40,3 @@ setupPublishing(
     url = "https://annoying-api.srnyx.com",
     licenses = listOf(LicenseData.MIT),
     developers = listOf(DeveloperData.srnyx))
-
-// Blossom (insert API version)
-blossom.replaceToken("{{BLOSSOM-DO_NOT_CHANGE-ANNOYING_API_VERSION}}", version, "src/main/java/xyz/srnyx/annoyingapi/AnnoyingPlugin.java")

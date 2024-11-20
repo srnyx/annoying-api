@@ -24,7 +24,7 @@ public class AnnoyingStats {
     public AnnoyingStats(@NotNull AnnoyingPlugin plugin) {
         // API
         final Metrics api = new Metrics(plugin, 18281);
-        api.addCustomChart(new SimplePie("annoying_api_version", AnnoyingPlugin.ANNOYING_API_VERSION::toString));
+        api.addCustomChart(new SimplePie("annoying_api_version", () -> BuildProperties.ANNOYING_API_VERSION));
         api.addCustomChart(new SimplePie("plugins", plugin::getName));
         api.addCustomChart(new SimplePie("storage_method", () -> plugin.dataManager == null ? "N/A" : plugin.dataManager.storageConfig.method.name()));
 

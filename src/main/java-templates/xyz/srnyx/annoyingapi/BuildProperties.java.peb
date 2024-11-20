@@ -1,0 +1,22 @@
+package xyz.srnyx.annoyingapi;
+
+import org.jetbrains.annotations.NotNull;
+
+
+/**
+ * This class is used to store properties defined in the build.gradle.kts file
+ * <br>Uses <a href="https://github.com/KyoriPowered/blossom">Blossom</a>
+ */
+public class BuildProperties {
+    /**
+     * The version of Annoying API
+     */
+    @NotNull public static final String ANNOYING_API_VERSION = "{{ annoying_api_version }}";
+
+    /**
+     * This class cannot be instantiated
+     */
+    public BuildProperties() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
+}
