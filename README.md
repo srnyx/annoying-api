@@ -19,3 +19,7 @@ You can find the Javadocs at [annoying-api.srnyx.com/javadocs](https://annoying-
 ### Installation
 
 To install the API, please see [the documentation](https://annoying-api.srnyx.com/wiki/installation) on GitHub
+
+### Building
+
+To build the API locally, run `./gradlew build` using Java 11+
