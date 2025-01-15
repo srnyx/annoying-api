@@ -8,7 +8,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1.3.2"
+    id("xyz.srnyx.gradle-galaxy") version "1.3.3"
     id("com.gradleup.shadow") version "8.3.5"
     id("net.kyori.blossom") version "2.1.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.9"
