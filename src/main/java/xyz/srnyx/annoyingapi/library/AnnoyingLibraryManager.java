@@ -14,7 +14,7 @@ import java.util.Set;
 
 
 /**
- * A library manager that can load libraries into the server's classpath or into an isolated classloader using {@link RuntimeLibrary}
+ * A library manager that can load libraries into the server's classpath or into an isolated classloader using {@link AnnoyingLibrary}
  */
 public class AnnoyingLibraryManager extends BukkitLibraryManager implements Annoyable {
     /**
@@ -22,9 +22,9 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      */
     @NotNull private final AnnoyingPlugin plugin;
     /**
-     * Set of loaded {@link RuntimeLibrary libraries} that are <b>not</b> isolated
+     * Set of loaded {@link AnnoyingLibrary libraries} that are <b>not</b> isolated
      */
-    @NotNull private final Set<RuntimeLibrary> loadedLibraries = new HashSet<>();
+    @NotNull private final Set<AnnoyingLibrary> loadedLibraries = new HashSet<>();
 
     /**
      * Create a new {@link AnnoyingLibraryManager} for the plugin
@@ -53,67 +53,67 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
     }
 
     /**
-     * Load a {@link RuntimeLibrary} into the server's classpath
+     * Load a {@link AnnoyingLibrary} into the server's classpath
      *
      * @param   library the library to load
      *
-     * @see             #loadLibraryIsolated(RuntimeLibrary)
+     * @see             #loadLibraryIsolated(AnnoyingLibrary)
      */
-    public void loadLibrary(@NotNull RuntimeLibrary library) {
+    public void loadLibrary(@NotNull AnnoyingLibrary library) {
         loadLibrary(library.getLibraryWithRelocations(plugin).build());
         loadedLibraries.add(library);
     }
 
     /**
-     * Load a {@link RuntimeLibrary} into an isolated classloader
+     * Load a {@link AnnoyingLibrary} into an isolated classloader
      *
      * @param   library the library to load
      *
      * @return          the isolated classloader containing the library
      *
-     * @see             #loadLibrary(RuntimeLibrary)
+     * @see             #loadLibrary(AnnoyingLibrary)
      */
     @NotNull
-    public IsolatedClassLoader loadLibraryIsolated(@NotNull RuntimeLibrary library) {
+    public IsolatedClassLoader loadLibraryIsolated(@NotNull AnnoyingLibrary library) {
         loadLibrary(library.getLibrary().isolatedLoad(true).build());
         return getIsolatedClassLoaderOf(library).orElseThrow(() -> new IllegalStateException("Failed to load isolated library"));
     }
 
     /**
-     * Get the {@link IsolatedClassLoader} of a {@link RuntimeLibrary}
+     * Get the {@link IsolatedClassLoader} of a {@link AnnoyingLibrary}
      *
      * @param   library the library to get the classloader of
      *
      * @return          the classloader of the library
      */
     @NotNull
-    public Optional<IsolatedClassLoader> getIsolatedClassLoaderOf(@NotNull RuntimeLibrary library) {
+    public Optional<IsolatedClassLoader> getIsolatedClassLoaderOf(@NotNull AnnoyingLibrary library) {
         return Optional.ofNullable(getIsolatedClassLoaderOf(library.getId()));
     }
 
     /**
-     * Check if a {@link RuntimeLibrary} is loaded in the server's classpath
+     * Check if a {@link AnnoyingLibrary} is loaded in the server's classpath
      *
      * @param   library the library to check
      *
      * @return          whether the library is loaded
      *
-     * @see             #isLoadedIsolated(RuntimeLibrary)
+     * @see             #isLoadedIsolated(AnnoyingLibrary)
      */
-    public boolean isLoaded(@NotNull RuntimeLibrary library) {
+    public boolean isLoaded(@NotNull AnnoyingLibrary library) {
         return loadedLibraries.contains(library);
     }
 
     /**
-     * Check if a {@link RuntimeLibrary} is loaded in an isolated classloader
+     * Check if a {@link AnnoyingLibrary} is loaded in an isolated classloader
      *
      * @param   library the library to check
      *
      * @return          whether the library is loaded
      *
-     * @see             #isLoaded(RuntimeLibrary)
+     * @see             #isLoaded(AnnoyingLibrary)
      */
-    public boolean isLoadedIsolated(@NotNull RuntimeLibrary library) {
+    public boolean isLoadedIsolated(@NotNull AnnoyingLibrary library) {
         return getIsolatedClassLoaderOf(library).isPresent();
     }
 }

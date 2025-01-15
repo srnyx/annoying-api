@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  */
 public interface AnnoyingLibrary {
     /**
-     * The unique ID of the library (used for identification with {@link AnnoyingLibraryManager#getIsolatedClassLoaderOf(RuntimeLibrary)})
+     * The unique ID of the library (used for identification with {@link AnnoyingLibraryManager#getIsolatedClassLoaderOf(AnnoyingLibrary)})
      *
      * @return  the unique ID of the library
      */
