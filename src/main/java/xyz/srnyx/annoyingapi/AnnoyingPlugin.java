@@ -122,9 +122,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
-
-        // Load required libraries
-        options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
     }
 
     /**
@@ -232,8 +229,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @see #enable()
      */
     private void enablePlugin() {
+        final String name = getName();
+
         // Check if they're trying to use API as standalone plugin
-        if (getName().equals("AnnoyingAPI")) {
+        if (name.equals("AnnoyingAPI")) {
             String hideMessage = "";
             try {
                 hideMessage = " To hide this message: delete &4" + new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
@@ -249,10 +248,13 @@ public class AnnoyingPlugin extends JavaPlugin {
                 .map(dependency -> dependency.name)
                 .collect(Collectors.joining("&c, &4"));
         if (!missing.isEmpty()) {
-            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because it's missing required dependencies: &4" + missing);
+            log(Level.SEVERE, "&cDisabling &4" + name + "&c because it's missing required dependencies: &4" + missing);
             disablePlugin();
             return;
         }
+
+        // Load required libraries
+        options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
 
         // Enable bStats
         if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean(options.bStatsOptions.toggleKey)) {
@@ -269,7 +271,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Get start messages
         final PluginDescriptionFile description = getDescription();
-        final String nameVersion = getName() + " v" + description.getVersion();
+        final String nameVersion = name + " v" + description.getVersion();
         final String authors = "By " + String.join(", ", description.getAuthors());
         final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
         final int lineLength = Math.max(nameVersion.length(), authors.length());
