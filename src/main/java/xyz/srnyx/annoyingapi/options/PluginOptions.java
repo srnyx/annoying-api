@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -19,6 +20,12 @@ import java.util.List;
  * Represents the general options for the plugin
  */
 public class PluginOptions extends Stringable {
+    /**
+     * <i>{@code OPTIONAL}</i> The {@link AnnoyingLibrary AnnoyingLibraries} to load <b>before</b> initializing the plugin
+     * <br>This is only needed if you have a library that is required to load before the plugin initializes, otherwise you can just load the library yourself when the plugin enables
+     * <br><i>Loading these libraries will be one of the first (if not the first) things the plugin does</i>
+     */
+    @NotNull public List<AnnoyingLibrary> libraries = new ArrayList<>();
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingDependency AnnoyingDependencies} to check for (add dependencies to this in the plugin's constructor)
      * <p>If you add a dependency to this OUTSIDE the constructor, it will not be checked
@@ -51,6 +58,31 @@ public class PluginOptions extends Stringable {
         options.dependencies.addAll(AnnoyingDependency.loadList(section, "dependencies"));
         options.updatePlatforms = PluginPlatform.Multi.load(section, "updatePlatforms");
         return options;
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingLibrary}s to {@link #libraries}
+     *
+     * @param   libraries   the libraries to add
+     *
+     * @return              the {@link PluginOptions} instance for chaining
+     */
+    @NotNull
+    public PluginOptions libraries(@NotNull Collection<AnnoyingLibrary> libraries) {
+        this.libraries.addAll(libraries);
+        return this;
+    }
+
+    /**
+     * Adds the specified {@link AnnoyingLibrary}s to {@link #libraries}
+     *
+     * @param   libraries   the libraries to add
+     *
+     * @return              the {@link PluginOptions} instance for chaining
+     */
+    @NotNull
+    public PluginOptions libraries(@NotNull AnnoyingLibrary... libraries) {
+        return libraries(Arrays.asList(libraries));
     }
 
     /**

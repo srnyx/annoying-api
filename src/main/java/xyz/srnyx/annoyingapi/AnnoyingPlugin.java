@@ -123,6 +123,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
+
+        // Load required libraries
+        options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
     }
 
     /**
