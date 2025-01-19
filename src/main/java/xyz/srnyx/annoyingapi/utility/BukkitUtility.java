@@ -32,9 +32,9 @@ public class BukkitUtility {
     /**
      * Translates {@code &} color codes to {@link ChatColor}
      *
-     * @param   object  the object/message to translate
+     * @param   object  the object/string to translate
      *
-     * @return          the translated object/message
+     * @return          the translated object/string
      */
     @NotNull
     public static String color(@Nullable Object object) {
@@ -42,11 +42,27 @@ public class BukkitUtility {
     }
 
     /**
-     * Translates {@code &} color codes to {@link ChatColor} for a {@link Collection} of messages
+     * Translates {@code &} color codes to {@link ChatColor} for multiple strings
      *
-     * @param   objects the objects/messages to translate
+     * @param   object1 the first object/string to translate
+     * @param   objects the other objects/strings to translate
      *
-     * @return          the translated objects/messages
+     * @return          the translated objects/strings
+     */
+    @NotNull
+    public static List<String> color(@Nullable Object object1, @Nullable Object... objects) {
+        final List<String> list = new ArrayList<>();
+        list.add(color(object1));
+        for (final Object object : objects) list.add(color(object));
+        return list;
+    }
+
+    /**
+     * Translates {@code &} color codes to {@link ChatColor} for a {@link Collection} of strings
+     *
+     * @param   objects the objects/strings to translate
+     *
+     * @return          the translated objects/strings
      */
     @NotNull
     public static List<String> colorCollection(@Nullable Collection<?> objects) {
@@ -66,6 +82,21 @@ public class BukkitUtility {
     @NotNull
     public static String stripUntranslatedColor(@Nullable String string) {
         return string == null ? "null" : STRIP_COLOR_PATTERN.matcher(string).replaceAll("");
+    }
+
+    /**
+     * Translates hex color codes to {@code &x} color codes
+     *
+     * @param   hex the hex color code
+     *
+     * @return      the translated hex color code
+     */
+    @NotNull
+    public static String hexColor(@NotNull String hex) {
+        if (hex.startsWith("#")) hex = hex.substring(1);
+        final StringBuilder builder = new StringBuilder("&x");
+        for (final char character : hex.toCharArray()) builder.append('&').append(character);
+        return builder.toString();
     }
 
     /**
