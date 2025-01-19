@@ -41,7 +41,6 @@ import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -305,9 +304,8 @@ public class AnnoyingPlugin extends JavaPlugin {
                     .forEach(clazz -> {
                         try {
                             clazz.getConstructor(this.getClass()).newInstance(this).register();
-                        } catch (final NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                            log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName());
-                            e.printStackTrace();
+                        } catch (final Throwable t) {
+                            log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
                         }
                     });
         }
