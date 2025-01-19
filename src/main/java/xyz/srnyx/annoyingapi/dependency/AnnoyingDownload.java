@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.bukkit.Bukkit;
-import org.bukkit.command.PluginCommandYamlParser;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
@@ -35,8 +34,6 @@ import java.util.logging.Level;
  * Used for downloading {@link AnnoyingDependency}s
  */
 public class AnnoyingDownload extends Stringable implements Annoyable {
-    @NotNull private static final CommandRegister COMMAND_REGISTER = new CommandRegister();
-
     @NotNull private final AnnoyingPlugin plugin;
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
@@ -299,9 +296,6 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
             }
             dependencyPlugin.onLoad();
             manager.enablePlugin(dependencyPlugin);
-            // Register commands
-            PluginCommandYamlParser.parse(dependencyPlugin).forEach(command -> COMMAND_REGISTER.register(dependencyPlugin, command));
-            COMMAND_REGISTER.sync();
         } catch (final IllegalArgumentException | InvalidPluginException | InvalidDescriptionException e) {
             AnnoyingPlugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to load plugin!");
         }
