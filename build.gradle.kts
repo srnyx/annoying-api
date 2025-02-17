@@ -31,7 +31,7 @@ dependencies {
     compileOnlyApi("org.postgresql", "postgresql", "42.7.5") // Downloaded on runtime
     compileOnlyApi("org.jetbrains", "annotations", "26.0.2")
     implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:2.0.0", "xyz.srnyx.javautilities")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:94d5d9c055", "xyz.srnyx.javautilities")
 }
 
 // Publishing

@@ -7,11 +7,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.Arguments;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
+
+import xyz.srnyx.javautilities.objects.Arguments;
 
 import java.util.Optional;
 import java.util.function.Function;
