@@ -89,7 +89,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}postgresql")
                     .artifactId("postgresql")
-                    .version("42.7.4"),
+                    .version("42.7.5"),
             plugin -> Collections.singleton(plugin.getRelocation("org{}postgresql")));
 
     /**
