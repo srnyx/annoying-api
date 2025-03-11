@@ -469,7 +469,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     public Optional<BukkitTask> attemptAsync(@NotNull Runnable runnable) {
         try {
             return Optional.of(Bukkit.getScheduler().runTaskAsynchronously(this, runnable));
-        } catch (final IllegalPluginAccessException e) {
+        } catch (final IllegalPluginAccessException | UnsupportedOperationException e) {
+            // IllegalPluginAccessException: Plugin is disabled
+            // UnsupportedOperationException: Server is using Folia
             runnable.run();
             return Optional.empty();
         }
