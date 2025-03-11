@@ -183,7 +183,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
             final Optional<JsonArray> json = HttpUtility.getJson(userAgent,
                     "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                             "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D")
+                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D", null)
                     .map(JsonElement::getAsJsonArray);
 
             // Request failed
@@ -205,7 +205,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @NotNull
     private Optional<String> hangar(@NotNull PluginPlatform platform) {
-        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions")
+        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions", null)
                 .map(element -> element.getAsJsonObject().getAsJsonArray("result"));
 
         // Request failed
@@ -258,7 +258,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
      */
     @NotNull
     private Optional<String> spigot(@NotNull String identifier) {
-        final Optional<String> json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest")
+        final Optional<String> json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest", null)
                 .map(element -> element.getAsJsonObject().get("name").getAsString());
 
         // Request failed

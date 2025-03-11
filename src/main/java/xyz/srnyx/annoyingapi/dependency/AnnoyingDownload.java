@@ -144,7 +144,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         final Optional<String> latest = HttpUtility.getJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D")
+                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D", null)
                 .map(element -> element.getAsJsonArray().get(0).getAsJsonObject()
                         .getAsJsonArray("files").get(0).getAsJsonObject()
                         .get("url").getAsString());
@@ -173,7 +173,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         }
         final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
 
-        final Optional<String> latest = HttpUtility.getString(userAgent, url + "latestrelease");
+        final Optional<String> latest = HttpUtility.getString(userAgent, url + "latestrelease", null);
         // Request failed
         if (!latest.isPresent()) {
             fail(dependency, platform.platform);
@@ -194,7 +194,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     private void spigot(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
         final PluginPlatform.Multi platforms = dependency.platforms;
         final String url = "https://api.spiget.org/v2/resources/" + identifier;
-        final Optional<JsonObject> json = HttpUtility.getJson(userAgent, url).map(JsonElement::getAsJsonObject);
+        final Optional<JsonObject> json = HttpUtility.getJson(userAgent, url, null).map(JsonElement::getAsJsonObject);
 
         // Request failed
         if (!json.isPresent()) {
