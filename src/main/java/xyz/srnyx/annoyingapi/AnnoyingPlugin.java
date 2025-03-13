@@ -41,10 +41,12 @@ import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -71,6 +73,17 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The Minecraft version the server is running
      */
     @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
+    /**
+     * Whether the server is running on Folia
+     */
+    public static boolean FOLIA = false;
+
+    static {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            FOLIA = true;
+        } catch (final ClassNotFoundException ignored) {}
+    }
 
     /**
      * The API options for the plugin
@@ -478,6 +491,64 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Runs a global task timer
+     * <br>If the server is running Folia, a global fixed rate task will be used
+     * <br>Otherwise, a standard Bukkit task timer will be used
+     *
+     * @param   runnable    the task to run
+     * @param   delay       tick delay before the task starts
+     * @param   interval    tick interval between each execution of the task
+     *
+     * @return              a {@link TaskWrapper} containing the task and its {@link TaskWrapper.Type type}
+     */
+    @NotNull @SuppressWarnings("UnusedReturnValue")
+    public TaskWrapper runGlobalTaskTimer(@NotNull Runnable runnable, long delay, long interval) {
+        // Folia
+        if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
+        // Bukkit
+        return new TaskWrapper(Bukkit.getScheduler().runTaskTimer(this, runnable, delay, interval));
+    }
+
+    /**
+     * Runs a global task timer asynchronously
+     * <br>If the server is running Folia, a global fixed rate task will be used
+     * <br>Otherwise, a standard async Bukkit task timer will be used
+     *
+     * @param   runnable    the task to run
+     * @param   delay       tick delay before the task starts
+     * @param   interval    tick interval between each execution of the task
+     *
+     * @return              a {@link TaskWrapper} containing the task and its {@link TaskWrapper.Type type}
+     */
+    @NotNull @SuppressWarnings("UnusedReturnValue")
+    public TaskWrapper runGlobalTaskTimerAsync(@NotNull Runnable runnable, long delay, long interval) {
+        // Folia
+        if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
+        // Bukkit
+        return new TaskWrapper(Bukkit.getScheduler().runTaskTimerAsynchronously(this, runnable, delay, interval));
+    }
+
+    /**
+     * Runs a global task timer using Folia
+     * <br><b>For internal use only, use {@link #runGlobalTaskTimer(Runnable, long, long)} instead!</b>
+     *
+     * @param   runnable    the task to run
+     * @param   delay       tick delay before the task starts
+     * @param   interval    tick interval between each execution of the task
+     *
+     * @return              a {@link TaskWrapper} containing the task with {@link TaskWrapper.Type#FOLIA}
+     */
+    @NotNull
+    private TaskWrapper runGlobalTaskTimerFolia(@NotNull Runnable runnable, long delay, long interval) {
+        try {
+            final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
+            return new TaskWrapper(scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class).invoke(scheduler, this, new FoliaConsumer(runnable), delay, interval));
+        } catch (final InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+            throw new RuntimeException("Failed to run a Folia task!", e);
+        }
+    }
+
+    /**
      * Gets a {@link Relocation} for the specified package
      *
      * @param   from    the package to relocate
@@ -555,5 +626,29 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull
     public static String replaceBrackets(@NotNull String string) {
         return string.replace("{}", ".");
+    }
+
+    /**
+     * Only used for {@link #runGlobalTaskTimerFolia(Runnable, long, long) Folia task timers} due to reflection
+     */
+    private static class FoliaConsumer implements Consumer<Object> {
+        /**
+         * The {@link Runnable} to run
+         */
+        @NotNull private final Runnable runnable;
+
+        /**
+         * Constructs a new {@link FoliaConsumer} instance
+         *
+         * @param   runnable    {@link #runnable}
+         */
+        public FoliaConsumer(@NotNull Runnable runnable) {
+            this.runnable = runnable;
+        }
+
+        @Override
+        public void accept(@NotNull Object object) {
+            runnable.run();
+        }
     }
 }

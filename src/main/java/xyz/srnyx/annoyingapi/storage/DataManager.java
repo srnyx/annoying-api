@@ -1,12 +1,10 @@
 package xyz.srnyx.annoyingapi.storage;
 
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.TaskWrapper;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
@@ -43,7 +41,7 @@ public class DataManager {
      *
      * @see DataManager#toggleIntervalCacheSaving()
      */
-    @Nullable public BukkitTask cacheSavingTask;
+    @Nullable public TaskWrapper cacheSavingTask;
 
     /**
      * Connect to the configured database and create the pre-defined tables/columns
@@ -79,13 +77,15 @@ public class DataManager {
     public void toggleIntervalCacheSaving() {
         // Cancel ongoing task if one exists
         if (cacheSavingTask != null) cacheSavingTask.cancel();
+
         // Disable
         if (!storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) {
             cacheSavingTask = null;
             return;
         }
+
         // Enable
-        cacheSavingTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, dialect::saveCache, storageConfig.cache.interval, storageConfig.cache.interval);
+        cacheSavingTask = plugin.runGlobalTaskTimerAsync(dialect::saveCache, storageConfig.cache.interval, storageConfig.cache.interval);
     }
 
     /**
