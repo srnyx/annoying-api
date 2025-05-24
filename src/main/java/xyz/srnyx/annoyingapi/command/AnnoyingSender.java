@@ -78,6 +78,20 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     }
 
     /**
+     * Gets the full/raw command that was used with the arguments
+     * <br>Example: {@code command arg1 arg2 arg3}
+     *
+     * @return  the full/raw command that was used with the arguments
+     */
+    @NotNull
+    public String getFullCommand() {
+        final StringBuilder command = new StringBuilder();
+        if (label != null) command.append(label);
+        if (args != null && args.length != 0) command.append(" ").append(getArgumentsJoined());
+        return command.toString();
+    }
+
+    /**
      * Checks if the provided {@link CommandSender} is the same as the {@link #cmdSender}
      *
      * @param   sender  the {@link CommandSender} to check

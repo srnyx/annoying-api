@@ -454,12 +454,7 @@ public class AnnoyingMessage extends Stringable {
      * @param   sender  the {@link AnnoyingSender} to use
      */
     private void replaceCommand(@Nullable AnnoyingSender sender) {
-        final StringBuilder command = new StringBuilder();
-        if (sender != null) {
-            if (sender.label != null) command.append("/").append(sender.label);
-            if (sender.args != null && sender.args.length != 0) command.append(" ").append(String.join(" ", sender.args));
-        }
-        replace("%command%", command.toString());
+        replace("%command%", sender != null ? sender.getFullCommand() : "");
     }
 
     /**
