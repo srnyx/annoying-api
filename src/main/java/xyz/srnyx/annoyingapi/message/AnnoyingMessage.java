@@ -454,7 +454,7 @@ public class AnnoyingMessage extends Stringable {
      * @param   sender  the {@link AnnoyingSender} to use
      */
     private void replaceCommand(@Nullable AnnoyingSender sender) {
-        replace("%command%", sender != null ? sender.getFullCommand() : "");
+        replace("%command%", sender != null ? "/" + sender.getFullCommand() : "");
     }
 
     /**

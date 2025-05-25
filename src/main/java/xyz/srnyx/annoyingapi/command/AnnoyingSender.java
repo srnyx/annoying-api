@@ -78,7 +78,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     }
 
     /**
-     * Gets the full/raw command that was used with the arguments
+     * Gets the full/raw command that was used with the arguments (without {@code /})
      * <br>Example: {@code command arg1 arg2 arg3}
      *
      * @return  the full/raw command that was used with the arguments
