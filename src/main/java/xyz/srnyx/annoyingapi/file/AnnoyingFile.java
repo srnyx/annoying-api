@@ -327,6 +327,19 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @NotNull
     public Optional<PotionEffect> getPotionEffect(@NotNull String path) {
+        return getPotionEffect(path, true);
+    }
+
+    /**
+     * Gets a {@link PotionEffect} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     * @param   log     whether to log warnings if the potion effect is invalid
+     *
+     * @return          the {@link PotionEffect} or empty if it's invalid
+     */
+    @NotNull
+    public Optional<PotionEffect> getPotionEffect(@NotNull String path, boolean log) {
         final Optional<PotionEffect> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
@@ -334,14 +347,14 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         // Get type name
         final String typeString = section.getString("type");
         if (typeString == null) {
-            log(Level.WARNING, path, "&cInvalid potion effect, missing type");
+            if (log) log(Level.WARNING, path, "&cInvalid potion effect, missing type");
             return def;
         }
 
         // Get type
         final Optional<PotionEffectType> typeOptional = RefRegistry.getEffect(typeString);
         if (!typeOptional.isPresent()) {
-            log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
+            if (log) log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
         final PotionEffectType type = typeOptional.get();
@@ -372,8 +385,23 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or empty if it's invalid
      */
-    @NotNull @SuppressWarnings("unchecked")
+    @NotNull
     public <G> Optional<G> getAttributeModifier(@NotNull String path) {
+        return getAttributeModifier(path, true);
+    }
+
+    /**
+     * {@code 1.9+} Gets an {@code AttributeModifier} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     * @param   log     whether to log warnings if the attribute modifier is invalid
+     *
+     * @param   <G>     the {@code AttributeModifier} class
+     *
+     * @return          the {@code AttributeModifier} or empty if it's invalid
+     */
+    @NotNull @SuppressWarnings("unchecked")
+    public <G> Optional<G> getAttributeModifier(@NotNull String path, boolean log) {
         final Optional<G> def = getDef(path);
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
         final ConfigurationSection section = getConfigurationSection(path);
@@ -382,7 +410,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final String name = section.getString("name");
         final String operationString = section.getString("operation");
         if (name == null || operationString == null) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier, missing name and/or operation");
+            if (log) log(Level.WARNING, path, "&cInvalid attribute modifier, missing name and/or operation");
             return def;
         }
 
@@ -391,7 +419,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         try {
             operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
         } catch (final IllegalArgumentException e) {
-            log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
+            if (log) log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
             return def;
         }
 
@@ -406,7 +434,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             if (equipmentSlotString != null) try {
                 slot = EquipmentSlot.valueOf(equipmentSlotString);
             } catch (final IllegalArgumentException e) {
-                log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
+                if (log) log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
             }
 
             // Return
@@ -429,6 +457,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
     /**
      * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * <br><i>If you want to disable warning/error logging, use {@link #getItemStackOptional(String, boolean)}</i>
      *
      * @param   path    the path to the node
      *
@@ -436,11 +465,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @Override @Nullable
     public ItemStack getItemStack(@NotNull String path) {
-        return getItemStackOptional(path).orElse(null);
+        return getItemStackOptional(path, true).orElse(null);
     }
 
     /**
      * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     * <br><i>If you want to disable warning/error logging, use {@link #getItemStackOptional(String, boolean)}</i>
      *
      * @param   path    the path to the node
      * @param   def     the default value
@@ -449,7 +479,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @Override @Nullable
     public ItemStack getItemStack(@NotNull String path, @Nullable ItemStack def) {
-        return getItemStackOptional(path).orElse(def);
+        return getItemStackOptional(path, true).orElse(def);
     }
 
     /**
@@ -461,6 +491,19 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @NotNull
     public Optional<ItemStack> getItemStackOptional(@NotNull String path) {
+        return getItemStackOptional(path, true);
+    }
+
+    /**
+     * Gets an {@link ItemStack} from the path. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path    the path to the node
+     * @param   log     whether to log warnings if the item stack is invalid
+     *
+     * @return the {@link ItemStack} or empty if it's invalid
+     */
+    @NotNull
+    public Optional<ItemStack> getItemStackOptional(@NotNull String path, boolean log) {
         final Optional<ItemStack> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
@@ -468,14 +511,14 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         // Get material name
         final String materialString = section.getString("material");
         if (materialString == null) {
-            log(Level.WARNING, path, "&cInvalid material, missing material");
+            if (log) log(Level.WARNING, path, "&cInvalid material, missing material");
             return def;
         }
 
         // Get material
         final Material material = Material.matchMaterial(materialString);
         if (material == null) {
-            log(Level.WARNING, path, "&cInvalid material for: &4" + materialString);
+            if (log) log(Level.WARNING, path, "&cInvalid material for: &4" + materialString);
             return def;
         }
 
@@ -509,7 +552,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Optional<Enchantment> enchantment = RefRegistry.getEnchantment(enchantmentKey);
                 if (!enchantment.isPresent()) {
-                    log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
+                    if (log) log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
                 meta.addEnchant(enchantment.get(), enchantmentsSection.getInt(enchantmentKey), true);
@@ -521,7 +564,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                         try {
                             return ItemFlag.valueOf(string.toUpperCase());
                         } catch (final IllegalArgumentException e) {
-                            log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
+                            if (log) log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
                             return null;
                         }
                     })
@@ -546,7 +589,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                         //noinspection unchecked
                         attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
                     } catch (final IllegalArgumentException e) {
-                        log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
+                        if (log) log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
 
@@ -622,6 +665,21 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @NotNull
     public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable String name) {
+        return getRecipe(path, itemFunction, name, true);
+    }
+
+    /**
+     * Gets a {@link Recipe} from the YAML. See <a href="https://annoying-api.srnyx.com/wiki/file-objects">the wiki</a> for more information
+     *
+     * @param   path            the path to get the recipe from
+     * @param   itemFunction    the function to apply to the {@link ItemStack} before returning it
+     * @param   name            the name of the recipe (only used in 1.12+ for the {@code NamespacedKey}), or {@code null} to use the node name
+     * @param   log             whether to log warnings if the recipe is invalid
+     *
+     * @return          the {@link Recipe} or the {@code def} if it's invalid
+     */
+    @NotNull
+    public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable String name, boolean log) {
         final Optional<Recipe> def = getDef(path);
 
         // section, shape, result, & ingredientMaterials
@@ -639,7 +697,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             final String value = String.valueOf(entry.getValue());
             final Material material = Material.matchMaterial(value);
             if (material == null) {
-                log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + value);
+                if (log) log(Level.WARNING, ingredients.getCurrentPath() + "." + key, "&cInvalid material: &4" + value);
                 continue;
             }
             ingredientMaterials.put(key.toUpperCase().charAt(0), material);
