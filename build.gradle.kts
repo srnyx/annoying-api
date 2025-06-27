@@ -9,9 +9,9 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "1.3.3"
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "8.3.7"
     id("net.kyori.blossom") version "2.1.0"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.9"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.10"
 }
 
 setupMC("xyz.srnyx", "5.1.5", "General purpose API with tons of features")
@@ -28,10 +28,10 @@ dependencies {
     compileOnlyApi("org.bstats", "bstats-bukkit", "3.1.0") // Downloaded on runtime
     compileOnlyApi("org.reflections", "reflections", "0.10.2") // Downloaded on runtime
     compileOnlyApi("com.h2database", "h2", "2.2.224") // Downloaded on runtime (don't update to keep support for Java 8)
-    compileOnlyApi("org.postgresql", "postgresql", "42.7.5") // Downloaded on runtime
+    compileOnlyApi("org.postgresql", "postgresql", "42.7.7") // Downloaded on runtime
     compileOnlyApi("org.jetbrains", "annotations", "26.0.2")
     implementationRelocate(project, "net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby")
-    implementationRelocate(project, "xyz.srnyx:java-utilities:94d5d9c055", "xyz.srnyx.javautilities")
+    implementationRelocate(project, "xyz.srnyx:java-utilities:ce339665c6", "xyz.srnyx.javautilities")
 }
 
 // Publishing
