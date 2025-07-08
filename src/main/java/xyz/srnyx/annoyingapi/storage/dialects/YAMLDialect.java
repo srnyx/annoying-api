@@ -76,11 +76,11 @@ public class YAMLDialect extends Dialect {
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data = new HashMap<>(); // [table, [target, [key, value]]]
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(new File(dataManager.plugin.getDataFolder(), "data/yaml"), "yaml")) {
             final AnnoyingData file = getTableFromDatabase(table);
             final Set<String> keys = new HashSet<>();
-            final Map<String, ConcurrentHashMap<String, Value>> tableData = new HashMap<>(); // [target, [key, value]]
+            final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> tableData = new ConcurrentHashMap<>(); // [target, [key, value]]
             for (final String target : file.getKeys(false)) {
                 final ConfigurationSection targetData = file.getConfigurationSection(target);
                 if (targetData == null) continue;

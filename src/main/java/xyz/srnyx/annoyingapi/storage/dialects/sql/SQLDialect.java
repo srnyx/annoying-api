@@ -37,7 +37,7 @@ public abstract class SQLDialect extends Dialect {
      *     </ul>
      * </ul>
      */
-    @NotNull public final Map<String, Map<String, ConcurrentHashMap<String, Value>>> cache = new HashMap<>();
+    @NotNull public final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> cache = new ConcurrentHashMap<>();
 
     /**
      * Construct a new {@link SQLDialect} with the given {@link DataManager}
@@ -53,7 +53,7 @@ public abstract class SQLDialect extends Dialect {
 
     @Override @Nullable
     public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        final Map<String, ConcurrentHashMap<String, Value>> tableMap = cache.get(table);
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> tableMap = cache.get(table);
         if (tableMap == null) return null;
         final Map<String, Value> targetMap = tableMap.get(target);
         return targetMap == null ? null : targetMap.get(key);
@@ -61,12 +61,12 @@ public abstract class SQLDialect extends Dialect {
 
     @Override
     public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
-        cache.computeIfAbsent(table, k -> new HashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, value);
+        cache.computeIfAbsent(table, k -> new ConcurrentHashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, value);
     }
 
     @Override
     public void markRemovedInCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        cache.computeIfAbsent(table, k -> new HashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, new Value());
+        cache.computeIfAbsent(table, k -> new ConcurrentHashMap<>()).computeIfAbsent(target, k -> new ConcurrentHashMap<>()).put(key, new Value());
     }
 
     @Override
@@ -96,11 +96,11 @@ public abstract class SQLDialect extends Dialect {
 
         // Get migration data
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // {Table, Keys}
-        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> values = new HashMap<>(); // {Table, {Target, {Key, Value}}}
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> values = new ConcurrentHashMap<>(); // {Table, {Target, {Key, Value}}}
         final int oldPrefixLength = dataManager.tablePrefix.length();
         for (final String table : tables) {
             final String tableWithoutPrefix = table.substring(oldPrefixLength);
-            final Map<String, ConcurrentHashMap<String, Value>> tableValues = new HashMap<>(); // {Target, {Key, Value}}
+            final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> tableValues = new ConcurrentHashMap<>(); // {Target, {Key, Value}}
             try (final PreparedStatement getValues = getAllValuesFromDatabase(table)) {
                 final ResultSet resultSet = getValues.executeQuery();
 

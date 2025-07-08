@@ -97,10 +97,10 @@ public class JSONDialect extends Dialect {
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data = new HashMap<>(); // [table, [target, [key, value]]]
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(folder, "json")) {
             final Set<String> keys = new HashSet<>();
-            final Map<String, ConcurrentHashMap<String, Value>> targetData = new HashMap<>(); // [target, [key, value]]
+            final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> targetData = new ConcurrentHashMap<>(); // [target, [key, value]]
             for (final Map.Entry<String, JsonElement> entry : getTableFromDatabase(table).json.entrySet()) {
                 final JsonElement entryElement = entry.getValue();
                 if (!entryElement.isJsonObject()) continue;

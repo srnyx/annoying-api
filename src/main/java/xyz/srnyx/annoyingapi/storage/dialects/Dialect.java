@@ -152,9 +152,9 @@ public abstract class Dialect {
      * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Set<FailedSet> setToDatabase(@NotNull Map<String, Map<String, ConcurrentHashMap<String, Value>>> data) {
+    public final Set<FailedSet> setToDatabase(@NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data) {
         final Set<FailedSet> failed = new HashSet<>();
-        for (final Map.Entry<String, Map<String, ConcurrentHashMap<String, Value>>> entry : data.entrySet()) {
+        for (final Map.Entry<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> entry : data.entrySet()) {
             final String table = entry.getKey();
             for (final Map.Entry<String, ConcurrentHashMap<String, Value>> entry1 : entry.getValue().entrySet()) {
                 final Set<FailedSet> failedSet = setToDatabase(table, entry1.getKey(), entry1.getValue());
@@ -292,7 +292,7 @@ public abstract class Dialect {
         /**
          * [table, [target, [key, value]]]
          */
-        @NotNull public final Map<String, Map<String, ConcurrentHashMap<String, Value>>> data;
+        @NotNull public final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data;
 
         /**
          * Construct a new {@link MigrationData} with the given data
@@ -300,7 +300,7 @@ public abstract class Dialect {
          * @param   tablesKeys  {@link #tablesKeys}
          * @param   data        {@link #data}
          */
-        public MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull Map<String, Map<String, ConcurrentHashMap<String, Value>>> data) {
+        public MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data) {
             this.tablesKeys = tablesKeys;
             this.data = data;
         }
