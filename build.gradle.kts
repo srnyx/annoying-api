@@ -14,7 +14,7 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.10"
 }
 
-setupMC("xyz.srnyx", "5.1.5", "General purpose API with tons of features")
+setupMC("xyz.srnyx", "5.2.0", "General purpose API with tons of features")
 spigotAPI("1.8.8")
 
 // Blossom (see java-templates module)
