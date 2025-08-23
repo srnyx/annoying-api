@@ -135,12 +135,12 @@ public class BukkitUtility {
      * @return              the value of the permission node, or empty if not found
      */
     @NotNull
-    public static Optional<Integer> getPermissionValue(@NotNull Player player, @NotNull String permission) {
+    public static Optional<Long> getPermissionValue(@NotNull Player player, @NotNull String permission) {
         for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
             if (!info.getValue()) continue;
             final String perm = info.getPermission();
             if (!perm.startsWith(permission)) continue;
-            final Optional<Integer> value = Mapper.toInt(perm.substring(permission.length()));
+            final Optional<Long> value = Mapper.toLong(perm.substring(permission.length()));
             if (!value.isPresent()) AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
             return value;
         }
