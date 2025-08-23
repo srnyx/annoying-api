@@ -63,7 +63,13 @@ public class TaskWrapper {
      * Types of valid tasks for {@link TaskWrapper}
      */
     public enum Type {
+        /**
+         * A {@link BukkitTask}
+         */
         BUKKIT,
+        /**
+         * A <a href="https://jd.papermc.io/folia/io/papermc/paper/threadedregions/scheduler/ScheduledTask.html">Folia task</a>
+         */
         FOLIA
     }
 }
