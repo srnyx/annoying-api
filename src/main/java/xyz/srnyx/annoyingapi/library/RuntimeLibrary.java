@@ -69,7 +69,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository("https://repo.codemc.org/repository/maven-public/")
                     .groupId("de{}tr7zw")
                     .artifactId("item-nbt-api")
-                    .version("2.15.1"),
+                    .version("2.15.2"),
             plugin -> Collections.singleton(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi"))),
     /**
      * {@code com.h2database:h2}
