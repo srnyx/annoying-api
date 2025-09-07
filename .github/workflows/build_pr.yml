@@ -15,4 +15,4 @@ jobs:
     uses: srnyx/tools/.github/workflows/build.yml@main
     with:
       name: Annoying API
-      java: 11
+      java: 22
