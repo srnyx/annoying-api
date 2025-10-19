@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.command.selector.SelectorOptional;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
@@ -241,6 +242,18 @@ public class AnnoyingSender extends Arguments implements Annoyable {
         final Optional<T> optional = getArgumentOptional(index).flatMap(function);
         if (!optional.isPresent()) invalidArgumentByIndex(index);
         return optional;
+    }
+
+    @NotNull
+    public <T> SelectorOptional<T> getSelector(int index, @NotNull Class<T> type) {
+        final String argument = getArgument(index);
+        if (argument == null) {
+            invalidArguments();
+            return SelectorOptional.noArgument(this);
+        }
+        final SelectorOptional<T> selector = SelectorOptional.of(this, argument, type);
+        if (selector.isEmpty()) invalidArgument(argument);
+        return selector;
     }
 
     /**
