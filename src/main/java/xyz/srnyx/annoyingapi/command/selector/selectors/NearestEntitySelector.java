@@ -14,6 +14,9 @@ import java.util.Collections;
 import java.util.List;
 
 
+/**
+ * Selector that selects the nearest entity to the command sender
+ */
 public class NearestEntitySelector implements Selector<Entity> {
     @Override @NotNull
     public Class<Entity> getType() {
@@ -38,5 +41,12 @@ public class NearestEntitySelector implements Selector<Entity> {
             }
         }
         return nearest == null ? Collections.emptyList() : Collections.singletonList(nearest);
+    }
+
+    /**
+     * Constructor for NearestEntitySelector
+     */
+    public NearestEntitySelector() {
+        // Only exists to give the constructor a Javadoc
     }
 }

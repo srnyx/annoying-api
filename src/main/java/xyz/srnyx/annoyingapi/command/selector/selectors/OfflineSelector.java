@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Selector that selects all offline players
+ */
 public class OfflineSelector implements Selector<OfflinePlayer> {
     @Override @NotNull
     public Class<OfflinePlayer> getType() {
@@ -23,5 +26,12 @@ public class OfflineSelector implements Selector<OfflinePlayer> {
         final List<OfflinePlayer> players = new ArrayList<>();
         for (final OfflinePlayer player : Bukkit.getOfflinePlayers()) if (!player.isOnline()) players.add(player);
         return players;
+    }
+
+    /**
+     * Constructor for OfflineSelector
+     */
+    public OfflineSelector() {
+        // Only exists to give the constructor a Javadoc
     }
 }

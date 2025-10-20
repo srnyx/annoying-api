@@ -14,6 +14,9 @@ import java.util.Collections;
 import java.util.List;
 
 
+/**
+ * Selector that selects a random entity in the sender's world, or the first world if the sender is not a player
+ */
 public class RandomEntitySelector implements Selector<Entity> {
     @Override @NotNull
     public Class<Entity> getType() {
@@ -28,5 +31,12 @@ public class RandomEntitySelector implements Selector<Entity> {
                 .getEntities();
         final int size = entities.size();
         return size == 0 ? Collections.emptyList() : Collections.singletonList(entities.get(MiscUtility.RANDOM.nextInt(size)));
+    }
+
+    /**
+     * Constructor for RandomEntitySelector
+     */
+    public RandomEntitySelector() {
+        // Only exists to give the constructor a Javadoc
     }
 }

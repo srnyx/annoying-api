@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 
 
+/**
+ * Selector that selects the nearest player to the command sender
+ */
 public class NearestPlayerSelector implements Selector<Player> {
     @Override @NotNull
     public Class<Player> getType() {
@@ -37,5 +40,12 @@ public class NearestPlayerSelector implements Selector<Player> {
             }
         }
         return nearest == null ? Collections.emptyList() : Collections.singletonList(nearest);
+    }
+
+    /**
+     * Constructor for NearestPlayerSelector
+     */
+    public NearestPlayerSelector() {
+        // Only exists to give the constructor a Javadoc
     }
 }

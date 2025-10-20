@@ -244,6 +244,16 @@ public class AnnoyingSender extends Arguments implements Annoyable {
         return optional;
     }
 
+    /**
+     * Gets the selector at the specified index as a {@link SelectorOptional}
+     *
+     * @param   index   the argument index
+     * @param   type    the selector type
+     *
+     * @return          the selector at the specified index as a {@link SelectorOptional}
+     *
+     * @param   <T>     the type of the selector
+     */
     @NotNull
     public <T> SelectorOptional<T> getSelector(int index, @NotNull Class<T> type) {
         final String argument = getArgument(index);

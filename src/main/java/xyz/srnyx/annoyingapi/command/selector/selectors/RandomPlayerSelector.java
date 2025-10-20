@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.List;
 
 
+/**
+ * Selector that selects a random online player
+ */
 public class RandomPlayerSelector implements Selector<Player> {
     @Override @NotNull
     public Class<Player> getType() {
@@ -26,5 +29,12 @@ public class RandomPlayerSelector implements Selector<Player> {
         final List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         final int size = players.size();
         return size == 0 ? Collections.emptyList() : Collections.singletonList(players.get(MiscUtility.RANDOM.nextInt(size)));
+    }
+
+    /**
+     * Constructor for RandomPlayerSelector
+     */
+    public RandomPlayerSelector() {
+        // Only exists to give the constructor a Javadoc
     }
 }
