@@ -1,8 +1,10 @@
-package xyz.srnyx.annoyingapi;
+package xyz.srnyx.annoyingapi.scheduler;
 
 import org.bukkit.scheduler.BukkitTask;
 
 import org.jetbrains.annotations.NotNull;
+
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.TaskWrapper;
+import xyz.srnyx.annoyingapi.scheduler.TaskWrapper;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
@@ -85,7 +85,7 @@ public class DataManager {
         }
 
         // Enable
-        cacheSavingTask = plugin.runGlobalTaskTimerAsync(dialect::saveCache, storageConfig.cache.interval, storageConfig.cache.interval);
+        cacheSavingTask = plugin.scheduler.runGlobalTaskTimerAsync(dialect::saveCache, storageConfig.cache.interval, storageConfig.cache.interval);
     }
 
     /**

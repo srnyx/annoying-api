@@ -41,7 +41,7 @@ public class AnnoyingResource extends AnnoyingFile<AnnoyingResource> {
             final InputStream input = plugin.getResource(path);
             if (input == null) return;
             final Path defaultPath = plugin.getDataFolder().toPath().resolve("default/" + path);
-            plugin.attemptAsync(() -> {
+            plugin.scheduler.attemptAsync(() -> {
                 try {
                     Files.createDirectories(defaultPath.getParent());
                     Files.copy(input, defaultPath, StandardCopyOption.REPLACE_EXISTING);

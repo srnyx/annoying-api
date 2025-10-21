@@ -10,18 +10,18 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Event;
-import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.StorageConfig;
@@ -41,7 +41,6 @@ import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -125,6 +124,10 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link CooldownManager} for the plugin
      */
     @NotNull public final CooldownManager cooldownManager = new CooldownManager();
+    /**
+     * The {@link AnnoyingScheduler} for the plugin, used to run scheduled tasks in place of {@link BukkitScheduler}
+     */
+    @NotNull public final AnnoyingScheduler scheduler = new AnnoyingScheduler(this);
     /**
      * Whether PlaceholderAPI is installed
      */
@@ -472,83 +475,6 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Attempt to run a task asynchronously if the plugin is enabled, otherwise run it synchronously
-     *
-     * @param   runnable    the task to run
-     *
-     * @return              the {@link BukkitTask} if the task was run asynchronously, otherwise {@link Optional#empty()}
-     */
-    @NotNull @SuppressWarnings("UnusedReturnValue")
-    public Optional<BukkitTask> attemptAsync(@NotNull Runnable runnable) {
-        try {
-            return Optional.of(Bukkit.getScheduler().runTaskAsynchronously(this, runnable));
-        } catch (final IllegalPluginAccessException | UnsupportedOperationException e) {
-            // IllegalPluginAccessException: Plugin is disabled
-            // UnsupportedOperationException: Server is using Folia
-            runnable.run();
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Runs a global task timer
-     * <br>If the server is running Folia, a global fixed rate task will be used
-     * <br>Otherwise, a standard Bukkit task timer will be used
-     *
-     * @param   runnable    the task to run
-     * @param   delay       tick delay before the task starts
-     * @param   interval    tick interval between each execution of the task
-     *
-     * @return              a {@link TaskWrapper} containing the task and its {@link TaskWrapper.Type type}
-     */
-    @NotNull @SuppressWarnings("UnusedReturnValue")
-    public TaskWrapper runGlobalTaskTimer(@NotNull Runnable runnable, long delay, long interval) {
-        // Folia
-        if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
-        // Bukkit
-        return new TaskWrapper(Bukkit.getScheduler().runTaskTimer(this, runnable, delay, interval));
-    }
-
-    /**
-     * Runs a global task timer asynchronously
-     * <br>If the server is running Folia, a global fixed rate task will be used
-     * <br>Otherwise, a standard async Bukkit task timer will be used
-     *
-     * @param   runnable    the task to run
-     * @param   delay       tick delay before the task starts
-     * @param   interval    tick interval between each execution of the task
-     *
-     * @return              a {@link TaskWrapper} containing the task and its {@link TaskWrapper.Type type}
-     */
-    @NotNull @SuppressWarnings("UnusedReturnValue")
-    public TaskWrapper runGlobalTaskTimerAsync(@NotNull Runnable runnable, long delay, long interval) {
-        // Folia
-        if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
-        // Bukkit
-        return new TaskWrapper(Bukkit.getScheduler().runTaskTimerAsynchronously(this, runnable, delay, interval));
-    }
-
-    /**
-     * Runs a global task timer using Folia
-     * <br><b>For internal use only, use {@link #runGlobalTaskTimer(Runnable, long, long)} instead!</b>
-     *
-     * @param   runnable    the task to run
-     * @param   delay       tick delay before the task starts
-     * @param   interval    tick interval between each execution of the task
-     *
-     * @return              a {@link TaskWrapper} containing the task with {@link TaskWrapper.Type#FOLIA}
-     */
-    @NotNull
-    private TaskWrapper runGlobalTaskTimerFolia(@NotNull Runnable runnable, long delay, long interval) {
-        try {
-            final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-            return new TaskWrapper(scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class).invoke(scheduler, this, new FoliaConsumer(runnable), delay, interval));
-        } catch (final InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-            throw new RuntimeException("Failed to run a Folia task!", e);
-        }
-    }
-
-    /**
      * Gets a {@link Relocation} for the specified package
      *
      * @param   from    the package to relocate
@@ -626,29 +552,5 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull
     public static String replaceBrackets(@NotNull String string) {
         return string.replace("{}", ".");
-    }
-
-    /**
-     * Only used for {@link #runGlobalTaskTimerFolia(Runnable, long, long) Folia task timers} due to reflection
-     */
-    private static class FoliaConsumer implements Consumer<Object> {
-        /**
-         * The {@link Runnable} to run
-         */
-        @NotNull private final Runnable runnable;
-
-        /**
-         * Constructs a new {@link FoliaConsumer} instance
-         *
-         * @param   runnable    {@link #runnable}
-         */
-        public FoliaConsumer(@NotNull Runnable runnable) {
-            this.runnable = runnable;
-        }
-
-        @Override
-        public void accept(@NotNull Object object) {
-            runnable.run();
-        }
     }
 }
