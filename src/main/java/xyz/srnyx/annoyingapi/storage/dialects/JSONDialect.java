@@ -29,7 +29,8 @@ import java.util.logging.Level;
 public class JSONDialect extends Dialect {
     @NotNull private static final Gson GSON = new Gson();
 
-    @NotNull private final File folder = new File(dataManager.plugin.getDataFolder(), "data/json");
+    // Need to use paths to ensure compatibility across operating systems
+    @NotNull private final File folder = dataManager.plugin.getDataFolder().toPath().resolve("data/json").toFile();
     @NotNull private final Map<String, JsonFile> tables = new HashMap<>();
 
     /**

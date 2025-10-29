@@ -96,11 +96,11 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * Constructs a new {@link AnnoyingFile}
      *
      * @param   plugin          {@link #plugin}
-     * @param   path            the path to the file (relative to the plugin's folder)
+     * @param   path            the path to the file (relative to the plugin's folder). This uses {@link Path}, so just using {@code /} is okay
      * @param   fileOptions     {@link #fileOptions}
      */
     public AnnoyingFile(@NotNull AnnoyingPlugin plugin, @NotNull String path, @Nullable Options<?> fileOptions) {
-        this(plugin, new File(plugin.getDataFolder(), path), fileOptions);
+        this(plugin, plugin.getDataFolder().toPath().resolve(path).normalize().toFile(), fileOptions);
     }
 
     /**
