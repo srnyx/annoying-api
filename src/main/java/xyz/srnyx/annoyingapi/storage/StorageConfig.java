@@ -10,6 +10,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -85,9 +86,10 @@ public class StorageConfig {
     public Connection createConnection() throws ConnectionException {
         if (method.url == null) throw new IllegalStateException("The storage method " + method + " is not an SQL method");
         final AnnoyingPlugin plugin = file.plugin;
+        final Path dataPath = plugin.getDataFolder().toPath();
 
         // Get url & properties
-        String url = method.url.apply(plugin.getDataFolder());
+        String url = method.url.apply(dataPath);
         final Properties properties = new Properties();
         if (remoteConnection != null) {
             url += remoteConnection.host + ":" + remoteConnection.port + "/" + remoteConnection.database;
@@ -102,7 +104,7 @@ public class StorageConfig {
 
         // SQLite: create parent directories
         if (method == StorageMethod.SQLITE) {
-            final File folder = new File(plugin.getDataFolder(), "data/sqlite");
+            final File folder = dataPath.resolve("data").resolve("sqlite").toFile();
             if (!folder.exists() && !folder.mkdirs()) throw new ConnectionException("Failed to create SQLite parent directories", url, properties);
         }
 

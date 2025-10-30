@@ -11,6 +11,7 @@ import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.*;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -22,11 +23,11 @@ public enum StorageMethod {
     /**
      * H2 storage method
      */
-    H2(H2Dialect::new, "org{}h2{}Driver", dataFolder -> "jdbc:h2:file:.\\" + dataFolder + "\\data\\h2\\data", RuntimeLibrary.H2),
+    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), RuntimeLibrary.H2),
     /**
      * SQLite storage method
      */
-    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", dataFolder -> "jdbc:sqlite:" + dataFolder + "\\data\\sqlite\\data.db", null),
+    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", pluginFolder -> "jdbc:sqlite:" + processPath(pluginFolder.resolve("data").resolve("sqlite").resolve("data.db")), null),
     /**
      * MySQL storage method
      */
@@ -61,7 +62,7 @@ public enum StorageMethod {
      * <br><b>Remote SQL:</b> The beginning of the URL for the method
      * <br><b>Local Readable:</b> {@code null}
      */
-    @Nullable public final Function<File, String> url;
+    @Nullable public final Function<Path, String> url;
     /**
      * The {@link RuntimeLibrary} to download/load if the method requires one
      */
@@ -79,7 +80,7 @@ public enum StorageMethod {
      * @param library   {@link #library}
      * @param url       {@link #url}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<File, String> url, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable RuntimeLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
@@ -168,6 +169,18 @@ public enum StorageMethod {
     @NotNull
     private static String getMysqlMariadbDriver() {
         return AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 16, 5) ? "com{}mysql{}cj{}jdbc{}Driver" : "com{}mysql{}jdbc{}Driver";
+    }
+
+    /**
+     * Process a {@link Path} to a standardized string format for database URLs
+     *
+     * @param   path    the {@link Path} to process
+     *
+     * @return          the processed path as a string
+     */
+    @NotNull
+    private static String processPath(@NotNull Path path) {
+        return path.toAbsolutePath().toString().replace(File.separatorChar, '/');
     }
 
     /**
