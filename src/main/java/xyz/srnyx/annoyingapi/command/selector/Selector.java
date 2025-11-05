@@ -78,10 +78,13 @@ public interface Selector<T> {
 
     /**
      * Adds all registered selector keys to the beginning of a collection
+     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
      *
      * @param   collection  the collection to add to
      *
      * @return              the collection with all registered selector keys added
+     *
+     * @see                 #addKeysToList(List)
      */
     @NotNull
     static Collection<String> addKeys(@NotNull Collection<String> collection) {
@@ -92,16 +95,52 @@ public interface Selector<T> {
 
     /**
      * Adds all registered selector keys for a specific type to the beginning of a collection
+     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
      *
      * @param   collection  the collection to add to
      * @param   type        the type to filter by
      *
      * @return              the collection with all registered selector keys for the specified type added
+     *
+     * @see                 #addKeysToList(List, Class)
      */
     @NotNull
     static List<String> addKeys(@NotNull Collection<String> collection, @NotNull Class<?> type) {
         final List<String> result = getKeys(type);
         result.addAll(collection);
         return result;
+    }
+
+    /**
+     * Adds all registered selector keys to the beginning of a list
+     * <br><b>This modifies the input list!</b>
+     *
+     * @param   list    the list to add to
+     *
+     * @return          the list with all registered selector keys added (for convenience)
+     *
+     * @see             #addKeys(Collection)
+     */
+    @NotNull
+    static List<String> addKeysToList(@NotNull List<String> list) {
+        list.addAll(0, getKeys());
+        return list;
+    }
+
+    /**
+     * Adds all registered selector keys for a specific type to the beginning of a list
+     * <br><b>This modifies the input list!</b>
+     *
+     * @param   list    the list to add to
+     * @param   type    the type to filter by
+     *
+     * @return          the list with all registered selector keys added (for convenience)
+     *
+     * @see             #addKeys(Collection, Class)
+     */
+    @NotNull
+    static List<String> addKeysToList(@NotNull List<String> list, @NotNull Class<?> type) {
+        list.addAll(0, getKeys(type));
+        return list;
     }
 }
