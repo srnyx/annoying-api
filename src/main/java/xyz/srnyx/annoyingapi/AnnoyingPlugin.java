@@ -19,6 +19,8 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
+import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
@@ -120,6 +122,10 @@ public class AnnoyingPlugin extends JavaPlugin {
             AdvancedPlayerMoveEvent.class, new AdvancedPlayerMoveEvent.Handler(this),
             PlayerDamageByPlayerEvent.class, new PlayerDamageByPlayerEvent.Handler(this));
     /**
+     * The {@link SelectorManager} for the plugin
+     */
+    @NotNull public final SelectorManager selectorManager = new SelectorManager(this);
+    /**
      * The {@link CooldownManager} for the plugin
      */
     @NotNull public final CooldownManager cooldownManager = new CooldownManager();
@@ -148,6 +154,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        selectorManager.registerSelectors();
         loadMessages();
         loadDataManger(null, false);
         load();

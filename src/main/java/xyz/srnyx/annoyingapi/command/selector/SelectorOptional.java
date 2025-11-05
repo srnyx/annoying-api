@@ -220,7 +220,7 @@ public class SelectorOptional<T> {
     @NotNull
     public static <T> SelectorOptional<T> of(@NotNull AnnoyingSender sender, @NotNull String input) {
         final String inputLower = input.toLowerCase();
-        for (final Map.Entry<String, Selector<?>> entry : Selector.SELECTORS.entrySet()) {
+        for (final Map.Entry<String, Selector<?>> entry : sender.plugin.selectorManager.selectors.entrySet()) {
             if (entry.getKey().equals(inputLower)) {
                 //noinspection unchecked
                 return new SelectorOptional<>(sender, input, (Selector<T>) entry.getValue());
@@ -243,7 +243,7 @@ public class SelectorOptional<T> {
     @NotNull
     public static <T> SelectorOptional<T> of(@NotNull AnnoyingSender sender, @NotNull String input, @NotNull Class<T> type) {
         final String inputLower = input.toLowerCase();
-        for (final Map.Entry<String, Selector<?>> entry : Selector.SELECTORS.entrySet()) {
+        for (final Map.Entry<String, Selector<?>> entry : sender.plugin.selectorManager.selectors.entrySet()) {
             if (entry.getKey().equals(inputLower) && type.isAssignableFrom(entry.getValue().getType())) {
                 //noinspection unchecked
                 return new SelectorOptional<>(sender, input, (Selector<T>) entry.getValue());

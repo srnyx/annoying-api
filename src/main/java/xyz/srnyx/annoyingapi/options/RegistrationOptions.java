@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.command.selector.Selector;
+import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -26,6 +28,7 @@ public class RegistrationOptions extends Stringable {
      * The {@link AutomaticRegistration} options to automatically register {@link Registrable}s
      */
     @NotNull public AutomaticRegistration automaticRegistration = new AutomaticRegistration();
+    @NotNull public Selectors selectors = new Selectors();
     /**
      * <i>{@code OPTIONAL}</i> The {@link Registrable}s to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      */
@@ -55,6 +58,8 @@ public class RegistrationOptions extends Stringable {
         final RegistrationOptions options = new RegistrationOptions();
         final ConfigurationSection automaticRegistrationSection = section.getConfigurationSection("automaticRegistration");
         if (automaticRegistrationSection != null) options.automaticRegistration(AutomaticRegistration.load(automaticRegistrationSection));
+        final ConfigurationSection selectorsSection = section.getConfigurationSection("selectors");
+        if (selectorsSection != null) options.selectors = Selectors.load(selectorsSection);
         return options;
     }
 
@@ -248,6 +253,61 @@ public class RegistrationOptions extends Stringable {
         @NotNull @SafeVarargs
         public final AutomaticRegistration ignoredClasses(@NotNull Class<? extends Registrable>... ignoredClasses) {
             return ignoredClasses(Arrays.asList(ignoredClasses));
+        }
+    }
+
+    public static class Selectors extends Stringable {
+        public boolean enableDefaultSelectors = true;
+        public char defaultSelectorPrefix = '!';
+        @NotNull public final LinkedHashMap<String, Selector<?>> toRegister = new LinkedHashMap<>();
+
+        public Selectors() {
+            // Only exists to give the constructor a Javadoc
+        }
+
+        @NotNull
+        public static Selectors load(@NotNull ConfigurationSection section) {
+            final Selectors selectors = new Selectors();
+            selectors.enableDefaultSelectors = section.getBoolean("enableDefaultSelectors", selectors.enableDefaultSelectors);
+            final String prefix = section.getString("defaultSelectorPrefix");
+            if (prefix != null && !prefix.isEmpty()) selectors.defaultSelectorPrefix = prefix.charAt(0);
+            return selectors;
+        }
+
+        @NotNull
+        public Selectors enableDefaultSelectors(boolean enableDefaultSelectors) {
+            this.enableDefaultSelectors = enableDefaultSelectors;
+            return this;
+        }
+
+        @NotNull
+        public Selectors enableDefaultSelectors() {
+            this.enableDefaultSelectors = true;
+            return this;
+        }
+
+        @NotNull
+        public Selectors disableDefaultSelectors() {
+            this.enableDefaultSelectors = false;
+            return this;
+        }
+
+        @NotNull
+        public Selectors defaultSelectorPrefix(char defaultSelectorPrefix) {
+            this.defaultSelectorPrefix = defaultSelectorPrefix;
+            return this;
+        }
+
+        @NotNull
+        public Selectors toRegister(@NotNull Map<String, Selector<?>> toRegister) {
+            this.toRegister.putAll(toRegister);
+            return this;
+        }
+
+        @NotNull
+        public Selectors toRegister(@NotNull String key, @NotNull Selector<?> selector) {
+            this.toRegister.put(key, selector);
+            return this;
         }
     }
 }

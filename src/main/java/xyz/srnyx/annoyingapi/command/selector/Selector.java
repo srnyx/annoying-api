@@ -4,14 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
-import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 
-import xyz.srnyx.javautilities.MapGenerator;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -37,110 +31,4 @@ public interface Selector<T> {
      */
     @Nullable
     List<T> expand(@NotNull AnnoyingSender sender);
-
-    /**
-     * Map of all registered selectors with their keys
-     */
-    @NotNull Map<String, Selector<?>> SELECTORS = MapGenerator.LINKED_HASH_MAP.mapOf(
-            "@all_players", new AllPlayersSelector(),
-            "@online", new OnlineSelector(),
-            "@offline", new OfflineSelector(),
-            "@self", new SelfSelector(),
-            "@nearest_player", new NearestPlayerSelector(),
-            "@random_player", new RandomPlayerSelector(),
-            "@entities", new EntitiesSelector(),
-            "@nearest_entity", new NearestEntitySelector(),
-            "@random_entity", new RandomEntitySelector());
-
-    /**
-     * Gets a list of all registered selector keys
-     *
-     * @return  a list of all registered selector keys
-     */
-    @NotNull
-    static List<String> getKeys() {
-        return new ArrayList<>(SELECTORS.keySet());
-    }
-
-    /**
-     * Gets a list of all registered selector keys for a specific type
-     *
-     * @param   type    the type to filter by
-     *
-     * @return          a list of all registered selector keys for the specified type
-     */
-    @NotNull
-    static List<String> getKeys(@NotNull Class<?> type) {
-        final List<String> keys = new ArrayList<>();
-        for (final Map.Entry<String, Selector<?>> entry : SELECTORS.entrySet()) if (type.isAssignableFrom(entry.getValue().getType())) keys.add(entry.getKey());
-        return keys;
-    }
-
-    /**
-     * Adds all registered selector keys to the beginning of a collection
-     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
-     *
-     * @param   collection  the collection to add to
-     *
-     * @return              the collection with all registered selector keys added
-     *
-     * @see                 #addKeysTo(Collection)
-     */
-    @NotNull
-    static Collection<String> withKeys(@NotNull Collection<String> collection) {
-        final List<String> result = getKeys();
-        result.addAll(collection);
-        return result;
-    }
-
-    /**
-     * Adds all registered selector keys for a specific type to the beginning of a collection
-     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
-     *
-     * @param   collection  the collection to add to
-     * @param   type        the type to filter by
-     *
-     * @return              the collection with all registered selector keys for the specified type added
-     *
-     * @see                 #addKeysTo(Collection, Class)
-     */
-    @NotNull
-    static List<String> withKeys(@NotNull Collection<String> collection, @NotNull Class<?> type) {
-        final List<String> result = getKeys(type);
-        result.addAll(collection);
-        return result;
-    }
-
-    /**
-     * Adds all registered selector keys to a collection
-     * <br><b>This modifies the input collection!</b>
-     *
-     * @param   collection  the collection to add to
-     *
-     * @return              the collection with all registered selector keys added (for convenience)
-     *
-     * @see                 #withKeys(Collection)
-     */
-    @NotNull
-    static Collection<String> addKeysTo(@NotNull Collection<String> collection) {
-        collection.addAll(getKeys());
-        return collection;
-    }
-
-    /**
-     * Adds all registered selector keys for a specific type to a collection
-     * <br><b>This modifies the input collection!</b>
-     *
-     * @param   collection  the collection to add to
-     * @param   type        the type to filter by
-     *
-     * @return              the collection with all registered selector keys added (for convenience)
-     *
-     * @see                 #withKeys(Collection, Class)
-     */
-    @NotNull
-    static Collection<String> addKeysTo(@NotNull Collection<String> collection, @NotNull Class<?> type) {
-        collection.addAll(getKeys(type));
-        return collection;
-    }
 }
