@@ -84,10 +84,10 @@ public interface Selector<T> {
      *
      * @return              the collection with all registered selector keys added
      *
-     * @see                 #addKeysToList(List)
+     * @see                 #addKeysTo(Collection)
      */
     @NotNull
-    static Collection<String> addKeys(@NotNull Collection<String> collection) {
+    static Collection<String> withKeys(@NotNull Collection<String> collection) {
         final List<String> result = getKeys();
         result.addAll(collection);
         return result;
@@ -102,45 +102,45 @@ public interface Selector<T> {
      *
      * @return              the collection with all registered selector keys for the specified type added
      *
-     * @see                 #addKeysToList(List, Class)
+     * @see                 #addKeysTo(Collection, Class)
      */
     @NotNull
-    static List<String> addKeys(@NotNull Collection<String> collection, @NotNull Class<?> type) {
+    static List<String> withKeys(@NotNull Collection<String> collection, @NotNull Class<?> type) {
         final List<String> result = getKeys(type);
         result.addAll(collection);
         return result;
     }
 
     /**
-     * Adds all registered selector keys to the beginning of a list
-     * <br><b>This modifies the input list!</b>
+     * Adds all registered selector keys to a collection
+     * <br><b>This modifies the input collection!</b>
      *
-     * @param   list    the list to add to
+     * @param   collection  the collection to add to
      *
-     * @return          the list with all registered selector keys added (for convenience)
+     * @return              the collection with all registered selector keys added (for convenience)
      *
-     * @see             #addKeys(Collection)
+     * @see                 #withKeys(Collection)
      */
     @NotNull
-    static List<String> addKeysToList(@NotNull List<String> list) {
-        list.addAll(0, getKeys());
-        return list;
+    static Collection<String> addKeysTo(@NotNull Collection<String> collection) {
+        collection.addAll(getKeys());
+        return collection;
     }
 
     /**
-     * Adds all registered selector keys for a specific type to the beginning of a list
-     * <br><b>This modifies the input list!</b>
+     * Adds all registered selector keys for a specific type to a collection
+     * <br><b>This modifies the input collection!</b>
      *
-     * @param   list    the list to add to
-     * @param   type    the type to filter by
+     * @param   collection  the collection to add to
+     * @param   type        the type to filter by
      *
-     * @return          the list with all registered selector keys added (for convenience)
+     * @return              the collection with all registered selector keys added (for convenience)
      *
-     * @see             #addKeys(Collection, Class)
+     * @see                 #withKeys(Collection, Class)
      */
     @NotNull
-    static List<String> addKeysToList(@NotNull List<String> list, @NotNull Class<?> type) {
-        list.addAll(0, getKeys(type));
-        return list;
+    static Collection<String> addKeysTo(@NotNull Collection<String> collection, @NotNull Class<?> type) {
+        collection.addAll(getKeys(type));
+        return collection;
     }
 }
