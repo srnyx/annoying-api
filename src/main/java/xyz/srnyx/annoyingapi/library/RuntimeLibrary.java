@@ -69,7 +69,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository("https://repo.codemc.org/repository/maven-public/")
                     .groupId("de{}tr7zw")
                     .artifactId("item-nbt-api")
-                    .version("2.15.2"),
+                    .version("2.15.5"),
             plugin -> Collections.singleton(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi"))),
     /**
      * {@code com.h2database:h2}
@@ -89,7 +89,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}postgresql")
                     .artifactId("postgresql")
-                    .version("42.7.7"),
+                    .version("42.7.8"),
             plugin -> Collections.singleton(plugin.getRelocation("org{}postgresql")));
 
     /**
