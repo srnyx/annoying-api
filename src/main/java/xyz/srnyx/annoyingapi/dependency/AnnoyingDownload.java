@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
@@ -31,7 +32,7 @@ import java.util.logging.Level;
 
 
 /**
- * Used for downloading {@link AnnoyingDependency}s
+ * Used for downloading {@link AnnoyingDependency AnnoyingDependencies}
  */
 public class AnnoyingDownload extends Stringable implements Annoyable {
     @NotNull private final AnnoyingPlugin plugin;
@@ -48,7 +49,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
         this.plugin = plugin;
-        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI (dependency)";
+        this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI/" + BuildProperties.ANNOYING_API_VERSION + " (dependency)";
         this.dependencies = dependencies;
     }
 
