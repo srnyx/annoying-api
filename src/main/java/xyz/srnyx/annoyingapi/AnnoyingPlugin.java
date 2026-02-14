@@ -265,10 +265,11 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Check if required dependencies are installed
-        final String missing = options.pluginOptions.dependencies.stream()
-                .filter(dependency -> dependency.required && dependency.isNotInstalled())
-                .map(dependency -> dependency.name)
-                .collect(Collectors.joining("&c, &4"));
+        final StringJoiner joiner = new StringJoiner("&c, &4");
+        for (final AnnoyingDependency dependency : options.pluginOptions.dependencies) {
+            if (dependency.required && dependency.isNotInstalled()) joiner.add(dependency.name);
+        }
+        final String missing = joiner.toString();
         if (!missing.isEmpty()) {
             log(Level.SEVERE, "&cDisabling &4" + name + "&c because it's missing required dependencies: &4" + missing);
             disablePlugin();
@@ -323,15 +324,17 @@ public class AnnoyingPlugin extends JavaPlugin {
 
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
-            AnnoyingReflections.getSubTypesOf(packages, Registrable.class).stream()
-                    .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnnotationPresent(Registrable.Ignore.class) && !ignoredClasses.contains(clazz))
-                    .forEach(clazz -> {
-                        try {
-                            clazz.getConstructor(this.getClass()).newInstance(this).register();
-                        } catch (final Throwable t) {
-                            log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
-                        }
-                    });
+            for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
+                // Ignore interfaces, abstract classes, classes with @Registrable.Ignore, and ignored classes
+                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers()) || clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
+
+                // Register class
+                try {
+                    clazz.getConstructor(this.getClass()).newInstance(this).register();
+                } catch (final Throwable t) {
+                    log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
+                }
+            }
         }
 
         // Enable/disable interval cache saving (depending on config)

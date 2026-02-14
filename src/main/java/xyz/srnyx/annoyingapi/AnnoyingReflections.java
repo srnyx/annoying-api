@@ -57,18 +57,20 @@ public class AnnoyingReflections implements NameHelper {
     @NotNull
     private Store getStore(@NotNull Set<String> packages) {
         final Map<String, Set<String>> storeMap = new HashMap<>();
-        final Set<Pattern> patterns = packages.stream()
-                .map(pkg -> {
-                    if (!pkg.endsWith(".")) pkg += ".";
-                    return Pattern.compile(pkg.replace(".", "\\.").replace("$", "\\$") + ".*");
-                })
-                .collect(Collectors.toSet());
+
+        // Prepare filter
+        final Set<Pattern> patterns = new HashSet<>();
+        for (String pkg : packages) {
+            if (!pkg.endsWith(".")) pkg += ".";
+            patterns.add(Pattern.compile(pkg.replace(".", "\\.").replace("$", "\\$") + ".*"));
+        }
         final Predicate<String> filter = string -> {
             if (!string.endsWith(".class")) return false;
             for (final Pattern pattern : patterns) if (pattern.matcher(string).matches()) return true;
             return false;
         };
 
+        // Scan packages
         packages.stream()
                 .map(ClasspathHelper::forPackage)
                 .flatMap(Collection::stream)
@@ -82,16 +84,21 @@ public class AnnoyingReflections implements NameHelper {
                             if (!filter.test(path) && !filter.test(path.replace('/', '.'))) continue;
 
                             try {
+                                // Scan file
                                 List<Map.Entry<String, String>> entries = Scanners.SubTypes.scan(file);
                                 if (entries == null) entries = Scanners.SubTypes.scan(getClassFile(file));
+
+                                // Store entries
                                 if (entries != null) for (final Map.Entry<String, String> entry : entries) {
                                     final String key = entry.getKey();
                                     if (key == null) continue;
                                     // Not using computeIfAbsent as it throws ConcurrentModificationException on Java 9+
                                     Set<String> values = storeMap.get(key);
-                                    if (values == null) values = new HashSet<>();
+                                    if (values == null) {
+                                        values = new HashSet<>();
+                                        storeMap.put(key, values);
+                                    }
                                     values.add(entry.getValue());
-                                    storeMap.put(key, values);
                                 }
                             } catch (final Exception e) {
                                 AnnoyingPlugin.log(Level.WARNING, "Could not scan file " + file.getRelativePath(), e);
@@ -104,7 +111,7 @@ public class AnnoyingReflections implements NameHelper {
                     }
                 });
 
-        // expand super types
+        // Expand super types
         if (!storeMap.isEmpty()) {
             final Set<String> subTypesKeys = new LinkedHashSet<>(storeMap.keySet());
             subTypesKeys.removeAll(storeMap.values().stream()
@@ -117,7 +124,7 @@ public class AnnoyingReflections implements NameHelper {
             }
         }
 
-        // wrap
+        // Wrap
         final Map<String, Map<String, Set<String>>> finalMap = new HashMap<>();
         finalMap.put(Scanners.SubTypes.index(), storeMap);
         return new Store(finalMap);
