@@ -183,7 +183,8 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
             final Optional<JsonArray> json = HttpUtility.getJson(userAgent,
                     "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                             "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D", null)
+                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D" +
+                            "&include_changelog=false", null)
                     .map(JsonElement::getAsJsonArray);
 
             // Request failed
