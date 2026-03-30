@@ -7,6 +7,7 @@ import net.byteflux.libby.relocation.Relocation;
 import org.jetbrains.annotations.NotNull;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.BuildProperties;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,6 +21,16 @@ import java.util.function.Supplier;
  */
 public enum RuntimeLibrary implements AnnoyingLibrary {
     /**
+     * {@code de.tr7zw:item-nbt-api}
+     */
+    ITEM_NBT_API(
+            () -> Library.builder()
+                    .repository("https://repo.codemc.org/repository/maven-public/")
+                    .groupId("de{}tr7zw")
+                    .artifactId("item-nbt-api")
+                    .version(BuildProperties.ITEM_NBT_API_VERSION),
+            plugin -> Collections.singleton(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi"))),
+    /**
      * {@code org.bstats:bstats-base}
      */
     BSTATS_BASE(
@@ -27,7 +38,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}bstats")
                     .artifactId("bstats-base")
-                    .version("3.1.0"),
+                    .version(BuildProperties.BSTATS_VERSION),
             plugin -> Collections.singleton(plugin.getRelocation("org{}bstats"))),
     /**
      * {@code org.bstats:bstats-bukkit}
@@ -37,7 +48,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}bstats")
                     .artifactId("bstats-bukkit")
-                    .version("3.1.0"),
+                    .version(BuildProperties.BSTATS_VERSION),
             plugin -> Collections.singleton(plugin.getRelocation("org{}bstats"))),
     /**
      * {@code org.javassist:javassist}
@@ -57,20 +68,10 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}reflections")
                     .artifactId("reflections")
-                    .version("0.10.2"),
+                    .version(BuildProperties.REFLECTIONS_VERSION),
             plugin -> Arrays.asList(
                     plugin.getRelocation("javassist{}", "javassist{}"),
                     plugin.getRelocation("org{}reflections"))),
-    /**
-     * {@code de.tr7zw:item-nbt-api}
-     */
-    ITEM_NBT_API(
-            () -> Library.builder()
-                    .repository("https://repo.codemc.org/repository/maven-public/")
-                    .groupId("de{}tr7zw")
-                    .artifactId("item-nbt-api")
-                    .version("2.15.5"),
-            plugin -> Collections.singleton(plugin.getRelocation("de{}tr7zw{}changeme{}nbtapi"))),
     /**
      * {@code com.h2database:h2}
      */
@@ -79,7 +80,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("com{}h2database")
                     .artifactId("h2")
-                    .version("2.2.224"), // Don't update to keep support for Java 8
+                    .version(BuildProperties.H2_VERSION), // Don't update to keep support for Java 8
             plugin -> Collections.singleton(plugin.getRelocation("org{}h2"))),
     /**
      * {@code org.postgresql:postgresql}
@@ -89,7 +90,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository(Repositories.MAVEN_CENTRAL)
                     .groupId("org{}postgresql")
                     .artifactId("postgresql")
-                    .version("42.7.8"),
+                    .version(BuildProperties.POSTGRESQL_VERSION),
             plugin -> Collections.singleton(plugin.getRelocation("org{}postgresql")));
 
     /**

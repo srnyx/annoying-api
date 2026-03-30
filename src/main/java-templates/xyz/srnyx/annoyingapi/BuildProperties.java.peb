@@ -14,6 +14,31 @@ public class BuildProperties {
     @NotNull public static final String ANNOYING_API_VERSION = "{{ annoying_api_version }}";
 
     /**
+     * The version of ITEM_NBT_API that Annoying API is built with
+     */
+    @NotNull public static final String ITEM_NBT_API_VERSION = "{{ item_nbt_api_version }}";
+
+    /**
+     * The version of bStats that Annoying API is built with
+     */
+    @NotNull public static final String BSTATS_VERSION = "{{ bstats_version }}";
+
+    /**
+     * The version of REFLECTIONS that Annoying API is built with
+     */
+    @NotNull public static final String REFLECTIONS_VERSION = "{{ reflections_version }}";
+
+    /**
+     * The version of H2 that Annoying API is built with
+     */
+    @NotNull public static final String H2_VERSION = "{{ h2_version }}";
+
+    /**
+     * The version of POSTGRESQL that Annoying API is built with
+     */
+    @NotNull public static final String POSTGRESQL_VERSION = "{{ postgresql_version }}";
+
+    /**
      * This class cannot be instantiated
      */
     public BuildProperties() {
