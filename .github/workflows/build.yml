@@ -1,4 +1,4 @@
-name: Build
+name: Maven Publish (Snapshots)
 on:
   push:
     branches:
@@ -14,6 +14,8 @@ on:
 
 jobs:
   build:
-    uses: srnyx/tools/.github/workflows/build.yml@main
+    uses: srnyx/tools/.github/workflows/maven_publish.yml@main
     with:
       name: Annoying API
+      channel: snapshots
+    secrets: inherit
