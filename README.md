@@ -1,4 +1,4 @@
-# Annoying API [![Release](https://jitpack.io/v/srnyx/annoying-api.svg)](https://annoying-api.srnyx.com/jitpack)
+# Annoying API [![Release](https://repo.srnyx.com/api/badge/latest/releases/xyz/srnyx/annoying-api?color=006d82&name=Reposilite)](https://repo.srnyx.com/#/releases/xyz/srnyx/annoying-api)
 
 General purpose API for my plugins. Just contains some utility classes and methods. *[Okay... it contains a tad bit more than that...](#developers)*
 
