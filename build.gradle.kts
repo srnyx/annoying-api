@@ -23,7 +23,7 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     description = "General purpose API with tons of features"))
 
 // Runtime dependency versions
-val itemNbtApiVersion: String = "2.15.6"
+val itemNbtApiVersion: String = "2.15.7"
 val bStatsVersion: String = "3.2.1"
 val reflectionsVersion: String = "0.10.2"
 val h2Version: String = "2.2.224" // Don't update to keep support for Java 8
