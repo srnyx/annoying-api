@@ -4,6 +4,7 @@ import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
@@ -11,6 +12,7 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 
 
 /**
@@ -57,11 +59,19 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      *
      * @param   library the library to load
      *
+     * @return          whether the library was loaded successfully
+     *
      * @see             #loadLibraryIsolated(AnnoyingLibrary)
      */
-    public void loadLibrary(@NotNull AnnoyingLibrary library) {
-        loadLibrary(library.getLibraryWithRelocations(plugin).build());
-        loadedLibraries.add(library);
+    public boolean loadLibrary(@NotNull AnnoyingLibrary library) {
+        try {
+            loadLibrary(library.getLibraryWithRelocations(plugin).build());
+            loadedLibraries.add(library);
+            return true;
+        } catch (final Exception e) {
+            AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
+            return false;
+        }
     }
 
     /**
@@ -69,14 +79,24 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      *
      * @param   library the library to load
      *
-     * @return          the isolated classloader containing the library
+     * @return          the isolated classloader containing the library, or null if the library failed to load
      *
      * @see             #loadLibrary(AnnoyingLibrary)
      */
-    @NotNull
+    @Nullable
     public IsolatedClassLoader loadLibraryIsolated(@NotNull AnnoyingLibrary library) {
-        loadLibrary(library.getLibrary().isolatedLoad(true).build());
-        return getIsolatedClassLoaderOf(library).orElseThrow(() -> new IllegalStateException("Failed to load isolated library"));
+        // Load library into isolated classloader
+        try {
+            loadLibrary(library.getLibrary().isolatedLoad(true).build());
+        } catch (final Exception e) {
+            AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
+            return null;
+        }
+
+        // Return the isolated class loader
+        final IsolatedClassLoader classLoader = getIsolatedClassLoaderOf(library).orElse(null);
+        if (classLoader == null) AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
+        return classLoader;
     }
 
     /**
