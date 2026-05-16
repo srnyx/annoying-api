@@ -69,7 +69,7 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
             loadedLibraries.add(library);
             return true;
         } catch (final Exception e) {
-            AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
             return false;
         }
     }
@@ -89,13 +89,13 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
         try {
             loadLibrary(library.getLibrary().isolatedLoad(true).build());
         } catch (final Exception e) {
-            AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
             return null;
         }
 
         // Return the isolated class loader
         final IsolatedClassLoader classLoader = getIsolatedClassLoaderOf(library).orElse(null);
-        if (classLoader == null) AnnoyingPlugin.LOGGER.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
+        if (classLoader == null) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
         return classLoader;
     }
 
