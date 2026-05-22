@@ -261,9 +261,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
             invalidArguments();
             return SelectorOptional.noArgument(this);
         }
-        final SelectorOptional<T> selector = SelectorOptional.of(this, argument, type);
-        if (selector.isEmpty()) invalidArgument(argument);
-        return selector;
+        return SelectorOptional.of(this, argument, type);
     }
 
     /**
