@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi.command.selector;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 
@@ -112,9 +113,9 @@ public class SelectorOptional<T> {
      *
      * @param   other   the function to get a default value if the selector is absent. The raw input string (after mappings) is provided as an argument.
      *
-     * @return          the expanded selector or the default value
+     * @return          the expanded selector or the default value (both unmodifiable)
      */
-    @Nullable
+    @Nullable @Unmodifiable
     public List<T> orElse(@NotNull Function<String, List<T>> other) {
         if (selector == null) return other.apply(raw);
         final List<T> expanded = selector.expand(sender);
@@ -127,9 +128,9 @@ public class SelectorOptional<T> {
      *
      * @param   other   the function to get a single default value if the selector is absent. The raw input string (after mappings) is provided as an argument.
      *
-     * @return          the expanded selector or a singleton list containing the default value
+     * @return          the expanded selector or a singleton list containing the default value (both unmodifiable)
      */
-    @Nullable
+    @Nullable @Unmodifiable
     public List<T> orElseSingle(@NotNull Function<String, T> other) {
         if (selector == null) return Collections.singletonList(other.apply(raw));
         final List<T> expanded = selector.expand(sender);
@@ -142,9 +143,9 @@ public class SelectorOptional<T> {
      *
      * @param   other   the function to get an optional default value if the selector is absent. The raw input string (after mappings) is provided as an argument.
      *
-     * @return          the expanded selector or the default value
+     * @return          the expanded selector (unmodifiable) or the default value
      */
-    @Nullable
+    @Nullable @Unmodifiable
     public List<T> orElseFlat(@NotNull Function<String, Optional<List<T>>> other) {
         if (selector == null) {
             final Optional<List<T>> result = other.apply(raw);
@@ -161,10 +162,11 @@ public class SelectorOptional<T> {
      *
      * @param   other   the function to get an optional single default value if the selector is absent. The raw input string (after mappings) is provided as an argument.
      *
-     * @return          the expanded selector or a singleton list containing the default value
+     * @return          the expanded selector or a singleton list containing the default value (both unmodifiable)
      */
-    @Nullable
+    @Nullable @Unmodifiable
     public List<T> orElseFlatSingle(@NotNull Function<String, Optional<T>> other) {
+        if (raw == null) return null;
         if (selector == null) {
             final Optional<T> result = other.apply(raw);
             if (!result.isPresent()) {
