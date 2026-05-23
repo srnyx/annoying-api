@@ -15,14 +15,14 @@ import java.util.List;
 /**
  * Selector that selects all online players
  */
-public class OnlineSelector implements Selector<Player> {
+public class OnlineSelector extends Selector<Player> {
     @Override @NotNull
     public Class<Player> getType() {
         return Player.class;
     }
 
     @Override @NotNull
-    public List<Player> expand(@NotNull AnnoyingSender sender) {
+    public List<Player> expandImplementation(@NotNull AnnoyingSender sender) {
         return new ArrayList<>(Bukkit.getOnlinePlayers());
     }
 

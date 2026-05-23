@@ -15,14 +15,14 @@ import java.util.List;
 /**
  * A selector that selects all players (online and offline)
  */
-public class AllPlayersSelector implements Selector<OfflinePlayer> {
+public class AllPlayersSelector extends Selector<OfflinePlayer> {
     @Override @NotNull
     public Class<OfflinePlayer> getType() {
         return OfflinePlayer.class;
     }
 
     @Override @NotNull
-    public List<OfflinePlayer> expand(@NotNull AnnoyingSender sender) {
+    public List<OfflinePlayer> expandImplementation(@NotNull AnnoyingSender sender) {
         return Arrays.asList(Bukkit.getOfflinePlayers());
     }
 

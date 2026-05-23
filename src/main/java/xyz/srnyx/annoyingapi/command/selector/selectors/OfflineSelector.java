@@ -15,14 +15,14 @@ import java.util.List;
 /**
  * Selector that selects all offline players
  */
-public class OfflineSelector implements Selector<OfflinePlayer> {
+public class OfflineSelector extends Selector<OfflinePlayer> {
     @Override @NotNull
     public Class<OfflinePlayer> getType() {
         return OfflinePlayer.class;
     }
 
     @Override @NotNull
-    public List<OfflinePlayer> expand(@NotNull AnnoyingSender sender) {
+    public List<OfflinePlayer> expandImplementation(@NotNull AnnoyingSender sender) {
         final List<OfflinePlayer> players = new ArrayList<>();
         for (final OfflinePlayer player : Bukkit.getOfflinePlayers()) if (!player.isOnline()) players.add(player);
         return players;

@@ -18,14 +18,14 @@ import java.util.List;
 /**
  * Selector that selects a random online player
  */
-public class RandomPlayerSelector implements Selector<Player> {
+public class RandomPlayerSelector extends Selector<Player> {
     @Override @NotNull
     public Class<Player> getType() {
         return Player.class;
     }
 
     @Override @NotNull
-    public List<Player> expand(@NotNull AnnoyingSender sender) {
+    public List<Player> expandImplementation(@NotNull AnnoyingSender sender) {
         final List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         final int size = players.size();
         return size == 0 ? Collections.emptyList() : Collections.singletonList(players.get(MiscUtility.RANDOM.nextInt(size)));

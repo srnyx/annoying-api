@@ -1,12 +1,16 @@
 package xyz.srnyx.annoyingapi.command;
 
+import org.bukkit.Location;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import xyz.srnyx.annoyingapi.command.selector.Selector;
 import xyz.srnyx.annoyingapi.command.selector.SelectorOptional;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
@@ -15,7 +19,7 @@ import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 import xyz.srnyx.javautilities.objects.Arguments;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -171,6 +175,32 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     }
 
     /**
+     * Gets the {@link Location} of the {@link CommandSender}
+     *
+     * @return  the {@link Location} of the {@link CommandSender}, or {@code null} if it cannot be determined
+     *
+     * @see     #getLocationOfSenderOptional()
+     */
+    @Nullable
+    public Location getLocationOfSender() {
+        if (cmdSender instanceof Entity) return ((Entity) cmdSender).getLocation();
+        if (cmdSender instanceof BlockCommandSender) return ((BlockCommandSender) cmdSender).getBlock().getLocation();
+        return null;
+    }
+
+    /**
+     * Gets the {@link Location} of the {@link CommandSender} as an {@link Optional}
+     *
+     * @return  the {@link Location} of the {@link CommandSender} as an {@link Optional}, empty if it cannot be determined
+     *
+     * @see     #getLocationOfSender()
+     */
+    @NotNull
+    public Optional<Location> getLocationOfSenderOptional() {
+        return Optional.ofNullable(getLocationOfSender());
+    }
+
+    /**
      * Gets the argument at the specified index after applying the specified function
      * <br>If it's {@code null} before/after the function, send the invalid argument message
      * <br><b>Example usage:</b>
@@ -262,6 +292,121 @@ public class AnnoyingSender extends Arguments implements Annoyable {
             return SelectorOptional.noArgument(this);
         }
         return SelectorOptional.of(this, argument, type);
+    }
+
+    private void addSelectorKeyIfSenderAllowed(@NotNull List<String> keys, @NotNull Map.Entry<String, Selector<?>> entry) {
+        // If no allowed senders, add
+        final Set<Class<? extends CommandSender>> allowedSenders = entry.getValue().getAllowedSenders();
+        if (allowedSenders == null || allowedSenders.isEmpty()) {
+            keys.add(entry.getKey());
+            return;
+        }
+
+        // Check if sender is allowed
+        final Class<? extends CommandSender> senderClass = cmdSender.getClass();
+        for (final Class<? extends CommandSender> allowedSender : allowedSenders) {
+            if (!allowedSender.isAssignableFrom(senderClass)) continue;
+            keys.add(entry.getKey());
+            return;
+        }
+    }
+
+    /**
+     * Gets a list of all registered selector keys
+     *
+     * @return  a list of all registered selector keys
+     */
+    @NotNull
+    public List<String> getSelectorKeys() {
+        final List<String> keys = new ArrayList<>();
+        for (final Map.Entry<String, Selector<?>> entry : plugin.selectorManager.selectors.entrySet()) {
+            addSelectorKeyIfSenderAllowed(keys, entry);
+        }
+        return keys;
+    }
+
+    /**
+     * Gets a list of all registered selector keys for a specific type
+     *
+     * @param   type    the type to filter by
+     *
+     * @return          a list of all registered selector keys for the specified type
+     */
+    @NotNull
+    public List<String> getSelectorKeys(@NotNull Class<?> type) {
+        final List<String> keys = new ArrayList<>();
+        for (final Map.Entry<String, Selector<?>> entry : plugin.selectorManager.selectors.entrySet()) {
+            if (type.isAssignableFrom(entry.getValue().getType())) addSelectorKeyIfSenderAllowed(keys, entry);
+        }
+        return keys;
+    }
+
+    /**
+     * Adds all registered selector keys to the beginning of a collection
+     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
+     *
+     * @param   collection  the collection to add to
+     *
+     * @return              the collection with all registered selector keys added
+     *
+     * @see                 #addSelectorKeysTo(Collection)
+     */
+    @NotNull
+    public Collection<String> withSelectorKeys(@NotNull Collection<String> collection) {
+        final List<String> result = getSelectorKeys();
+        result.addAll(collection);
+        return result;
+    }
+
+    /**
+     * Adds all registered selector keys for a specific type to the beginning of a collection
+     * <br><b>This returns a NEW List, it does not modify the input collection!</b>
+     *
+     * @param   collection  the collection to add to
+     * @param   type        the type to filter by
+     *
+     * @return              the collection with all registered selector keys for the specified type added
+     *
+     * @see                 #addSelectorKeysTo(Collection, Class)
+     */
+    @NotNull
+    public List<String> withSelectorKeys(@NotNull Collection<String> collection, @NotNull Class<?> type) {
+        final List<String> result = getSelectorKeys(type);
+        result.addAll(collection);
+        return result;
+    }
+
+    /**
+     * Adds all registered selector keys to a collection
+     * <br><b>This modifies the input collection!</b>
+     *
+     * @param   collection  the collection to add to
+     *
+     * @return              the collection with all registered selector keys added (for convenience)
+     *
+     * @see                 #withSelectorKeys(Collection)
+     */
+    @NotNull
+    public Collection<String> addSelectorKeysTo(@NotNull Collection<String> collection) {
+        collection.addAll(getSelectorKeys());
+        return collection;
+    }
+
+    /**
+     * Adds all registered selector keys for a specific type to a collection
+     * <br><b>This modifies the input collection!</b>
+     *
+     * @param   collection  the collection to add to
+     * @param   type        the type to filter by
+     *
+     * @return              the collection with all registered selector keys added (for convenience)
+     *
+     * @see                 #withSelectorKeys(Collection, Class)
+     */
+    @NotNull
+    public Collection<String> addSelectorKeysTo(@NotNull Collection<String> collection, @NotNull Class<?> type) {
+        collection.addAll(getSelectorKeys(type));
+        return collection;
     }
 
     /**
