@@ -17,13 +17,13 @@ plugins {
     id("xyz.srnyx.gradle-galaxy") version "2.1.0"
     id("com.gradleup.shadow") version "8.3.9"
     id("net.kyori.blossom") version "2.2.0"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.3"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
 
 spigotAPI(config = DependencyConfig(version = "1.8.8"))
 setupMC(javaSetupConfig = JavaSetupConfig(
     group = "xyz.srnyx",
-    version = "5.2.0",
+    version = "5.2.1",
     description = "General purpose API with tons of features"))
 
 // Runtime dependency versions
@@ -31,7 +31,7 @@ val itemNbtApiVersion: String = "2.15.7"
 val bStatsVersion: String = "3.2.1"
 val reflectionsVersion: String = "0.10.2"
 val h2Version: String = "2.2.224" // Don't update to keep support for Java 8
-val postgreSqlVersion: String = "42.7.8"
+val postgreSqlVersion: String = "42.7.11"
 
 // Blossom (see java-templates module)
 sourceSets.main { blossom.javaSources {
@@ -46,15 +46,15 @@ sourceSets.main { blossom.javaSources {
 // Dependencies
 repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.CODE_MC)
 dependencies {
-    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnly("de.tr7zw:item-nbt-api:$itemNbtApiVersion") // Downloaded on runtime
     compileOnlyApi("org.bstats:bstats-bukkit:$bStatsVersion") // Downloaded on runtime
     compileOnlyApi("org.reflections:reflections:$reflectionsVersion") // Downloaded on runtime
     compileOnlyApi("com.h2database:h2:$h2Version") // Downloaded on runtime (don't update to keep support for Java 8)
     compileOnlyApi("org.postgresql:postgresql:$postgreSqlVersion") // Downloaded on runtime
-    compileOnlyApi("org.jetbrains:annotations:26.0.2")
+    compileOnlyApi("org.jetbrains:annotations:26.1.0")
     implementationRelocate("net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby")
-    implementationRelocate("xyz.srnyx:java-utilities:4a0f974", "xyz.srnyx.javautilities")
+    implementationRelocate("xyz.srnyx:java-utilities:c53df5b", "xyz.srnyx.javautilities")
 }
 
 // Publishing
