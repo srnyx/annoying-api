@@ -24,6 +24,11 @@ public class BuildProperties {
     @NotNull public static final String BSTATS_VERSION = "{{ bstats_version }}";
 
     /**
+     * The version of FastStats that Annoying API is built with
+     */
+    @NotNull public static final String FASTSTATS_VERSION = "{{ faststats_version }}";
+
+    /**
      * The version of REFLECTIONS that Annoying API is built with
      */
     @NotNull public static final String REFLECTIONS_VERSION = "{{ reflections_version }}";

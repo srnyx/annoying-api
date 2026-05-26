@@ -20,10 +20,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
-import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
+import xyz.srnyx.annoyingapi.stats.StatsHelper;
+import xyz.srnyx.annoyingapi.stats.loader.StatsLoader;
+import xyz.srnyx.annoyingapi.stats.provider.StatsProvider;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.StorageConfig;
@@ -92,10 +94,8 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
      */
     @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
-    /**
-     * Wrapper for bStats
-     */
-    @Nullable public AnnoyingStats stats;
+    @NotNull public Set<StatsLoader<?, ?>> statsLoaders = new HashSet<>();
+    @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
@@ -201,6 +201,9 @@ public class AnnoyingPlugin extends JavaPlugin {
             }
         }
 
+        // Stats loaders
+        for (final StatsLoader<?, ?> statsLoader : statsLoaders) statsLoader.unload();
+
         // Run custom onDisable
         disable();
     }
@@ -278,11 +281,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Load required libraries
         options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
 
-        // Enable bStats
-        if (new AnnoyingResource(this, options.bStatsOptions.fileName, options.bStatsOptions.fileOptions).getBoolean(options.bStatsOptions.toggleKey)) {
-            libraryManager.loadLibrary(RuntimeLibrary.BSTATS_BASE);
-            libraryManager.loadLibrary(RuntimeLibrary.BSTATS_BUKKIT);
-            stats = new AnnoyingStats(this);
+        // Stats providers
+        for (final StatsProvider<?, ?, ?> provider : options.statsOptions.providers) {
+            final StatsLoader<?, ?> loader = provider.createLoader(this);
+            if (loader != null) statsLoaders.add(loader);
         }
 
         // Get start message colors

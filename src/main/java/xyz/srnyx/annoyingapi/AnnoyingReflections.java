@@ -92,8 +92,8 @@ public class AnnoyingReflections implements NameHelper {
                                 if (entries != null) for (final Map.Entry<String, String> entry : entries) {
                                     final String key = entry.getKey();
                                     if (key == null) continue;
-                                    // Not using computeIfAbsent as it throws ConcurrentModificationException on Java 9+
                                     Set<String> values = storeMap.get(key);
+                                    //noinspection Java8MapApi (computeIfAbsent throws ConcurrentModificationException on Java 9+)
                                     if (values == null) {
                                         values = new HashSet<>();
                                         storeMap.put(key, values);

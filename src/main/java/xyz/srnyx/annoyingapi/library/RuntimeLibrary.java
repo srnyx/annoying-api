@@ -51,6 +51,26 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .version(BuildProperties.BSTATS_VERSION),
             plugin -> Collections.singleton(plugin.getRelocation("org{}bstats"))),
     /**
+     * {@code dev.faststats.metrics:core}
+     */
+    FASTSTATS_CORE(
+            () -> Library.builder()
+                    .repository("https://repo.faststats.dev/releases/")
+                    .groupId("dev{}faststats{}metrics")
+                    .artifactId("core")
+                    .version(BuildProperties.FASTSTATS_VERSION),
+            plugin -> Collections.singleton(plugin.getRelocation("dev{}faststats"))),
+    /**
+     * {@code dev.faststats.metrics:bukkit}
+     */
+    FASTSTATS_BUKKIT(
+            () -> Library.builder()
+                    .repository("https://repo.faststats.dev/releases/")
+                    .groupId("dev{}faststats{}metrics")
+                    .artifactId("bukkit")
+                    .version(BuildProperties.FASTSTATS_VERSION),
+            plugin -> Collections.singleton(plugin.getRelocation("dev{}faststats"))),
+    /**
      * {@code org.javassist:javassist}
      */
     JAVASSIST(

@@ -27,9 +27,9 @@ public class AnnoyingOptions extends Stringable {
      */
     @NotNull public RegistrationOptions registrationOptions = new RegistrationOptions();
     /**
-     * {@link BStatsOptions}
+     * {@link StatsOptions}
      */
-    @NotNull public BStatsOptions bStatsOptions = new BStatsOptions();
+    @NotNull public StatsOptions statsOptions = new StatsOptions();
     /**
      * {@link DataOptions}
      */
@@ -60,8 +60,6 @@ public class AnnoyingOptions extends Stringable {
         if (pluginOptionsSection != null) options.pluginOptions(PluginOptions.load(pluginOptionsSection));
         final ConfigurationSection registrationOptionsSection = section.getConfigurationSection("registrationOptions");
         if (registrationOptionsSection != null) options.registrationOptions(RegistrationOptions.load(registrationOptionsSection));
-        final ConfigurationSection bStatsOptionsSection = section.getConfigurationSection("bStatsOptions");
-        if (bStatsOptionsSection != null) options.bStatsOptions(BStatsOptions.load(bStatsOptionsSection));
         final ConfigurationSection dataOptionsSection = section.getConfigurationSection("dataOptions");
         if (dataOptionsSection != null) options.dataOptions(DataOptions.load(dataOptionsSection));
         final ConfigurationSection messagesOptionsSection = section.getConfigurationSection("messagesOptions");
@@ -111,28 +109,28 @@ public class AnnoyingOptions extends Stringable {
     }
 
     /**
-     * Sets {@link #bStatsOptions}
+     * Sets {@link #statsOptions}
      *
-     * @param   bStatsOptions   the new {@link #bStatsOptions}
+     * @param   statsOptions   the new {@link #statsOptions}
      *
      * @return                  the {@link AnnoyingOptions} instance for chaining
      */
     @NotNull
-    public AnnoyingOptions bStatsOptions(@NotNull BStatsOptions bStatsOptions) {
-        this.bStatsOptions = bStatsOptions;
+    public AnnoyingOptions statsOptions(@NotNull StatsOptions statsOptions) {
+        this.statsOptions = statsOptions;
         return this;
     }
 
     /**
-     * Sets {@link #bStatsOptions}
+     * Sets {@link #statsOptions}
      *
-     * @param   consumer    the consumer to accept the {@link BStatsOptions}
+     * @param   consumer    the consumer to accept the {@link StatsOptions}
      *
      * @return              the {@link AnnoyingOptions} instance for chaining
      */
     @NotNull
-    public AnnoyingOptions bStatsOptions(@NotNull Consumer<BStatsOptions> consumer) {
-        consumer.accept(bStatsOptions);
+    public AnnoyingOptions statsOptions(@NotNull Consumer<StatsOptions> consumer) {
+        consumer.accept(statsOptions);
         return this;
     }
 
