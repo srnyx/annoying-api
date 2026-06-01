@@ -3,23 +3,18 @@ package xyz.srnyx.annoyingapi.message;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
-
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-
 import xyz.srnyx.javautilities.parents.Stringable;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,7 +32,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSp
 /**
  * Represents a message from the {@link MessagesOptions#fileName} file
  */
-public class AnnoyingMessage extends Stringable {
+public class AnnoyingMessage {
     /**
      * The {@link AnnoyingPlugin} instance
      */
