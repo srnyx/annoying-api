@@ -21,7 +21,7 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "2.1.0"
-    id("com.gradleup.shadow") version "8.3.9"
+    id("com.gradleup.shadow") version "9.4.2"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
@@ -64,7 +64,7 @@ val runtimeLibraries = listOf(
             Repository.FASTSTATS_SNAPSHOTS.url),
         group = "dev.faststats.metrics",
         artifact = "bukkit",
-        version = "0.22.1",
+        version = "0.23.0",
         excludes = listOf(Exclude("com.google.code.gson", "gson")),
         relocations = listOf(Relocation("dev.faststats"))),
     RuntimeLibrary(

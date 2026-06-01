@@ -5,6 +5,7 @@ import net.byteflux.libby.Repositories;
 import net.byteflux.libby.relocation.Relocation;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
@@ -49,7 +50,18 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .groupId("org{}bstats")
                     .artifactId("bstats-bukkit")
                     .version(BuildProperties.BSTATS_VERSION),
-            plugin -> Collections.singleton(plugin.getRelocation("org{}bstats"))),
+            plugin -> Collections.singleton(plugin.getRelocation("org{}bstats")),
+            Collections.singleton(BSTATS_BASE)),
+    /**
+     * {@code com.google.code.gson:gson}
+     */
+    GSON(
+            () -> Library.builder()
+                    .repository(Repositories.MAVEN_CENTRAL)
+                    .groupId("com{}google{}code{}gson")
+                    .artifactId("gson")
+                    .version("2.14.0"),
+            plugin -> Collections.singleton(plugin.getRelocation("com{}google{}gson"))),
     /**
      * {@code dev.faststats.metrics:core}
      */
@@ -59,7 +71,10 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .groupId("dev{}faststats{}metrics")
                     .artifactId("core")
                     .version(BuildProperties.FASTSTATS_VERSION),
-            plugin -> Collections.singleton(plugin.getRelocation("dev{}faststats"))),
+            plugin -> Arrays.asList(
+                    plugin.getRelocation("com{}google{}gson"),
+                    plugin.getRelocation("dev{}faststats")),
+            Collections.singleton(GSON)),
     /**
      * {@code dev.faststats.metrics:bukkit}
      */
@@ -69,7 +84,10 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .groupId("dev{}faststats{}metrics")
                     .artifactId("bukkit")
                     .version(BuildProperties.FASTSTATS_VERSION),
-            plugin -> Collections.singleton(plugin.getRelocation("dev{}faststats"))),
+            plugin -> Arrays.asList(
+                    plugin.getRelocation("com{}google{}gson"),
+                    plugin.getRelocation("dev{}faststats")),
+            Collections.singleton(FASTSTATS_CORE)),
     /**
      * {@code org.javassist:javassist}
      */
@@ -91,7 +109,8 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .version(BuildProperties.REFLECTIONS_VERSION),
             plugin -> Arrays.asList(
                     plugin.getRelocation("javassist{}", "javassist{}"),
-                    plugin.getRelocation("org{}reflections"))),
+                    plugin.getRelocation("org{}reflections")),
+            Collections.singleton(JAVASSIST)),
     /**
      * {@code com.h2database:h2}
      */
@@ -121,16 +140,34 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
      * {@link AnnoyingLibrary#getRelocations()}
      */
     @NotNull public final Function<AnnoyingPlugin, Collection<Relocation>> relocations;
+    /**
+     * {@link AnnoyingLibrary#getRequiredLibraries()}
+     */
+    @Nullable public final Collection<AnnoyingLibrary> requiredLibraries;
 
     /**
      * Creates a new {@link RuntimeLibrary} with relocations
      *
-     * @param   librarySupplier  {@link #librarySupplier}
+     * @param   librarySupplier {@link #librarySupplier}
      * @param   relocations     {@link #relocations}
      */
     RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier, @NotNull Function<AnnoyingPlugin, Collection<Relocation>> relocations) {
         this.librarySupplier = librarySupplier;
         this.relocations = relocations;
+        this.requiredLibraries = null;
+    }
+
+    /**
+     * Creates a new {@link RuntimeLibrary} with relocations
+     *
+     * @param   librarySupplier     {@link #librarySupplier}
+     * @param   relocations         {@link #relocations}
+     * @param   requiredLibraries   {@link #requiredLibraries}
+     */
+    RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier, @NotNull Function<AnnoyingPlugin, Collection<Relocation>> relocations, @NotNull Collection<AnnoyingLibrary> requiredLibraries) {
+        this.librarySupplier = librarySupplier;
+        this.relocations = relocations;
+        this.requiredLibraries = requiredLibraries;
     }
 
     @Override @NotNull
@@ -141,5 +178,10 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
     @Override @NotNull
     public Function<AnnoyingPlugin, Collection<Relocation>> getRelocations() {
         return relocations;
+    }
+
+    @Override @Nullable
+    public Collection<AnnoyingLibrary> getRequiredLibraries() {
+        return requiredLibraries;
     }
 }

@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi.storage.dialects.sql;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
@@ -48,7 +47,7 @@ public class MySQLDialect extends SQLDialect {
         try (final ResultSet result = connection.createStatement().executeQuery("SHOW COLUMNS FROM `" + table + "`")) {
             if (result != null) while (result.next()) if (result.getString("Field").equals(key)) return null;
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get columns for &4" + table, e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to get columns for &4" + table, e);
         }
         return connection.prepareStatement("ALTER TABLE `" + table + "` ADD COLUMN `" + key + "` TEXT");
     }
@@ -65,7 +64,7 @@ public class MySQLDialect extends SQLDialect {
             final ResultSet result = statement.executeQuery();
             if (result.next()) return Optional.ofNullable(result.getString(column));
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get &4" + column + "&c for &4" + target + "&c in &4" + table + "&c | DEVELOPERS: Make sure you added the table/key to DataOptions!", e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to get &4" + column + "&c for &4" + target + "&c in &4" + table + "&c | DEVELOPERS: Make sure you added the table/key to DataOptions!", e);
         }
         return Optional.empty();
     }

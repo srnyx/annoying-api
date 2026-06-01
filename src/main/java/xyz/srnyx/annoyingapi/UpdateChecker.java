@@ -28,7 +28,7 @@ import java.util.logging.Level;
 /**
  * Class for handling update checking
  */
-public class AnnoyingUpdate extends Stringable implements Annoyable {
+public class UpdateChecker extends Stringable implements Annoyable {
     /**
      * The current version of Minecraft in short form (ex: 1.17 instead of 1.17.0)
      */
@@ -60,41 +60,41 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     @Nullable public final SemanticVersion latestVersion;
 
     /**
-     * Creates a new {@link AnnoyingUpdate} object
+     * Creates a new {@link UpdateChecker} object
      *
      * @param   annoyingPlugin      {@link #annoyingPlugin}
      * @param   pluginDescription   {@link #pluginName} and {@link #currentVersion}
      * @param   platforms           {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginDescriptionFile pluginDescription, @NotNull PluginPlatform.Multi platforms) {
+    public UpdateChecker(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginDescriptionFile pluginDescription, @NotNull PluginPlatform.Multi platforms) {
         this.annoyingPlugin = annoyingPlugin;
         this.pluginName = pluginDescription.getName();
         this.currentVersion = new SemanticVersion(pluginDescription.getVersion());
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = platforms;
-        this.latestVersion = getLatestVersion()
+        this.latestVersion = retrieveLatestVersion()
                 .map(SemanticVersion::new)
                 .orElse(null);
     }
 
     /**
-     * Creates a new {@link AnnoyingUpdate} object
+     * Creates a new {@link UpdateChecker} object
      *
      * @param   annoyingPlugin  {@link #annoyingPlugin}
      * @param   plugin          {@link #pluginName} and {@link #currentVersion}
      * @param   platforms       {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginBase plugin, @NotNull PluginPlatform.Multi platforms) {
+    public UpdateChecker(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginBase plugin, @NotNull PluginPlatform.Multi platforms) {
         this(annoyingPlugin, plugin.getDescription(), platforms);
     }
 
     /**
-     * Creates a new {@link AnnoyingUpdate} object
+     * Creates a new {@link UpdateChecker} object
      *
      * @param   plugin      {@link #annoyingPlugin}, {@link #pluginName}, and {@link #currentVersion}
      * @param   platforms   {@link #platforms}
      */
-    public AnnoyingUpdate(@NotNull AnnoyingPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
+    public UpdateChecker(@NotNull AnnoyingPlugin plugin, @NotNull PluginPlatform.Multi platforms) {
         this(plugin, plugin, platforms);
     }
 
@@ -129,7 +129,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     }
 
     @NotNull
-    private Optional<String> getLatestVersion() {
+    private Optional<String> retrieveLatestVersion() {
         // Modrinth
         final Optional<String> modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
         if (modrinthIdentifier.isPresent()) {
@@ -270,7 +270,7 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     }
 
     /**
-     * Remove the failed platform from the list of platforms and retry {@link #getLatestVersion() getting the latest version}
+     * Remove the failed platform from the list of platforms and retry {@link #retrieveLatestVersion() getting the latest version}
      *
      * @param   platform    the platform that failed
      *
@@ -279,6 +279,6 @@ public class AnnoyingUpdate extends Stringable implements Annoyable {
     @NotNull
     private Optional<String> fail(@NotNull PluginPlatform.Platform platform) {
         platforms.remove(platform);
-        return getLatestVersion();
+        return retrieveLatestVersion();
     }
 }

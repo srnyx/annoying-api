@@ -1,6 +1,0 @@
-DOCUMENTATION: https://annoying-api.srnyx.com/wiki/bstats
-
-
-# Set this to false to disable bStats metrics (https://bstats.org)
-# The data collected by bStats is completely anonymous and only includes technical information
-enabled: true

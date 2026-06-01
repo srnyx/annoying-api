@@ -60,7 +60,7 @@ public class MariaDBDialect extends SQLDialect {
             final ResultSet result = statement.executeQuery();
             if (result.next()) return Optional.ofNullable(result.getString(column));
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get &4" + column + "&c for &4" + target + "&c in &4" + table + "&c | DEVELOPERS: Make sure you added the table/key to DataOptions!", e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to get &4" + column + "&c for &4" + target + "&c in &4" + table + "&c | DEVELOPERS: Make sure you added the table/key to DataOptions!", e);
         }
         return Optional.empty();
     }

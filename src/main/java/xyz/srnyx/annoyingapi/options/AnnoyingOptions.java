@@ -4,8 +4,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.jetbrains.annotations.NotNull;
-
 import org.jetbrains.annotations.Nullable;
+
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.InputStream;

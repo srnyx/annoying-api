@@ -24,7 +24,10 @@ import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
 import xyz.srnyx.annoyingapi.stats.StatsHelper;
-import xyz.srnyx.annoyingapi.stats.loader.StatsLoader;
+import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
+import xyz.srnyx.annoyingapi.stats.loader.FastStatsLoader;
+import xyz.srnyx.annoyingapi.stats.provider.BStatsProvider;
+import xyz.srnyx.annoyingapi.stats.provider.FastStatsProvider;
 import xyz.srnyx.annoyingapi.stats.provider.StatsProvider;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
@@ -94,16 +97,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
      */
     @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
-    @NotNull public Set<StatsLoader<?, ?>> statsLoaders = new HashSet<>();
     @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
      */
     @Nullable public AnnoyingResource messages;
     /**
-     * {@link ChatColor} aliases for the plugin from the messages file ({@link MessagesOptions.MessageKeys#globalPlaceholders})
-     *
-     * @see MessagesOptions.MessageKeys#globalPlaceholders
+     * {@link MessagesOptions.MessageKeys#globalPlaceholders}
      */
     @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
@@ -132,6 +132,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link AnnoyingScheduler} for the plugin, used to run scheduled tasks in place of {@link BukkitScheduler}
      */
     @NotNull public final AnnoyingScheduler scheduler = new AnnoyingScheduler(this);
+    @Nullable public UpdateChecker updateChecker;
     /**
      * Whether PlaceholderAPI is installed
      */
@@ -202,7 +203,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Stats loaders
-        for (final StatsLoader<?, ?> statsLoader : statsLoaders) statsLoader.unload();
+        for (final Registrable registrable : new HashSet<>(registeredClasses)) if (registrable instanceof StatsProvider<?>) registrable.unregister();
 
         // Run custom onDisable
         disable();
@@ -281,12 +282,6 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Load required libraries
         options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
 
-        // Stats providers
-        for (final StatsProvider<?, ?, ?> provider : options.statsOptions.providers) {
-            final StatsLoader<?, ?> loader = provider.createLoader(this);
-            if (loader != null) statsLoaders.add(loader);
-        }
-
         // Get start message colors
         final String primaryColorString = globalPlaceholders.get("p");
         final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
@@ -309,7 +304,8 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(Level.INFO, line);
 
         // Check for updates
-        checkUpdate();
+        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
+        updateChecker.checkUpdate();
 
         // Register manually-defined Registrables & PAPI expansion
         options.registrationOptions.toRegister.forEach(Registrable::register);
@@ -319,8 +315,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Automatic registration
         final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
         if (!packages.isEmpty()) {
-            // Load Javassist and Reflections libraries
-            libraryManager.loadLibrary(RuntimeLibrary.JAVASSIST);
+            // Load Reflections library
             libraryManager.loadLibrary(RuntimeLibrary.REFLECTIONS);
 
             // Register classes
@@ -336,6 +331,39 @@ public class AnnoyingPlugin extends JavaPlugin {
                     log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
                 }
             }
+        }
+
+        // Manual bStats loader
+        if (options.statsOptions.bStatsLoader != null) try {
+            boolean alreadyRegistered = false;
+            for (final Registrable registrable : registeredClasses) if (registrable instanceof BStatsProvider<?>) {
+                alreadyRegistered = true;
+                break;
+            }
+            if (!alreadyRegistered) new BStatsProvider<>(this) {
+                @Override @NotNull
+                public Class<BStatsLoader> getLoaderClass() {
+                    return (Class<BStatsLoader>) options.statsOptions.bStatsLoader;
+                }
+            }.register();
+        } catch (final Exception e) {
+            log(Level.WARNING, "&eFailed to register &6bStats&e metrics", e);
+        }
+        // Manual FastStats loader
+        if (options.statsOptions.fastStatsLoader != null) try {
+            boolean alreadyRegistered = false;
+            for (final Registrable registrable : registeredClasses) if (registrable instanceof FastStatsProvider<?>) {
+                alreadyRegistered = true;
+                break;
+            }
+            if (!alreadyRegistered) new FastStatsProvider<>(this) {
+                @Override @NotNull
+                public Class<FastStatsLoader> getLoaderClass() {
+                    return (Class<FastStatsLoader>) options.statsOptions.fastStatsLoader;
+                }
+            }.register();
+        } catch (final Exception e) {
+            log(Level.WARNING, "&eFailed to register &6FastStats&e metrics", e);
         }
 
         // Enable/disable interval cache saving (depending on config)
@@ -417,20 +445,17 @@ public class AnnoyingPlugin extends JavaPlugin {
         return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
+    @Nullable
+    public <T extends Registrable> T getRegistrable(@NotNull Class<T> clazz) {
+        for (final Registrable registrable : registeredClasses) if (registrable.getClass().equals(clazz)) return (T) registrable;
+        return null;
+    }
+
     /**
      * Unregisters all {@link Registrable}s in {@link #registeredClasses}
      */
     public void unregisterClasses() {
         new HashSet<>(registeredClasses).forEach(Registrable::unregister);
-    }
-
-    /**
-     * Runs {@link AnnoyingUpdate#checkUpdate()} with {@link PluginOptions#updatePlatforms}
-     *
-     * @see AnnoyingUpdate
-     */
-    public void checkUpdate() {
-        new AnnoyingUpdate(this, options.pluginOptions.updatePlatforms).checkUpdate();
     }
 
     /**
@@ -549,6 +574,28 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public static void log(@Nullable Object message) {
         log(null, message, null);
+    }
+
+    public void logErrorTrack(@Nullable Level level, @Nullable Object message, @Nullable Throwable throwable) {
+        // Log
+        log(level, message, throwable);
+
+        // FastStats error tracking
+        final FastStatsProvider<?> fastStatsProvider = getRegistrable(FastStatsProvider.class);
+        if (fastStatsProvider == null || fastStatsProvider.loader == null) return;
+        if (throwable != null) {
+            fastStatsProvider.loader.errorTracker.trackError(throwable);
+        } else if (message != null) {
+            fastStatsProvider.loader.errorTracker.trackError(message.toString());
+        }
+    }
+
+    public void logErrorTrack(@Nullable Level level, @Nullable Object message) {
+        logErrorTrack(level, message, null);
+    }
+
+    public void logErrorTrack(@Nullable Object message) {
+        logErrorTrack(null, message, null);
     }
 
     /**

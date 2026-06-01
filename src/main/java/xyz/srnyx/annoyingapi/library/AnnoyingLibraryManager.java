@@ -1,7 +1,9 @@
 package xyz.srnyx.annoyingapi.library;
 
 import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
+import net.byteflux.libby.relocation.Relocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -64,8 +67,24 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      * @see             #loadLibraryIsolated(AnnoyingLibrary)
      */
     public boolean loadLibrary(@NotNull AnnoyingLibrary library) {
+        // Load required libraries and get all relocations
+        final Set<Relocation> dependencyRelocations = new HashSet<>();
+        final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
+        if (requiredLibraries != null) for (final AnnoyingLibrary required : library.getRequiredLibraries()) {
+            if (!isLoaded(required) && !loadLibrary(required)) {
+                AnnoyingPlugin.log(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
+                return false;
+            }
+            dependencyRelocations.addAll(required.getRelocations().apply(plugin));
+        }
+
+        // Get library builder with relocations
+        final Library.Builder builder = library.getLibraryWithRelocations(plugin);
+        for (final Relocation relocation : dependencyRelocations) builder.relocate(relocation);
+
+        // Load library
         try {
-            loadLibrary(library.getLibraryWithRelocations(plugin).build());
+            loadLibrary(builder.build());
             loadedLibraries.add(library);
             return true;
         } catch (final Exception e) {
@@ -76,6 +95,7 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
 
     /**
      * Load a {@link AnnoyingLibrary} into an isolated classloader
+     * <br><b>{@link AnnoyingLibrary#getRequiredLibraries()} is IGNORED when loading isolated libraries, as it is currently not possible to load multiple libraries into the same isolated classloader!</b>
      *
      * @param   library the library to load
      *

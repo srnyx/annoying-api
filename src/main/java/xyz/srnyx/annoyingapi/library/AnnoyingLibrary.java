@@ -4,6 +4,7 @@ import net.byteflux.libby.Library;
 import net.byteflux.libby.relocation.Relocation;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
@@ -44,6 +45,16 @@ public interface AnnoyingLibrary {
      */
     @NotNull
     Function<AnnoyingPlugin, Collection<Relocation>> getRelocations();
+
+    /**
+     * The libraries that are required to load this library
+     *
+     * @return  a list of libraries that are required to load this library
+     */
+    @Nullable
+    default Collection<AnnoyingLibrary> getRequiredLibraries() {
+        return null;
+    }
 
     /**
      * Sets the {@link #getId() ID} of the library and returns the builder
