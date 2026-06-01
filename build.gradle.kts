@@ -64,7 +64,7 @@ val runtimeLibraries = listOf(
             Repository.FASTSTATS_SNAPSHOTS.url),
         group = "dev.faststats.metrics",
         artifact = "bukkit",
-        version = "0.23.0",
+        version = "0.24.1",
         excludes = listOf(Exclude("com.google.code.gson", "gson")),
         relocations = listOf(Relocation("dev.faststats"))),
     RuntimeLibrary(

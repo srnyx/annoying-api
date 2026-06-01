@@ -75,6 +75,16 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     plugin.getRelocation("com{}google{}gson"),
                     plugin.getRelocation("dev{}faststats")),
             Collections.singleton(GSON)),
+    FASTSTATS_CONFIG(
+            () -> Library.builder()
+                    .repository("https://repo.faststats.dev/releases/")
+                    .groupId("dev{}faststats{}metrics")
+                    .artifactId("config")
+                    .version(BuildProperties.FASTSTATS_VERSION),
+            plugin -> Arrays.asList(
+                    plugin.getRelocation("com{}google{}gson"),
+                    plugin.getRelocation("dev{}faststats")),
+            Collections.singleton(FASTSTATS_CORE)),
     /**
      * {@code dev.faststats.metrics:bukkit}
      */
@@ -87,7 +97,7 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
             plugin -> Arrays.asList(
                     plugin.getRelocation("com{}google{}gson"),
                     plugin.getRelocation("dev{}faststats")),
-            Collections.singleton(FASTSTATS_CORE)),
+            Collections.singleton(FASTSTATS_CONFIG)),
     /**
      * {@code org.javassist:javassist}
      */

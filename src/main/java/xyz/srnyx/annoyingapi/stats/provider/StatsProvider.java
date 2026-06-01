@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.stats.provider;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.stats.loader.StatsLoader;
@@ -16,7 +15,7 @@ public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registr
     @Nullable public L loader;
 
     @NotNull
-    public abstract Class<L> getLoaderClass();
+    public abstract L createLoader();
 
     @Nullable
     public Collection<AnnoyingLibrary> getRequiredLibraries() {
@@ -38,7 +37,7 @@ public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registr
 
         // Create loader
         try {
-            loader = getLoaderClass().getConstructor(plugin.getClass()).newInstance(plugin);
+            loader = createLoader();
             loader.load();
         } catch (final Exception e) {
             AnnoyingPlugin.log(Level.SEVERE, "Failed to create stats loader for provider " + getClass().getSimpleName(), e);

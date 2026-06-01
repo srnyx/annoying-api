@@ -2,9 +2,7 @@ package xyz.srnyx.annoyingapi;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-
 import net.byteflux.libby.relocation.Relocation;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -15,10 +13,8 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
@@ -43,7 +39,6 @@ import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-
 import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
@@ -333,38 +328,9 @@ public class AnnoyingPlugin extends JavaPlugin {
             }
         }
 
-        // Manual bStats loader
-        if (options.statsOptions.bStatsLoader != null) try {
-            boolean alreadyRegistered = false;
-            for (final Registrable registrable : registeredClasses) if (registrable instanceof BStatsProvider<?>) {
-                alreadyRegistered = true;
-                break;
-            }
-            if (!alreadyRegistered) new BStatsProvider<>(this) {
-                @Override @NotNull
-                public Class<BStatsLoader> getLoaderClass() {
-                    return (Class<BStatsLoader>) options.statsOptions.bStatsLoader;
-                }
-            }.register();
-        } catch (final Exception e) {
-            log(Level.WARNING, "&eFailed to register &6bStats&e metrics", e);
-        }
-        // Manual FastStats loader
-        if (options.statsOptions.fastStatsLoader != null) try {
-            boolean alreadyRegistered = false;
-            for (final Registrable registrable : registeredClasses) if (registrable instanceof FastStatsProvider<?>) {
-                alreadyRegistered = true;
-                break;
-            }
-            if (!alreadyRegistered) new FastStatsProvider<>(this) {
-                @Override @NotNull
-                public Class<FastStatsLoader> getLoaderClass() {
-                    return (Class<FastStatsLoader>) options.statsOptions.fastStatsLoader;
-                }
-            }.register();
-        } catch (final Exception e) {
-            log(Level.WARNING, "&eFailed to register &6FastStats&e metrics", e);
-        }
+        // Manual stats registration
+        registerBStatsManually();
+        registerFastStatsManually();
 
         // Enable/disable interval cache saving (depending on config)
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
@@ -409,6 +375,115 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Get a {@link Registrable} by its super-class or exact class
+     *
+     * @param   clazz   The class of the {@link Registrable} to get
+     *
+     * @return  The {@link Registrable} if it exists, or {@code null} if it doesn't
+     *
+     * @param   <T> The type of the {@link Registrable}
+     */
+    @Nullable
+    public <T extends Registrable> T getRegistrable(@NotNull Class<T> clazz) {
+        for (final Registrable registrable : registeredClasses) if (clazz.isAssignableFrom(registrable.getClass())) return (T) registrable;
+        return null;
+    }
+
+    /**
+     * Get a {@link Registrable} by its exact class
+     *
+     * @param   clazz   The exact class of the {@link Registrable} to get
+     *
+     * @return  The {@link Registrable} if it exists, or {@code null} if it doesn't
+     *
+     * @param   <T> The type of the {@link Registrable}
+     */
+    @Nullable
+    public <T extends Registrable> T getRegistrableExact(@NotNull Class<T> clazz) {
+        for (final Registrable registrable : registeredClasses) if (registrable.getClass().equals(clazz)) return (T) registrable;
+        return null;
+    }
+
+    /**
+     * Unregisters all {@link Registrable}s in {@link #registeredClasses}
+     */
+    public void unregisterClasses() {
+        new HashSet<>(registeredClasses).forEach(Registrable::unregister);
+    }
+
+    public void registerBStatsManually() {
+        // Stop if no manual loader/ID provided
+        if (options.statsOptions.bStats.loader == null && options.statsOptions.bStats.id == null) return;
+
+        // Stop if explicit provider already registered
+        if (getRegistrable(BStatsProvider.class) != null) return;
+
+        try {
+            new BStatsProvider<>(this) {
+                @Override @NotNull
+                public BStatsLoader createLoader() {
+                    if (options.statsOptions.bStats.loader != null) try {
+                        return options.statsOptions.bStats.loader.getConstructor(AnnoyingPlugin.this.getClass()).newInstance(AnnoyingPlugin.this);
+                    } catch (final Exception t) {
+                        throw new RuntimeException("[MANUAL] Failed to create bStats loader", t);
+                    }
+
+                    return new BStatsLoader() {
+                        @Override @NotNull
+                        public AnnoyingPlugin getAnnoyingPlugin() {
+                            return AnnoyingPlugin.this;
+                        }
+
+                        @Override @NotNull
+                        public Integer getId() {
+                            if (options.statsOptions.bStats.id == null) throw new RuntimeException("[MANUAL] bStats ID is null");
+                            return options.statsOptions.bStats.id;
+                        }
+                    };
+                }
+            }.register();
+        } catch (final Exception e) {
+            log(Level.WARNING, "&eFailed to register &6bStats&e metrics", e);
+        }
+    }
+
+    public void registerFastStatsManually() {
+        // Stop if no manual loader/ID provided
+        if (options.statsOptions.fastStats.loader == null && options.statsOptions.fastStats.id == null) return;
+
+        // Stop if explicit provider already registered
+        if (getRegistrable(FastStatsProvider.class) != null) return;
+
+        try {
+            new FastStatsProvider<>(this) {
+                @Override @NotNull
+                public FastStatsLoader createLoader() {
+                    if (options.statsOptions.fastStats.loader != null) try {
+                        return options.statsOptions.fastStats.loader.getConstructor(AnnoyingPlugin.this.getClass()).newInstance(AnnoyingPlugin.this);
+                    } catch (final Exception t) {
+                        throw new RuntimeException("[MANUAL] Failed to create FastStats loader", t);
+                    }
+
+                    return new FastStatsLoader() {
+                        @Override @NotNull
+                        public AnnoyingPlugin getAnnoyingPlugin() {
+                            return AnnoyingPlugin.this;
+                        }
+
+                        @Override @NotNull
+                        public String getId() {
+                            if (options.statsOptions.fastStats.id == null) throw new RuntimeException("[MANUAL] FastStats ID is null");
+                            return options.statsOptions.fastStats.id;
+                        }
+                    };
+                }
+            }.register();
+        } catch (final Exception e) {
+            log(Level.WARNING, "&eFailed to register &6FastStats&e metrics", e);
+        }
+    }
+
+    /**
      * Loads the messages.yml file to {@link #messages} and {@link #globalPlaceholders}
      */
     public void loadMessages() {
@@ -443,19 +518,6 @@ public class AnnoyingPlugin extends JavaPlugin {
     public String parsePapiPlaceholders(@Nullable OfflinePlayer player, @Nullable String message) {
         if (message == null) return "null";
         return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
-    }
-
-    @Nullable
-    public <T extends Registrable> T getRegistrable(@NotNull Class<T> clazz) {
-        for (final Registrable registrable : registeredClasses) if (registrable.getClass().equals(clazz)) return (T) registrable;
-        return null;
-    }
-
-    /**
-     * Unregisters all {@link Registrable}s in {@link #registeredClasses}
-     */
-    public void unregisterClasses() {
-        new HashSet<>(registeredClasses).forEach(Registrable::unregister);
     }
 
     /**

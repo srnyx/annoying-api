@@ -1,31 +1,33 @@
 package xyz.srnyx.annoyingapi.stats.loader;
 
-import dev.faststats.bukkit.BukkitMetrics;
-import dev.faststats.core.ErrorTracker;
-import dev.faststats.core.data.Metric;
-
-import me.clip.placeholderapi.PlaceholderAPIPlugin;
-
+import dev.faststats.ErrorTracker;
+import dev.faststats.FeatureFlagService;
+import dev.faststats.Metrics;
+import dev.faststats.bukkit.BukkitContext;
+import dev.faststats.data.Metric;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
 
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 
-public abstract class FastStatsLoader extends StatsLoader<String, BukkitMetrics> {
+public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext> {
     @NotNull public final ErrorTracker errorTracker = ErrorTracker.contextAware();
 
-    @Nullable private BukkitMetrics apiStats;
+    @Nullable private BukkitContext apiStats;
 
-    @Nullable
-    public Consumer<BukkitMetrics.Factory> getFactoryConsumer() {
-        return null;
-    }
+    /**
+     * Do not use {@link BukkitContext.Factory#metrics(Function)}, {@link BukkitContext.Factory#featureFlagService(Function)}, or other similar service creators <b>unless</b> you want to overwrite the default ones the API creates!
+     */
+    public void mutateContextFactory(@NotNull BukkitContext.Factory factory) {}
+
+    public void mutateMetricsFactory(@NotNull Metrics.Factory factory) {}
+
+    public void mutateFeatureFlagService(@NotNull FeatureFlagService.Factory factory) {}
 
     @Override
     public void load() {
@@ -39,27 +41,34 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitMetrics>
                 Metric.stringArray("messages_plugin_global_placeholders_keys", plugin.statsHelper::getMessagesPluginGlobalPlaceholdersKeys),
                 Metric.string("messages_plugin_splitters_json", plugin.statsHelper::getMessagesPluginSplittersJson),
                 Metric.string("messages_plugin_splitters_placeholder", plugin.statsHelper::getMessagesPluginSplittersPlaceholder),
-                Metric.string("placeholderapi_version", () -> plugin.papiInstalled ? PlaceholderAPIPlugin.getInstance().getDescription().getVersion() : null),
-                Metric.string("update_checker_outdated_latest_version", () -> plugin.updateChecker != null && plugin.updateChecker.latestVersion != null && plugin.updateChecker.isUpdateAvailable() ? plugin.updateChecker.latestVersion.toString() : null));
+                Metric.string("placeholderapi_version", plugin.statsHelper::getPlaceholderAPIVersion),
+                Metric.string("update_checker_outdated_latest_version", plugin.statsHelper::getUpdateCheckerOutdatedLatestVersion));
 
         // API
-        final BukkitMetrics.Factory apiFactory = BukkitMetrics.factory()
-                .token("724dd679781f2a22c15aefa4b8a7bbcd")
-                .addMetric(Metric.string("plugins", plugin::getName));
-        commonMetrics.forEach(apiFactory::addMetric);
-        apiStats = apiFactory
-                .errorTracker(errorTracker)
-                .create(plugin);
+        apiStats = new BukkitContext.Factory(plugin, "724dd679781f2a22c15aefa4b8a7bbcd")
+                .errorTrackerService(errorTracker)
+                .metrics(factory -> {
+                    factory.addMetric(Metric.string("plugins", plugin::getName));
+                    commonMetrics.forEach(factory::addMetric);
+                    return factory.create();
+                })
+                .create();
         apiStats.ready();
 
         // Plugin
-        final BukkitMetrics.Factory pluginFactory = BukkitMetrics.factory().token(getId());
-        commonMetrics.forEach(pluginFactory::addMetric);
-        final Consumer<BukkitMetrics.Factory> factoryConsumer = getFactoryConsumer();
-        if (factoryConsumer != null) factoryConsumer.accept(pluginFactory);
-        stats = pluginFactory
-                .errorTracker(errorTracker)
-                .create(plugin);
+        final BukkitContext.Factory context = new BukkitContext.Factory(plugin, getId())
+                .errorTrackerService(errorTracker)
+                .metrics(factory -> {
+                    commonMetrics.forEach(factory::addMetric);
+                    mutateMetricsFactory(factory);
+                    return factory.create();
+                })
+                .featureFlagService(factory -> {
+                    mutateFeatureFlagService(factory);
+                    return factory.create();
+                });
+        mutateContextFactory(context);
+        stats = context.create();
         stats.ready();
 
         // Log

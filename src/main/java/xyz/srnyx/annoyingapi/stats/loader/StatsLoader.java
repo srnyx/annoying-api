@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.stats.loader;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 

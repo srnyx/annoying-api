@@ -1,8 +1,8 @@
 package xyz.srnyx.annoyingapi.stats;
 
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
@@ -29,8 +29,7 @@ public class StatsHelper implements Annoyable {
         return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.enabled;
     }
 
-    @Nullable
-    public String[] getStorageCacheSaveOn() {
+    public @NotNull String @Nullable [] getStorageCacheSaveOn() {
         return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.saveOn.stream()
                 .map(Enum::name)
                 .toArray(String[]::new);
@@ -59,5 +58,15 @@ public class StatsHelper implements Annoyable {
     @Nullable
     public String getMessagesPluginSplittersPlaceholder() {
         return plugin.messages == null ? null : plugin.messages.getString(plugin.options.messagesOptions.keys.splitterPlaceholder);
+    }
+
+    @Nullable
+    public String getPlaceholderAPIVersion() {
+        return plugin.papiInstalled ? PlaceholderAPIPlugin.getInstance().getDescription().getVersion() : null;
+    }
+
+    @Nullable
+    public String getUpdateCheckerOutdatedLatestVersion() {
+        return plugin.updateChecker != null && plugin.updateChecker.latestVersion != null && plugin.updateChecker.isUpdateAvailable() ? plugin.updateChecker.latestVersion.toString() : null;
     }
 }
