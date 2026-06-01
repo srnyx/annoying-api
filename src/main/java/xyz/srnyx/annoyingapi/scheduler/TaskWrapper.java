@@ -1,9 +1,8 @@
 package xyz.srnyx.annoyingapi.scheduler;
 
 import org.bukkit.scheduler.BukkitTask;
-
 import org.jetbrains.annotations.NotNull;
-
+import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,11 +16,17 @@ public class TaskWrapper {
     /**
      * The task object
      */
-    @NotNull public final Object task;
+    @Nullable public Object task;
     /**
-     * The type of task
+     * The {@link Type} of task
      */
-    @NotNull public final Type type;
+    @Nullable public Type type;
+
+    /**
+     * Create an empty {@link TaskWrapper}
+     * <br>Use {@link #setTask(Object)} once you have the task
+     */
+    public TaskWrapper() {}
 
     /**
      * Wrap a Bukkit or Folia task
@@ -29,6 +34,13 @@ public class TaskWrapper {
      * @param   task    {@link #task}
      */
     public TaskWrapper(@NotNull Object task) {
+        setTask(task);
+    }
+
+    /**
+     * Used internally to set {@link #task} and {@link #type} after creating an empty wrapper
+     */
+    void setTask(@NotNull Object task) {
         this.task = task;
         this.type = task instanceof BukkitTask ? Type.BUKKIT : Type.FOLIA;
     }
@@ -40,6 +52,8 @@ public class TaskWrapper {
      */
     @NotNull
     public BukkitTask asBukkitTask() {
+        if (task == null) throw new IllegalStateException("Task not set yet!");
+        if (type != Type.BUKKIT) throw new IllegalStateException("Task is not a Bukkit task!");
         return (BukkitTask) task;
     }
 
@@ -47,6 +61,8 @@ public class TaskWrapper {
      * Cancel the task
      */
     public void cancel() {
+        if (task == null) return;
+
         // Folia
         if (type == Type.FOLIA) {
             try {
@@ -58,7 +74,7 @@ public class TaskWrapper {
         }
 
         // Bukkit
-        ((BukkitTask) task).cancel();
+        asBukkitTask().cancel();
     }
 
     /**
