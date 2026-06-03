@@ -306,7 +306,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         if (section == null) return def;
 
         // Get category
-        Object category = null;
+        Enum<?> category = null;
         final String categoryString = section.getString("category");
         if (categoryString != null) try {
             category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
