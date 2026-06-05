@@ -374,6 +374,22 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
+     * Gets all {@link Registrable Registrables} that are assignable from the given class
+     *
+     * @param   clazz   The class to check assignability from
+     *
+     * @return  A set of all Registrables that are assignable from the given class
+     *
+     * @param   <T> The type of the class to check assignability from
+     */
+    @NotNull
+    public <T extends Registrable> Set<T> getRegistrables(@NotNull Class<T> clazz) {
+        final Set<T> set = new HashSet<>();
+        for (final Registrable registrable : registeredClasses) if (clazz.isInstance(registrable)) set.add(clazz.cast(registrable));
+        return set;
+    }
+
+    /**
      * Get a {@link Registrable} by its super-class or exact class
      *
      * @param   clazz   The class of the {@link Registrable} to get
