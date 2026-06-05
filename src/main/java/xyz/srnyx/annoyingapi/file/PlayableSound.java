@@ -28,7 +28,7 @@ public class PlayableSound extends Stringable {
     /**
      * The SoundCategory to play the {@link Sound} in
      */
-    @Nullable public Object category;
+    @Nullable public Enum<?> category;
     /**
      * The volume to play the {@link Sound} at
      */
@@ -48,7 +48,7 @@ public class PlayableSound extends Stringable {
      *
      * @see     #PlayableSound(Sound, float, float) 1.10.2 and below
      */
-    public PlayableSound(@NotNull Sound sound, @Nullable Object category, float volume, float pitch) {
+    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category, float volume, float pitch) {
         this.sound = sound;
         this.category = category;
         this.volume = volume;
@@ -63,7 +63,7 @@ public class PlayableSound extends Stringable {
      *
      * @see     #PlayableSound(Sound)   1.10.2 and below
      */
-    public PlayableSound(@NotNull Sound sound, @Nullable Object category) {
+    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category) {
         this(sound, category, 1, 1);
     }
 

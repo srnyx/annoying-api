@@ -4,10 +4,8 @@ import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import net.byteflux.libby.relocation.Relocation;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
@@ -117,6 +115,29 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
         final IsolatedClassLoader classLoader = getIsolatedClassLoaderOf(library).orElse(null);
         if (classLoader == null) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
         return classLoader;
+    }
+
+    /**
+     * Load a {@link AnnoyingLibrary} into the server's classpath if it's not already loaded
+     *
+     * @param   library the library to load
+     *
+     * @return  whether the library is now loaded
+     */
+    public boolean loadIfNotLoaded(@NotNull AnnoyingLibrary library) {
+        return isLoaded(library) || loadLibrary(library);
+    }
+
+    /**
+     * Load a {@link AnnoyingLibrary} into an isolated classloader if it's not already loaded
+     *
+     * @param   library the library to load
+     *
+     * @return  the isolated classloader containing the library, or null if the library failed to load
+     */
+    @Nullable
+    public IsolatedClassLoader loadIfNotLoadedIsolated(@NotNull AnnoyingLibrary library) {
+        return getIsolatedClassLoaderOf(library).orElseGet(() -> loadLibraryIsolated(library));
     }
 
     /**
