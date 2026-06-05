@@ -11,17 +11,14 @@ import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefRegistry;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
-
 import xyz.srnyx.javautilities.FileUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -30,10 +27,13 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute.ATTRIBUTE_ENUM;
@@ -301,7 +301,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     public Optional<PlayableSound> getPlayableSound(@NotNull String path) {
         final Optional<PlayableSound> def = getDef(path);
         final Optional<Sound> sound = getSound(path + ".sound");
-        if (!sound.isPresent()) return def;
+        if (sound.isEmpty()) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
@@ -353,7 +353,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
         // Get type
         final Optional<PotionEffectType> typeOptional = RefRegistry.getEffect(typeString);
-        if (!typeOptional.isPresent()) {
+        if (typeOptional.isEmpty()) {
             if (log) log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
@@ -551,7 +551,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
                 final Optional<Enchantment> enchantment = RefRegistry.getEnchantment(enchantmentKey);
-                if (!enchantment.isPresent()) {
+                if (enchantment.isEmpty()) {
                     if (log) log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
@@ -595,7 +595,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
                     // Get attribute modifier
                     final Optional<?> attributeModifier = getAttributeModifier(pathString);
-                    if (!attributeModifier.isPresent()) continue;
+                    if (attributeModifier.isEmpty()) continue;
 
                     // Add attribute modifier
                     try {
@@ -688,7 +688,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final ConfigurationSection ingredients = section.getConfigurationSection("ingredients");
         final List<String> shape = section.getStringList("shape").stream()
                 .map(String::toUpperCase)
-                .collect(Collectors.toList());
+                .toList();
         ItemStack result = getItemStack(path + ".result");
         if (ingredients == null || shape.isEmpty()) return def;
         final Map<Character, Material> ingredientMaterials = new HashMap<>();

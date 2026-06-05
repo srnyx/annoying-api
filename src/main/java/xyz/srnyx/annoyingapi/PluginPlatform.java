@@ -2,12 +2,9 @@ package xyz.srnyx.annoyingapi;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
@@ -395,7 +392,7 @@ public class PluginPlatform extends Stringable {
          */
         public boolean addIfAbsent(@NotNull PluginPlatform... pluginPlatforms) {
             final Set<PluginPlatform> toAdd = Arrays.stream(pluginPlatforms)
-                    .filter(filter -> !get(filter.platform).isPresent())
+                    .filter(filter -> get(filter.platform).isEmpty())
                     .collect(Collectors.toSet());
             return this.pluginPlatforms.addAll(toAdd);
         }

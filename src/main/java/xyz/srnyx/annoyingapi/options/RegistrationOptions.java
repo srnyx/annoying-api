@@ -3,14 +3,11 @@ package xyz.srnyx.annoyingapi.options;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 import org.bukkit.configuration.ConfigurationSection;
-
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.selector.Selector;
 import xyz.srnyx.annoyingapi.parents.Registrable;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.lang.reflect.InvocationTargetException;

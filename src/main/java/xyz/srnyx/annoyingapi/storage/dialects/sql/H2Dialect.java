@@ -2,18 +2,21 @@ package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -78,12 +81,12 @@ public class H2Dialect extends SQLDialect {
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
+    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("MERGE INTO \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\"");
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
-        final List<Value> values = new ArrayList<>();
-        for (final ConcurrentHashMap.Entry<String, Value> entry : data.entrySet()) {
+        final List<CachedValue> values = new ArrayList<>();
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) {
             insertBuilder.append(", \"").append(entry.getKey()).append("\"");
             valuesBuilder.append(", ?");
             values.add(entry.getValue());
@@ -96,7 +99,7 @@ public class H2Dialect extends SQLDialect {
         try (final PreparedStatement statement = setValuesParameters(target, values, insertBuilder, valuesBuilder, null)) {
             statement.executeUpdate();
         } catch (final SQLException e) {
-            for (final ConcurrentHashMap.Entry<String, Value> entry : data.entrySet()) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value, e));
+            for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value(), e));
         }
         return failed;
     }

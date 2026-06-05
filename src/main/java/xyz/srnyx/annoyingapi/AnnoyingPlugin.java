@@ -18,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
+import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
 import xyz.srnyx.annoyingapi.stats.StatsHelper;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
@@ -36,7 +38,6 @@ import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
 import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
-import xyz.srnyx.annoyingapi.options.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.MapGenerator;
@@ -289,7 +290,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         final String authors = "By " + String.join(", ", description.getAuthors());
         final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
         final int lineLength = Math.max(nameVersion.length(), authors.length());
-        for (int i = 0; i < lineLength; i++) lineBuilder.append("-");
+        lineBuilder.append("-".repeat(lineLength));
         final String line = lineBuilder.toString();
 
         // Send start messages
@@ -316,8 +317,10 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
             for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
-                // Ignore interfaces, abstract classes, classes with @Registrable.Ignore, and ignored classes
-                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers()) || clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
+                // Ignore interfaces and abstract classes
+                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
+                // Ignore classes with @Registrable.Ignore and specific ignored classes
+                if (clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
 
                 // Register class
                 try {

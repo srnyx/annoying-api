@@ -7,12 +7,9 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-
 import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.lang.reflect.InvocationTargetException;
@@ -141,7 +138,7 @@ public class BukkitUtility {
             final String perm = info.getPermission();
             if (!perm.startsWith(permission)) continue;
             final Optional<Long> value = Mapper.toLong(perm.substring(permission.length()));
-            if (!value.isPresent()) AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
+            if (value.isEmpty()) AnnoyingPlugin.log(Level.WARNING, "&cInvalid permission value for &4" + player.getName() + "&c: &4" + perm);
             return value;
         }
         return Optional.empty();

@@ -1,19 +1,20 @@
 package xyz.srnyx.annoyingapi.storage.dialects;
 
 import org.bukkit.configuration.ConfigurationSection;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
-
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 import xyz.srnyx.javautilities.FileUtility;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -38,19 +39,19 @@ public class YAMLDialect extends Dialect {
     }
 
     @Override @Nullable
-    public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getTableFromCache(table).map(file -> new Value(file.getString(target + "." + key))).orElse(null);
+    public CachedValue getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+        return getTableFromCache(table).map(file -> new CachedValue(file.getString(target + "." + key))).orElse(null);
     }
 
     @Override
-    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
+    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull CachedValue value) {
         getTableFromCache(table)
                 .orElseGet(() -> {
                     final AnnoyingData file = getTableFromDatabase(table);
                     tables.put(table, file);
                     return file;
                 })
-                .set(target + "." + key, value.value);
+                .set(target + "." + key, value.value());
     }
 
     @Override
@@ -76,18 +77,18 @@ public class YAMLDialect extends Dialect {
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(new File(dataManager.plugin.getDataFolder(), "data/yaml"), "yaml")) {
             final AnnoyingData file = getTableFromDatabase(table);
             final Set<String> keys = new HashSet<>();
-            final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> tableData = new ConcurrentHashMap<>(); // [target, [key, value]]
+            final ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>> tableData = new ConcurrentHashMap<>(); // [target, [key, value]]
             for (final String target : file.getKeys(false)) {
                 final ConfigurationSection targetData = file.getConfigurationSection(target);
                 if (targetData == null) continue;
-                final ConcurrentHashMap<String, Value> targetMap = new ConcurrentHashMap<>(); // [key, value]
+                final ConcurrentHashMap<String, CachedValue> targetMap = new ConcurrentHashMap<>(); // [key, value]
                 for (final String key : targetData.getKeys(false)) {
                     keys.add(key);
-                    targetMap.put(key, new Value(targetData.getString(key)));
+                    targetMap.put(key, new CachedValue(targetData.getString(key)));
                 }
                 tableData.put(target, targetMap);
             }
@@ -108,19 +109,19 @@ public class YAMLDialect extends Dialect {
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
-        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
+        final Set<ConcurrentHashMap.Entry<String, CachedValue>> entrySet = data.entrySet();
 
         // Set data in file
         final AnnoyingData file = getTableFromDatabase(table);
         ConfigurationSection targetData = file.getConfigurationSection(target);
         if (targetData == null) targetData = file.createSection(target);
-        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) targetData.set(entry.getKey(), entry.getValue().value);
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) targetData.set(entry.getKey(), entry.getValue().value());
 
         // Return failures if saving fails
         final Set<FailedSet> failed = new HashSet<>();
         if (file.save()) return failed;
-        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value));
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value()));
         return failed;
     }
 

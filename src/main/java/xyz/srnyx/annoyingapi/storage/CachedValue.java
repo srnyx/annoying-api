@@ -7,27 +7,15 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Represents a value that may be null
  * <br>This is needed so that the plugin can know whether a value was cached or not for data (because null could be a valid value)
+ *
+ * @param value The value
  */
-public class Value {
-    /**
-     * The value
-     */
-    @Nullable public final String value;
-
-    /**
-     * Constructs a new value with the given value
-     *
-     * @param   value   the value
-     */
-    public Value(@Nullable String value) {
-        this.value = value;
-    }
-
+public record CachedValue(@Nullable String value) {
     /**
      * Constructs a new value with a null value
      */
-    public Value() {
-        this.value = null;
+    public CachedValue() {
+        this(null);
     }
 
     @Override @NotNull

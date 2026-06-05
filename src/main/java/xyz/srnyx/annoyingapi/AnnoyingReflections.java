@@ -1,10 +1,8 @@
 package xyz.srnyx.annoyingapi;
 
 import javassist.bytecode.ClassFile;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.reflections.ReflectionsException;
@@ -13,7 +11,6 @@ import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.NameHelper;
 import org.reflections.vfs.Vfs;
-
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import java.io.BufferedInputStream;

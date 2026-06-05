@@ -151,7 +151,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
                         .get("url").getAsString());
 
         // Request failed
-        if (!latest.isPresent()) {
+        if (latest.isEmpty()) {
             fail(dependency, PluginPlatform.Platform.MODRINTH);
             return;
         }
@@ -176,7 +176,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
 
         final Optional<String> latest = HttpUtility.getString(userAgent, url + "latestrelease", null);
         // Request failed
-        if (!latest.isPresent()) {
+        if (latest.isEmpty()) {
             fail(dependency, platform.platform);
             return;
         }
@@ -198,7 +198,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         final Optional<JsonObject> json = HttpUtility.getJson(userAgent, url, null).map(JsonElement::getAsJsonObject);
 
         // Request failed
-        if (!json.isPresent()) {
+        if (json.isEmpty()) {
             fail(dependency, PluginPlatform.Platform.SPIGOT);
             return;
         }

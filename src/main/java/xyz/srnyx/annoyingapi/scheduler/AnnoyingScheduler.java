@@ -3,9 +3,7 @@ package xyz.srnyx.annoyingapi.scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.Plugin;
-
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
@@ -191,22 +189,10 @@ public class AnnoyingScheduler implements Annoyable {
 
     /**
      * Only used for {@link #runGlobalTaskTimerFolia(Runnable, long, long) Folia task timers} due to reflection
+     *
+     * @param runnable  The {@link Runnable} to run
      */
-    private static class FoliaConsumer implements Consumer<Object> {
-        /**
-         * The {@link Runnable} to run
-         */
-        @NotNull private final Runnable runnable;
-
-        /**
-         * Constructs a new {@link FoliaConsumer} instance
-         *
-         * @param   runnable    {@link #runnable}
-         */
-        public FoliaConsumer(@NotNull Runnable runnable) {
-            this.runnable = runnable;
-        }
-
+    private record FoliaConsumer(@NotNull Runnable runnable) implements Consumer<Object> {
         @Override
         public void accept(@NotNull Object object) {
             runnable.run();

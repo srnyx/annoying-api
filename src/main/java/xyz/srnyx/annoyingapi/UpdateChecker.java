@@ -188,7 +188,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                     .map(JsonElement::getAsJsonArray);
 
             // Request failed
-            if (!json.isPresent()) return fail(PluginPlatform.Platform.MODRINTH);
+            if (json.isEmpty()) return fail(PluginPlatform.Platform.MODRINTH);
 
             // Return the latest version
             return json.get().size() != 0 ? json.map(versions -> versions.get(0).getAsJsonObject().get("version_number").getAsString()) : fail(PluginPlatform.Platform.MODRINTH);
@@ -210,7 +210,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 .map(element -> element.getAsJsonObject().getAsJsonArray("result"));
 
         // Request failed
-        if (!json.isPresent()) return fail(PluginPlatform.Platform.HANGAR);
+        if (json.isEmpty()) return fail(PluginPlatform.Platform.HANGAR);
 
         // Get supported versions
         final Map<String, OffsetDateTime> result = new HashMap<>();
@@ -263,7 +263,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 .map(element -> element.getAsJsonObject().get("name").getAsString());
 
         // Request failed
-        if (!json.isPresent()) return fail(PluginPlatform.Platform.SPIGOT);
+        if (json.isEmpty()) return fail(PluginPlatform.Platform.SPIGOT);
 
         // Return the latest version
         return json;

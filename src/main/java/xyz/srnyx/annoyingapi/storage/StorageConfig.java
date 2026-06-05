@@ -3,10 +3,8 @@ package xyz.srnyx.annoyingapi.storage;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
@@ -101,7 +99,7 @@ public class StorageConfig {
 
         // Get driver
         final Optional<String> driver = method.getDriver();
-        if (!driver.isPresent()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
+        if (driver.isEmpty()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
 
         // SQLite: create parent directories
         if (method == StorageMethod.SQLITE) {
@@ -123,7 +121,7 @@ public class StorageConfig {
             // Connect using driver from IsolatedClassLoader
             try {
                 final Class<?> driverClass = classLoader.loadClass(driver.get());
-                return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.newInstance(), url, properties);
+                return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.getDeclaredConstructor().newInstance(), url, properties);
             } catch (final Exception e) {
                 throw new ConnectionException(e, url, properties);
             }

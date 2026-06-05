@@ -6,17 +6,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.command.selector.Selector;
 import xyz.srnyx.annoyingapi.command.selector.SelectorOptional;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-
 import xyz.srnyx.javautilities.objects.Arguments;
 
 import java.util.*;
@@ -247,7 +244,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     @NotNull
     public <T> Optional<T> getArgumentOptional(int index, @NotNull Function<String, T> function) {
         final Optional<T> optional = getArgumentOptional(index).map(function);
-        if (!optional.isPresent()) invalidArgumentByIndex(index);
+        if (optional.isEmpty()) invalidArgumentByIndex(index);
         return optional;
     }
 
@@ -270,7 +267,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     @NotNull
     public <T> Optional<T> getArgumentOptionalFlat(int index, @NotNull Function<String, Optional<T>> function) {
         final Optional<T> optional = getArgumentOptional(index).flatMap(function);
-        if (!optional.isPresent()) invalidArgumentByIndex(index);
+        if (optional.isEmpty()) invalidArgumentByIndex(index);
         return optional;
     }
 

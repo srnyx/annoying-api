@@ -134,8 +134,7 @@ public class AnnoyingCooldown extends Stringable {
     @Override
     public boolean equals(@Nullable Object other) {
         if (this == other) return true;
-        if (!(other instanceof AnnoyingCooldown)) return false;
-        final AnnoyingCooldown cooldown = (AnnoyingCooldown) other;
+        if (!(other instanceof final AnnoyingCooldown cooldown)) return false;
         return type.equals(cooldown.type) && key.equals(cooldown.key);
     }
 

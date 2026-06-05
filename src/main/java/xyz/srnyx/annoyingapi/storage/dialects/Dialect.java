@@ -2,12 +2,14 @@ package xyz.srnyx.annoyingapi.storage.dialects;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -39,7 +41,7 @@ public abstract class Dialect {
      * @return          the value, empty if not found
      */
     @Nullable
-    public Value getFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
+    public CachedValue getFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
         return getFromCacheImpl(table, target, key);
     }
 
@@ -51,7 +53,7 @@ public abstract class Dialect {
      * @param   key     the key
      * @param   value   the value
      */
-    public void setToCache(@NotNull String table, @NotNull String target, @NotNull String key, @Nullable Value value) {
+    public void setToCache(@NotNull String table, @NotNull String target, @NotNull String key, @Nullable CachedValue value) {
         if (value == null) {
             markRemovedInCache(table, target, key);
             return;
@@ -138,9 +140,9 @@ public abstract class Dialect {
      * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Set<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
-        final ConcurrentHashMap<String, Value> dataLower = new ConcurrentHashMap<>();
-        for (final ConcurrentHashMap.Entry<String, Value> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue());
+    public final Set<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
+        final ConcurrentHashMap<String, CachedValue> dataLower = new ConcurrentHashMap<>();
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue());
         return setToDatabaseImpl(table, target, dataLower);
     }
 
@@ -152,11 +154,11 @@ public abstract class Dialect {
      * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Set<FailedSet> setToDatabase(@NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data) {
+    public final Set<FailedSet> setToDatabase(@NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data) {
         final Set<FailedSet> failed = new HashSet<>();
-        for (final Map.Entry<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> entry : data.entrySet()) {
+        for (final Map.Entry<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> entry : data.entrySet()) {
             final String table = entry.getKey();
-            for (final Map.Entry<String, ConcurrentHashMap<String, Value>> entry1 : entry.getValue().entrySet()) {
+            for (final Map.Entry<String, ConcurrentHashMap<String, CachedValue>> entry1 : entry.getValue().entrySet()) {
                 final Set<FailedSet> failedSet = setToDatabase(table, entry1.getKey(), entry1.getValue());
                 if (!failedSet.isEmpty()) failed.addAll(failedSet);
             }
@@ -184,10 +186,10 @@ public abstract class Dialect {
      * @param   target  the target
      * @param   key     the key
      *
-     * @return          the value inside a {@link Value}, null if it isn't cached
+     * @return          the value inside a {@link CachedValue}, null if it isn't cached
      */
     @Nullable
-    protected abstract Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
+    protected abstract CachedValue getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key);
 
     /**
      * Set a value to the cache
@@ -195,9 +197,9 @@ public abstract class Dialect {
      * @param   table   the table
      * @param   target  the target
      * @param   key     the key
-     * @param   value   the value inside a {@link Value}
+     * @param   value   the value inside a {@link CachedValue}
      */
-    protected abstract void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value);
+    protected abstract void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull CachedValue value);
 
     /**
      * Mark a value as removed in the cache
@@ -266,7 +268,7 @@ public abstract class Dialect {
      * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    protected abstract Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data);
+    protected abstract Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data);
 
     /**
      * Remove a value from the database
@@ -282,27 +284,10 @@ public abstract class Dialect {
     /**
      * Data for a database migration
      *
+     * @param tablesKeys    [table, keys]
+     * @param data          [table, [target, [key, value]]]
+     *
      * @see #getMigrationDataFromDatabase(DataManager)
      */
-    public static class MigrationData {
-        /**
-         * [table, keys]
-         */
-        @NotNull public final Map<String, Set<String>> tablesKeys;
-        /**
-         * [table, [target, [key, value]]]
-         */
-        @NotNull public final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data;
-
-        /**
-         * Construct a new {@link MigrationData} with the given data
-         *
-         * @param   tablesKeys  {@link #tablesKeys}
-         * @param   data        {@link #data}
-         */
-        public MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data) {
-            this.tablesKeys = tablesKeys;
-            this.data = data;
-        }
-    }
+    public record MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data) {}
 }

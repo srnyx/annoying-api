@@ -2,13 +2,10 @@ package xyz.srnyx.annoyingapi.data;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingData;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
