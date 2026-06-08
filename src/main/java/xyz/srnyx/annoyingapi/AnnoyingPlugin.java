@@ -414,13 +414,14 @@ public class AnnoyingPlugin extends JavaPlugin {
         new HashSet<>(registeredClasses).forEach(Registrable::unregister);
     }
 
-    public void registerBStatsManually() {
+    private void registerBStatsManually() {
         // Stop if no manual loader/ID provided
         if (options.statsOptions.bStats.loader == null && options.statsOptions.bStats.id == null) return;
 
         // Stop if explicit provider already registered
         if (getRegistrable(BStatsProvider.class) != null) return;
 
+        // Register manually
         try {
             new BStatsProvider<>(this) {
                 @Override @NotNull
@@ -450,13 +451,14 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    public void registerFastStatsManually() {
+    private void registerFastStatsManually() {
         // Stop if no manual loader/ID provided
         if (options.statsOptions.fastStats.loader == null && options.statsOptions.fastStats.id == null) return;
 
         // Stop if explicit provider already registered
         if (getRegistrable(FastStatsProvider.class) != null) return;
 
+        // Register manually
         try {
             new FastStatsProvider<>(this) {
                 @Override @NotNull
