@@ -93,11 +93,11 @@ public class JSONDialect extends Dialect {
             json = GSON.fromJson(fileReader, JsonObject.class);
         } catch (final IOException | JsonParseException e) {
             // Reading failed, log error
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to read file for table &4" + table, e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to read file for table &4" + table, e);
         }
 
         // Return new file
-        return new JsonFile(file, json);
+        return new JsonFile(dataManager.plugin, file, json);
     }
 
     @Override @NotNull
@@ -126,7 +126,7 @@ public class JSONDialect extends Dialect {
 
     @Override @NotNull
     protected Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return Optional.ofNullable(getTableFromDatabase(table).get(target, key)).map(value -> value.value());
+        return Optional.ofNullable(getTableFromDatabase(table).get(target, key)).map(CachedValue::value);
     }
 
     @Override @Nullable
@@ -163,6 +163,7 @@ public class JSONDialect extends Dialect {
      * A wrapper for a JSON file with utility methods
      */
     public static class JsonFile {
+        @NotNull private final AnnoyingPlugin plugin;
         /**
          * The file
          */
@@ -178,7 +179,8 @@ public class JSONDialect extends Dialect {
          * @param   file    {@link #file}
          * @param   json    {@link #json}
          */
-        private JsonFile(@NotNull File file, @NotNull JsonObject json) {
+        private JsonFile(@NotNull AnnoyingPlugin plugin, @NotNull File file, @NotNull JsonObject json) {
+            this.plugin = plugin;
             this.file = file;
             this.json = json;
         }
@@ -260,7 +262,7 @@ public class JSONDialect extends Dialect {
                 Files.createDirectories(file.getParentFile().toPath());
                 Files.createFile(file.toPath());
             } catch (final IOException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
+                plugin.logErrorTrack(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
                 return false;
             }
 
@@ -269,7 +271,7 @@ public class JSONDialect extends Dialect {
                 fileWriter.write(GSON.toJson(json));
                 return true;
             } catch (final IOException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
+                plugin.logErrorTrack(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
                 return false;
             }
         }

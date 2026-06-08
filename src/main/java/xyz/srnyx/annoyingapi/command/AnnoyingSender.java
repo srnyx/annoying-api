@@ -425,7 +425,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      */
     public void invalidArgumentByIndex(int index) {
         final boolean invalid = args == null || args.length <= index;
-        if (invalid) AnnoyingPlugin.log(Level.WARNING, "&4[" + label + "]&c Invalid argument index for invalidArgumentByIndex: &4" + index);
+        if (invalid) plugin.logErrorTrack(Level.WARNING, "&4[" + label + "]&c Invalid argument index for invalidArgumentByIndex: &4" + index);
         invalidArgument(invalid ? index : args[index]);
     }
 

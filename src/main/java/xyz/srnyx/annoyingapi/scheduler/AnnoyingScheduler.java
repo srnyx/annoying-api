@@ -46,14 +46,14 @@ public class AnnoyingScheduler implements Annoyable {
         if (AnnoyingPlugin.FOLIA) {
             try {
                 final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                return new TaskWrapper(scheduler.getClass().getMethod("run", Plugin.class, Consumer.class).invoke(scheduler, plugin, new FoliaConsumer(runnable)));
+                return new TaskWrapper(plugin, scheduler.getClass().getMethod("run", Plugin.class, Consumer.class).invoke(scheduler, plugin, new FoliaConsumer(runnable)));
             } catch (final InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
                 throw new RuntimeException("Failed to run a Folia task!", e);
             }
         }
 
         // Bukkit
-        return new TaskWrapper(Bukkit.getScheduler().runTask(plugin, runnable));
+        return new TaskWrapper(plugin, Bukkit.getScheduler().runTask(plugin, runnable));
     }
 
     /**
@@ -68,7 +68,7 @@ public class AnnoyingScheduler implements Annoyable {
     @NotNull @SuppressWarnings("UnusedReturnValue")
     public Optional<TaskWrapper> attemptAsync(@NotNull Runnable runnable) {
         try {
-            return Optional.of(new TaskWrapper(Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable)));
+            return Optional.of(new TaskWrapper(plugin, Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable)));
         } catch (final IllegalPluginAccessException | UnsupportedOperationException e) {
             // UnsupportedOperationException: Server is using Folia
             if (e instanceof UnsupportedOperationException && AnnoyingPlugin.FOLIA) return Optional.of(runSync(runnable));
@@ -93,7 +93,7 @@ public class AnnoyingScheduler implements Annoyable {
         if (AnnoyingPlugin.FOLIA) return runGlobalTaskLaterFolia(runnable, delay);
 
         // Bukkit
-        final TaskWrapper wrapper = new TaskWrapper();
+        final TaskWrapper wrapper = new TaskWrapper(plugin);
         wrapper.setTask(Bukkit.getScheduler().runTaskLater(plugin, () -> runnable.accept(wrapper), delay));
         return wrapper;
     }
@@ -113,7 +113,7 @@ public class AnnoyingScheduler implements Annoyable {
         if (AnnoyingPlugin.FOLIA) return runGlobalTaskLaterFolia(runnable, delay);
 
         // Bukkit
-        final TaskWrapper wrapper = new TaskWrapper();
+        final TaskWrapper wrapper = new TaskWrapper(plugin);
         wrapper.setTask(Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> runnable.accept(wrapper), delay));
         return wrapper;
     }
@@ -131,7 +131,7 @@ public class AnnoyingScheduler implements Annoyable {
     private TaskWrapper runGlobalTaskLaterFolia(@NotNull Consumer<TaskWrapper> runnable, long delay) {
         try {
             final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-            final TaskWrapper wrapper = new TaskWrapper();
+            final TaskWrapper wrapper = new TaskWrapper(plugin);
             wrapper.setTask(scheduler.getClass().getMethod("runDelayed", Plugin.class, Consumer.class, long.class).invoke(scheduler, plugin, new FoliaConsumer(() -> runnable.accept(wrapper)), delay));
             return wrapper;
         } catch (final InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
@@ -155,7 +155,7 @@ public class AnnoyingScheduler implements Annoyable {
         if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
 
         // Bukkit
-        final TaskWrapper wrapper = new TaskWrapper();
+        final TaskWrapper wrapper = new TaskWrapper(plugin);
         wrapper.setTask(Bukkit.getScheduler().runTaskTimer(plugin, () -> runnable.accept(wrapper), delay, interval));
         return wrapper;
     }
@@ -176,7 +176,7 @@ public class AnnoyingScheduler implements Annoyable {
         if (AnnoyingPlugin.FOLIA) return runGlobalTaskTimerFolia(runnable, delay, interval);
 
         // Bukkit
-        final TaskWrapper wrapper = new TaskWrapper();
+        final TaskWrapper wrapper = new TaskWrapper(plugin);
         wrapper.setTask(Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> runnable.accept(wrapper), delay, interval));
         return wrapper;
     }
@@ -195,7 +195,7 @@ public class AnnoyingScheduler implements Annoyable {
     private TaskWrapper runGlobalTaskTimerFolia(@NotNull Consumer<TaskWrapper> runnable, long delay, long interval) {
         try {
             final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-            final TaskWrapper wrapper = new TaskWrapper();
+            final TaskWrapper wrapper = new TaskWrapper(plugin);
             wrapper.setTask(scheduler.getClass().getMethod("runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class).invoke(scheduler, plugin, new FoliaConsumer(() -> runnable.accept(wrapper)), delay, interval));
             return wrapper;
         } catch (final InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {

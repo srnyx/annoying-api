@@ -70,7 +70,7 @@ public abstract class SQLDialect extends Dialect {
 
     @Override
     public void saveCacheImpl() {
-        for (final FailedSet failure : setToDatabase(cache)) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c: &4" + failure.value(), failure.exception());
+        for (final FailedSet failure : setToDatabase(cache)) dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to save cached &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c: &4" + failure.value(), failure.exception());
     }
 
     @Override
@@ -78,7 +78,7 @@ public abstract class SQLDialect extends Dialect {
         final Map<String, ConcurrentHashMap<String, CachedValue>> tableMap = cache.get(table);
         if (tableMap == null) return;
         final ConcurrentHashMap<String, CachedValue> targetMap = tableMap.get(target);
-        if (targetMap != null) for (final FailedSet failure : setToDatabase(table, target, targetMap)) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save cached &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c: &4" + failure.value(), failure.exception());
+        if (targetMap != null) for (final FailedSet failure : setToDatabase(table, target, targetMap)) dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to save cached &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c: &4" + failure.value(), failure.exception());
     }
 
     @Override @NotNull
@@ -89,7 +89,7 @@ public abstract class SQLDialect extends Dialect {
             final ResultSet resultSet = getTables.executeQuery();
             while (resultSet.next()) tables.add(resultSet.getString(1));
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get tables!", e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get tables!", e);
             return Optional.empty();
         }
 
@@ -127,7 +127,7 @@ public abstract class SQLDialect extends Dialect {
                     tableValues.put(target, keyValues);
                 }
             } catch (final SQLException e) {
-                AnnoyingPlugin.log(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get values for table &4" + table, e);
+                dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get values for table &4" + table, e);
             }
             if (!tableValues.isEmpty()) values.put(newManager.getTableName(tableWithoutPrefix), tableValues);
         }
@@ -147,7 +147,7 @@ public abstract class SQLDialect extends Dialect {
             try (final PreparedStatement statement = createTable(table)) {
                 statement.executeUpdate();
             } catch (final SQLException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create table &4" + table, e);
+                dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to create table &4" + table, e);
                 continue;
             }
             // Create keys
@@ -156,7 +156,7 @@ public abstract class SQLDialect extends Dialect {
                 if (!keyLower.equals(StringData.TARGET_COLUMN)) try (final PreparedStatement keyStatement = createKeyImpl(table, keyLower)) {
                     if (keyStatement != null) keyStatement.executeUpdate();
                 } catch (final SQLException e) {
-                    AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create key &4" + keyLower + "&c in table &4" + table, e);
+                    dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to create key &4" + keyLower + "&c in table &4" + table, e);
                 }
             }
         }

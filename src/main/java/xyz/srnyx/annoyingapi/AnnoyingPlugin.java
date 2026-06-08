@@ -326,7 +326,7 @@ public class AnnoyingPlugin extends JavaPlugin {
                 try {
                     clazz.getConstructor(this.getClass()).newInstance(this).register();
                 } catch (final Throwable t) {
-                    log(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
+                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
                 }
             }
         }
@@ -447,7 +447,7 @@ public class AnnoyingPlugin extends JavaPlugin {
                 }
             }.register();
         } catch (final Exception e) {
-            log(Level.WARNING, "&eFailed to register &6bStats&e metrics", e);
+            logErrorTrack(Level.WARNING, "&eFailed to register &6bStats&e metrics", e);
         }
     }
 
@@ -620,8 +620,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public static void log(@Nullable Level level, @Nullable Object message, @Nullable Throwable throwable) {
         if (level == null) level = Level.INFO;
-        // Only color the message if the server version is between 1.12 and 1.20
-        LOGGER.log(level, MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 12, 0) && MINECRAFT_VERSION.isLessThanOrEqualTo(1, 20, 0) ? BukkitUtility.color(message) : BukkitUtility.stripUntranslatedColor(String.valueOf(message)), throwable);
+        final String messageString = String.valueOf(message);
+        LOGGER.log(level,
+                // Only color the message if the server version is between 1.12 and 1.20
+                MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 12, 0) && MINECRAFT_VERSION.isLessThanOrEqualTo(1, 20, 0)
+                        ? BukkitUtility.color(messageString)
+                        : BukkitUtility.stripUntranslatedColor(messageString),
+                throwable);
     }
 
     /**

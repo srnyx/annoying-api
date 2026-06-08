@@ -70,7 +70,7 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
         final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
         if (requiredLibraries != null) for (final AnnoyingLibrary required : library.getRequiredLibraries()) {
             if (!isLoaded(required) && !loadLibrary(required)) {
-                AnnoyingPlugin.log(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
+                plugin.logErrorTrack(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
                 return false;
             }
             dependencyRelocations.addAll(required.getRelocations().apply(plugin));
@@ -86,7 +86,7 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
             loadedLibraries.add(library);
             return true;
         } catch (final Exception e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
+            plugin.logErrorTrack(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
             return false;
         }
     }
@@ -107,13 +107,13 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
         try {
             loadLibrary(library.getLibrary().isolatedLoad(true).build());
         } catch (final Exception e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
+            plugin.logErrorTrack(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
             return null;
         }
 
         // Return the isolated class loader
         final IsolatedClassLoader classLoader = getIsolatedClassLoaderOf(library).orElse(null);
-        if (classLoader == null) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
+        if (classLoader == null) plugin.logErrorTrack(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
         return classLoader;
     }
 

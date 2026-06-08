@@ -137,7 +137,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 final Optional<String> modrinth = modrinth(modrinthIdentifier.get());
                 if (modrinth.isPresent()) return modrinth;
             } catch (final Exception e) {
-                AnnoyingPlugin.log(Level.WARNING, "Failed to check Modrinth for the latest version of " + pluginName, e);
+                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Modrinth for the latest version of " + pluginName, e);
                 return fail(PluginPlatform.Platform.MODRINTH);
             }
         }
@@ -149,7 +149,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 final Optional<String> hangar = hangar(hangarPlatform.get());
                 if (hangar.isPresent()) return hangar;
             } catch (final Exception e) {
-                AnnoyingPlugin.log(Level.WARNING, "Failed to check Hangar for the latest version of " + pluginName, e);
+                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Hangar for the latest version of " + pluginName, e);
                 return fail(PluginPlatform.Platform.HANGAR);
             }
         }
@@ -161,7 +161,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 final Optional<String> spigot = spigot(spigotIdentifier.get());
                 if (spigot.isPresent()) return spigot;
             } catch (final Exception e) {
-                AnnoyingPlugin.log(Level.WARNING, "Failed to check Spigot for the latest version of " + pluginName, e);
+                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Spigot for the latest version of " + pluginName, e);
                 return fail(PluginPlatform.Platform.SPIGOT);
             }
         }

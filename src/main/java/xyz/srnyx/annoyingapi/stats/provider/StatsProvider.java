@@ -28,11 +28,8 @@ public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registr
 
         // Load required libraries
         final Collection<AnnoyingLibrary> libraries = getRequiredLibraries();
-        if (libraries != null) for (final AnnoyingLibrary library : libraries) {
-            if (!plugin.libraryManager.loadLibrary(library)) {
-                AnnoyingPlugin.log(Level.WARNING, "Failed to load required library " + library.getId() + " for stats provider " + getClass().getSimpleName());
-                return;
-            }
+        if (libraries != null) {
+            for (final AnnoyingLibrary library : libraries) if (!plugin.libraryManager.loadLibrary(library)) return;
         }
 
         // Create loader
@@ -40,7 +37,7 @@ public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registr
             loader = createLoader();
             loader.load();
         } catch (final Exception e) {
-            AnnoyingPlugin.log(Level.SEVERE, "Failed to create stats loader for provider " + getClass().getSimpleName(), e);
+            plugin.logErrorTrack(Level.SEVERE, "Failed to create stats loader for provider " + getClass().getSimpleName(), e);
             return;
         }
 
