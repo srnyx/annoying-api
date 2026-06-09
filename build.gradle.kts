@@ -36,7 +36,6 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     javaVersion = javaVersion))
 
 // Libraries downloaded at runtime
-val okaeriConfigsRepository: String = "https://repo.okaeri.cloud/releases"
 val okaeriConfigsVersion: String = "6.1.0-beta.4"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
@@ -47,28 +46,28 @@ val runtimeLibraries = listOf(
         version = "26.1.0"),
     RuntimeLibrary(
         name = "okaeri_configs_yaml_bukkit",
-        repositories = listOf(okaeriConfigsRepository),
+        repositories = listOf(Repository.OKAERI_RELEASES.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-yaml-bukkit",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_serdes_bukkit",
-        repositories = listOf(okaeriConfigsRepository),
+        repositories = listOf(Repository.OKAERI_RELEASES.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-serdes-bukkit",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_serdes_commons",
-        repositories = listOf(okaeriConfigsRepository),
+        repositories = listOf(Repository.OKAERI_RELEASES.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-serdes-commons",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_validator_okaeri",
-        repositories = listOf(okaeriConfigsRepository),
+        repositories = listOf(Repository.OKAERI_RELEASES.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-validator-okaeri",
         version = okaeriConfigsVersion,
