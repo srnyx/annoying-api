@@ -18,20 +18,49 @@ import java.util.function.Supplier;
 
 
 public enum RuntimeLibrary implements AnnoyingLibrary {
+    OKAERI_CONFIGS_CORE(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_yaml_bukkit_repository_0 }}")
+                    .groupId("{{ okaeri_configs_yaml_bukkit_group }}")
+                    .artifactId("okaeri-configs-core")
+                    .version("{{ okaeri_configs_yaml_bukkit_version }}"),
+            plugin -> Collections.singleton(plugin.getRelocation("{{ okaeri_configs_yaml_bukkit_relocation_0_from }}"))),
+    OKAERI_CONFIGS_YAML_BUKKIT(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_yaml_bukkit_repository_0 }}")
+                    .groupId("{{ okaeri_configs_yaml_bukkit_group }}")
+                    .artifactId("{{ okaeri_configs_yaml_bukkit_artifact }}")
+                    .version("{{ okaeri_configs_yaml_bukkit_version }}")),
+    OKAERI_CONFIGS_SERDES_BUKKIT(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_serdes_bukkit_repository_0 }}")
+                    .groupId("{{ okaeri_configs_serdes_bukkit_group }}")
+                    .artifactId("{{ okaeri_configs_serdes_bukkit_artifact }}")
+                    .version("{{ okaeri_configs_serdes_bukkit_version }}")),
+    OKAERI_CONFIGS_SERDES_COMMONS(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_serdes_commons_repository_0 }}")
+                    .groupId("{{ okaeri_configs_serdes_commons_group }}")
+                    .artifactId("{{ okaeri_configs_serdes_commons_artifact }}")
+                    .version("{{ okaeri_configs_serdes_commons_version }}")),
+    OKAERI_CONFIGS_VALIDATOR_OKAERI(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_validator_okaeri_repository_0 }}")
+                    .groupId("{{ okaeri_configs_validator_okaeri_group }}")
+                    .artifactId("{{ okaeri_configs_validator_okaeri_artifact }}")
+                    .version("{{ okaeri_configs_validator_okaeri_version }}")),
     ITEM_NBT_API(
             () -> Library.builder()
                     .repository("{{ item_nbt_api_repository_0 }}")
                     .groupId("{{ item_nbt_api_group }}")
                     .artifactId("{{ item_nbt_api_artifact }}")
-                    .version("{{ item_nbt_api_version }}"),
-            plugin -> Collections.singleton(plugin.getRelocation("{{ item_nbt_api_relocation_0_from }}"))),
+                    .version("{{ item_nbt_api_version }}")),
     BSTATS_BASE(
             () -> Library.builder()
                     .repository("{{ bstats_bukkit_repository_0 }}")
                     .groupId("{{ bstats_bukkit_group }}")
                     .artifactId("bstats-base")
-                    .version("{{ bstats_bukkit_version }}"),
-            plugin -> Collections.singleton(plugin.getRelocation("{{ bstats_bukkit_relocation_0_from }}"))),
+                    .version("{{ bstats_bukkit_version }}")),
     BSTATS_BUKKIT(
             () -> Library.builder()
                     .repository("{{ bstats_bukkit_repository_0 }}")
@@ -94,16 +123,16 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
     @Nullable public final Function<AnnoyingPlugin, Collection<Relocation>> relocations;
     @Nullable public final Collection<AnnoyingLibrary> requiredLibraries;
 
+    RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier) {
+        this(librarySupplier, null, null);
+    }
+
     RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier, @NotNull Function<AnnoyingPlugin, Collection<Relocation>> relocations) {
-        this.librarySupplier = librarySupplier;
-        this.relocations = relocations;
-        this.requiredLibraries = null;
+        this(librarySupplier, relocations, null);
     }
 
     RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier, @NotNull Collection<AnnoyingLibrary> requiredLibraries) {
-        this.librarySupplier = librarySupplier;
-        this.relocations = null;
-        this.requiredLibraries = requiredLibraries;
+        this(librarySupplier, null, requiredLibraries);
     }
 
     RuntimeLibrary(@NotNull Supplier<Library.Builder> librarySupplier, @NotNull Function<AnnoyingPlugin, Collection<Relocation>> relocations, @NotNull Collection<AnnoyingLibrary> requiredLibraries) {
