@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.stats.provider;
 
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.library.RuntimeLibrary;

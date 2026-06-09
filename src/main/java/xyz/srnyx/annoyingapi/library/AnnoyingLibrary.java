@@ -43,7 +43,7 @@ public interface AnnoyingLibrary {
      *
      * @return  a function that gives a collection of relocations to apply to the library
      */
-    @NotNull
+    @Nullable
     Function<AnnoyingPlugin, Collection<Relocation>> getRelocations();
 
     /**
@@ -76,7 +76,8 @@ public interface AnnoyingLibrary {
     @NotNull
     default Library.Builder getLibraryWithRelocations(@NotNull AnnoyingPlugin plugin) {
         final Library.Builder builder = getLibrary();
-        for (final Relocation relocation : getRelocations().apply(plugin)) builder.relocate(relocation);
+        final Function<AnnoyingPlugin, Collection<Relocation>> relocationsFunction = getRelocations();
+        if (relocationsFunction != null) for (final Relocation relocation : relocationsFunction.apply(plugin)) builder.relocate(relocation);
         return builder;
     }
 }

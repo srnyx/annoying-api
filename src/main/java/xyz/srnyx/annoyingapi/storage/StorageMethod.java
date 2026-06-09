@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
@@ -67,9 +68,9 @@ public enum StorageMethod {
      */
     @Nullable public final Function<Path, String> url;
     /**
-     * The {@link RuntimeLibrary} to download/load if the method requires one
+     * The {@link AnnoyingLibrary} to download/load if the method requires one
      */
-    @Nullable public final RuntimeLibrary library;
+    @Nullable public final AnnoyingLibrary library;
     /**
      * The default port for the method (only for remote connections)
      */
@@ -83,7 +84,7 @@ public enum StorageMethod {
      * @param library   {@link #library}
      * @param url       {@link #url}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
@@ -100,7 +101,7 @@ public enum StorageMethod {
      * @param library     {@link #library}
      * @param defaultPort {@link #defaultPort}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable RuntimeLibrary library, int defaultPort) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable AnnoyingLibrary library, int defaultPort) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = file -> url;

@@ -9,10 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 
@@ -66,14 +64,17 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      */
     public boolean loadLibrary(@NotNull AnnoyingLibrary library) {
         // Load required libraries and get all relocations
-        final Set<Relocation> dependencyRelocations = new HashSet<>();
+        final Collection<Relocation> dependencyRelocations = new HashSet<>();
         final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
-        if (requiredLibraries != null) for (final AnnoyingLibrary required : library.getRequiredLibraries()) {
+        if (requiredLibraries != null) for (final AnnoyingLibrary required : requiredLibraries) {
+            // Load required library
             if (!isLoaded(required) && !loadLibrary(required)) {
                 plugin.logErrorTrack(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
                 return false;
             }
-            dependencyRelocations.addAll(required.getRelocations().apply(plugin));
+
+            // Get relocations from required library (deep search)
+            dependencyRelocations.addAll(getRelocationsDeep(required, new HashSet<>()));
         }
 
         // Get library builder with relocations
@@ -89,6 +90,29 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
             plugin.logErrorTrack(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
             return false;
         }
+    }
+
+    @NotNull
+    private Collection<Relocation> getRelocationsDeep(@NotNull AnnoyingLibrary library, @NotNull Set<AnnoyingLibrary> visited) {
+        final Collection<Relocation> relocations = new HashSet<>();
+
+        // Prevent infinite recursion
+        if (!visited.add(library)) return relocations;
+
+        // Add own relocations
+        final Function<AnnoyingPlugin, Collection<Relocation>> ownRelocationsFunction = library.getRelocations();
+        if (ownRelocationsFunction != null) {
+            final Collection<Relocation> ownRelocations = library.getRelocations().apply(plugin);
+            if (ownRelocations != null) relocations.addAll(ownRelocations);
+        }
+
+        // Add relocations of required libraries (deep search)
+        final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
+        if (requiredLibraries != null) for (final AnnoyingLibrary required : requiredLibraries) {
+            relocations.addAll(getRelocationsDeep(required, visited));
+        }
+
+        return relocations;
     }
 
     /**

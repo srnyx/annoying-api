@@ -36,6 +36,8 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     javaVersion = javaVersion))
 
 // Libraries downloaded at runtime
+val okaeriConfigsRepository: String = "https://repo.okaeri.cloud/releases"
+val okaeriConfigsVersion: String = "6.1.0-beta.4"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
@@ -51,14 +53,14 @@ val runtimeLibraries = listOf(
         version = "2.15.7",
         relocations = listOf(Relocation("de.tr7zw.changeme.nbtapi"))),
     RuntimeLibrary(
-        name = "bstats",
+        name = "bstats_bukkit",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "org.bstats",
         artifact = "bstats-bukkit",
         version = "3.2.1",
         relocations = listOf(Relocation("org.bstats"))),
     RuntimeLibrary(
-        name = "faststats",
+        name = "faststats_bukkit",
         repositories = listOf(
             Repository.FASTSTATS_RELEASES.url,
             Repository.FASTSTATS_SNAPSHOTS.url),
@@ -113,7 +115,18 @@ sourceSets.main { blossom.javaSources {
     property("annoying_api_version", version.toString())
 
     // Runtime libraries
-    for (library in runtimeLibraries) property("${library.name}_version", library.version)
+    for (library in runtimeLibraries) {
+        library.repositories.forEachIndexed { index, repository ->
+            property("${library.name}_repository_$index", repository)
+        }
+        property("${library.name}_group", library.group.dotsToBrackets())
+        property("${library.name}_artifact", library.artifact)
+        property("${library.name}_version", library.version)
+        library.relocations.forEachIndexed { index, relocation ->
+            property("${library.name}_relocation_${index}_from", relocation.from.dotsToBrackets())
+            relocation.to?.let { property("${library.name}_relocation_${index}_to", it.processRelocationTo()) }
+        }
+    }
 } }
 
 // Publishing
@@ -138,3 +151,7 @@ setupPublishingEnv(publishingSimpleConfig(
         },
         classifier = "metadata",
         extension = "json"))))
+
+fun String.dotsToBrackets(): String = replace(".", "{}")
+
+fun String.processRelocationTo(): String = replace("{package}.libs.", "").dotsToBrackets()

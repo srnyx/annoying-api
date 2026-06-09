@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
