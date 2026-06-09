@@ -1,4 +1,4 @@
-# Annoying API [![Release](https://repo.srnyx.com/api/badge/latest/releases/xyz/srnyx/annoying-api?color=006d82&name=Reposilite)](https://repo.srnyx.com/#/releases/xyz/srnyx/annoying-api)
+# Annoying API [![Release](https://repo.srnyx.com/api/badge/latest/releases/xyz/srnyx/annoying-api?color=006d82&name=Release)](https://repo.srnyx.com/#/releases/xyz/srnyx/annoying-api) [![Snapshot](https://repo.srnyx.com/api/badge/latest/snapshots/xyz/srnyx/annoying-api?color=006d82&name=Snapshot)](https://repo.srnyx.com/#/snapshots/xyz/srnyx/annoying-api)
 
 General purpose API for my plugins. Just contains some utility classes and methods. *[Okay... it contains a tad bit more than that...](#developers)*
 
