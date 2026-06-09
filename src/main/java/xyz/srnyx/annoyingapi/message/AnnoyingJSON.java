@@ -1,10 +1,12 @@
 package xyz.srnyx.annoyingapi.message;
 
-import net.md_5.bungee.api.chat.*;
-
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefHoverEvent;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 

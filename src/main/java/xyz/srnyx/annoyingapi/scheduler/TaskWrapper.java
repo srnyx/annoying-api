@@ -13,6 +13,7 @@ import java.util.logging.Level;
  * A wrapper for Bukkit and Folia tasks
  */
 public class TaskWrapper {
+    @NotNull private final AnnoyingPlugin plugin;
     /**
      * The task object
      */
@@ -26,14 +27,17 @@ public class TaskWrapper {
      * Create an empty {@link TaskWrapper}
      * <br>Use {@link #setTask(Object)} once you have the task
      */
-    public TaskWrapper() {}
+    public TaskWrapper(@NotNull AnnoyingPlugin plugin) {
+        this.plugin = plugin;
+    }
 
     /**
      * Wrap a Bukkit or Folia task
      *
      * @param   task    {@link #task}
      */
-    public TaskWrapper(@NotNull Object task) {
+    public TaskWrapper(@NotNull AnnoyingPlugin plugin, @NotNull Object task) {
+        this(plugin);
         setTask(task);
     }
 
@@ -68,7 +72,7 @@ public class TaskWrapper {
             try {
                 Class.forName("io.papermc.paper.threadedregions.scheduler.ScheduledTask").getMethod("cancel").invoke(task);
             } catch (final ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "Failed to cancel a Folia task!", e);
+                plugin.logErrorTrack(Level.SEVERE, "Failed to cancel a Folia task!", e);
             }
             return;
         }

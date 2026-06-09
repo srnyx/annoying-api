@@ -3,15 +3,11 @@ package xyz.srnyx.annoyingapi.options;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 import org.bukkit.configuration.ConfigurationSection;
-
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.AnnoyingPAPIExpansion;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.selector.Selector;
-import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 import xyz.srnyx.annoyingapi.parents.Registrable;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.lang.reflect.InvocationTargetException;
@@ -32,7 +28,7 @@ public class RegistrationOptions extends Stringable {
     /**
      * <i>{@code OPTIONAL}</i> The {@link Registrable}s to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      */
-    @NotNull @SuppressWarnings("CanBeFinal") public Set<Registrable> toRegister = new HashSet<>();
+    @NotNull public Set<Registrable> toRegister = new HashSet<>();
     /**
      * <i>{@code OPTIONAL}</i> The {@link PlaceholderExpansion PAPI expansion} to register when the plugin {@link AnnoyingPlugin#onEnable() enables}
      * <p><i>Can also be a {@link AnnoyingPAPIExpansion}</i>

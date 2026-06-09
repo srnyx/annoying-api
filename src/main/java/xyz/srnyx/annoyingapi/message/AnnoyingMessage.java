@@ -195,11 +195,10 @@ public class AnnoyingMessage {
         for (final Map.Entry<String, Object> entry : section.getValues(false).entrySet()) {
             final String subKey = entry.getKey();
             final Object value = entry.getValue();
-            if (!(value instanceof String)) {
+            if (!(value instanceof String subMessage)) {
                 json.append(key + "." + subKey, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!");
                 continue;
             }
-            String subMessage = (String) value;
 
             // Only cache if %command% not present
             if (shouldCache && subMessage.contains("%command%")) shouldCache = false;

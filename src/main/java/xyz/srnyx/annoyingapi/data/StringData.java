@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 import xyz.srnyx.annoyingapi.options.DataOptions;
 
 import java.util.logging.Level;
@@ -79,13 +79,13 @@ public class StringData extends Data<String> {
 
         // Get the data from the cache
         if (useCache) {
-            final Value cached = plugin.dataManager.dialect.getFromCache(table, target, key);
-            if (cached != null) return cached.value;
+            final CachedValue cached = plugin.dataManager.dialect.getFromCache(table, target, key);
+            if (cached != null) return cached.value();
         }
 
         // Get the data from the database
         final String data = plugin.dataManager.dialect.getFromDatabase(table, target, key).orElse(null);
-        if (useCache) plugin.dataManager.dialect.setToCache(table, target, key, new Value(data));
+        if (useCache) plugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(data));
         return data;
     }
 
@@ -98,14 +98,14 @@ public class StringData extends Data<String> {
 
         // Set the data in the cache
         if (useCache) {
-            plugin.dataManager.dialect.setToCache(table, target, key, new Value(value));
+            plugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(value));
             return true;
         }
 
         // Set the data in the database
         final FailedSet failed = plugin.dataManager.dialect.setToDatabase(table, target, key, value);
         if (failed != null) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!", failed.exception);
+            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!", failed.exception());
             return false;
         }
         return true;

@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.command.selector;
 
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.selector.selectors.*;
 

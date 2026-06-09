@@ -2,18 +2,21 @@ package xyz.srnyx.annoyingapi.storage.dialects.sql;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -48,7 +51,7 @@ public class SQLiteDialect extends SQLDialect {
         try (final ResultSet result = connection.createStatement().executeQuery("PRAGMA table_info(\"" + table + "\")")) {
             if (result != null) while (result.next()) if (result.getString("name").equals(key)) return null;
         } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get table info for &4" + table, e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to get table info for &4" + table, e);
         }
         return connection.prepareStatement("ALTER TABLE \"" + table + "\" ADD COLUMN \"" + key + "\" TEXT");
     }
@@ -83,14 +86,14 @@ public class SQLiteDialect extends SQLDialect {
     }
 
     @Override @NotNull
-    public Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
-        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+    public Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
+        final Set<ConcurrentHashMap.Entry<String, CachedValue>> entrySet = data.entrySet();
 
         // Get builders
         final StringBuilder insertBuilder = new StringBuilder("INSERT OR REPLACE INTO \"" + table + "\" (\"" + StringData.TARGET_COLUMN + "\"");
         final StringBuilder valuesBuilder = new StringBuilder(" VALUES(?");
-        final List<Value> values = new ArrayList<>();
-        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) {
+        final List<CachedValue> values = new ArrayList<>();
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) {
             insertBuilder.append(", `").append(entry.getKey()).append("`");
             valuesBuilder.append(", ?");
             values.add(entry.getValue());
@@ -103,7 +106,7 @@ public class SQLiteDialect extends SQLDialect {
         try (final PreparedStatement statement = setValuesParameters(target, values, insertBuilder, valuesBuilder, null)) {
             statement.executeUpdate();
         } catch (final SQLException e) {
-            for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value, e));
+            for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value(), e));
         }
         return failed;
     }

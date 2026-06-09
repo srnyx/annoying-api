@@ -1,12 +1,15 @@
 package xyz.srnyx.annoyingapi.library;
 
 import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
+import net.byteflux.libby.relocation.Relocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -62,18 +65,35 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      * @see             #loadLibraryIsolated(AnnoyingLibrary)
      */
     public boolean loadLibrary(@NotNull AnnoyingLibrary library) {
+        // Load required libraries and get all relocations
+        final Set<Relocation> dependencyRelocations = new HashSet<>();
+        final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
+        if (requiredLibraries != null) for (final AnnoyingLibrary required : library.getRequiredLibraries()) {
+            if (!isLoaded(required) && !loadLibrary(required)) {
+                plugin.logErrorTrack(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
+                return false;
+            }
+            dependencyRelocations.addAll(required.getRelocations().apply(plugin));
+        }
+
+        // Get library builder with relocations
+        final Library.Builder builder = library.getLibraryWithRelocations(plugin);
+        for (final Relocation relocation : dependencyRelocations) builder.relocate(relocation);
+
+        // Load library
         try {
-            loadLibrary(library.getLibraryWithRelocations(plugin).build());
+            loadLibrary(builder.build());
             loadedLibraries.add(library);
             return true;
         } catch (final Exception e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
+            plugin.logErrorTrack(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
             return false;
         }
     }
 
     /**
      * Load a {@link AnnoyingLibrary} into an isolated classloader
+     * <br><b>{@link AnnoyingLibrary#getRequiredLibraries()} is IGNORED when loading isolated libraries, as it is currently not possible to load multiple libraries into the same isolated classloader!</b>
      *
      * @param   library the library to load
      *
@@ -87,13 +107,13 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
         try {
             loadLibrary(library.getLibrary().isolatedLoad(true).build());
         } catch (final Exception e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
+            plugin.logErrorTrack(Level.SEVERE, "&cFailed to load isolated library &4" + library.getId(), e);
             return null;
         }
 
         // Return the isolated class loader
         final IsolatedClassLoader classLoader = getIsolatedClassLoaderOf(library).orElse(null);
-        if (classLoader == null) AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
+        if (classLoader == null) plugin.logErrorTrack(Level.SEVERE, "&cFailed to get classloader of isolated library &4" + library.getId() + " &cafter loading");
         return classLoader;
     }
 

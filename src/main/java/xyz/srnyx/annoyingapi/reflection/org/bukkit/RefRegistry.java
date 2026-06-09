@@ -2,10 +2,8 @@ package xyz.srnyx.annoyingapi.reflection.org.bukkit;
 
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffectType;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.InvocationTargetException;

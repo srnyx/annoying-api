@@ -38,7 +38,7 @@ public enum DefaultReplaceType implements ReplaceType {
     BOOLEAN("true//false", (input, value) -> {
         final String[] split = input.split("//", 2);
         final boolean bool = Boolean.parseBoolean(value);
-        if (split.length != 2) return bool ? "true" : "false";
+        if (split.length != 2) return Boolean.toString(bool);
         return bool ? split[0] : split[1];
     });
 

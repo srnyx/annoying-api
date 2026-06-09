@@ -118,11 +118,11 @@ public class DataManager {
         final Dialect.MigrationData migrationData = dialect.getMigrationDataFromDatabase(newManager).orElse(null);
         if (migrationData == null) return this;
 
-        if (!migrationData.data.isEmpty()) {
+        if (!migrationData.data().isEmpty()) {
             // NEW: Create missing tables/columns
-            if (newManager.dialect instanceof SQLDialect) ((SQLDialect) newManager.dialect).createTablesKeys(migrationData.tablesKeys);
+            if (newManager.dialect instanceof SQLDialect) ((SQLDialect) newManager.dialect).createTablesKeys(migrationData.tablesKeys());
             // NEW: Save values to new database (log failures)
-            for (final FailedSet failure : newManager.dialect.setToDatabase(migrationData.data)) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set &4" + failure.column + "&c for &4" + failure.target + "&c in table &4" + failure.table + "&c to &4" + failure.value, failure.exception);
+            for (final FailedSet failure : newManager.dialect.setToDatabase(migrationData.data())) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c to &4" + failure.value(), failure.exception());
         } else {
             AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
         }

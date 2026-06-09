@@ -1,24 +1,29 @@
 package xyz.srnyx.annoyingapi.storage.dialects;
 
-import com.google.gson.*;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
-import xyz.srnyx.annoyingapi.storage.Value;
-
+import xyz.srnyx.annoyingapi.storage.CachedValue;
 import xyz.srnyx.javautilities.FileUtility;
-import xyz.srnyx.javautilities.MiscUtility;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -48,19 +53,19 @@ public class JSONDialect extends Dialect {
     }
 
     @Override @Nullable
-    public Value getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
+    public CachedValue getFromCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         return getTableFromCache(table).map(file -> file.get(target, key)).orElse(null);
     }
 
     @Override
-    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull Value value) {
+    public void setToCacheImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull CachedValue value) {
         getTableFromCache(table)
                 .orElseGet(() -> {
                     final JsonFile newFile = getTableFromDatabase(table);
                     tables.put(table, newFile);
                     return newFile;
                 })
-                .set(target, key, value.value);
+                .set(target, key, value.value());
     }
 
     @Override
@@ -86,30 +91,30 @@ public class JSONDialect extends Dialect {
         // Read the file if it exists
         if (file.exists()) try (final FileReader fileReader = new FileReader(file)) {
             json = GSON.fromJson(fileReader, JsonObject.class);
-        // Reading failed, log error
         } catch (final IOException | JsonParseException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to read file for table &4" + table, e);
+            // Reading failed, log error
+            dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to read file for table &4" + table, e);
         }
 
         // Return new file
-        return new JsonFile(file, json);
+        return new JsonFile(dataManager.plugin, file, json);
     }
 
     @Override @NotNull
     protected Optional<MigrationData> getMigrationDataFromDatabaseImpl(@NotNull DataManager newManager) {
         final Map<String, Set<String>> tablesKeys = new HashMap<>(); // [table, [column]]
-        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, Value>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
+        final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data = new ConcurrentHashMap<>(); // [table, [target, [key, value]]]
         for (final String table : FileUtility.getFileNames(folder, "json")) {
             final Set<String> keys = new HashSet<>();
-            final ConcurrentHashMap<String, ConcurrentHashMap<String, Value>> targetData = new ConcurrentHashMap<>(); // [target, [key, value]]
+            final ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>> targetData = new ConcurrentHashMap<>(); // [target, [key, value]]
             for (final Map.Entry<String, JsonElement> entry : getTableFromDatabase(table).json.entrySet()) {
                 final JsonElement entryElement = entry.getValue();
                 if (!entryElement.isJsonObject()) continue;
-                final ConcurrentHashMap<String, Value> targetMap = new ConcurrentHashMap<>(); // [key, value]
+                final ConcurrentHashMap<String, CachedValue> targetMap = new ConcurrentHashMap<>(); // [key, value]
                 for (final Map.Entry<String, JsonElement> targetEntry : entryElement.getAsJsonObject().entrySet()) {
                     final String key = targetEntry.getKey();
                     keys.add(key);
-                    targetMap.put(key, new Value(targetEntry.getValue().getAsString()));
+                    targetMap.put(key, new CachedValue(targetEntry.getValue().getAsString()));
                 }
                 targetData.put(entry.getKey(), targetMap);
             }
@@ -121,7 +126,7 @@ public class JSONDialect extends Dialect {
 
     @Override @NotNull
     protected Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return Optional.ofNullable(getTableFromDatabase(table).get(target, key)).map(value -> value.value);
+        return Optional.ofNullable(getTableFromDatabase(table).get(target, key)).map(CachedValue::value);
     }
 
     @Override @Nullable
@@ -132,18 +137,18 @@ public class JSONDialect extends Dialect {
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, Value> data) {
-        final Set<ConcurrentHashMap.Entry<String, Value>> entrySet = data.entrySet();
+    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
+        final Set<ConcurrentHashMap.Entry<String, CachedValue>> entrySet = data.entrySet();
 
         // Set data in file
         final JsonFile file = getTableFromDatabase(table);
         final JsonObject targetData = file.getTargetDataCreate(target);
-        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) targetData.addProperty(entry.getKey(), entry.getValue().value);
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) targetData.addProperty(entry.getKey(), entry.getValue().value());
 
         // Return failures if saving fails
         final Set<FailedSet> failed = new HashSet<>();
         if (file.save()) return failed;
-        for (final ConcurrentHashMap.Entry<String, Value> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value));
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value()));
         return failed;
     }
 
@@ -158,6 +163,7 @@ public class JSONDialect extends Dialect {
      * A wrapper for a JSON file with utility methods
      */
     public static class JsonFile {
+        @NotNull private final AnnoyingPlugin plugin;
         /**
          * The file
          */
@@ -173,7 +179,8 @@ public class JSONDialect extends Dialect {
          * @param   file    {@link #file}
          * @param   json    {@link #json}
          */
-        private JsonFile(@NotNull File file, @NotNull JsonObject json) {
+        private JsonFile(@NotNull AnnoyingPlugin plugin, @NotNull File file, @NotNull JsonObject json) {
+            this.plugin = plugin;
             this.file = file;
             this.json = json;
         }
@@ -187,7 +194,7 @@ public class JSONDialect extends Dialect {
          */
         @NotNull
         private Optional<JsonObject> getTargetData(@NotNull String target) {
-            return MiscUtility.handleException(() -> json.getAsJsonObject(target));
+            return Mapper.convertJsonElement(json.get(target), JsonObject.class);
         }
 
         /**
@@ -199,7 +206,7 @@ public class JSONDialect extends Dialect {
          */
         @NotNull
         private JsonObject getTargetDataCreate(@NotNull String target) {
-            return MiscUtility.handleException(() -> json.getAsJsonObject(target)).orElseGet(() -> {
+            return getTargetData(target).orElseGet(() -> {
                 final JsonObject jsonObject = new JsonObject();
                 json.add(target, jsonObject);
                 return jsonObject;
@@ -212,13 +219,14 @@ public class JSONDialect extends Dialect {
          * @param   target  the target to get the key's value from
          * @param   key     the key to get
          *
-         * @return          the value of the key in a {@link Value}, or null if the key doesn't exist
+         * @return          the value of the key in a {@link CachedValue}, or null if the key doesn't exist
          */
         @Nullable
-        private Value get(@NotNull String target, @NotNull String key) {
+        private CachedValue get(@NotNull String target, @NotNull String key) {
             return getTargetData(target)
-                    .flatMap(jsonObject -> MiscUtility.handleException(() -> jsonObject.get(key).getAsString()))
-                    .map(Value::new)
+                    .flatMap(jsonObject -> Mapper.convertJsonElement(jsonObject.get(key), JsonPrimitive.class))
+                    .flatMap(primitive -> Mapper.convertJsonPrimitive(primitive, String.class))
+                    .map(CachedValue::new)
                     .orElse(null);
         }
 
@@ -254,7 +262,7 @@ public class JSONDialect extends Dialect {
                 Files.createDirectories(file.getParentFile().toPath());
                 Files.createFile(file.toPath());
             } catch (final IOException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
+                plugin.logErrorTrack(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
                 return false;
             }
 
@@ -263,7 +271,7 @@ public class JSONDialect extends Dialect {
                 fileWriter.write(GSON.toJson(json));
                 return true;
             } catch (final IOException e) {
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
+                plugin.logErrorTrack(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
                 return false;
             }
         }

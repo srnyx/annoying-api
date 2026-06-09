@@ -157,6 +157,6 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      * @param   t       the {@link Throwable} that caused the error
      */
     protected void sendError(@NotNull String action, @Nullable Throwable t) {
-        AnnoyingPlugin.log(Level.WARNING, "&cFailed to " + action + " data for &4" + BukkitUtility.stripUntranslatedColor(target.toString()) + "&c!", t);
+        plugin.logErrorTrack(Level.WARNING, "&cFailed to " + action + " data for &4" + BukkitUtility.stripUntranslatedColor(target.toString()) + "&c!", t);
     }
 }

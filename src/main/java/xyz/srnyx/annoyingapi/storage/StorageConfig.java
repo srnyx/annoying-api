@@ -1,11 +1,10 @@
 package xyz.srnyx.annoyingapi.storage;
 
+import net.byteflux.libby.classloader.IsolatedClassLoader;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
@@ -100,7 +99,7 @@ public class StorageConfig {
 
         // Get driver
         final Optional<String> driver = method.getDriver();
-        if (!driver.isPresent()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
+        if (driver.isEmpty()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
 
         // SQLite: create parent directories
         if (method == StorageMethod.SQLITE) {
@@ -109,11 +108,23 @@ public class StorageConfig {
         }
 
         // If downloading library, connect using an IsolatedClassLoader
-        if (method.library != null) try {
-            final Class<?> driverClass = plugin.libraryManager.loadLibraryIsolated(method.library).loadClass(driver.get());
-            return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.newInstance(), url, properties);
-        } catch (final Exception e) {
-            throw new ConnectionException(e, url, properties);
+        if (method.library != null) {
+            // Get IsolatedClassLoader of library
+            final IsolatedClassLoader classLoader;
+            try {
+                classLoader = plugin.libraryManager.loadLibraryIsolated(method.library);
+            } catch (final Exception e) {
+                throw new ConnectionException(e, url, properties);
+            }
+            if (classLoader == null) throw new ConnectionException("Failed to load library for " + method, url, properties);
+
+            // Connect using driver from IsolatedClassLoader
+            try {
+                final Class<?> driverClass = classLoader.loadClass(driver.get());
+                return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.getDeclaredConstructor().newInstance(), url, properties);
+            } catch (final Exception e) {
+                throw new ConnectionException(e, url, properties);
+            }
         }
 
         // Load driver and connect

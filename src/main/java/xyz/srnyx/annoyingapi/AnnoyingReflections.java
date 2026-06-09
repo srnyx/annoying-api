@@ -1,10 +1,8 @@
 package xyz.srnyx.annoyingapi;
 
 import javassist.bytecode.ClassFile;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.reflections.ReflectionsException;
@@ -13,7 +11,6 @@ import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.NameHelper;
 import org.reflections.vfs.Vfs;
-
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
 import java.io.BufferedInputStream;
@@ -92,8 +89,8 @@ public class AnnoyingReflections implements NameHelper {
                                 if (entries != null) for (final Map.Entry<String, String> entry : entries) {
                                     final String key = entry.getKey();
                                     if (key == null) continue;
-                                    // Not using computeIfAbsent as it throws ConcurrentModificationException on Java 9+
                                     Set<String> values = storeMap.get(key);
+                                    //noinspection Java8MapApi (computeIfAbsent throws ConcurrentModificationException on Java 9+)
                                     if (values == null) {
                                         values = new HashSet<>();
                                         storeMap.put(key, values);
