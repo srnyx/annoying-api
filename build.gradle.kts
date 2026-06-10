@@ -12,6 +12,7 @@ import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
 import xyz.srnyx.gradlegalaxy.enums.Repository
 import xyz.srnyx.gradlegalaxy.enums.repository
 import xyz.srnyx.gradlegalaxy.utility.dependencyRelocate
+import xyz.srnyx.gradlegalaxy.utility.getVersionString
 import xyz.srnyx.gradlegalaxy.utility.setupMC
 import xyz.srnyx.gradlegalaxy.utility.setupPublishingEnv
 import xyz.srnyx.gradlegalaxy.utility.spigotAPI
@@ -26,9 +27,10 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
 
-val javaVersion = JavaVersion.VERSION_17
+val spigotVersion: String = "1.8.8"
+val javaVersion: JavaVersion = JavaVersion.VERSION_17
 
-spigotAPI(config = DependencyConfig(version = "1.8.8"))
+spigotAPI(config = DependencyConfig(version = spigotVersion))
 setupMC(javaSetupConfig = JavaSetupConfig(
     group = "xyz.srnyx",
     version = "5.2.1",
@@ -131,10 +133,29 @@ dependencies {
     dependencyRelocate("net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby", configuration = "api")
     dependencyRelocate("xyz.srnyx:java-utilities:c53df5b", "xyz.srnyx.javautilities", configuration = "api")
 
+    // Unit tests
+    testImplementation("org.spigotmc:spigot-api:${getVersionString(spigotVersion)}")
+    testImplementation(platform("org.junit:junit-bom:6.1.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     // Runtime libraries
-    for (library in runtimeLibraries) compileOnlyApi("${library.group}:${library.artifact}:${library.version}") {
-        library.excludes.forEach { exclude(it.group, it.module) }
+    for (library in runtimeLibraries) {
+        val notation = "${library.group}:${library.artifact}:${library.version}"
+        compileOnlyApi(notation) {
+            library.excludes.forEach { exclude(it.group, it.module) }
+        }
+
+        // Unit tests
+        testImplementation(notation) {
+            library.excludes.forEach { exclude(it.group, it.module) }
+        }
     }
+}
+
+// Unit tests
+tasks.test {
+    useJUnitPlatform()
 }
 
 // Blossom (see java-templates module)
