@@ -16,35 +16,48 @@ import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 
-public class ConfigBuilder<C extends OkaeriConfig> {
+public class ConfigBuilder<C> {
     @NotNull private final JavaPlugin plugin;
 
-    @Nullable public C config;
-    @Nullable public Consumer<OkaeriConfigOptions> configure;
-    @NotNull public File file;
-    @NotNull public List<ConfigMigration> migrations = new ArrayList<>();
-    public boolean renameHyphenToSnakeCase = true;
-    public boolean saveDefaults = true;
+    @Nullable private OkaeriConfig config;
+    @Nullable private Consumer<OkaeriConfigOptions> configure;
+    @NotNull private File file;
+    @NotNull private final List<ConfigMigration> migrations = new ArrayList<>();
+    private boolean renameHyphenToSnakeCase = true;
+    private boolean saveDefaults = true;
 
     public ConfigBuilder(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "config.yml");
     }
 
+    /**
+     * Must be an instance of {@link OkaeriConfig}
+     */
     @NotNull
     public ConfigBuilder<C> config(@NotNull C config) {
-        this.config = config;
+        if (!(config instanceof final OkaeriConfig okaeriConfig)) {
+            throw new IllegalArgumentException("Config instance must extend OkaeriConfig: " + config.getClass().getName());
+        }
+        this.config = okaeriConfig;
         return this;
     }
 
+    /**
+     * Must be an instance of {@link OkaeriConfig}
+     */
     @NotNull
     public ConfigBuilder<C> config(@NotNull Class<C> configClass) {
-        this.config = ConfigManager.create(configClass);
+        if (!OkaeriConfig.class.isAssignableFrom(configClass)) {
+            throw new IllegalArgumentException("Config class must extend OkaeriConfig: " + configClass.getName());
+        }
+        this.config = ConfigManager.create(configClass.asSubclass(OkaeriConfig.class));
         return this;
     }
 
@@ -69,15 +82,14 @@ public class ConfigBuilder<C extends OkaeriConfig> {
     }
 
     @NotNull
-    public ConfigBuilder<C> migration(@NotNull ConfigMigration... migration) {
-        this.migrations.addAll(List.of(migration));
+    public ConfigBuilder<C> migrations(@NotNull Collection<ConfigMigration> migrations) {
+        this.migrations.addAll(migrations);
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> migrations(@NotNull Collection<ConfigMigration> migrations) {
-        this.migrations.addAll(migrations);
-        return this;
+    public ConfigBuilder<C> migration(@NotNull ConfigMigration @NotNull ... migration) {
+        return migrations(Arrays.asList(migration));
     }
 
     @NotNull
@@ -108,12 +120,11 @@ public class ConfigBuilder<C extends OkaeriConfig> {
             opt.validator(new AnnoyingConfigValidator());
             opt.bindFile(file);
             opt.removeOrphans(true);
+
+            if (configure != null) configure.accept(opt);
         });
 
-        // Custom configure
-        if (configure != null) config.configure(configure);
-
-        // Load
+        // Initial load for migrations and saveDefaults
         config.load();
 
         // Rename hyphen to snake case migration
@@ -125,6 +136,6 @@ public class ConfigBuilder<C extends OkaeriConfig> {
         // Save defaults
         if (saveDefaults) config.saveDefaults();
 
-        return config;
+        return (C) config;
     }
 }

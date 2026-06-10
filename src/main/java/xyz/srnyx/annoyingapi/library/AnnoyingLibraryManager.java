@@ -54,42 +54,45 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
     }
 
     /**
-     * Load a {@link AnnoyingLibrary} into the server's classpath
+     * Load {@link AnnoyingLibrary libraries} into the server's classpath
+     * <br>This will stop loading libraries if one fails
      *
-     * @param   library the library to load
+     * @param   libraries   the libraries to load
      *
-     * @return          whether the library was loaded successfully
+     * @return  true if all libraries were loaded successfully, false if ANY failed to load
      *
-     * @see             #loadLibraryIsolated(AnnoyingLibrary)
+     * @see #loadLibraryIsolated(AnnoyingLibrary)
      */
-    public boolean loadLibrary(@NotNull AnnoyingLibrary library) {
-        // Load required libraries and get all relocations
-        final Collection<Relocation> dependencyRelocations = new HashSet<>();
-        final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
-        if (requiredLibraries != null) for (final AnnoyingLibrary required : requiredLibraries) {
-            // Load required library
-            if (!isLoaded(required) && !loadLibrary(required)) {
-                plugin.logErrorTrack(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
-                return false;
+    public boolean loadLibrary(@NotNull AnnoyingLibrary @NotNull ... libraries) {
+        for (final AnnoyingLibrary library : libraries) {
+            // Load required libraries and get all relocations
+            final Collection<Relocation> dependencyRelocations = new HashSet<>();
+            final Collection<AnnoyingLibrary> requiredLibraries = library.getRequiredLibraries();
+            if (requiredLibraries != null) for (final AnnoyingLibrary required : requiredLibraries) {
+                // Load required library
+                if (!isLoaded(required) && !loadLibrary(required)) {
+                    plugin.logErrorTrack(Level.SEVERE, "Failed to load required library " + required.getId() + " for " + library.getId());
+                    return false;
+                }
+
+                // Get relocations from required library (deep search)
+                dependencyRelocations.addAll(getRelocationsDeep(required, new HashSet<>()));
             }
 
-            // Get relocations from required library (deep search)
-            dependencyRelocations.addAll(getRelocationsDeep(required, new HashSet<>()));
-        }
+            // Get library builder with relocations
+            final Library.Builder builder = library.getLibraryWithRelocations(plugin);
+            for (final Relocation relocation : dependencyRelocations) builder.relocate(relocation);
 
-        // Get library builder with relocations
-        final Library.Builder builder = library.getLibraryWithRelocations(plugin);
-        for (final Relocation relocation : dependencyRelocations) builder.relocate(relocation);
-
-        // Load library
-        try {
-            loadLibrary(builder.build());
-            loadedLibraries.add(library);
-            return true;
-        } catch (final Exception e) {
-            plugin.logErrorTrack(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
-            return false;
+            // Load library
+            try {
+                loadLibrary(builder.build());
+                loadedLibraries.add(library);
+            } catch (final Exception e) {
+                plugin.logErrorTrack(Level.SEVERE, "&cFailed to load library &4" + library.getId(), e);
+                return false;
+            }
         }
+        return true;
     }
 
     @NotNull
@@ -121,9 +124,9 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      *
      * @param   library the library to load
      *
-     * @return          the isolated classloader containing the library, or null if the library failed to load
+     * @return  the isolated classloader containing the library, or null if the library failed to load
      *
-     * @see             #loadLibrary(AnnoyingLibrary)
+     * @see #loadLibrary(AnnoyingLibrary...)
      */
     @Nullable
     public IsolatedClassLoader loadLibraryIsolated(@NotNull AnnoyingLibrary library) {
@@ -142,14 +145,18 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
     }
 
     /**
-     * Load a {@link AnnoyingLibrary} into the server's classpath if it's not already loaded
+     * Load {@link AnnoyingLibrary libraries} into the server's classpath if they're not already loaded
+     * <br>This will stop loading libraries if one fails
      *
-     * @param   library the library to load
+     * @param   libraries   the libraries to load
      *
-     * @return  whether the library is now loaded
+     * @return  true if all libraries were loaded successfully, false if ANY failed to load
      */
-    public boolean loadIfNotLoaded(@NotNull AnnoyingLibrary library) {
-        return isLoaded(library) || loadLibrary(library);
+    public boolean loadIfNotLoaded(@NotNull AnnoyingLibrary @NotNull ... libraries) {
+        for (final AnnoyingLibrary library : libraries) {
+            if (!isLoaded(library) && !loadLibrary(library)) return false;
+        }
+        return true;
     }
 
     /**
