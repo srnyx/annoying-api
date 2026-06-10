@@ -23,18 +23,29 @@ import java.util.function.Consumer;
 
 
 public class ConfigBuilder<C> {
-    @NotNull private final JavaPlugin plugin;
-
+    @NotNull private final File file;
     @Nullable private OkaeriConfig config;
     @Nullable private Consumer<OkaeriConfigOptions> configure;
-    @NotNull private File file;
     @NotNull private final List<ConfigMigration> migrations = new ArrayList<>();
     private boolean renameKebabCaseToSnakeCase = true;
     private boolean saveDefaults = true;
 
+    public ConfigBuilder(@NotNull File file) {
+        this.file = file;
+    }
+
+    /**
+     * @param   name    relative to {@link JavaPlugin#getDataFolder()}
+     */
+    public ConfigBuilder(@NotNull JavaPlugin plugin, @NotNull String name) {
+        this(new File(plugin.getDataFolder(), name));
+    }
+
+    /**
+     * {@code config.yml} in {@link JavaPlugin#getDataFolder()}
+     */
     public ConfigBuilder(@NotNull JavaPlugin plugin) {
-        this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "config.yml");
+        this(plugin, "config.yml");
     }
 
     /**
@@ -65,20 +76,6 @@ public class ConfigBuilder<C> {
     public ConfigBuilder<C> configure(@Nullable Consumer<OkaeriConfigOptions> configure) {
         this.configure = configure;
         return this;
-    }
-
-    @NotNull
-    public ConfigBuilder<C> file(@NotNull File file) {
-        this.file = file;
-        return this;
-    }
-
-    /**
-     * Relative to the plugin's data folder
-     */
-    @NotNull
-    public ConfigBuilder<C> file(@NotNull String name) {
-        return file(new File(plugin.getDataFolder(), name));
     }
 
     @NotNull
@@ -124,14 +121,14 @@ public class ConfigBuilder<C> {
             if (configure != null) configure.accept(opt);
         });
 
-        // Initial load for migrations and saveDefaults
+        // Initial load (for migrations)
         config.load();
 
-        // Rename hyphen to snake case migration
-        if (renameKebabCaseToSnakeCase) config.migrate(new A0001_Rename_kebab_case_to_snake_case());
-
-        // Custom migrations
-        for (final ConfigMigration migration : migrations) config.migrate(migration);
+        // Migrations
+        final List<ConfigMigration> migrations = new ArrayList<>();
+        if (renameKebabCaseToSnakeCase) migrations.add(new A0001_Rename_kebab_case_to_snake_case());
+        migrations.addAll(this.migrations);
+        config.migrate(migrations.toArray(new ConfigMigration[0]));
 
         // Save defaults
         if (saveDefaults) config.saveDefaults();
