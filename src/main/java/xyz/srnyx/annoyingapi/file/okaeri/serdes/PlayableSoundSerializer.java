@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.file.PlayableSound;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 
 
 public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> {
@@ -33,13 +34,10 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
         final Float pitch = data.get("pitch", Float.class);
         if (soundName == null || category == null) return null;
 
-        // Get sound. Need to do this to support modern enum (alternative is XSeries).
-        final Sound sound;
-        try {
-            sound = Sound.valueOf(soundName);
-        } catch (final IllegalArgumentException ignored) {
-            return null;
-        }
+        // Get sound. Need to use toEnum to support modern enum (alternative is XSeries).
+        //TODO: doesnt make sense this is needed cause wouldnt data.get("sound", Sound.class) do the same thing?
+        final Sound sound = Mapper.toEnum(soundName, Sound.class).orElse(null);
+        if (sound == null) return null;
 
         return new PlayableSound(sound, category, volume, pitch);
     }

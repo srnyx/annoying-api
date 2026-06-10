@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.AnnoyingFile;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -260,12 +261,7 @@ public class StorageConfig {
          */
         @NotNull
         public static Optional<SaveOn> fromString(@Nullable String string) {
-            if (string == null) return Optional.empty();
-            try {
-                return Optional.of(valueOf(string.toUpperCase()));
-            } catch (final IllegalArgumentException e) {
-                return Optional.empty();
-            }
+            return Mapper.toEnum(string, SaveOn.class);
         }
     }
 }

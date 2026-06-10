@@ -20,6 +20,7 @@ import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 import xyz.srnyx.javautilities.FileUtility;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.File;
@@ -27,11 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 
@@ -283,11 +280,9 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      */
     @NotNull
     public Optional<Sound> getSound(@NotNull String path) {
-        final String sound = getString(path);
-        if (sound != null) try {
-            return Optional.of(Sound.valueOf(sound.toUpperCase()));
-        } catch (final IllegalArgumentException ignored) {}
-        return getDef(path);
+        return Optional.ofNullable(getString(path))
+                .flatMap(s -> Mapper.toEnum(s, Sound.class))
+                .or(() -> getDef(path));
     }
 
     /**
@@ -338,7 +333,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@link PotionEffect} or empty if it's invalid
      */
-    @NotNull
+    @NotNull //TODO okaeri serdes
     public Optional<PotionEffect> getPotionEffect(@NotNull String path, boolean log) {
         final Optional<PotionEffect> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
@@ -400,7 +395,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or empty if it's invalid
      */
-    @NotNull @SuppressWarnings("unchecked")
+    @NotNull @SuppressWarnings("unchecked") //TODO okaeri serdes
     public <G> Optional<G> getAttributeModifier(@NotNull String path, boolean log) {
         final Optional<G> def = getDef(path);
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
@@ -415,10 +410,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // operation
-        final Object operation;
-        try {
-            operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
-        } catch (final IllegalArgumentException e) {
+        final Object operation = Mapper.toEnum(operationString, ATTRIBUTE_MODIFIER_OPERATION_ENUM).orElse(null);
+        if (operation == null) {
             if (log) log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
             return def;
         }
@@ -431,10 +424,9 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // slot
             EquipmentSlot slot = null;
             final String equipmentSlotString = section.getString("slot");
-            if (equipmentSlotString != null) try {
-                slot = EquipmentSlot.valueOf(equipmentSlotString);
-            } catch (final IllegalArgumentException e) {
-                if (log) log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
+            if (equipmentSlotString != null) {
+                slot = Mapper.toEnum(equipmentSlotString, EquipmentSlot.class).orElse(null);
+                if (slot == null && log) log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
             }
 
             // Return
@@ -502,7 +494,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return the {@link ItemStack} or empty if it's invalid
      */
-    @NotNull
+    @NotNull //TODO https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ItemStackSerializer.java, https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ItemMetaSerializer.java
     public Optional<ItemStack> getItemStackOptional(@NotNull String path, boolean log) {
         final Optional<ItemStack> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
@@ -561,13 +553,11 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // Flags
             section.getStringList("flags").stream()
                     .map(string -> {
-                        try {
-                            return ItemFlag.valueOf(string.toUpperCase());
-                        } catch (final IllegalArgumentException e) {
-                            if (log) log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
-                            return null;
-                        }
+                        final ItemFlag flag = Mapper.toEnum(string, ItemFlag.class).orElse(null);
+                        if (flag == null && log) log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
+                        return flag;
                     })
+                    .filter(Objects::nonNull)
                     .forEach(meta::addItemFlags);
 
             // 1.11+ (unbreakable)
@@ -584,11 +574,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                     final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
 
                     // Get attribute
-                    final Object attribute;
-                    try {
-                        //noinspection unchecked
-                        attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
-                    } catch (final IllegalArgumentException e) {
+                    final Object attribute = Mapper.toEnum(attributeKey, ATTRIBUTE_ENUM).orElse(null);
+                    if (attribute == null) {
                         if (log) log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
@@ -678,7 +665,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@link Recipe} or the {@code def} if it's invalid
      */
-    @NotNull
+    @NotNull //TODO https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ShapedRecipeSerializer.java
     public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable String name, boolean log) {
         final Optional<Recipe> def = getDef(path);
 

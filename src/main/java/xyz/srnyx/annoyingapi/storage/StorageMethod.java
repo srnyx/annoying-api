@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.storage.dialects.sql.MariaDBDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.MySQLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.PostgreSQLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLiteDialect;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -158,10 +159,7 @@ public enum StorageMethod {
      */
     @NotNull
     public static StorageMethod get(@Nullable String name) {
-        if (name != null) try {
-            return valueOf(name.toUpperCase());
-        } catch (final IllegalArgumentException ignored) {}
-        return H2;
+        return Mapper.toEnum(name, StorageMethod.class).orElse(H2);
     }
 
     /**
