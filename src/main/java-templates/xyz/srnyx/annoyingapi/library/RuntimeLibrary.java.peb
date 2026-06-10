@@ -70,13 +70,15 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository("{{ item_nbt_api_repository_0 }}")
                     .groupId("{{ item_nbt_api_group }}")
                     .artifactId("{{ item_nbt_api_artifact }}")
-                    .version("{{ item_nbt_api_version }}")),
+                    .version("{{ item_nbt_api_version }}"),
+            plugin -> Collections.singleton(plugin.getRelocation("{{ item_nbt_api_relocation_0_from }}"))),
     BSTATS_BASE(
             () -> Library.builder()
                     .repository("{{ bstats_bukkit_repository_0 }}")
                     .groupId("{{ bstats_bukkit_group }}")
                     .artifactId("bstats-base")
-                    .version("{{ bstats_bukkit_version }}")),
+                    .version("{{ bstats_bukkit_version }}"),
+            plugin -> Collections.singleton(plugin.getRelocation("{{ bstats_bukkit_relocation_0_from }}"))),
     BSTATS_BUKKIT(
             () -> Library.builder()
                     .repository("{{ bstats_bukkit_repository_0 }}")
