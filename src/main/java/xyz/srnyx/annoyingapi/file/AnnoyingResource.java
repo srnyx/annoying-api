@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.file;
 
+import eu.okaeri.configs.OkaeriConfig;
 import org.bukkit.configuration.ConfigurationSection;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,10 @@ import java.nio.file.StandardCopyOption;
 
 /**
  * Represents a file in the plugin's folder (usually a config file), the file MUST exist in the {@code resources} folder
+ *
+ * @deprecated  Use {@link OkaeriConfig} instead
  */
+@Deprecated
 public class AnnoyingResource extends AnnoyingFile<AnnoyingResource> {
     /**
      * The path to the file (relative to the plugin's folder)

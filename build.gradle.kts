@@ -20,7 +20,7 @@ import xyz.srnyx.gradlegalaxy.utility.spigotAPI
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "3.0.1"
+    id("xyz.srnyx.gradle-galaxy") version "400e6d5"
     id("com.gradleup.shadow") version "9.4.2"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"

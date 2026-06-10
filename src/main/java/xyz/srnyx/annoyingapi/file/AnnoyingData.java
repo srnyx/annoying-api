@@ -4,11 +4,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.data.Data;
 
 
 /**
  * Represents a file in the plugin's folder (in {@code /data/})
+ *
+ * @deprecated  use {@link Data} instead
  */
+@Deprecated
 public class AnnoyingData extends AnnoyingFile<AnnoyingData> {
     /**
      * Constructs and loads a new {@link AnnoyingData} from the path

@@ -1,0 +1,130 @@
+package xyz.srnyx.annoyingapi.file.okaeri;
+
+import eu.okaeri.configs.ConfigManager;
+import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.OkaeriConfigOptions;
+import eu.okaeri.configs.migrate.ConfigMigration;
+import eu.okaeri.configs.serdes.commons.SerdesCommons;
+import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
+import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_hyphen_names_to_snake_case;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.PlayableSoundSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+
+
+public class ConfigBuilder<C extends OkaeriConfig> {
+    @NotNull private final JavaPlugin plugin;
+
+    @Nullable public C config;
+    @Nullable public Consumer<OkaeriConfigOptions> configure;
+    @NotNull public File file;
+    @NotNull public List<ConfigMigration> migrations = new ArrayList<>();
+    public boolean renameHyphenToSnakeCase = true;
+    public boolean saveDefaults = true;
+
+    public ConfigBuilder(@NotNull JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), "config.yml");
+    }
+
+    @NotNull
+    public ConfigBuilder<C> config(@NotNull C config) {
+        this.config = config;
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> config(@NotNull Class<C> configClass) {
+        this.config = ConfigManager.create(configClass);
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> configure(@Nullable Consumer<OkaeriConfigOptions> configure) {
+        this.configure = configure;
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> file(@NotNull File file) {
+        this.file = file;
+        return this;
+    }
+
+    /**
+     * Relative to the plugin's data folder
+     */
+    @NotNull
+    public ConfigBuilder<C> file(@NotNull String name) {
+        return file(new File(plugin.getDataFolder(), name));
+    }
+
+    @NotNull
+    public ConfigBuilder<C> migration(@NotNull ConfigMigration... migration) {
+        this.migrations.addAll(List.of(migration));
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> migrations(@NotNull Collection<ConfigMigration> migrations) {
+        this.migrations.addAll(migrations);
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> renameHyphenToSnakeCase(boolean renameHyphenToSnakeCase) {
+        this.renameHyphenToSnakeCase = renameHyphenToSnakeCase;
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> saveDefaults(boolean saveDefaults) {
+        this.saveDefaults = saveDefaults;
+        return this;
+    }
+
+    @NotNull
+    public C build() {
+        if (config == null) throw new IllegalStateException("Config must be set");
+
+        // Configure
+        config.configure(opt -> {
+            opt.configurer(
+                    new YamlBukkitConfigurer(),
+                    new SerdesCommons(),
+                    new SerdesBukkit(),
+                    registry -> {
+                        registry.register(new PlayableSoundSerializer());
+                    });
+            opt.validator(new AnnoyingConfigValidator());
+            opt.bindFile(file);
+            opt.removeOrphans(true);
+        });
+
+        // Custom configure
+        if (configure != null) config.configure(configure);
+
+        // Load
+        config.load();
+
+        // Rename hyphen to snake case migration
+        if (renameHyphenToSnakeCase) config.migrate(new A0001_Rename_hyphen_names_to_snake_case());
+
+        // Custom migrations
+        for (final ConfigMigration migration : migrations) config.migrate(migration);
+
+        // Save defaults
+        if (saveDefaults) config.saveDefaults();
+
+        return config;
+    }
+}

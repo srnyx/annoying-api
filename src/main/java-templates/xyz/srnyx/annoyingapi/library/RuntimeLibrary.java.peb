@@ -13,6 +13,7 @@ import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -30,25 +31,40 @@ public enum RuntimeLibrary implements AnnoyingLibrary {
                     .repository("{{ okaeri_configs_yaml_bukkit_repository_0 }}")
                     .groupId("{{ okaeri_configs_yaml_bukkit_group }}")
                     .artifactId("{{ okaeri_configs_yaml_bukkit_artifact }}")
-                    .version("{{ okaeri_configs_yaml_bukkit_version }}")),
-    OKAERI_CONFIGS_SERDES_BUKKIT(
-            () -> Library.builder()
-                    .repository("{{ okaeri_configs_serdes_bukkit_repository_0 }}")
-                    .groupId("{{ okaeri_configs_serdes_bukkit_group }}")
-                    .artifactId("{{ okaeri_configs_serdes_bukkit_artifact }}")
-                    .version("{{ okaeri_configs_serdes_bukkit_version }}")),
+                    .version("{{ okaeri_configs_yaml_bukkit_version }}"),
+            Collections.singleton(OKAERI_CONFIGS_CORE)),
     OKAERI_CONFIGS_SERDES_COMMONS(
             () -> Library.builder()
                     .repository("{{ okaeri_configs_serdes_commons_repository_0 }}")
                     .groupId("{{ okaeri_configs_serdes_commons_group }}")
                     .artifactId("{{ okaeri_configs_serdes_commons_artifact }}")
-                    .version("{{ okaeri_configs_serdes_commons_version }}")),
+                    .version("{{ okaeri_configs_serdes_commons_version }}"),
+            Collections.singleton(OKAERI_CONFIGS_CORE)),
+    OKAERI_CONFIGS_SERDES_BUKKIT(
+            () -> Library.builder()
+                    .repository("{{ okaeri_configs_serdes_bukkit_repository_0 }}")
+                    .groupId("{{ okaeri_configs_serdes_bukkit_group }}")
+                    .artifactId("{{ okaeri_configs_serdes_bukkit_artifact }}")
+                    .version("{{ okaeri_configs_serdes_bukkit_version }}"),
+            List.of(
+                    OKAERI_CONFIGS_CORE,
+                    OKAERI_CONFIGS_YAML_BUKKIT)),
+    OKAERI_VALIDATOR(
+            () -> Library.builder()
+                    .repository("https://repo.okaeri.cloud/releases/")
+                    .groupId("eu{}okaeri")
+                    .artifactId("okaeri-validator")
+                    .version("2.0.5"),
+            Collections.singleton(OKAERI_CONFIGS_CORE)),
     OKAERI_CONFIGS_VALIDATOR_OKAERI(
             () -> Library.builder()
                     .repository("{{ okaeri_configs_validator_okaeri_repository_0 }}")
                     .groupId("{{ okaeri_configs_validator_okaeri_group }}")
                     .artifactId("{{ okaeri_configs_validator_okaeri_artifact }}")
-                    .version("{{ okaeri_configs_validator_okaeri_version }}")),
+                    .version("{{ okaeri_configs_validator_okaeri_version }}"),
+            List.of(
+                    OKAERI_CONFIGS_CORE,
+                    OKAERI_VALIDATOR)),
     ITEM_NBT_API(
             () -> Library.builder()
                     .repository("{{ item_nbt_api_repository_0 }}")

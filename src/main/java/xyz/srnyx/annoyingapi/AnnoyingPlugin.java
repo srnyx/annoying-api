@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
 import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
@@ -93,6 +94,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
      */
     @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
+    @NotNull public final ConfigLoader configLoader = new ConfigLoader(this);
     @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
     /**
      * The {@link AnnoyingResource} that contains the plugin's messages
