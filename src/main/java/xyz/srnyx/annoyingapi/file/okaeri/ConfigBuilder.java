@@ -10,7 +10,7 @@ import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_hyphen_names_to_snake_case;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_snake_case;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.PlayableSoundSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
 
@@ -29,7 +29,7 @@ public class ConfigBuilder<C> {
     @Nullable private Consumer<OkaeriConfigOptions> configure;
     @NotNull private File file;
     @NotNull private final List<ConfigMigration> migrations = new ArrayList<>();
-    private boolean renameHyphenToSnakeCase = true;
+    private boolean renameKebabCaseToSnakeCase = true;
     private boolean saveDefaults = true;
 
     public ConfigBuilder(@NotNull JavaPlugin plugin) {
@@ -93,8 +93,8 @@ public class ConfigBuilder<C> {
     }
 
     @NotNull
-    public ConfigBuilder<C> renameHyphenToSnakeCase(boolean renameHyphenToSnakeCase) {
-        this.renameHyphenToSnakeCase = renameHyphenToSnakeCase;
+    public ConfigBuilder<C> renameKebabCaseToSnakeCase(boolean renameKebabCaseToSnakeCase) {
+        this.renameKebabCaseToSnakeCase = renameKebabCaseToSnakeCase;
         return this;
     }
 
@@ -128,7 +128,7 @@ public class ConfigBuilder<C> {
         config.load();
 
         // Rename hyphen to snake case migration
-        if (renameHyphenToSnakeCase) config.migrate(new A0001_Rename_hyphen_names_to_snake_case());
+        if (renameKebabCaseToSnakeCase) config.migrate(new A0001_Rename_kebab_case_to_snake_case());
 
         // Custom migrations
         for (final ConfigMigration migration : migrations) config.migrate(migration);
