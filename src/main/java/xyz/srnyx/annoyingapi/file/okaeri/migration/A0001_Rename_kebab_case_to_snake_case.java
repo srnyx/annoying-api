@@ -1,19 +1,21 @@
 package xyz.srnyx.annoyingapi.file.okaeri.migration;
 
 import eu.okaeri.configs.migrate.builtin.NamedMigration;
+import eu.okaeri.configs.migrate.view.InternalStateView;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static eu.okaeri.configs.migrate.ConfigMigrationDsl.move;
+import static eu.okaeri.configs.migrate.ConfigMigrationDsl.*;
 
 
 public class A0001_Rename_kebab_case_to_snake_case extends NamedMigration {
     public A0001_Rename_kebab_case_to_snake_case() {
         super("renames kebab-case keys to snake_case", (config, view) -> {
-            final List<String> keys = getKeysToMove(config.asMap(), "");
+            if (!(view instanceof InternalStateView internalStateView)) return false;
+            final List<String> keys = getKeysToMove(internalStateView.getInternalState(), "");
             for (final String key : keys) move(key, key.replace("-", "_")).migrate(config, view);
             return !keys.isEmpty();
         });

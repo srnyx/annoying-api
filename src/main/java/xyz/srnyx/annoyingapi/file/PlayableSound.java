@@ -5,13 +5,12 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefWorld.WORLD_PLAY_SOUND_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_PLAY_SOUND_METHOD;
@@ -48,11 +47,11 @@ public class PlayableSound extends Stringable {
      *
      * @see     #PlayableSound(Sound, float, float) 1.10.2 and below
      */
-    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category, float volume, float pitch) {
+    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category, @Nullable Float volume, @Nullable Float pitch) {
         this.sound = sound;
         this.category = category;
-        this.volume = volume;
-        this.pitch = pitch;
+        this.volume = Objects.requireNonNullElse(volume, 1.0f);
+        this.pitch = Objects.requireNonNullElse(pitch, 1.0f);
     }
 
     /**
@@ -64,7 +63,7 @@ public class PlayableSound extends Stringable {
      * @see     #PlayableSound(Sound)   1.10.2 and below
      */
     public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category) {
-        this(sound, category, 1, 1);
+        this(sound, category, null, null);
     }
 
     /**
@@ -84,7 +83,7 @@ public class PlayableSound extends Stringable {
      * @param   sound   {@link #sound}
      */
     public PlayableSound(@NotNull Sound sound) {
-        this(sound, null, 1, 1);
+        this(sound, null, null, null);
     }
 
     /**

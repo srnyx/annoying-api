@@ -63,7 +63,7 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
      *
      * @see #loadLibraryIsolated(AnnoyingLibrary)
      */
-    public boolean loadLibrary(@NotNull AnnoyingLibrary @NotNull ... libraries) {
+    public boolean loadLibrary(@NotNull Iterable<AnnoyingLibrary> libraries) {
         for (final AnnoyingLibrary library : libraries) {
             // Load required libraries and get all relocations
             final Collection<Relocation> dependencyRelocations = new HashSet<>();
@@ -93,6 +93,13 @@ public class AnnoyingLibraryManager extends BukkitLibraryManager implements Anno
             }
         }
         return true;
+    }
+
+    /**
+     * @see #loadLibrary(Iterable)
+     */
+    public boolean loadLibrary(@NotNull AnnoyingLibrary @NotNull ... libraries) {
+        return loadLibrary(Arrays.asList(libraries));
     }
 
     @NotNull

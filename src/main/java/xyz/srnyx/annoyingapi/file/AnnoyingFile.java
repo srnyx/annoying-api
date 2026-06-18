@@ -333,7 +333,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@link PotionEffect} or empty if it's invalid
      */
-    @NotNull //TODO okaeri serdes
+    @NotNull
     public Optional<PotionEffect> getPotionEffect(@NotNull String path, boolean log) {
         final Optional<PotionEffect> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
@@ -395,7 +395,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or empty if it's invalid
      */
-    @NotNull @SuppressWarnings("unchecked") //TODO okaeri serdes
+    @NotNull
     public <G> Optional<G> getAttributeModifier(@NotNull String path, boolean log) {
         final Optional<G> def = getDef(path);
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
@@ -420,7 +420,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final double amount = section.getDouble("amount");
 
         // 1.13.2+
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_5 != null) {
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2 != null) {
             // slot
             EquipmentSlot slot = null;
             final String equipmentSlotString = section.getString("slot");
@@ -431,7 +431,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
             // Return
             try {
-                return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot));
+                return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2.newInstance(UUID.randomUUID(), name, amount, operation, slot));
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -439,8 +439,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Return
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 != null) try {
-            return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation));
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9 != null) try {
+            return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9.newInstance(name, amount, operation));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -494,7 +494,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return the {@link ItemStack} or empty if it's invalid
      */
-    @NotNull //TODO https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ItemStackSerializer.java, https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ItemMetaSerializer.java
+    @NotNull
     public Optional<ItemStack> getItemStackOptional(@NotNull String path, boolean log) {
         final Optional<ItemStack> def = getDef(path);
         final ConfigurationSection section = getConfigurationSection(path);
@@ -665,7 +665,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@link Recipe} or the {@code def} if it's invalid
      */
-    @NotNull //TODO https://github.com/OkaeriPoland/okaeri-configs/blob/master/serdes-bukkit/src/main/java/eu/okaeri/configs/yaml/bukkit/serdes/serializer/ShapedRecipeSerializer.java
+    @NotNull
     public Optional<Recipe> getRecipe(@NotNull String path, @Nullable UnaryOperator<ItemStack> itemFunction, @Nullable String name, boolean log) {
         final Optional<Recipe> def = getDef(path);
 

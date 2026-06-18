@@ -74,14 +74,15 @@ public class ConfigBuilderTest {
 
         final ExampleConfig loaded = new ConfigBuilder<ExampleConfig>(configFile.toFile())
                 .config(ExampleConfig.class)
-                .configure(opt -> opt.removeOrphans(false))
-                .migration(migration)
+                .removeOrphans(false)
+                .configMigrations(migration)
                 .build();
 
         assertAll(
                 () -> assertTrue(migrationRan.get()),
                 () -> assertEquals("configured", loaded.identity.name),
                 () -> assertEquals(99, loaded.identity.build),
+                () -> assertEquals("keep-me", loaded.get("orphan_key")),
                 () -> assertTrue(Files.exists(configFile)));
     }
 }

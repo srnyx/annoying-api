@@ -38,7 +38,7 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     javaVersion = javaVersion))
 
 // Libraries downloaded at runtime
-val okaeriConfigsVersion: String = "6.1.0-beta.4"
+val okaeriConfigsVersion: String = "9d8531c"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
@@ -47,29 +47,36 @@ val runtimeLibraries = listOf(
         artifact = "annotations",
         version = "26.1.0"),
     RuntimeLibrary(
+        name = "xseries",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "com.github.cryptomorin",
+        artifact = "XSeries",
+        version = "13.7.0",
+        relocations = listOf(Relocation("com.cryptomorin.xseries"))),
+    RuntimeLibrary(
         name = "okaeri_configs_yaml_bukkit",
-        repositories = listOf(Repository.OKAERI_RELEASES.url),
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-yaml-bukkit",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_serdes_bukkit",
-        repositories = listOf(Repository.OKAERI_RELEASES.url),
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-serdes-bukkit",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_serdes_commons",
-        repositories = listOf(Repository.OKAERI_RELEASES.url),
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-serdes-commons",
         version = okaeriConfigsVersion,
         relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_validator_okaeri",
-        repositories = listOf(Repository.OKAERI_RELEASES.url),
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
         group = "eu.okaeri",
         artifact = "okaeri-configs-validator-okaeri",
         version = okaeriConfigsVersion,
@@ -95,7 +102,7 @@ val runtimeLibraries = listOf(
             Repository.FASTSTATS_SNAPSHOTS.url),
         group = "dev.faststats.metrics",
         artifact = "bukkit",
-        version = "0.25.1",
+        version = "0.27.0",
         excludes = listOf(Exclude("com.google.code.gson", "gson")),
         relocations = listOf(Relocation("dev.faststats"))),
     RuntimeLibrary(

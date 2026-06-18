@@ -19,13 +19,21 @@ import java.util.function.Supplier;
 
 
 public enum RuntimeLibrary implements AnnoyingLibrary {
+    XSERIES(
+            () -> Library.builder()
+                    .repository("{{ xseries_repository_0 }}")
+                    .groupId("{{ xseries_group }}")
+                    .artifactId("{{ xseries_artifact }}")
+                    .version("{{ xseries_version }}"),
+            plugin -> Collections.singleton(plugin.getRelocation("{{ xseries_relocation_0_from }}"))),
     OKAERI_CONFIGS_CORE(
             () -> Library.builder()
                     .repository("{{ okaeri_configs_yaml_bukkit_repository_0 }}")
                     .groupId("{{ okaeri_configs_yaml_bukkit_group }}")
                     .artifactId("okaeri-configs-core")
                     .version("{{ okaeri_configs_yaml_bukkit_version }}"),
-            plugin -> Collections.singleton(plugin.getRelocation("{{ okaeri_configs_yaml_bukkit_relocation_0_from }}"))),
+            plugin -> Collections.singleton(plugin.getRelocation("{{ okaeri_configs_yaml_bukkit_relocation_0_from }}")),
+            Collections.singleton(XSERIES)),
     OKAERI_CONFIGS_YAML_BUKKIT(
             () -> Library.builder()
                     .repository("{{ okaeri_configs_yaml_bukkit_repository_0 }}")

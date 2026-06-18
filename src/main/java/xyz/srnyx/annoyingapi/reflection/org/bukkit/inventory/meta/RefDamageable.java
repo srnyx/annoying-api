@@ -17,6 +17,11 @@ public class RefDamageable {
     @Nullable public static final Class<?> DAMAGEABLE_CLASS = ReflectionUtility.getClass(1, 13, 0, RefDamageable.class);
 
     /**
+     * 1.13+ org.bukkit.inventory.meta.Damageable#getDamage()
+     */
+    @Nullable public static final Method DAMAGEABLE_GET_DAMAGE_METHOD = ReflectionUtility.getMethod(1, 13, 0, DAMAGEABLE_CLASS, "getDamage");
+
+    /**
      * 1.13+ org.bukkit.inventory.meta.Damageable#setDamage(int)
      */
     @Nullable public static final Method DAMAGEABLE_SET_DAMAGE_METHOD = ReflectionUtility.getMethod(1, 13, 0, DAMAGEABLE_CLASS, "setDamage", int.class);

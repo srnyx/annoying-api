@@ -42,7 +42,8 @@ public class RefRegistry {
      * @return          the {@link PotionEffectType}
      */
     @NotNull
-    public static Optional<PotionEffectType> getEffect(@NotNull String name) {
+    public static Optional<PotionEffectType> getEffect(@Nullable String name) {
+        if (name == null) return Optional.empty();
         // 1.20.3+
         if (GET_METHOD != null && EFFECT_FIELD != null && MINECRAFT_METHOD != null) try {
             return Optional.ofNullable((PotionEffectType) GET_METHOD.invoke(EFFECT_FIELD, MINECRAFT_METHOD.invoke(null, name)));
@@ -61,7 +62,8 @@ public class RefRegistry {
      * @return          the {@link Enchantment}
      */
     @NotNull
-    public static Optional<Enchantment> getEnchantment(@NotNull String name) {
+    public static Optional<Enchantment> getEnchantment(@Nullable String name) {
+        if (name == null) return Optional.empty();
         // 1.14+
         if (GET_METHOD != null && ENCHANTMENT_FIELD != null && MINECRAFT_METHOD != null) try {
             return Optional.ofNullable((Enchantment) GET_METHOD.invoke(ENCHANTMENT_FIELD, MINECRAFT_METHOD.invoke(null, name)));

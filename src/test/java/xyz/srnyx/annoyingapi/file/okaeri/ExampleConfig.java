@@ -57,8 +57,7 @@ public class ExampleConfig extends OkaeriConfig {
         @Comment("Free-form labels for the identity block")
         @NotNull public Map<String, String> labels = new LinkedHashMap<>(Map.of(
                 "owner", "nobody",
-                "realm", "sandbox"
-        ));
+                "realm", "sandbox"));
 
         @NotNull
         public String getMemo() {
@@ -114,8 +113,7 @@ public class ExampleConfig extends OkaeriConfig {
         @Comment("Named toggles for fake feature flags")
         @NotNull public Map<String, Boolean> flag_overrides = new LinkedHashMap<>(Map.of(
                 "alpha", true,
-                "beta", false
-        ));
+                "beta", false));
     }
 
     public static class Timing extends OkaeriConfig {
@@ -146,8 +144,7 @@ public class ExampleConfig extends OkaeriConfig {
         @NotNull public Map<String, Integer> weights = new LinkedHashMap<>(Map.of(
                 "small", 2,
                 "medium", 5,
-                "large", 11
-        ));
+                "large", 11));
 
         @Comment("A nested bag of sub-collections")
         @NotNull public Bags bags = new Bags();

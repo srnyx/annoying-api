@@ -203,7 +203,7 @@ public class ConfigMigrationTest {
     private ExampleConfig loadConfig(@NotNull Path configFile, @NotNull ConfigMigration... migrations) {
         return new ConfigBuilder<ExampleConfig>(configFile.toFile())
                 .config(ExampleConfig.class)
-                .migration(migrations)
+                .internalStateMigrations(migrations)
                 .build();
     }
 

@@ -278,28 +278,11 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Load required libraries
-        options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
-
-        // Get start message colors
-        final String primaryColorString = globalPlaceholders.get("p");
-        final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = globalPlaceholders.get("s");
-        final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
-
-        // Get start messages
-        final PluginDescriptionFile description = getDescription();
-        final String nameVersion = name + " v" + description.getVersion();
-        final String authors = "By " + String.join(", ", description.getAuthors());
-        final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
-        final int lineLength = Math.max(nameVersion.length(), authors.length());
-        lineBuilder.append("-".repeat(lineLength));
-        final String line = lineBuilder.toString();
-
-        // Send start messages
-        log(Level.INFO, line);
-        log(Level.INFO, primaryColor + nameVersion);
-        log(Level.INFO, primaryColor + authors);
-        log(Level.INFO, line);
+        if (!libraryManager.loadLibrary(options.pluginOptions.libraries)) {
+            log(Level.SEVERE, "&cDisabling &4" + name + "&c because required libraries failed to load");
+            disablePlugin();
+            return;
+        }
 
         // Check for updates
         updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
@@ -339,6 +322,27 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Enable/disable interval cache saving (depending on config)
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
+
+        // Get start message colors
+        final String primaryColorString = globalPlaceholders.get("p");
+        final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+
+        // Get start messages
+        final PluginDescriptionFile description = getDescription();
+        final String nameVersion = name + " v" + description.getVersion();
+        final String authors = "By " + String.join(", ", description.getAuthors());
+        final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
+        final int lineLength = Math.max(nameVersion.length(), authors.length());
+        lineBuilder.append("-".repeat(lineLength));
+        final String line = lineBuilder.toString();
+
+        // Send start messages
+        log(Level.INFO, line);
+        log(Level.INFO, primaryColor + nameVersion);
+        log(Level.INFO, primaryColor + authors);
+        log(Level.INFO, line);
 
         // Custom onEnable
         enable();

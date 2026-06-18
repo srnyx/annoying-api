@@ -7,11 +7,22 @@ import eu.okaeri.configs.migrate.ConfigMigration;
 import eu.okaeri.configs.serdes.commons.SerdesCommons;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_snake_case;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.AttributeModifierSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.ItemStackSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.NamespacedKeySerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.PlayableSoundSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.PotionEffectSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorAttachmentResolver;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeAttachmentResolver;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipechoice.RecipeChoiceSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
 
 import java.io.File;
@@ -23,28 +34,40 @@ import java.util.function.Consumer;
 
 
 public class ConfigBuilder<C> {
+    @Nullable private final Plugin plugin;
+
     @NotNull private final File file;
     @Nullable private OkaeriConfig config;
     @Nullable private Consumer<OkaeriConfigOptions> configure;
-    @NotNull private final List<ConfigMigration> migrations = new ArrayList<>();
+    @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
+    @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
+    private boolean removeOrphans = true;
     private boolean renameKebabCaseToSnakeCase = true;
     private boolean saveDefaults = true;
 
-    public ConfigBuilder(@NotNull File file) {
+    public ConfigBuilder(@Nullable Plugin plugin, @NotNull File file) {
+        this.plugin = plugin;
         this.file = file;
+
+        // Use AnnoyingPlugin.LOGGER directly to avoid Minecraft version check
+        if (plugin == null) AnnoyingPlugin.LOGGER.warning("DEVELOPER: Plugin is null for ConfigBuilder! This may cause issues with serializers that require a plugin instance");
+    }
+
+    public ConfigBuilder(@NotNull File file) {
+        this(null, file);
     }
 
     /**
      * @param   name    relative to {@link JavaPlugin#getDataFolder()}
      */
-    public ConfigBuilder(@NotNull JavaPlugin plugin, @NotNull String name) {
-        this(new File(plugin.getDataFolder(), name));
+    public ConfigBuilder(@NotNull Plugin plugin, @NotNull String name) {
+        this(plugin, new File(plugin.getDataFolder(), name));
     }
 
     /**
      * {@code config.yml} in {@link JavaPlugin#getDataFolder()}
      */
-    public ConfigBuilder(@NotNull JavaPlugin plugin) {
+    public ConfigBuilder(@NotNull Plugin plugin) {
         this(plugin, "config.yml");
     }
 
@@ -79,14 +102,31 @@ public class ConfigBuilder<C> {
     }
 
     @NotNull
-    public ConfigBuilder<C> migrations(@NotNull Collection<ConfigMigration> migrations) {
-        this.migrations.addAll(migrations);
+    public ConfigBuilder<C> internalStateMigrations(@NotNull Collection<ConfigMigration> migrations) {
+        this.internalStateMigrations.addAll(migrations);
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> migration(@NotNull ConfigMigration @NotNull ... migration) {
-        return migrations(Arrays.asList(migration));
+    public ConfigBuilder<C> internalStateMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
+        return internalStateMigrations(Arrays.asList(migrations));
+    }
+
+    @NotNull
+    public ConfigBuilder<C> configMigrations(@NotNull Collection<ConfigMigration> migrations) {
+        this.configMigrations.addAll(migrations);
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder<C> configMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
+        return configMigrations(Arrays.asList(migrations));
+    }
+
+    @NotNull
+    public ConfigBuilder<C> removeOrphans(boolean removeOrphans) {
+        this.removeOrphans = removeOrphans;
+        return this;
     }
 
     @NotNull
@@ -107,31 +147,51 @@ public class ConfigBuilder<C> {
 
         // Configure
         config.configure(opt -> {
+            // Configurer
             opt.configurer(
                     new YamlBukkitConfigurer(),
                     new SerdesCommons(),
                     new SerdesBukkit(),
+
+                    // Custom serdes
                     registry -> {
+                        registry.register(new ColorSerializer());
+                        registry.register(new ColorAttachmentResolver());
+                        registry.register(new RecipeSerializer(plugin));
+                        registry.register(new RecipeAttachmentResolver());
+                        registry.register(new RecipeChoiceSerializer());
+                        registry.register(new AttributeModifierSerializer(plugin));
+                        registry.register(new ItemStackSerializer());
                         registry.register(new PlayableSoundSerializer());
+                        registry.register(new PotionEffectSerializer());
                     });
+
+            // Conditional serdes
+            final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
+            if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
+
+            // Other options
             opt.validator(new AnnoyingConfigValidator());
             opt.bindFile(file);
-            opt.removeOrphans(true);
+            if (removeOrphans) opt.removeOrphans(true);
 
             if (configure != null) configure.accept(opt);
         });
 
+        // Save defaults
+        if (saveDefaults) config.saveDefaults();
+
         // Initial load (for migrations)
         config.load();
 
-        // Migrations
-        final List<ConfigMigration> migrations = new ArrayList<>();
-        if (renameKebabCaseToSnakeCase) migrations.add(new A0001_Rename_kebab_case_to_snake_case());
-        migrations.addAll(this.migrations);
-        config.migrate(migrations.toArray(new ConfigMigration[0]));
+        // InternalStateMigrations
+        final List<ConfigMigration> allInternalStateMigrations = new ArrayList<>();
+        if (renameKebabCaseToSnakeCase) allInternalStateMigrations.add(new A0001_Rename_kebab_case_to_snake_case());
+        allInternalStateMigrations.addAll(internalStateMigrations);
+        config.migrateInternalState(allInternalStateMigrations.toArray(new ConfigMigration[0]));
 
-        // Save defaults
-        if (saveDefaults) config.saveDefaults();
+        // ConfigMigrations
+        config.migrate(configMigrations.toArray(new ConfigMigration[0]));
 
         return (C) config;
     }
