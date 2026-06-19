@@ -3,7 +3,7 @@ package xyz.srnyx.annoyingapi.file.okaeri;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -19,10 +19,10 @@ public class ConfigLoader {
     @Nullable
     public <C> C buildElseNull(@NotNull Consumer<ConfigBuilder<C>> builder) {
         if (!plugin.libraryManager.loadIfNotLoaded(
-                RuntimeLibrary.OKAERI_CONFIGS_YAML_BUKKIT,
-                RuntimeLibrary.OKAERI_CONFIGS_SERDES_COMMONS,
-                RuntimeLibrary.OKAERI_CONFIGS_SERDES_BUKKIT,
-                RuntimeLibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) return null;
+                AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) return null;
 
         final ConfigBuilder<C> configBuilder = new ConfigBuilder<>(plugin);
         builder.accept(configBuilder);

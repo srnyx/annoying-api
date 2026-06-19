@@ -19,7 +19,8 @@ import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
@@ -91,7 +92,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
-     * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
+     * The {@link AnnoyingLibraryManager} for the plugin to manage {@link AnnoyingLibrary libraries}
      */
     @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
     @NotNull public final ConfigLoader configLoader = new ConfigLoader(this);
@@ -297,7 +298,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
         if (!packages.isEmpty()) {
             // Load Reflections library
-            libraryManager.loadLibrary(RuntimeLibrary.REFLECTIONS);
+            libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
 
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;

@@ -3,8 +3,8 @@ package xyz.srnyx.annoyingapi.storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
@@ -28,7 +28,7 @@ public enum StorageMethod {
     /**
      * H2 storage method
      */
-    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), RuntimeLibrary.H2),
+    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), AnnoyingAPILibrary.H2),
     /**
      * SQLite storage method
      */
@@ -44,7 +44,7 @@ public enum StorageMethod {
     /**
      * PostgreSQL storage method
      */
-    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", RuntimeLibrary.POSTGRESQL, 5432),
+    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", AnnoyingAPILibrary.POSTGRESQL, 5432),
     /**
      * JSON storage method
      */

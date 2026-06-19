@@ -2,8 +2,8 @@ package xyz.srnyx.annoyingapi.stats.provider;
 
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
 
 import java.util.Collection;
@@ -24,6 +24,6 @@ public abstract class BStatsProvider<L extends BStatsLoader> extends StatsProvid
 
     @Override @NotNull
     public Collection<AnnoyingLibrary> getRequiredLibraries() {
-        return Collections.singleton(RuntimeLibrary.BSTATS_BUKKIT);
+        return Collections.singleton(AnnoyingAPILibrary.BSTATS_BUKKIT);
     }
 }
