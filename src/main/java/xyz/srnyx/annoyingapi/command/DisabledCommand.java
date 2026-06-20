@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.command;
 
 import org.jetbrains.annotations.NotNull;
 
-import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 
@@ -43,6 +42,6 @@ public class DisabledCommand extends AnnoyingCommand {
      */
     @Override
     public void onCommand(@NotNull AnnoyingSender sender) {
-        new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.disabledCommand).send(sender);
+        plugin.messagesProvider.messages().error.disabled_command.newAnnoyingMessage().send(sender);
     }
 }

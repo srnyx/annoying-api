@@ -3,17 +3,12 @@ package xyz.srnyx.annoyingapi;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import org.bukkit.plugin.PluginBase;
 import org.bukkit.plugin.PluginDescriptionFile;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -104,14 +99,14 @@ public class UpdateChecker extends Stringable implements Annoyable {
     }
 
     /**
-     * Checks if an update is available and sends {@link MessagesOptions.MessageKeys#updateAvailable a message} to the console if it is
+     * Checks if an update is available and sends {@link AnnoyingMessages.Plugin#update_available a message} to the console if it is
      *
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) new AnnoyingMessage(annoyingPlugin, annoyingPlugin.options.messagesOptions.keys.updateAvailable)
+        if (update && latestVersion != null) annoyingPlugin.messagesProvider.messages().plugin.update_available.newAnnoyingMessage()
                 .replace("%plugin%", pluginName)
                 .replace("%current%", currentVersion.version)
                 .replace("%new%", latestVersion.version)

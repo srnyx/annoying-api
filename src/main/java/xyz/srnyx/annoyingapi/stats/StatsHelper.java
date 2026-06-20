@@ -40,6 +40,7 @@ public class StatsHelper implements Annoyable {
         return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.interval;
     }
 
+    //TODO
 //    @Nullable
 //    public Integer getStorageConfiguredTableCount() {
 //        return plugin.dataManager == null ? null : plugin.dataManager.dialect
@@ -47,17 +48,17 @@ public class StatsHelper implements Annoyable {
 
     @NotNull
     public String[] getMessagesPluginGlobalPlaceholdersKeys() {
-        return plugin.globalPlaceholders.keySet().toArray(new String[0]);
+        return plugin.messagesProvider.messages().plugin.global_placeholders.keySet().toArray(new String[0]);
     }
 
     @Nullable
     public String getMessagesPluginSplittersJson() {
-        return plugin.messages == null ? null : plugin.messages.getString(plugin.options.messagesOptions.keys.splitterJson);
+        return plugin.messagesProvider.messages().plugin.splitters.json;
     }
 
     @Nullable
     public String getMessagesPluginSplittersPlaceholder() {
-        return plugin.messages == null ? null : plugin.messages.getString(plugin.options.messagesOptions.keys.splitterPlaceholder);
+        return plugin.messagesProvider.messages().plugin.splitters.placeholder;
     }
 
     @Nullable

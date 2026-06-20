@@ -26,7 +26,7 @@ public class StorageConfig {
     /**
      * The {@link YamlConfiguration storage configuration file}
      */
-    @NotNull public final AnnoyingFile<?> file;
+    @NotNull public final AnnoyingFile<?> file; //TODO switch to OkaeriConfig
     /**
      * The {@link StorageMethod storage method}
      */

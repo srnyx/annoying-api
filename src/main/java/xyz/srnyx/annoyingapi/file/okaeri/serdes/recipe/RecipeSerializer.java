@@ -211,16 +211,17 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             return new FurnaceRecipe(result, ingredient);
         }
 
-        // 1.9+ MerchantRecipe TODO: check default values
+        // 1.9+ MerchantRecipe TODO: Paper-specific ignoreDiscounts
         if (MERCHANT_RECIPE_CLASS != null && MERCHANT_RECIPE_CLASS.isAssignableFrom(type)) {
+            // max_uses
+            final Integer maxUses = data.get("max_uses", Integer.class);
+            if (maxUses == null) throw new IllegalArgumentException("Missing required field: max_uses");
+
             // uses
             final int uses = data.getOr("uses", int.class, 0);
 
-            // max_uses
-            final int maxUses = data.getOr("max_uses", int.class, 0);
-
             // experience_reward
-            final boolean experienceReward = data.getOr("experience_reward", boolean.class, true);
+            final boolean experienceReward = data.getOr("experience_reward", boolean.class, false);
 
             // 1.14+
             if (MERCHANT_RECIPE_CONSTRUCTOR_1_14 != null) {
@@ -228,7 +229,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                 final int villagerExperience = data.getOr("villager_experience", int.class, 0);
 
                 // price_multiplier
-                final float priceMultiplier = data.getOr("price_multiplier", float.class, 1.0f);
+                final float priceMultiplier = data.getOr("price_multiplier", float.class, 0.0f);
 
                 // 1.18.1+
                 if (MERCHANT_RECIPE_CONSTRUCTOR_1_18_1 != null) {

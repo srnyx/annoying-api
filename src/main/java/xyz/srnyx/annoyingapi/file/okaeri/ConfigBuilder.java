@@ -7,17 +7,12 @@ import eu.okaeri.configs.migrate.ConfigMigration;
 import eu.okaeri.configs.serdes.commons.SerdesCommons;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_snake_case;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.AttributeModifierSerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.ItemStackSerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.NamespacedKeySerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.PlayableSoundSerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.PotionEffectSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.*;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorAttachmentResolver;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeAttachmentResolver;
@@ -33,10 +28,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 
-public class ConfigBuilder<C> {
-    @Nullable private final Plugin plugin;
+public class ConfigBuilder {
+    @Nullable public final AnnoyingPlugin plugin;
 
-    @NotNull private final File file;
+    @NotNull private File file;
     @Nullable private OkaeriConfig config;
     @Nullable private Consumer<OkaeriConfigOptions> configure;
     @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
@@ -45,7 +40,7 @@ public class ConfigBuilder<C> {
     private boolean renameKebabCaseToSnakeCase = true;
     private boolean saveDefaults = true;
 
-    public ConfigBuilder(@Nullable Plugin plugin, @NotNull File file) {
+    public ConfigBuilder(@Nullable AnnoyingPlugin plugin, @NotNull File file) {
         this.plugin = plugin;
         this.file = file;
 
@@ -60,22 +55,34 @@ public class ConfigBuilder<C> {
     /**
      * @param   name    relative to {@link JavaPlugin#getDataFolder()}
      */
-    public ConfigBuilder(@NotNull Plugin plugin, @NotNull String name) {
+    public ConfigBuilder(@NotNull AnnoyingPlugin plugin, @NotNull String name) {
         this(plugin, new File(plugin.getDataFolder(), name));
     }
 
     /**
      * {@code config.yml} in {@link JavaPlugin#getDataFolder()}
      */
-    public ConfigBuilder(@NotNull Plugin plugin) {
+    public ConfigBuilder(@NotNull AnnoyingPlugin plugin) {
         this(plugin, "config.yml");
+    }
+
+    @NotNull
+    public ConfigBuilder file(@NotNull File file) {
+        this.file = file;
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder file(@NotNull String name) {
+        if (plugin == null) throw new IllegalStateException("Plugin must be set! Maybe use file(File) instead?");
+        return file(new File(plugin.getDataFolder(), name));
     }
 
     /**
      * Must be an instance of {@link OkaeriConfig}
      */
     @NotNull
-    public ConfigBuilder<C> config(@NotNull C config) {
+    public ConfigBuilder config(@NotNull Object config) {
         if (!(config instanceof final OkaeriConfig okaeriConfig)) {
             throw new IllegalArgumentException("Config instance must extend OkaeriConfig: " + config.getClass().getName());
         }
@@ -87,7 +94,7 @@ public class ConfigBuilder<C> {
      * Must be an instance of {@link OkaeriConfig}
      */
     @NotNull
-    public ConfigBuilder<C> config(@NotNull Class<C> configClass) {
+    public ConfigBuilder config(@NotNull Class<?> configClass) {
         if (!OkaeriConfig.class.isAssignableFrom(configClass)) {
             throw new IllegalArgumentException("Config class must extend OkaeriConfig: " + configClass.getName());
         }
@@ -96,53 +103,53 @@ public class ConfigBuilder<C> {
     }
 
     @NotNull
-    public ConfigBuilder<C> configure(@Nullable Consumer<OkaeriConfigOptions> configure) {
+    public ConfigBuilder configure(@Nullable Consumer<OkaeriConfigOptions> configure) {
         this.configure = configure;
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> internalStateMigrations(@NotNull Collection<ConfigMigration> migrations) {
+    public ConfigBuilder internalStateMigrations(@NotNull Collection<ConfigMigration> migrations) {
         this.internalStateMigrations.addAll(migrations);
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> internalStateMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
+    public ConfigBuilder internalStateMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
         return internalStateMigrations(Arrays.asList(migrations));
     }
 
     @NotNull
-    public ConfigBuilder<C> configMigrations(@NotNull Collection<ConfigMigration> migrations) {
+    public ConfigBuilder configMigrations(@NotNull Collection<ConfigMigration> migrations) {
         this.configMigrations.addAll(migrations);
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> configMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
+    public ConfigBuilder configMigrations(@NotNull ConfigMigration @NotNull ... migrations) {
         return configMigrations(Arrays.asList(migrations));
     }
 
     @NotNull
-    public ConfigBuilder<C> removeOrphans(boolean removeOrphans) {
+    public ConfigBuilder removeOrphans(boolean removeOrphans) {
         this.removeOrphans = removeOrphans;
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> renameKebabCaseToSnakeCase(boolean renameKebabCaseToSnakeCase) {
+    public ConfigBuilder renameKebabCaseToSnakeCase(boolean renameKebabCaseToSnakeCase) {
         this.renameKebabCaseToSnakeCase = renameKebabCaseToSnakeCase;
         return this;
     }
 
     @NotNull
-    public ConfigBuilder<C> saveDefaults(boolean saveDefaults) {
+    public ConfigBuilder saveDefaults(boolean saveDefaults) {
         this.saveDefaults = saveDefaults;
         return this;
     }
 
     @NotNull
-    public C build() {
+    public <C> C build() {
         if (config == null) throw new IllegalStateException("Config must be set");
 
         // Configure
@@ -166,9 +173,13 @@ public class ConfigBuilder<C> {
                         registry.register(new PotionEffectSerializer());
                     });
 
-            // Conditional serdes
-            final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
-            if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
+            // Conditional serdes (requires plugin)
+            if (plugin != null) {
+                opt.serdes(new JsonMessageSerializer(plugin));
+
+                final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
+                if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
+            }
 
             // Other options
             opt.validator(new AnnoyingConfigValidator());

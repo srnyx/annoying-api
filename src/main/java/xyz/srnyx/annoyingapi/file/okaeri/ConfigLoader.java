@@ -17,14 +17,14 @@ public class ConfigLoader {
     }
 
     @Nullable
-    public <C> C buildElseNull(@NotNull Consumer<ConfigBuilder<C>> builder) {
+    public <C> C buildElseNull(@NotNull Consumer<ConfigBuilder> builder) {
         if (!plugin.libraryManager.loadIfNotLoaded(
                 AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_BUKKIT,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) return null;
 
-        final ConfigBuilder<C> configBuilder = new ConfigBuilder<>(plugin);
+        final ConfigBuilder configBuilder = new ConfigBuilder(plugin);
         builder.accept(configBuilder);
         final C config = configBuilder.build();
         AnnoyingPlugin.log(Level.INFO, "Loaded config: " + config.getClass().getName());
@@ -32,9 +32,9 @@ public class ConfigLoader {
     }
 
     @NotNull
-    public <C> C buildElseThrow(@NotNull Consumer<ConfigBuilder<C>> builder) {
+    public <C> C buildElseThrow(@NotNull Consumer<ConfigBuilder> builder) {
         final C config = buildElseNull(builder);
-        if (config == null) throw new IllegalStateException("Failed to load config due to missing libraries");
+        if (config == null) throw new IllegalStateException("Failed to load a config due to missing libraries");
         return config;
     }
 }

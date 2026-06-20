@@ -29,7 +29,7 @@ public class ConfigBuilderTest {
         final Path pluginData = tempDir.resolve("builder-plugin");
         ConfigTestSupport.writeYaml(pluginData, "config.yml", "");
 
-        final ExampleConfig config = new ConfigBuilder<ExampleConfig>(pluginData.resolve("config.yml").toFile())
+        final ExampleConfig config = new ConfigBuilder(pluginData.resolve("config.yml").toFile())
                 .config(ExampleConfig.class)
                 .build();
 
@@ -46,7 +46,7 @@ public class ConfigBuilderTest {
         final ExampleConfig config = new ExampleConfig();
         config.identity.setMemo("set-before-build");
 
-        final ExampleConfig loaded = new ConfigBuilder<ExampleConfig>(pluginData.resolve("config.yml").toFile())
+        final ExampleConfig loaded = new ConfigBuilder(pluginData.resolve("config.yml").toFile())
                 .config(config)
                 .saveDefaults(false)
                 .build();
@@ -72,7 +72,7 @@ public class ConfigBuilderTest {
             return true;
         };
 
-        final ExampleConfig loaded = new ConfigBuilder<ExampleConfig>(configFile.toFile())
+        final ExampleConfig loaded = new ConfigBuilder(configFile.toFile())
                 .config(ExampleConfig.class)
                 .removeOrphans(false)
                 .configMigrations(migration)

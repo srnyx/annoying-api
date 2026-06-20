@@ -35,7 +35,7 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     javaVersion = javaVersion))
 
 // Runtime libraries
-val okaeriConfigsVersion: String = "9d8531c"
+val okaeriConfigsVersion: String = "bfa06f9"
 val bStatsVersion: String = "3.2.1"
 val fastStatsVersion: String = "0.27.0"
 val runtimeLibraries = listOf(

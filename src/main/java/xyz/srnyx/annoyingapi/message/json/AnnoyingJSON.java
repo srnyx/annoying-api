@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.message;
+package xyz.srnyx.annoyingapi.message.json;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -7,6 +7,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.annoyingapi.message.json.component.RawTextComponent;
+import xyz.srnyx.annoyingapi.message.json.component.RawActionComponent;
 import xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefHoverEvent;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
@@ -15,7 +17,7 @@ import java.util.List;
 
 
 /**
- * Class to manage and build JSON messages ({@link BaseComponent}[])
+ * Class to manage and build JSON messages ({@link BaseComponent BaseComponent[]})
  */
 public class AnnoyingJSON {
     /**
@@ -96,5 +98,23 @@ public class AnnoyingJSON {
     @NotNull
     public AnnoyingJSON append(@NotNull String display) {
         return append(display, null);
+    }
+
+    /**
+     * Appends a {@link RawTextComponent} to the {@link ComponentBuilder} of the {@link AnnoyingJSON} instance
+     *
+     * @param   component   the {@link RawTextComponent} to append
+     *
+     * @return  the {@link AnnoyingJSON} instance
+     */
+    @NotNull
+    public AnnoyingJSON append(@NotNull RawTextComponent component) {
+        // Action
+        if (component instanceof RawActionComponent actionComponent) {
+            return append(actionComponent.text, actionComponent.hover, actionComponent.action, actionComponent.actionValue);
+        }
+
+        // Text
+        return append(component.text, component.hover);
     }
 }

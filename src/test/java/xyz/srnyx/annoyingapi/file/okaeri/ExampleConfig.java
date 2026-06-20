@@ -7,13 +7,13 @@ import eu.okaeri.configs.serdes.commons.duration.DurationSpec;
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.annotation.DurationRange;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.annotation.PatternCollection;
+import xyz.srnyx.javautilities.MapGenerator;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,9 +55,9 @@ public class ExampleConfig extends OkaeriConfig {
         @NotNull private String memo = "internal-mock-note";
 
         @Comment("Free-form labels for the identity block")
-        @NotNull public Map<String, String> labels = new LinkedHashMap<>(Map.of(
+        @NotNull public Map<String, String> labels = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "owner", "nobody",
-                "realm", "sandbox"));
+                "realm", "sandbox");
 
         @NotNull
         public String getMemo() {
@@ -111,9 +111,9 @@ public class ExampleConfig extends OkaeriConfig {
         @NotNull public Set<Phase> allowed_phases = new HashSet<>(Set.of(Phase.INIT, Phase.STEADY));
 
         @Comment("Named toggles for fake feature flags")
-        @NotNull public Map<String, Boolean> flag_overrides = new LinkedHashMap<>(Map.of(
+        @NotNull public Map<String, Boolean> flag_overrides = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "alpha", true,
-                "beta", false));
+                "beta", false);
     }
 
     public static class Timing extends OkaeriConfig {
@@ -141,10 +141,10 @@ public class ExampleConfig extends OkaeriConfig {
         @NotNull public Set<String> tokens = new HashSet<>(Set.of("mock_one", "mock-two", "mock3"));
 
         @Comment("A tiny catalog of numeric weights")
-        @NotNull public Map<String, Integer> weights = new LinkedHashMap<>(Map.of(
+        @NotNull public Map<String, Integer> weights = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "small", 2,
                 "medium", 5,
-                "large", 11));
+                "large", 11);
 
         @Comment("A nested bag of sub-collections")
         @NotNull public Bags bags = new Bags();

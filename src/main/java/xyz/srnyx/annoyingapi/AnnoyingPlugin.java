@@ -3,10 +3,10 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.byteflux.libby.relocation.Relocation;
+import net.md_5.bungee.api.chat.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -21,8 +21,10 @@ import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
+import xyz.srnyx.annoyingapi.message.json.component.RawTextComponent;
+import xyz.srnyx.annoyingapi.message.json.component.RawActionComponent;
+import xyz.srnyx.annoyingapi.message.MessagesProvider;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
 import xyz.srnyx.annoyingapi.stats.StatsHelper;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
@@ -53,6 +55,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
 
 
 /**
@@ -95,16 +99,15 @@ public class AnnoyingPlugin extends JavaPlugin {
      * The {@link AnnoyingLibraryManager} for the plugin to manage {@link AnnoyingLibrary libraries}
      */
     @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
+    /**
+     * Loader for OkaeriConfig configs
+     */
     @NotNull public final ConfigLoader configLoader = new ConfigLoader(this);
+    /**
+     * Helper for stats providers (bStats, FastStats, etc.)
+     */
     @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
-    /**
-     * The {@link AnnoyingResource} that contains the plugin's messages
-     */
-    @Nullable public AnnoyingResource messages;
-    /**
-     * {@link MessagesOptions.MessageKeys#globalPlaceholders}
-     */
-    @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
+    public MessagesProvider messagesProvider;
     /**
      * The {@link DataManager} for the plugin
      */
@@ -142,6 +145,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
+        LOGGER.severe("Constructing plugin instance...");
     }
 
     /**
@@ -153,8 +157,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        LOGGER.severe("onLoad() called");
         selectorManager.registerSelectors();
-        loadMessages();
+        loadMessagesProvider();
         loadDataManger(null, false);
         load();
     }
@@ -325,9 +330,9 @@ public class AnnoyingPlugin extends JavaPlugin {
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
         // Get start message colors
-        final String primaryColorString = globalPlaceholders.get("p");
+        final String primaryColorString = messagesProvider.messages().plugin.global_placeholders.get("p");
         final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColorString = messagesProvider.messages().plugin.global_placeholders.get("s");
         final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
 
         // Get start messages
@@ -360,14 +365,14 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
+     * Reloads the plugin (messages, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
      * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
      * <p><b>Do not override this method! Override {@link #reload()} instead</b>
      *
      * @see #reload()
      */
     public void reloadPlugin() {
-        loadMessages();
+        loadMessagesProvider();
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;
@@ -495,27 +500,13 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    /**
-     * Loads the messages.yml file to {@link #messages} and {@link #globalPlaceholders}
-     */
-    public void loadMessages() {
-        messages = new AnnoyingResource(this, options.messagesOptions.fileName, options.messagesOptions.fileOptions);
-        // globalPlaceholders
-        globalPlaceholders.clear();
-        final ConfigurationSection section = messages.getConfigurationSection(options.messagesOptions.keys.globalPlaceholders);
-        if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
+    private void loadMessagesProvider() {
+        messagesProvider = new MessagesProvider(loadMessages());
     }
 
-    /**
-     * Gets a string from {@link #messages} with the specified key
-     *
-     * @param   key the key of the string
-     *
-     * @return      the string, or the {@code key} if {@link #messages} is {@code null} or the string is not found
-     */
     @NotNull
-    public String getMessagesString(@NotNull String key) {
-        return messages != null ? messages.getString(key, key) : key;
+    public <C> C loadMessages() {
+        return configLoader.buildElseThrow(options.messagesOptions.builder);
     }
 
     /**
@@ -581,6 +572,45 @@ public class AnnoyingPlugin extends JavaPlugin {
 
             ((SQLDialect) dataManager.dialect).createTablesKeys(tablesCopy);
         }
+    }
+
+    @NotNull
+    public RawTextComponent deserializeTextComponent(@Nullable String key, @NotNull String value) {
+        final String[] split = value.split(messagesProvider.messages().plugin.splitters.json, 3);
+
+        // Text
+        final String text = split[0];
+
+        // Hover
+        final String splitHover = split.length >= 2 ? split[1] : null;
+        final String hover = splitHover != null && BukkitUtility.stripUntranslatedColor(splitHover).isEmpty() ? null : splitHover;
+
+        // Action
+        final String splitAction = split.length >= 3 ? split[2] : null;
+        final String actionValue = splitAction != null && BukkitUtility.stripUntranslatedColor(splitAction).isEmpty() ? null : splitAction;
+
+        // ActionComponent
+        if (actionValue != null) {
+            // Suggest (default action)
+            if (key == null || key.startsWith("suggest")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.SUGGEST_COMMAND, actionValue);
+
+            // Copy
+            if (COPY_TO_CLIPBOARD != null && key.startsWith("copy")) return new RawActionComponent(key, value, text, hover, COPY_TO_CLIPBOARD, actionValue);
+
+            // Chat
+            if (key.startsWith("chat")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.RUN_COMMAND, actionValue);
+
+            // Web
+            if (key.startsWith("web")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.OPEN_URL, actionValue);
+        }
+
+        // ATextComponent
+        return new RawTextComponent(key, value, text, hover);
+    }
+
+    @NotNull
+    public RawTextComponent deserializeTextComponent(@NotNull String value) {
+        return deserializeTextComponent(null, value);
     }
 
     /**

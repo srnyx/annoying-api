@@ -6,7 +6,6 @@ import eu.okaeri.configs.serdes.BidirectionalTransformer;
 import eu.okaeri.configs.serdes.SerdesContext;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
@@ -16,10 +15,15 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMES
 
 
 public class NamespacedKeySerializer extends BidirectionalTransformer<String, Object> implements Supplier<Boolean> {
-    @Nullable private final Plugin plugin;
+    @NotNull private final Plugin plugin;
 
-    public NamespacedKeySerializer(@Nullable Plugin plugin) {
+    public NamespacedKeySerializer(@NotNull Plugin plugin) {
         this.plugin = plugin;
+    }
+
+    @Override @NotNull
+    public Boolean get() {
+        return NAMESPACED_KEY_CLASS != null && NAMESPACED_KEY_CONSTRUCTOR != null && NAMESPACED_KEY_GET_KEY_METHOD != null;
     }
 
     @Override @NotNull
@@ -28,13 +32,8 @@ public class NamespacedKeySerializer extends BidirectionalTransformer<String, Ob
     }
 
     @Override @NotNull
-    public Boolean get() {
-        return plugin != null && NAMESPACED_KEY_CLASS != null && NAMESPACED_KEY_CONSTRUCTOR != null && NAMESPACED_KEY_GET_KEY_METHOD != null;
-    }
-
-    @Override @NotNull
     public Object leftToRight(@NotNull String data, @NotNull SerdesContext serdesContext) {
-        if (plugin == null || NAMESPACED_KEY_CONSTRUCTOR == null) {
+        if (NAMESPACED_KEY_CONSTRUCTOR == null) {
             throw new IllegalStateException("Plugin is null or NamespacedKey constructor is null, cannot transform String to NamespacedKey");
         }
 
@@ -47,7 +46,7 @@ public class NamespacedKeySerializer extends BidirectionalTransformer<String, Ob
 
     @Override @NotNull
     public String rightToLeft(@NotNull Object data, @NotNull SerdesContext serdesContext) {
-        if (plugin == null || NAMESPACED_KEY_GET_KEY_METHOD == null) {
+        if (NAMESPACED_KEY_GET_KEY_METHOD == null) {
             throw new IllegalStateException("Plugin is null or NamespacedKey getKey method is null, cannot transform NamespacedKey to String");
         }
 

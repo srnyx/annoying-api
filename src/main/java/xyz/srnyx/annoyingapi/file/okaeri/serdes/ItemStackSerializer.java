@@ -157,7 +157,7 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
         // Meta stuff
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // name, lore TODO: color stuff might be removed when re-serializing. might need custom ItemStackWrapper that keeps raw values stored.
+            // name, lore TODO: color stuff might be removed when re-serializing. might need custom ItemStackWrapper that keeps raw values stored. and switch to minimessage?
             meta.setDisplayName(BukkitUtility.color(data.get("name", String.class)));
             meta.setLore(BukkitUtility.colorCollection(data.getAsList("lore", String.class)));
 
