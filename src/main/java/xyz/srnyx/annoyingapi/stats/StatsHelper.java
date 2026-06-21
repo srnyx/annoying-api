@@ -31,14 +31,14 @@ public class StatsHelper implements Annoyable {
     }
 
     public @NotNull String @Nullable [] getStorageCacheSaveOn() {
-        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.saveOn.stream()
+        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.getSaveOn().stream()
                 .map(Enum::name)
                 .toArray(String[]::new);
     }
 
     @Nullable
     public Long getStorageCacheInterval() {
-        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.interval;
+        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.interval.toMillis();
     }
 
     //TODO

@@ -1,101 +1,95 @@
 package xyz.srnyx.annoyingapi.storage;
 
+import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.annotation.Comment;
+import eu.okaeri.configs.annotation.Header;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.file.AnnoyingFile;
-import xyz.srnyx.javautilities.manipulation.Mapper;
+import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 
-/**
- * The {@code storage.yml} configuration file parser
- */
-public class StorageConfig {
-    /**
-     * The {@link YamlConfiguration storage configuration file}
-     */
-    @NotNull public final AnnoyingFile<?> file; //TODO switch to OkaeriConfig
-    /**
-     * The {@link StorageMethod storage method}
-     */
-    @NotNull public final StorageMethod method;
-    /**
-     * The {@link Cache data cache} options
-     */
-    @NotNull public final Cache cache;
-    /**
-     * The {@link RemoteConnection remote connection} details/properties
-     */
-    @Nullable public final RemoteConnection remoteConnection;
+@Header("DOCUMENTATION: https://annoying-api.srnyx.com/wiki/data-storage")
+@Header("The documentation includes the process for method migration (e.g. H2 -> MYSQL, etc.)")
+public class StorageConfig extends OkaeriConfig {
+    @Comment
+    @Comment
+    @Comment("The method that data will be stored. Available options are listed below")
+    @Comment("If you want to switch to a different storage method, please see the documentation for a guide on how to migrate your data")
+    @Comment
+    @Comment("LOCAL SQL (data will be stored on the Minecraft server in SQL format, connection configuration NOT required)")
+    @Comment("These methods are recommended for most non-network servers")
+    @Comment("- H2 (default)")
+    @Comment("- SQLITE")
+    @Comment
+    @Comment("REMOTE SQL (data will be stored on a remote database in SQL format, connection configuration REQUIRED)")
+    @Comment("These methods are recommended for network servers (ones with proxies) or servers with multiple instances")
+    @Comment("- MYSQL")
+    @Comment("- MARIADB")
+    @Comment("- POSTGRESQL")
+    @Comment
+    @Comment("LOCAL READABLE (data will be stored on the Minecraft server in a human-readable format, connection configuration NOT required)")
+    @Comment("These methods are NOT recommended as they impact performance significantly! It's strongly recommended to at least keep the cache enabled")
+    @Comment("- JSON")
+    @Comment("- YAML")
+    @NotNull public StorageMethod method = StorageMethod.H2;
+
+    @Comment
+    @Comment("The connection configuration for REMOTE databases")
+    @Comment("NOTE: If you are using a LOCAL database, you can ignore this section")
+    @Nullable public RemoteConnection remote_connection = new RemoteConnection(this);
+
+    @Comment
+    @Comment("Options for the data cache, which is used for both LOCAL and REMOTE storage methods")
+    @Comment("The cache greatly improves performance by storing data in memory")
+    @Comment("However, there is a potential risk of data loss if the server crashes before the data is saved to the database")
+    @NotNull public Cache cache = new Cache(this);
+
+
+    @NotNull public transient final AnnoyingPlugin plugin;
+
+    public StorageConfig(@NotNull AnnoyingPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     /**
      * Friendly name when migrating between methods for logging
      * <br><b>Format:</b> {@code FILE_PATH (METHOD)}
      */
-    @NotNull public final String migrationLogPrefix;
-
-    /**
-     * Construct a new {@link StorageConfig} instance to parse a storage configuration file
-     *
-     * @param   file    {@link #file}
-     */
-    public StorageConfig(@NotNull AnnoyingFile<?> file) {
-        this.file = file;
-        cache = new Cache();
-        final StorageMethod getMethod = StorageMethod.get(file.getString("method"));
-        migrationLogPrefix = "&4" + file.file.getName() + " (" + getMethod + ") &8|&c ";
-
-        // Local storage
-        if (!getMethod.isRemote()) {
-            method = getMethod;
-            remoteConnection = null;
-            return;
-        }
-
-        // Remote database
-        final ConfigurationSection remoteSection = file.getConfigurationSection("remote-connection");
-        if (remoteSection == null) {
-            AnnoyingPlugin.log(Level.WARNING, file.file.getPath() + " | A remote storage method is used but no remote connection is specified, using H2 instead");
-            method = StorageMethod.H2;
-            remoteConnection = null;
-            return;
-        }
-        method = getMethod;
-        remoteConnection = new RemoteConnection(remoteSection);
+    @NotNull
+    public String getMigrationLogPrefix() {
+        return "&4" + getBindFileName() + " (" + method + ") &8|&c ";
     }
 
     /**
      * Create a new {@link Connection} to the configured database
      *
-     * @return                      a new {@link Connection} to the database
+     * @return  a new {@link Connection} to the database
      *
-     * @throws ConnectionException if the connection to the database fails for any reason
+     * @throws  ConnectionException if the connection to the database fails for any reason
      */
     @NotNull
     public Connection createConnection() throws ConnectionException {
         if (method.url == null) throw new IllegalStateException("The storage method " + method + " is not an SQL method");
-        final AnnoyingPlugin plugin = file.plugin;
         final Path dataPath = plugin.getDataFolder().toPath();
 
         // Get url & properties
         String url = method.url.apply(dataPath);
         final Properties properties = new Properties();
-        if (remoteConnection != null) {
-            url += remoteConnection.host + ":" + remoteConnection.port + "/" + remoteConnection.database;
-            properties.putAll(remoteConnection.properties);
-            if (remoteConnection.username != null) properties.setProperty("user", remoteConnection.username);
-            if (remoteConnection.password != null) properties.setProperty("password", remoteConnection.password);
+        if (remote_connection != null) {
+            url += remote_connection.host + ":" + remote_connection.port + "/" + remote_connection.database;
+            properties.putAll(remote_connection.properties);
+            if (remote_connection.username != null) properties.setProperty("user", remote_connection.username);
+            if (remote_connection.password != null) properties.setProperty("password", remote_connection.password);
         }
 
         // Get driver
@@ -140,128 +134,103 @@ public class StorageConfig {
     /**
      * The remote connection details/properties
      */
-    public class RemoteConnection {
-        /**
-         * The remote host
-         */
-        @NotNull public final String host;
-        /**
-         * The remote port
-         */
-        public final int port;
-        /**
-         * The remote database name
-         */
-        @NotNull public final String database;
-        /**
-         * The remote username
-         */
-        @Nullable public final String username = file.getString("remote-connection.username");
-        /**
-         * The remote password
-         */
-        @Nullable public final String password = file.getString("remote-connection.password");
+    public static class RemoteConnection extends SubConfig<StorageConfig> {
+        public RemoteConnection(@NotNull StorageConfig root) {
+            super(root);
+        }
+
+        @Comment("The host of the database")
+        @NotNull public String host = "localhost";
+        @Comment("The port of the database")
+        @Comment("Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL")
+        @Nullable public Integer port = root.method.defaultPort; //TODO if this doesnt work, move to constructor
+
+        @Comment
+        @Comment("The name of the database")
+        @Comment("THE DATABASE MUST ALREADY EXIST")
+        @NotNull public String database = "minecraft";
+
+        @Comment("The username and password of the database")
+        @Nullable public String username;
+        @Nullable public String password;
+
         /**
          * The table prefix for the remote database
          * <br><i>Defaults to the plugin name in lowercase with all non-alphanumeric characters removed + an underscore</i>
          */
-        @NotNull public final String tablePrefix = file.getString("remote-connection.table-prefix", file.plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_");
+        @Comment("If you're using one database for multiple plugins, it's recommended to have a table prefix (case-insensitive)")
+        @Comment("By default (if left commented out), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore")
+        @Comment("To remove the table prefix, set it to an empty string ('')")
+        @Comment("DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)")
+        @NotNull public String table_prefix = root.plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_"; //TODO if this doesnt work, move to constructor
+
         /**
          * Additional custom properties for the remote connection
          */
-        @NotNull public final Map<String, String> properties = new HashMap<>();
-
-        /**
-         * Construct a new {@link RemoteConnection} instance to parse the {@code remote-connection} section
-         *
-         * @param   section the {@link ConfigurationSection remote-connection} section
-         */
-        public RemoteConnection(@NotNull ConfigurationSection section) {
-            // host
-            final String getHost = section.getString("host");
-            if (getHost == null) throw new IllegalArgumentException("A remote storage method is used but no remote host is specified");
-            host = getHost;
-
-            // port
-            Integer getPort = section.getInt("port");
-            if (getPort == 0) getPort = method.defaultPort;
-            if (getPort == null) throw new IllegalArgumentException("A remote storage method is used but no remote port is specified");
-            port = getPort;
-
-            // database
-            final String getDatabase = section.getString("database");
-            if (getDatabase == null) throw new IllegalArgumentException("A remote storage method is used but no remote database is specified");
-            database = getDatabase;
-
-            // properties
-            final ConfigurationSection propertiesSection = section.getConfigurationSection("properties");
-            if (propertiesSection != null) properties.putAll(propertiesSection.getValues(false).entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toString())));
-        }
+        @Comment
+        @Comment("Additional properties for the connection")
+        @Comment("You may need to remove useUnicode and characterEncoding if you're using PostgreSQL")
+        @Comment("It's recommended to keep 'autoReconnect: true'")
+        @NotNull public Map<String, String> properties = Map.of(
+                "autoReconnect", "true",
+                "useUnicode", "true",
+                "characterEncoding", "UTF-8");
     }
 
     /**
      * Options for the data cache (stored differently per method)
      */
-    public class Cache {
-        /**
-         * Whether the cache is enabled
-         */
-        public final boolean enabled = file.getBoolean("cache.enabled");
+    public static class Cache extends SubConfig<StorageConfig> {
+        public Cache(@NotNull StorageConfig root) {
+            super(root);
+        }
+
+        @Comment("Whether to enable using the cache")
+        public boolean enabled = true;
+
         /**
          * When to save the cache
          */
-        @NotNull public final Set<SaveOn> saveOn;
-        /**
-         * The interval to save the cache (if {@link #saveOn} contains {@link SaveOn#INTERVAL})
-         */
-        public final long interval = file.getLong("cache.interval");
+        @Comment("The actions that will trigger the cache to save to the database (RELOAD, DISABLE, INTERVAL)")
+        @Comment("If empty, all actions will trigger the cache to save")
+        @NotNull private Set<SaveOn> save_on = SaveOn.VALUES;
 
         /**
-         * Construct a new {@link Cache} instance to parse the {@code cache} section
+         * The interval to save the cache (if {@link #save_on} contains {@link SaveOn#INTERVAL})
          */
-        public Cache() {
-            final Set<SaveOn> providedSaveOns = file.getStringList("cache.save-on").stream()
-                    .map(string -> SaveOn.fromString(string).orElse(null))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            saveOn = !providedSaveOns.isEmpty() ? providedSaveOns : new HashSet<>(Arrays.asList(SaveOn.values()));
-        }
-    }
+        @Comment("The interval in which the cache will save to the database (only applicable if 'INTERVAL' is in 'save_on')")
+        @Comment("Make sure to specify units (s, m, h, etc.), else it will default to Minecraft ticks! :)")
+        @NotNull public Duration interval = Duration.ofMinutes(5);
 
-    /**
-     * Valid values for {@code storage.yml}'s {@code cache.save-on} option
-     */
-    public enum SaveOn {
-        /**
-         * Saves the cache on plugin reload
-         *
-         * @see AnnoyingPlugin#reload()
-         */
-        RELOAD,
-        /**
-         * Saves the cache on plugin disable
-         *
-         * @see AnnoyingPlugin#disable()
-         */
-        DISABLE,
-        /**
-         * Saves the cache on an interval
-         *
-         * @see Cache#interval
-         */
-        INTERVAL;
-
-        /**
-         * Converts the specified string to a {@link SaveOn} value
-         *
-         * @param   string  the string to convert
-         *
-         * @return          the converted value, or empty if the string is invalid
-         */
         @NotNull
-        public static Optional<SaveOn> fromString(@Nullable String string) {
-            return Mapper.toEnum(string, SaveOn.class);
+        public Set<SaveOn> getSaveOn() {
+            return save_on.isEmpty() ? SaveOn.VALUES : save_on;
+        }
+
+        /**
+         * Valid values for {@link #save_on}
+         */
+        public enum SaveOn {
+            /**
+             * Saves the cache on plugin reload
+             *
+             * @see AnnoyingPlugin#reload()
+             */
+            RELOAD,
+            /**
+             * Saves the cache on plugin disable
+             *
+             * @see AnnoyingPlugin#disable()
+             */
+            DISABLE,
+            /**
+             * Saves the cache on an interval
+             *
+             * @see Cache#interval
+             */
+            INTERVAL;
+
+            @NotNull private static final Set<SaveOn> VALUES = Collections.unmodifiableSet(EnumSet.allOf(SaveOn.class));
         }
     }
 }

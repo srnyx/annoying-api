@@ -17,7 +17,9 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.S0001_Cache_interval_ticks_to_duration;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
@@ -38,7 +40,6 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
@@ -50,6 +51,7 @@ import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -189,7 +191,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public final void onDisable() {
         if (dataManager != null) {
             // Save cache
-            if (dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.dialect.saveCache();
+            if (dataManager.storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.DISABLE)) dataManager.dialect.saveCache();
             // Close connection (if SQL)
             if (dataManager.dialect instanceof SQLDialect) try {
                 ((SQLDialect) dataManager.dialect).connection.close();
@@ -379,8 +381,9 @@ public class AnnoyingPlugin extends JavaPlugin {
         StorageConfig storageConfig = null;
         boolean saveCache = false;
         if (options.dataOptions.enabled) {
-            storageConfig = new StorageConfig(new AnnoyingResource(this, "storage.yml"));
-            saveCache = storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD) || (dataManager != null && dataManager.storageConfig.cache.enabled && !storageConfig.cache.enabled);
+            storageConfig = newStorageConfig();
+            if (storageConfig == null) throw new RuntimeException("Failed to load storage config");
+            saveCache = storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.RELOAD) || (dataManager != null && dataManager.storageConfig.cache.enabled && !storageConfig.cache.enabled);
         }
         // Load data manager
         loadDataManger(storageConfig, saveCache);
@@ -546,6 +549,23 @@ public class AnnoyingPlugin extends JavaPlugin {
         return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
+    //TODO may not work due to StorageConfig extending OkaeriConfig
+    @Nullable
+    public StorageConfig newStorageConfig(@Nullable Consumer<ConfigBuilder> builder) {
+        return configLoader.buildElseNull(configBuilder -> {
+            configBuilder
+                    .config(new StorageConfig(this))
+                    .file("storage.yml")
+                    .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration());
+            if (builder != null) builder.accept(configBuilder);
+        });
+    }
+
+    @Nullable
+    public StorageConfig newStorageConfig() {
+        return newStorageConfig(null);
+    }
+
     /**
      * Attempts to load the {@link #dataManager}, catching any exceptions and logging them
      * <br>If {@code storage-new.yml} exists, it will attempt to migrate the data from {@code storage.yml} to {@code storage-new.yml} using {@link DataManager#attemptDatabaseMigration()}
@@ -574,9 +594,15 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
+        // Get storage config
+        if (storageConfig == null) {
+            storageConfig = newStorageConfig();
+            if (storageConfig == null) throw new RuntimeException("Failed to load storage config");
+        }
+
         // Connect to database
         try {
-            dataManager = new DataManager(storageConfig == null ? new StorageConfig(new AnnoyingResource(this, "storage.yml")) : storageConfig);
+            dataManager = new DataManager(storageConfig);
         } catch (final ConnectionException e) {
             dataManager = null;
             log(Level.SEVERE, "&4storage.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);

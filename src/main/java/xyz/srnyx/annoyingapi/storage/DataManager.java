@@ -6,7 +6,6 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.scheduler.TaskWrapper;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
-import xyz.srnyx.annoyingapi.file.AnnoyingFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,10 +49,10 @@ public class DataManager {
      * @throws  ConnectionException if the connection to the database fails for any reason
      */
     public DataManager(@NotNull StorageConfig config) throws ConnectionException {
-        plugin = config.file.plugin;
+        plugin = config.plugin;
         storageConfig = config;
         dialect = storageConfig.method.dialect.apply(this);
-        tablePrefix = storageConfig.remoteConnection != null ? storageConfig.remoteConnection.tablePrefix : "";
+        tablePrefix = storageConfig.remote_connection != null ? storageConfig.remote_connection.table_prefix : "";
     }
 
     /**
@@ -78,13 +77,14 @@ public class DataManager {
         if (cacheSavingTask != null) cacheSavingTask.cancel();
 
         // Disable
-        if (!storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.INTERVAL)) {
+        if (!storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.INTERVAL)) {
             cacheSavingTask = null;
             return;
         }
 
         // Enable
-        cacheSavingTask = plugin.scheduler.runGlobalTaskTimerAsync(task -> dialect.saveCache(), storageConfig.cache.interval, storageConfig.cache.interval);
+        final long ticks = storageConfig.cache.interval.toMillis() / 50;
+        cacheSavingTask = plugin.scheduler.runGlobalTaskTimerAsync(task -> dialect.saveCache(), ticks, ticks);
     }
 
     /**
@@ -100,9 +100,10 @@ public class DataManager {
         if (!storageNew.exists()) return this;
 
         // NEW: Load storage-new.yml
-        final AnnoyingFile<?> storageNewFile = new AnnoyingFile<>(plugin, storageNew, new AnnoyingFile.Options<>().canBeEmpty(false));
-        if (!storageNewFile.load()) return this;
-        final StorageConfig storageNewConfig = new StorageConfig(storageNewFile);
+        final StorageConfig storageNewConfig = plugin.newStorageConfig(builder -> builder
+                .file(storageNew)
+                .saveDefaults(false));
+        if (storageNewConfig == null) return this;
         AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2storage-new.yml&a, attempting to migrate data from &2" + storageConfig.method + "&a to &2" + storageNewConfig.method + "&a...");
 
         // NEW: Connect to new database
@@ -122,9 +123,9 @@ public class DataManager {
             // NEW: Create missing tables/columns
             if (newManager.dialect instanceof SQLDialect) ((SQLDialect) newManager.dialect).createTablesKeys(migrationData.tablesKeys());
             // NEW: Save values to new database (log failures)
-            for (final FailedSet failure : newManager.dialect.setToDatabase(migrationData.data())) AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Failed to set &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c to &4" + failure.value(), failure.exception());
+            for (final FailedSet failure : newManager.dialect.setToDatabase(migrationData.data())) AnnoyingPlugin.log(Level.SEVERE, storageConfig.getMigrationLogPrefix() + "Failed to set &4" + failure.column() + "&c for &4" + failure.target() + "&c in table &4" + failure.table() + "&c to &4" + failure.value(), failure.exception());
         } else {
-            AnnoyingPlugin.log(Level.SEVERE, storageConfig.migrationLogPrefix + "Found no data to migrate! This may or may not be an error...");
+            AnnoyingPlugin.log(Level.SEVERE, storageConfig.getMigrationLogPrefix() + "Found no data to migrate! This may or may not be an error...");
         }
 
         // OLD: Close old connection
@@ -143,13 +144,16 @@ public class DataManager {
         }
 
         // Rename files
-        final File storage = storageConfig.file.file;
+        final File storage = storageConfig.getBindFile().toFile();
         if (storage.renameTo(storageOld)) { // OLD: storage.yml -> storage-old.yml
-            if (!storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
-                AnnoyingPlugin.log(Level.SEVERE, "&cFailed to rename &4storage-new.yml&c to &4storage.yml&c! You MUST rename &4storage-new.yml&c to &4storage.yml&c manually!");
+            if (storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
+                // Update OkaeriConfig bind file for StorageConfig
+                newManager.storageConfig.configure(configure -> configure.bindFile(storage));
+            } else {
+                AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4storage-new.yml&c to &4storage.yml&c!\nYou MUST rename &4storage-new.yml&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
             }
         } else {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to rename &4storage.yml&c to &4storage-old.yml&c! You MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!");
+            AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4storage.yml&c to &4storage-old.yml&c!\nYou MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
         }
 
         // NEW: Use new storage

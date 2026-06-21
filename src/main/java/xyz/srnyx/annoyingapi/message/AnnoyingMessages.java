@@ -24,6 +24,7 @@ public class AnnoyingMessages extends OkaeriConfig {
     @Comment("Error messages when a player does something wrong")
     @NotNull public Error error = new Error(this);
 
+
     @NotNull private transient final AnnoyingPlugin annoyingPlugin;
 
     public AnnoyingMessages(@NotNull AnnoyingPlugin annoyingPlugin) {

@@ -89,7 +89,7 @@ public abstract class SQLDialect extends Dialect {
             final ResultSet resultSet = getTables.executeQuery();
             while (resultSet.next()) tables.add(resultSet.getString(1));
         } catch (final SQLException e) {
-            dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get tables!", e);
+            dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.getMigrationLogPrefix() + "Failed to get tables!", e);
             return Optional.empty();
         }
 
@@ -108,12 +108,12 @@ public abstract class SQLDialect extends Dialect {
                 final ResultSetMetaData metaData = resultSet.getMetaData();
                 final int keyCount = metaData.getColumnCount();
                 if (keyCount == 0) {
-                    AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.migrationLogPrefix + "Table &4" + table + "&c has no keys, skipping...");
+                    AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.getMigrationLogPrefix() + "Table &4" + table + "&c has no keys, skipping...");
                     continue;
                 }
                 for (int i = 1; i <= keyCount; i++) keys.add(metaData.getColumnName(i));
                 if (!keys.contains("target")) {
-                    AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.migrationLogPrefix + "Table &4" + table + "&c doesn't have a '&4target&c' key, skipping...");
+                    AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.getMigrationLogPrefix() + "Table &4" + table + "&c doesn't have a '&4target&c' key, skipping...");
                     continue;
                 }
                 tablesKeys.put(tableWithoutPrefix, keys);
@@ -127,7 +127,7 @@ public abstract class SQLDialect extends Dialect {
                     tableValues.put(target, keyValues);
                 }
             } catch (final SQLException e) {
-                dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.migrationLogPrefix + "Failed to get values for table &4" + table, e);
+                dataManager.plugin.logErrorTrack(Level.SEVERE, dataManager.storageConfig.getMigrationLogPrefix() + "Failed to get values for table &4" + table, e);
             }
             if (!tableValues.isEmpty()) values.put(newManager.getTableName(tableWithoutPrefix), tableValues);
         }

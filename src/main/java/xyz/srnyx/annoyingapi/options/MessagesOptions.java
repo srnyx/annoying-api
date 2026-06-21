@@ -14,8 +14,8 @@ import java.util.function.Consumer;
  */
 public class MessagesOptions extends Stringable {
     @NotNull public Consumer<ConfigBuilder> builder = build -> build
-            .file("messages.yml")
-            .config(new AnnoyingMessages(Objects.requireNonNull(build.plugin)));
+            .config(new AnnoyingMessages(Objects.requireNonNull(build.plugin)))
+            .file("messages.yml");
 
     /**
      * Constructs a new {@link MessagesOptions} instance with default values
