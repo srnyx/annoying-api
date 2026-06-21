@@ -5,14 +5,15 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class SubConfig<R extends OkaeriConfig> extends OkaeriConfig {
-    @NotNull
-    public R getRootConfig() {
-        return (R) getContext().getRootConfig();
+    @NotNull public final R root;
+
+    public SubConfig(@NotNull R root) {
+        this.root = root;
     }
 
     @Override @NotNull
     public SubConfig<R> save() {
-        getContext().getRootConfig().save();
+        root.save();
         return this;
     }
 }

@@ -106,7 +106,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
     @SuppressWarnings("UnusedReturnValue")
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) annoyingPlugin.messagesProvider.messages().plugin.update_available.newAnnoyingMessage()
+        if (update && latestVersion != null) annoyingPlugin.getMessagesProvider().getMessages().plugin.update_available.newAnnoyingMessage()
                 .replace("%plugin%", pluginName)
                 .replace("%current%", currentVersion.version)
                 .replace("%new%", latestVersion.version)

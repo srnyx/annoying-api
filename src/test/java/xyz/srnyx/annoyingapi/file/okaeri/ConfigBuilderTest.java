@@ -74,7 +74,7 @@ public class ConfigBuilderTest {
 
         final ExampleConfig loaded = new ConfigBuilder(configFile.toFile())
                 .config(ExampleConfig.class)
-                .removeOrphans(false)
+                .configure(configure -> configure.removeOrphans(false))
                 .configMigrations(migration)
                 .build();
 

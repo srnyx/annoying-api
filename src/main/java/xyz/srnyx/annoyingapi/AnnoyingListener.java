@@ -17,6 +17,7 @@ import java.util.Set;
 /**
  * A listener that can be registered to the Bukkit event system
  */
+@Registrable.Ignore
 public abstract class AnnoyingListener extends Registrable implements Listener {
     /**
      * Whether the custom events have already been registered

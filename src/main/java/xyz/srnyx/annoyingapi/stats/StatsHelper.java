@@ -4,6 +4,7 @@ import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 
@@ -48,17 +49,18 @@ public class StatsHelper implements Annoyable {
 
     @NotNull
     public String[] getMessagesPluginGlobalPlaceholdersKeys() {
-        return plugin.messagesProvider.messages().plugin.global_placeholders.keySet().toArray(new String[0]);
+        final AnnoyingMessages msgs = plugin.getMessagesProvider().getMessages();
+        return msgs.plugin.global_placeholders.keySet().toArray(new String[0]);
     }
 
     @Nullable
     public String getMessagesPluginSplittersJson() {
-        return plugin.messagesProvider.messages().plugin.splitters.json;
+        return plugin.getMessagesProvider().getMessages().plugin.splitters.json;
     }
 
     @Nullable
     public String getMessagesPluginSplittersPlaceholder() {
-        return plugin.messagesProvider.messages().plugin.splitters.placeholder;
+        return plugin.getMessagesProvider().getMessages().plugin.splitters.placeholder;
     }
 
     @Nullable

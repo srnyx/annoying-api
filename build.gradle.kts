@@ -19,7 +19,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "a76a50b"
+    id("xyz.srnyx.gradle-galaxy") version "0866cc0"
     id("com.gradleup.shadow") version "9.4.2"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
@@ -35,7 +35,7 @@ setupMC(javaSetupConfig = JavaSetupConfig(
     javaVersion = javaVersion))
 
 // Runtime libraries
-val okaeriConfigsVersion: String = "bfa06f9"
+val okaeriConfigsVersion: String = "df8ae69"
 val bStatsVersion: String = "3.2.1"
 val fastStatsVersion: String = "0.27.0"
 val runtimeLibraries = listOf(

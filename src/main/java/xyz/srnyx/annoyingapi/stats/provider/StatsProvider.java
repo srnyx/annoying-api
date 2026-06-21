@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 
+@Registrable.Ignore
 public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registrable {
     @Nullable public L loader;
 

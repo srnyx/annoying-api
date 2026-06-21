@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi.message;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -10,18 +11,21 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
 import xyz.srnyx.annoyingapi.message.json.AnnoyingJSON;
-import xyz.srnyx.annoyingapi.message.json.JsonMessage;
-import xyz.srnyx.annoyingapi.message.json.component.RawTextComponent;
-import xyz.srnyx.annoyingapi.message.json.component.RawActionComponent;
+import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
+import xyz.srnyx.annoyingapi.message.json.message.JsonMessage;
+import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
+import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_SEND_TITLE_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSpigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
 
@@ -54,14 +58,21 @@ public class AnnoyingMessage extends Stringable {
     @NotNull private BaseComponent @Nullable [] components;
 
     public AnnoyingMessage(@NotNull JsonMessage jsonMessage) {
-        this.plugin = jsonMessage.plugin();
+        this.plugin = jsonMessage.plugin;
         this.jsonMessage = jsonMessage;
-        plugin.messagesProvider.messages().plugin.global_placeholders.forEach((placeholder, placeholderValue) -> replace("%" + placeholder + "%", placeholderValue));
+        plugin.getMessagesProvider().getMessages().plugin.global_placeholders.forEach((placeholder, placeholderValue) -> replace("%" + placeholder + "%", placeholderValue));
     }
 
     public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull JsonMessage newMessage) {
         this.plugin = message.plugin;
         this.jsonMessage = newMessage;
+        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
+        this.replacements.addAll(message.replacements);
+    }
+
+    public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull String newMessage) {
+        this.plugin = message.plugin;
+        this.jsonMessage = new JsonChatMessage(plugin, newMessage);
         this.parsePapiPlaceholders = message.parsePapiPlaceholders;
         this.replacements.addAll(message.replacements);
     }
@@ -134,6 +145,9 @@ public class AnnoyingMessage extends Stringable {
         // Use cached components
         if (components != null) return components;
 
+        // Cast to JsonChatMessage
+        if (!(jsonMessage instanceof JsonChatMessage chatMessage)) throw new IllegalStateException("Message is not a chat message");
+
         // Add %command% replacement
         replaceCommand(sender);
 
@@ -142,38 +156,59 @@ public class AnnoyingMessage extends Stringable {
 
         // Get JSON components
         final AnnoyingJSON json = new AnnoyingJSON();
-        boolean shouldCache = true;
-        for (final RawTextComponent component : jsonMessage.components().values()) {
-            final RawTextComponent componentCopy = component.copy();
-
-            // Only cache if %command% not present
-            if (shouldCache && componentCopy.raw.contains("%command%")) shouldCache = false;
+        for (final Map.Entry<String, String> entry : chatMessage.components.entrySet()) {
+            final String key = entry.getKey();
+            String value = entry.getValue();
 
             // Process replacements
-            for (final Replacement replacement : replacements) {
-                componentCopy.text = replacement.process(componentCopy.text);
-                if (componentCopy.hover != null) componentCopy.hover = replacement.process(componentCopy.hover);
-                if (componentCopy instanceof RawActionComponent actionComponent) {
-                    actionComponent.actionValue = replacement.process(actionComponent.actionValue);
-                }
-            }
+            for (final Replacement replacement : replacements) value = replacement.process(value);
 
             // Parse PAPI placeholders
-            if (parsePapiPlaceholders) {
-                componentCopy.text = plugin.parsePapiPlaceholders(player, componentCopy.text);
-                if (componentCopy.hover != null) componentCopy.hover = plugin.parsePapiPlaceholders(player, componentCopy.hover);
-                if (componentCopy instanceof RawActionComponent actionComponent) {
-                    actionComponent.actionValue = plugin.parsePapiPlaceholders(player, actionComponent.actionValue);
+            if (parsePapiPlaceholders) value = plugin.parsePapiPlaceholders(player, value);
+
+            final String[] split = value.split(plugin.getMessagesProvider().getMessages().plugin.splitters.json, 3);
+            // Text
+            final String text = split[0];
+            // Hover
+            final String splitHover = split.length >= 2 ? split[1] : null;
+            final String hover = splitHover != null && BukkitUtility.stripUntranslatedColor(splitHover).isEmpty() ? null : splitHover;
+            // Action
+            final String splitAction = split.length >= 3 ? split[2] : null;
+            final String actionValue = splitAction != null && BukkitUtility.stripUntranslatedColor(splitAction).isEmpty() ? null : splitAction;
+
+            if (actionValue != null) {
+                // Suggest
+                if (key.startsWith("suggest")) {
+                    json.append(text, hover, ClickEvent.Action.SUGGEST_COMMAND, actionValue);
+                    continue;
+                }
+
+                // Copy
+                if (COPY_TO_CLIPBOARD != null && key.startsWith("copy")) {
+                    json.append(text, hover, COPY_TO_CLIPBOARD, actionValue);
+                    continue;
+                }
+
+                // Chat
+                if (key.startsWith("chat")) {
+                    json.append(text, hover, ClickEvent.Action.RUN_COMMAND, actionValue);
+                    continue;
+                }
+
+                // Web
+                if (key.startsWith("web")) {
+                    json.append(text, hover, ClickEvent.Action.OPEN_URL, actionValue);
+                    continue;
                 }
             }
 
-            // Add component
-            json.append(componentCopy);
+            // Text
+            json.append(text, hover);
         }
 
         // Build, cache, & return components
         final BaseComponent[] newComponents = json.build();
-        if (shouldCache) components = newComponents;
+        if (chatMessage.shouldCache()) components = newComponents;
         return newComponents;
     }
 
@@ -234,6 +269,9 @@ public class AnnoyingMessage extends Stringable {
      * @see             #broadcast(BroadcastType, AnnoyingSender)
      * @see             #broadcast(BroadcastType)
      */
+    //TODO replace BroadcastType with just new component types (title + subtitle + actionbar). they can then be used in send(...). broadcast does some sort of loop.
+    // would need migrations for existing keys. also need to consider keys that are used in BOTH send(...) and broadcast(...).
+    // title/subtitle/full title can just use JsonTitleMessage but with Nullable title/subtitle.
     public void broadcast(@NotNull BroadcastType type, @Nullable AnnoyingSender sender, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
         // Title/subtitle/full title
         if (type.isTitle()) {
@@ -254,11 +292,12 @@ public class AnnoyingMessage extends Stringable {
                 return;
             }
 
-            // Title and subtitle (full title) TODO: another custom serializer (JsonTitleMessage?)
-//            broadcastTitle(
-//                    new AnnoyingMessage(this, key + ".title").toString(sender),
-//                    new AnnoyingMessage(this, key + ".subtitle").toString(sender),
-//                    fadeIn, stay, fadeOut);
+            // Title and subtitle (full title)
+            if (!(jsonMessage instanceof JsonTitleMessage titleMessage)) throw new IllegalStateException("Message is not a title message");
+            broadcastTitle(
+                    new AnnoyingMessage(this, titleMessage.title).toString(sender),
+                    new AnnoyingMessage(this, titleMessage.subtitle).toString(sender),
+                    fadeIn, stay, fadeOut);
             return;
         }
         final BaseComponent[] compiledComponents = getComponents(sender);
@@ -435,12 +474,13 @@ public class AnnoyingMessage extends Stringable {
             if (type == null) return input.replace(before, value);
 
             // Parameter placeholder
-            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + plugin.messagesProvider.messages().plugin.splitters.placeholder) + ".*?%").matcher(input);
+            final String placeholderSplitter = plugin.getMessagesProvider().getMessages().plugin.splitters.placeholder;
+            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + placeholderSplitter) + ".*?%").matcher(input);
             final String match;
             final String parameter;
             if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
                 match = matcher.group(); // get the placeholder
-                final String split = match.split(plugin.messagesProvider.messages().plugin.splitters.placeholder, 2)[1]; // get the input part of the placeholder
+                final String split = match.split(placeholderSplitter, 2)[1]; // get the input part of the placeholder
                 parameter = split.substring(0, split.length() - 1); // remove the closing % from the input part
             } else {
                 match = before; // use the original placeholder

@@ -109,7 +109,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      * @return  whether the {@link CommandSender} is a {@link Player}
      */
     public boolean checkPlayer() {
-        if (!isPlayer) plugin.messagesProvider.messages().error.player_only.newAnnoyingMessage().send(this);
+        if (!isPlayer) plugin.getMessagesProvider().getMessages().error.player_only.newAnnoyingMessage().send(this);
         return isPlayer;
     }
 
@@ -122,7 +122,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      */
     public boolean checkPermission(@NotNull String permission) {
         final boolean hasPermission = cmdSender.hasPermission(permission);
-        if (!hasPermission) plugin.messagesProvider.messages().error.no_permission.newAnnoyingMessage()
+        if (!hasPermission) plugin.getMessagesProvider().getMessages().error.no_permission.newAnnoyingMessage()
                 .replace("%permission%", permission)
                 .send(this);
         return hasPermission;
@@ -411,7 +411,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      * @param   argument    the argument to replace {@code %argument%} with
      */
     public void invalidArgument(@Nullable Object argument) {
-        plugin.messagesProvider.messages().error.invalid_argument.newAnnoyingMessage()
+        plugin.getMessagesProvider().getMessages().error.invalid_argument.newAnnoyingMessage()
                 .replace("%argument%", String.valueOf(argument))
                 .send(this);
     }
@@ -432,6 +432,6 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      * Sends the invalid arguments message
      */
     public void invalidArguments() {
-        plugin.messagesProvider.messages().error.invalid_arguments.newAnnoyingMessage().send(this);
+        plugin.getMessagesProvider().getMessages().error.invalid_arguments.newAnnoyingMessage().send(this);
     }
 }

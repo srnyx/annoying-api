@@ -4,12 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
+import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
 
 import java.util.Collection;
 import java.util.Collections;
 
 
+@Registrable.Ignore
 public abstract class BStatsProvider<L extends BStatsLoader> extends StatsProvider<L> {
     @NotNull private final AnnoyingPlugin plugin;
 

@@ -3,7 +3,6 @@ package xyz.srnyx.annoyingapi;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.byteflux.libby.relocation.Relocation;
-import net.md_5.bungee.api.chat.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -21,8 +20,7 @@ import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
-import xyz.srnyx.annoyingapi.message.json.component.RawTextComponent;
-import xyz.srnyx.annoyingapi.message.json.component.RawActionComponent;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.message.MessagesProvider;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
@@ -55,8 +53,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-
-import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
 
 
 /**
@@ -107,7 +103,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Helper for stats providers (bStats, FastStats, etc.)
      */
     @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
-    public MessagesProvider messagesProvider;
     /**
      * The {@link DataManager} for the plugin
      */
@@ -145,7 +140,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
-        LOGGER.severe("Constructing plugin instance...");
     }
 
     /**
@@ -157,9 +151,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
-        LOGGER.severe("onLoad() called");
         selectorManager.registerSelectors();
-        loadMessagesProvider();
         loadDataManger(null, false);
         load();
     }
@@ -290,17 +282,16 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
-        // Check for updates
-        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
-        updateChecker.checkUpdate();
-
         // Register manually-defined Registrables & PAPI expansion
         options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papiInstalled) options.registrationOptions.getPapiExpansionToRegister().ifPresent(PlaceholderExpansion::register);
 
-        // Automatic registration
-        final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
+        // Get packages for automatic registration
+        final Set<String> packages = new HashSet<>(options.registrationOptions.automaticRegistration.packages);
+        if (options.registrationOptions.automaticRegistration.addPrimaryPackage) packages.add(getClass().getPackageName());
+
+        // Do automatic registration
         if (!packages.isEmpty()) {
             // Load Reflections library
             libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
@@ -308,19 +299,24 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
             for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
-                // Ignore interfaces and abstract classes
-                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
+                // Ignore interfaces, abstract classes, and anonymous classes
+                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers()) || clazz.isAnonymousClass()) continue;
                 // Ignore classes with @Registrable.Ignore and specific ignored classes
                 if (clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
 
                 // Register class
+                final String className = clazz.getSimpleName();
+                log(Level.INFO, "Automatically registering " + className);
                 try {
                     clazz.getConstructor(this.getClass()).newInstance(this).register();
                 } catch (final Throwable t) {
-                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
+                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + className, t);
                 }
             }
         }
+
+        // Load messages
+        loadMessages();
 
         // Manual stats registration
         registerBStatsManually();
@@ -330,9 +326,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
         // Get start message colors
-        final String primaryColorString = messagesProvider.messages().plugin.global_placeholders.get("p");
+        final AnnoyingMessages annoyingMessages = getMessagesProvider().getMessages();
+        final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
         final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = messagesProvider.messages().plugin.global_placeholders.get("s");
+        final String secondaryColorString = annoyingMessages.plugin.global_placeholders.get("s");
         final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
 
         // Get start messages
@@ -349,6 +346,10 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(Level.INFO, primaryColor + nameVersion);
         log(Level.INFO, primaryColor + authors);
         log(Level.INFO, line);
+
+        // Check for updates
+        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
+        updateChecker.checkUpdate();
 
         // Custom onEnable
         enable();
@@ -372,7 +373,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @see #reload()
      */
     public void reloadPlugin() {
-        loadMessagesProvider();
+        loadMessages();
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;
@@ -500,13 +501,35 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    private void loadMessagesProvider() {
-        messagesProvider = new MessagesProvider(loadMessages());
+    private void loadMessages() {
+        MessagesProvider provider = getRegistrable(MessagesProvider.class);
+        if (provider == null) {
+            provider = new MessagesProvider() {
+                private AnnoyingMessages messages;
+
+                @Override @NotNull
+                public AnnoyingPlugin getAnnoyingPlugin() {
+                    return AnnoyingPlugin.this;
+                }
+
+                @Override
+                public void setMessages(@NotNull AnnoyingMessages messages) {
+                    this.messages = messages;
+                }
+
+                @Override @NotNull
+                public AnnoyingMessages getMessages() {
+                    return messages;
+                }
+            };
+            provider.register();
+        }
+        provider.setMessages(configLoader.buildElseThrow(options.messagesOptions.builder));
     }
 
     @NotNull
-    public <C> C loadMessages() {
-        return configLoader.buildElseThrow(options.messagesOptions.builder);
+    public MessagesProvider getMessagesProvider() {
+        return Objects.requireNonNull(getRegistrable(MessagesProvider.class), "Messages not loaded yet");
     }
 
     /**
@@ -572,45 +595,6 @@ public class AnnoyingPlugin extends JavaPlugin {
 
             ((SQLDialect) dataManager.dialect).createTablesKeys(tablesCopy);
         }
-    }
-
-    @NotNull
-    public RawTextComponent deserializeTextComponent(@Nullable String key, @NotNull String value) {
-        final String[] split = value.split(messagesProvider.messages().plugin.splitters.json, 3);
-
-        // Text
-        final String text = split[0];
-
-        // Hover
-        final String splitHover = split.length >= 2 ? split[1] : null;
-        final String hover = splitHover != null && BukkitUtility.stripUntranslatedColor(splitHover).isEmpty() ? null : splitHover;
-
-        // Action
-        final String splitAction = split.length >= 3 ? split[2] : null;
-        final String actionValue = splitAction != null && BukkitUtility.stripUntranslatedColor(splitAction).isEmpty() ? null : splitAction;
-
-        // ActionComponent
-        if (actionValue != null) {
-            // Suggest (default action)
-            if (key == null || key.startsWith("suggest")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.SUGGEST_COMMAND, actionValue);
-
-            // Copy
-            if (COPY_TO_CLIPBOARD != null && key.startsWith("copy")) return new RawActionComponent(key, value, text, hover, COPY_TO_CLIPBOARD, actionValue);
-
-            // Chat
-            if (key.startsWith("chat")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.RUN_COMMAND, actionValue);
-
-            // Web
-            if (key.startsWith("web")) return new RawActionComponent(key, value, text, hover, ClickEvent.Action.OPEN_URL, actionValue);
-        }
-
-        // ATextComponent
-        return new RawTextComponent(key, value, text, hover);
-    }
-
-    @NotNull
-    public RawTextComponent deserializeTextComponent(@NotNull String value) {
-        return deserializeTextComponent(null, value);
     }
 
     /**

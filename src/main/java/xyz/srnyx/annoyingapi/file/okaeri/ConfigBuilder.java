@@ -34,9 +34,9 @@ public class ConfigBuilder {
     @NotNull private File file;
     @Nullable private OkaeriConfig config;
     @Nullable private Consumer<OkaeriConfigOptions> configure;
+    @Nullable private Consumer<YamlBukkitConfigurer> configurer;
     @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
     @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
-    private boolean removeOrphans = true;
     private boolean renameKebabCaseToSnakeCase = true;
     private boolean saveDefaults = true;
 
@@ -109,6 +109,12 @@ public class ConfigBuilder {
     }
 
     @NotNull
+    public ConfigBuilder configurer(@Nullable Consumer<YamlBukkitConfigurer> configurer) {
+        this.configurer = configurer;
+        return this;
+    }
+
+    @NotNull
     public ConfigBuilder internalStateMigrations(@NotNull Collection<ConfigMigration> migrations) {
         this.internalStateMigrations.addAll(migrations);
         return this;
@@ -131,12 +137,6 @@ public class ConfigBuilder {
     }
 
     @NotNull
-    public ConfigBuilder removeOrphans(boolean removeOrphans) {
-        this.removeOrphans = removeOrphans;
-        return this;
-    }
-
-    @NotNull
     public ConfigBuilder renameKebabCaseToSnakeCase(boolean renameKebabCaseToSnakeCase) {
         this.renameKebabCaseToSnakeCase = renameKebabCaseToSnakeCase;
         return this;
@@ -155,8 +155,11 @@ public class ConfigBuilder {
         // Configure
         config.configure(opt -> {
             // Configurer
+            final YamlBukkitConfigurer configurer = new YamlBukkitConfigurer()
+                    .setLineWidth(Integer.MAX_VALUE);
+            if (this.configurer != null) this.configurer.accept(configurer);
             opt.configurer(
-                    new YamlBukkitConfigurer(),
+                    configurer,
                     new SerdesCommons(),
                     new SerdesBukkit(),
 
@@ -175,7 +178,8 @@ public class ConfigBuilder {
 
             // Conditional serdes (requires plugin)
             if (plugin != null) {
-                opt.serdes(new JsonMessageSerializer(plugin));
+                opt.serdes(new JsonChatMessageSerializer(plugin));
+                opt.serdes(new JsonTitleMessageSerializer(plugin));
 
                 final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
                 if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
@@ -184,7 +188,7 @@ public class ConfigBuilder {
             // Other options
             opt.validator(new AnnoyingConfigValidator());
             opt.bindFile(file);
-            if (removeOrphans) opt.removeOrphans(true);
+            opt.removeOrphans(true);
 
             if (configure != null) configure.accept(opt);
         });
