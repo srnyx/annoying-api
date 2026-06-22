@@ -167,7 +167,6 @@ public class ConfigBuilder {
                     registry -> {
                         registry.register(new ColorSerializer());
                         registry.register(new ColorAttachmentResolver());
-                        registry.register(new RecipeSerializer(plugin));
                         registry.register(new RecipeAttachmentResolver());
                         registry.register(new RecipeChoiceSerializer());
                         registry.register(new AttributeModifierSerializer(plugin));
@@ -179,6 +178,7 @@ public class ConfigBuilder {
 
             // Conditional serdes (requires plugin)
             if (plugin != null) {
+                opt.serdes(new RecipeSerializer(plugin));
                 opt.serdes(new JsonChatMessageSerializer(plugin));
                 opt.serdes(new JsonTitleMessageSerializer(plugin));
 

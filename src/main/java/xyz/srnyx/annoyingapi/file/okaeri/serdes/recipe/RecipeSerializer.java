@@ -11,15 +11,17 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.material.MaterialData;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_CLASS;
@@ -44,9 +46,12 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.Stonecutting
 
 
 public class RecipeSerializer implements ObjectSerializer<Recipe> {
-    @Nullable private final Plugin plugin;
+    @NotNull private static final Map<Class<? extends ResultTransformer>, ResultTransformer> TRANSFORMERS = new HashMap<>();
 
-    public RecipeSerializer(@Nullable Plugin plugin) {
+    @NotNull public final AnnoyingPlugin plugin;
+    @NotNull private final Map<Recipe, ItemStack> rawResults = new WeakHashMap<>();
+
+    public RecipeSerializer(@NotNull AnnoyingPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -58,7 +63,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
     @Override
     public void serialize(@NotNull Recipe object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
         // result
-        data.set("result", object.getResult());
+        data.set("result", rawResults.getOrDefault(object, object.getResult()));
 
         // 1.14+ CookingRecipe
         if (COOKING_RECIPE_CLASS != null && COOKING_RECIPE_CLASS.isAssignableFrom(object.getClass())) {
@@ -165,15 +170,29 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
     @Override @NotNull
     public Recipe deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
-        // name
-        final String name = data.getContext().getAttachment(RecipeSpecData.class)
-                .map(RecipeSpecData::name)
-                .orElse(null);
-        if (name == null) throw new IllegalStateException("DEVELOPER: Recipe name is required with @RecipeSpec");
+        // Get spec data
+        final RecipeSpecData specData = data.getContext()
+                .getAttachment(RecipeSpecData.class)
+                .orElseThrow(() -> new IllegalStateException("DEVELOPER: Recipe name is required with @RecipeSpec"));
 
-        // result TODO: function
-        final ItemStack result = data.get("result", ItemStack.class);
-        if (result == null) throw new IllegalArgumentException("Missing required field: result");
+        // result
+        final ItemStack rawResult = data.get("result", ItemStack.class);
+        if (rawResult == null) throw new IllegalArgumentException("Missing required field: result");
+        ItemStack result = rawResult.clone();
+
+        // name
+        final String name = specData.name();
+
+        // Transform result
+        final Class<? extends ResultTransformer> transformerClass = specData.resultTransformer();
+        ResultTransformer transformer = TRANSFORMERS.get(transformerClass);
+        if (transformer == null) try {
+            transformer = transformerClass.getDeclaredConstructor().newInstance();
+            TRANSFORMERS.put(transformerClass, transformer);
+        } catch (final Exception e) {
+            plugin.logErrorTrack(Level.SEVERE, "DEVELOPER: Failed to construct transformer " + transformerClass.getName() + " for recipe " + name, e);
+        }
+        if (transformer != null) result = transformer.apply(this, result);
 
         final Class<?> type = generics.getType();
 
@@ -194,24 +213,24 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
             // 1.14+ CookingRecipe
             if (cooking) try {
-                return (Recipe) COOKING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks);
+                return storeRawResult((Recipe) COOKING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks), rawResult);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
 
             // 1.13+ FurnaceRecipe
             if (FURNACE_RECIPE_CONSTRUCTOR_1_13 != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
-                return FURNACE_RECIPE_CONSTRUCTOR_1_13.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks);
+                return storeRawResult(FURNACE_RECIPE_CONSTRUCTOR_1_13.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks), rawResult);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
 
             // 1.9+ FurnaceRecipe
             if (FURNACE_RECIPE_CONSTRUCTOR_1_9 != null) try {
-                return FURNACE_RECIPE_CONSTRUCTOR_1_9.newInstance(result, new MaterialData(ingredient), experience);
+                return storeRawResult(FURNACE_RECIPE_CONSTRUCTOR_1_9.newInstance(result, new MaterialData(ingredient), experience), rawResult);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
 
             // 1.8.8- FurnaceRecipe
-            return new FurnaceRecipe(result, ingredient);
+            return storeRawResult(new FurnaceRecipe(result, ingredient), rawResult);
         }
 
-        // 1.9+ MerchantRecipe TODO: Paper-specific ignoreDiscounts
+        // 1.9+ MerchantRecipe
         if (MERCHANT_RECIPE_CLASS != null && MERCHANT_RECIPE_CLASS.isAssignableFrom(type)) {
             // max_uses
             final Integer maxUses = data.get("max_uses", Integer.class);
@@ -240,14 +259,14 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                     final int specialPrice = data.getOr("special_price", int.class, 0);
 
                     try {
-                        return (Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice);
+                        return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice), rawResult);
                     } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }
 
                 try {
-                    return (Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_14.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier);
+                    return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_14.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier), rawResult);
                 } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -255,7 +274,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
             // 1.9+
             if (MERCHANT_RECIPE_CONSTRUCTOR != null) try {
-                return (Recipe) MERCHANT_RECIPE_CONSTRUCTOR.newInstance(result, uses, maxUses, experienceReward);
+                return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR.newInstance(result, uses, maxUses, experienceReward), rawResult);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
@@ -273,7 +292,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             if (ingredient == null) throw new IllegalArgumentException("Missing required field: ingredient");
 
             try {
-                return (Recipe) STONECUTTING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient);
+                return storeRawResult((Recipe) STONECUTTING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient), rawResult);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalStateException("Could not create StonecuttingRecipe", e);
             }
@@ -292,7 +311,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             if (addition == null) throw new IllegalArgumentException("Missing required field: addition");
 
             try {
-                return (Recipe) SMITHING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, base, addition);
+                return storeRawResult((Recipe) SMITHING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, base, addition), rawResult);
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new IllegalStateException("Could not create SmithingRecipe", e);
             }
@@ -310,7 +329,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         if (data.get("shapeless", boolean.class)) {
             // Create shapeless recipe
             ShapelessRecipe shapeless;
-            if (plugin != null && SHAPELESS_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
+            if (SHAPELESS_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
                 try {
                     // 1.12+
                     shapeless = SHAPELESS_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
@@ -334,12 +353,12 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                         entry.getValue());
             }
 
-            return shapeless;
+            return storeRawResult(shapeless, rawResult);
         }
 
         // shaped
         ShapedRecipe shaped;
-        if (plugin != null && SHAPED_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
+        if (SHAPED_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
             try {
                 // 1.12+
                 shaped = SHAPED_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
@@ -358,6 +377,12 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                 .toArray(String[]::new));
         ingredients.forEach(shaped::setIngredient);
 
-        return shaped;
+        return storeRawResult(shaped, rawResult);
+    }
+
+    @NotNull
+    private Recipe storeRawResult(@NotNull Recipe recipe, @NotNull ItemStack rawResult) {
+        rawResults.put(recipe, rawResult);
+        return recipe;
     }
 }

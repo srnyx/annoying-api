@@ -15,11 +15,11 @@ public class RecipeAttachmentResolver implements SerdesAnnotationResolver<Recipe
 
     @Override @NotNull
     public Optional<RecipeSpecData> resolveAttachment(@NotNull Field field, @NotNull RecipeSpec annotation) {
-        return Optional.of(new RecipeSpecData(annotation.name()));
+        return Optional.of(new RecipeSpecData(annotation.name(), annotation.resultTransformer()));
     }
 
     @Override @NotNull
     public Optional<RecipeSpecData> resolveClassAttachment(@NotNull Class<?> clazz, @NotNull RecipeSpec annotation) {
-        return Optional.of(new RecipeSpecData(annotation.name()));
+        return Optional.of(new RecipeSpecData(annotation.name(), annotation.resultTransformer()));
     }
 }
