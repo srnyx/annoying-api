@@ -5,10 +5,8 @@ import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
 import eu.okaeri.configs.serdes.SerializationData;
-import org.bukkit.Sound;
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.file.PlayableSound;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 
 
 public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> {
@@ -28,14 +26,12 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
     @Override @NotNull
     public PlayableSound deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
         // sound (need to use XSeries because Sound isn't an enum in newer versions)
-        final XSound xSound = data.get("sound", XSound.class);
-        if (xSound == null) throw new IllegalArgumentException("Missing or invalid required field: sound");
-        final Sound sound = xSound.get();
+        final XSound sound = data.get("sound", XSound.class);
         if (sound == null) throw new IllegalArgumentException("Missing or invalid required field: sound");
 
         // category
-        final Enum<?> category = RefSoundCategory.SOUND_CATEGORY_ENUM != null ? data.get("category", RefSoundCategory.SOUND_CATEGORY_ENUM) : null;
-        if (category == null) throw new IllegalArgumentException("Missing required field: category");
+        final XSound.Category category = data.get("category", XSound.Category.class);
+        if (category == null) throw new IllegalArgumentException("Missing or invalid required field: category");
 
         // volume
         final Float volume = data.get("volume", Float.class);
