@@ -60,7 +60,7 @@ public class AnnoyingMessage extends Stringable {
     public AnnoyingMessage(@NotNull JsonMessage jsonMessage) {
         this.plugin = jsonMessage.plugin;
         this.jsonMessage = jsonMessage;
-        plugin.getMessagesProvider().getMessages().plugin.global_placeholders.forEach((placeholder, placeholderValue) -> replace("%" + placeholder + "%", placeholderValue));
+        plugin.getAnnoyingMessages().plugin.global_placeholders.forEach((placeholder, placeholderValue) -> replace("%" + placeholder + "%", placeholderValue));
     }
 
     public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull JsonMessage newMessage) {
@@ -166,7 +166,7 @@ public class AnnoyingMessage extends Stringable {
             // Parse PAPI placeholders
             if (parsePapiPlaceholders) value = plugin.parsePapiPlaceholders(player, value);
 
-            final String[] split = value.split(plugin.getMessagesProvider().getMessages().plugin.splitters.json, 3);
+            final String[] split = value.split(plugin.getAnnoyingMessages().plugin.splitters.json, 3);
             // Text
             final String text = split[0];
             // Hover
@@ -474,7 +474,7 @@ public class AnnoyingMessage extends Stringable {
             if (type == null) return input.replace(before, value);
 
             // Parameter placeholder
-            final String placeholderSplitter = plugin.getMessagesProvider().getMessages().plugin.splitters.placeholder;
+            final String placeholderSplitter = plugin.getAnnoyingMessages().plugin.splitters.placeholder;
             final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + placeholderSplitter) + ".*?%").matcher(input);
             final String match;
             final String parameter;

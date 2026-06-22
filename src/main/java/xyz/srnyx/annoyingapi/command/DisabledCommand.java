@@ -42,6 +42,6 @@ public class DisabledCommand extends AnnoyingCommand {
      */
     @Override
     public void onCommand(@NotNull AnnoyingSender sender) {
-        plugin.getMessagesProvider().getMessages().error.disabled_command.newAnnoyingMessage().send(sender);
+        plugin.getAnnoyingMessages().error.disabled_command.newAnnoyingMessage().send(sender);
     }
 }

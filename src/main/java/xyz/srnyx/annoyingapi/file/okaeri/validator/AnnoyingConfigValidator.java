@@ -29,6 +29,11 @@ public class AnnoyingConfigValidator implements ConfigValidator {
     }
 
     @Override
+    public boolean validateOnLoad() {
+        return false;
+    }
+
+    @Override
     public boolean isValid(@NotNull Object entity) {
         // Check config type
         if (!(entity instanceof final OkaeriConfig config)) throw new IllegalArgumentException("OkaeriValidator can only validate OkaeriConfig instances, got: " + entity.getClass().getName());

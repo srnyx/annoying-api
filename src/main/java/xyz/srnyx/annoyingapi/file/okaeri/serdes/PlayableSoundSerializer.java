@@ -10,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.file.PlayableSound;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 
-import java.util.Objects;
-
 
 public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> {
     @Override
@@ -29,18 +27,15 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
 
     @Override @NotNull
     public PlayableSound deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
-        // sound
-        final String soundName = data.get("sound", String.class);
-        if (soundName == null) throw new IllegalArgumentException("Missing required field: sound");
+        // sound (need to use XSeries because Sound isn't an enum in newer versions)
+        final XSound xSound = data.get("sound", XSound.class);
+        if (xSound == null) throw new IllegalArgumentException("Missing or invalid required field: sound");
+        final Sound sound = xSound.get();
+        if (sound == null) throw new IllegalArgumentException("Missing or invalid required field: sound");
 
         // category
         final Enum<?> category = RefSoundCategory.SOUND_CATEGORY_ENUM != null ? data.get("category", RefSoundCategory.SOUND_CATEGORY_ENUM) : null;
         if (category == null) throw new IllegalArgumentException("Missing required field: category");
-
-        // Get Sound (need to use XSeries because Sound isn't an enum in newer versions)
-        final Sound sound = XSound.of(soundName)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid sound: " + soundName))
-                .get();
 
         // volume
         final Float volume = data.get("volume", Float.class);
@@ -48,6 +43,6 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
         // pitch
         final Float pitch = data.get("pitch", Float.class);
 
-        return new PlayableSound(Objects.requireNonNull(sound), category, volume, pitch);
+        return new PlayableSound(sound, category, volume, pitch);
     }
 }

@@ -174,6 +174,7 @@ public class ConfigBuilder {
                         registry.register(new ItemStackSerializer());
                         registry.register(new PlayableSoundSerializer());
                         registry.register(new PotionEffectSerializer());
+                        registry.register(new XBaseSerializer());
                     });
 
             // Conditional serdes (requires plugin)

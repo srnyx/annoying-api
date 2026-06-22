@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi;
 
+import eu.okaeri.configs.OkaeriConfig;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.byteflux.libby.relocation.Relocation;
@@ -17,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
 import xyz.srnyx.annoyingapi.file.okaeri.migration.S0001_Cache_interval_ticks_to_duration;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
@@ -51,7 +51,6 @@ import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -100,7 +99,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Loader for OkaeriConfig configs
      */
-    @NotNull public final ConfigLoader configLoader = new ConfigLoader(this);
+    @NotNull public final ConfigLoader configLoader;
     /**
      * Helper for stats providers (bStats, FastStats, etc.)
      */
@@ -142,6 +141,16 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
+
+        // Load Okaeri Configs
+        if (!libraryManager.loadLibrary(
+                AnnoyingAPILibrary.XSERIES,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) throw new RuntimeException("Failed to load Okaeri Configs");
+
+        configLoader = new ConfigLoader(this);
     }
 
     /**
@@ -153,8 +162,17 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        // Load required libraries
+        if (!libraryManager.loadLibrary(options.pluginOptions.libraries)) {
+            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because required libraries failed to load");
+            disablePlugin();
+            return;
+        }
+
         selectorManager.registerSelectors();
         loadDataManger(null, false);
+
+        // Run custom onLoad
         load();
     }
 
@@ -277,13 +295,6 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
-        // Load required libraries
-        if (!libraryManager.loadLibrary(options.pluginOptions.libraries)) {
-            log(Level.SEVERE, "&cDisabling &4" + name + "&c because required libraries failed to load");
-            disablePlugin();
-            return;
-        }
-
         // Register manually-defined Registrables & PAPI expansion
         options.registrationOptions.toRegister.forEach(Registrable::register);
         papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
@@ -318,7 +329,29 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Load messages
-        loadMessages();
+        MessagesProvider provider = getRegistrable(MessagesProvider.class);
+        if (provider == null) {
+            provider = new MessagesProvider() {
+                private AnnoyingMessages messages;
+
+                @Override @NotNull
+                public AnnoyingPlugin getAnnoyingPlugin() {
+                    return AnnoyingPlugin.this;
+                }
+
+                @Override
+                public void setMessages(@NotNull AnnoyingMessages messages) {
+                    this.messages = messages;
+                }
+
+                @Override @NotNull
+                public AnnoyingMessages getMessages() {
+                    return messages;
+                }
+            };
+            provider.register();
+        }
+        provider.setMessages(configLoader.build(options.messagesOptions.builder));
 
         // Manual stats registration
         registerBStatsManually();
@@ -328,7 +361,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
         // Get start message colors
-        final AnnoyingMessages annoyingMessages = getMessagesProvider().getMessages();
+        final AnnoyingMessages annoyingMessages = getAnnoyingMessages();
         final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
         final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
         final String secondaryColorString = annoyingMessages.plugin.global_placeholders.get("s");
@@ -375,7 +408,9 @@ public class AnnoyingPlugin extends JavaPlugin {
      * @see #reload()
      */
     public void reloadPlugin() {
-        loadMessages();
+        // Reload messages
+        final MessagesProvider provider = getRegistrable(MessagesProvider.class);
+        if (provider != null) provider.getMessages().load(true);
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;
@@ -504,35 +539,17 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    private void loadMessages() {
-        MessagesProvider provider = getRegistrable(MessagesProvider.class);
-        if (provider == null) {
-            provider = new MessagesProvider() {
-                private AnnoyingMessages messages;
-
-                @Override @NotNull
-                public AnnoyingPlugin getAnnoyingPlugin() {
-                    return AnnoyingPlugin.this;
-                }
-
-                @Override
-                public void setMessages(@NotNull AnnoyingMessages messages) {
-                    this.messages = messages;
-                }
-
-                @Override @NotNull
-                public AnnoyingMessages getMessages() {
-                    return messages;
-                }
-            };
-            provider.register();
-        }
-        provider.setMessages(configLoader.buildElseThrow(options.messagesOptions.builder));
-    }
-
     @NotNull
     public MessagesProvider getMessagesProvider() {
         return Objects.requireNonNull(getRegistrable(MessagesProvider.class), "Messages not loaded yet");
+    }
+
+    /**
+     * Not overrideable as it would cause a {@link NoClassDefFoundError} for {@link OkaeriConfig} in consumers!
+     */
+    @NotNull
+    public final AnnoyingMessages getAnnoyingMessages() {
+        return getMessagesProvider().getMessages();
     }
 
     /**
@@ -549,21 +566,17 @@ public class AnnoyingPlugin extends JavaPlugin {
         return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
-    //TODO may not work due to StorageConfig extending OkaeriConfig
     @Nullable
-    public StorageConfig newStorageConfig(@Nullable Consumer<ConfigBuilder> builder) {
-        return configLoader.buildElseNull(configBuilder -> {
-            configBuilder
-                    .config(new StorageConfig(this))
-                    .file("storage.yml")
-                    .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration());
-            if (builder != null) builder.accept(configBuilder);
-        });
+    public StorageConfig newStorageConfig(@NotNull String fileName) {
+        return configLoader.build(configBuilder -> configBuilder
+                .config(new StorageConfig(this))
+                .file(fileName)
+                .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration()));
     }
 
     @Nullable
     public StorageConfig newStorageConfig() {
-        return newStorageConfig(null);
+        return newStorageConfig("storage.yml");
     }
 
     /**

@@ -142,7 +142,7 @@ public abstract class AnnoyingCommand extends Registrable implements TabExecutor
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            getAnnoyingPlugin().getMessagesProvider().getMessages().error.invalid_arguments.newAnnoyingMessage().send(sender);
+            getAnnoyingPlugin().getAnnoyingMessages().error.invalid_arguments.newAnnoyingMessage().send(sender);
             return true;
         }
 

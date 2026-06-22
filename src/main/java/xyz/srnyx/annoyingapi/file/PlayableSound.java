@@ -23,7 +23,7 @@ public class PlayableSound extends Stringable {
     /**
      * The {@link Sound} to play
      */
-    @NotNull public Sound sound;
+    @NotNull public Sound sound; //TODO use XSound
     /**
      * The SoundCategory to play the {@link Sound} in
      */

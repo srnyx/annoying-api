@@ -2,8 +2,7 @@ package xyz.srnyx.annoyingapi.message;
 
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
-import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
+import eu.okaeri.validator.annotation.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
@@ -25,19 +24,19 @@ public class AnnoyingMessages extends OkaeriConfig {
     @NotNull public Error error = new Error(this);
 
 
-    @NotNull private transient final AnnoyingPlugin annoyingPlugin;
+    @org.jetbrains.annotations.NotNull private transient final AnnoyingPlugin annoyingPlugin;
 
-    public AnnoyingMessages(@NotNull AnnoyingPlugin annoyingPlugin) {
+    public AnnoyingMessages(@org.jetbrains.annotations.NotNull AnnoyingPlugin annoyingPlugin) {
         this.annoyingPlugin = annoyingPlugin;
     }
 
-    @NotNull
-    public JsonChatMessage defaultMessage(@NotNull String raw) {
+    @org.jetbrains.annotations.NotNull
+    public JsonChatMessage defaultMessage(@org.jetbrains.annotations.NotNull String raw) {
         return new JsonChatMessage(annoyingPlugin, raw);
     }
 
     public static class Plugin extends SubConfig<AnnoyingMessages> {
-        public Plugin(@NonNull AnnoyingMessages root) {
+        public Plugin(@org.jetbrains.annotations.NotNull AnnoyingMessages root) {
             super(root);
         }
 
@@ -60,10 +59,10 @@ public class AnnoyingMessages extends OkaeriConfig {
         @Comment
         @Comment("Message sent in the console when an update for the plugin is available")
         @Comment("Placeholders: %plugin%, %current%, %new%")
-        @NotNull public JsonChatMessage update_available = root.defaultMessage("%pe%A new version of %se%%plugin%%pe% is available! | Current: %se%%current%%pe% | Latest: %se%%new%");
+        @NotNull public JsonChatMessage update_available = getRoot().defaultMessage("%pe%A new version of %se%%plugin%%pe% is available! | Current: %se%%current%%pe% | Latest: %se%%new%");
 
         public static class Splitters extends SubConfig<Plugin> {
-            public Splitters(@NonNull Plugin root) {
+            public Splitters(@org.jetbrains.annotations.NotNull Plugin root) {
                 super(root);
             }
 
@@ -76,25 +75,25 @@ public class AnnoyingMessages extends OkaeriConfig {
     }
 
     public static class Error extends SubConfig<AnnoyingMessages> {
-        public Error(@NonNull AnnoyingMessages root) {
+        public Error(@org.jetbrains.annotations.NotNull AnnoyingMessages root) {
             super(root);
         }
 
         @Comment("Player doesn't have permission to use a command")
         @Comment("Placeholders: %permission%")
-        @NotNull public JsonChatMessage no_permission = root.defaultMessage("%prefix%%pe%You must have %se%%permission%%pe% to use this!@@%pe%%command%@@%command%");
+        @NotNull public JsonChatMessage no_permission = getRoot().defaultMessage("%prefix%%pe%You must have %se%%permission%%pe% to use this!@@%pe%%command%@@%command%");
 
         @Comment("Console tries to use a command that can only be used by players")
-        @NotNull public JsonChatMessage player_only = root.defaultMessage("%prefix%%pe%You must be a player to run this command!@@%pe%%command%@@%command%");
+        @NotNull public JsonChatMessage player_only = getRoot().defaultMessage("%prefix%%pe%You must be a player to run this command!@@%pe%%command%@@%command%");
 
         @Comment("Command is used with an invalid/incorrect argument")
         @Comment("Placeholders: %argument%")
-        @NotNull public JsonChatMessage invalid_argument = root.defaultMessage("%prefix%%se%%argument%%pe% is an invalid argument!@@%pe%%command%@@%command%");
+        @NotNull public JsonChatMessage invalid_argument = getRoot().defaultMessage("%prefix%%se%%argument%%pe% is an invalid argument!@@%pe%%command%@@%command%");
 
         @Comment("Command is used with multiple invalid/incorrect arguments")
-        @NotNull public JsonChatMessage invalid_arguments = root.defaultMessage("%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%");
+        @NotNull public JsonChatMessage invalid_arguments = getRoot().defaultMessage("%prefix%%pe%Invalid arguments!@@%pe%%command%@@%command%");
 
         @Comment("Command is used when it's disabled")
-        @NotNull public JsonChatMessage disabled_command = root.defaultMessage("%prefix%%se%%command%%pe% is disabled!@@%pe%%command%@@%command%");
+        @NotNull public JsonChatMessage disabled_command = getRoot().defaultMessage("%prefix%%se%%command%%pe% is disabled!@@%pe%%command%@@%command%");
     }
 }

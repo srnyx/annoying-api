@@ -49,18 +49,18 @@ public class StatsHelper implements Annoyable {
 
     @NotNull
     public String[] getMessagesPluginGlobalPlaceholdersKeys() {
-        final AnnoyingMessages msgs = plugin.getMessagesProvider().getMessages();
+        final AnnoyingMessages msgs = plugin.getAnnoyingMessages();
         return msgs.plugin.global_placeholders.keySet().toArray(new String[0]);
     }
 
     @Nullable
     public String getMessagesPluginSplittersJson() {
-        return plugin.getMessagesProvider().getMessages().plugin.splitters.json;
+        return plugin.getAnnoyingMessages().plugin.splitters.json;
     }
 
     @Nullable
     public String getMessagesPluginSplittersPlaceholder() {
-        return plugin.getMessagesProvider().getMessages().plugin.splitters.placeholder;
+        return plugin.getAnnoyingMessages().plugin.splitters.placeholder;
     }
 
     @Nullable

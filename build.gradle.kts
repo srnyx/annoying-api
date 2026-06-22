@@ -58,8 +58,7 @@ val runtimeLibraries = listOf(
         group = "eu.okaeri",
         artifact = "okaeri-configs-core",
         version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri")),
-        dependencies = listOf("xseries")),
+        relocations = listOf(Relocation("eu.okaeri"))),
     RuntimeLibrary(
         name = "okaeri_configs_yaml_bukkit",
         repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
@@ -216,6 +215,12 @@ sourceSets.main { blossom.javaSources { property("annoying_api_version", version
 
 // Testing
 setupTesting(junitBomConfig = DependencyConfig(version = "6.1.0"))
+
+// Silence missing Javadoc warnings
+tasks.withType<Javadoc> {
+    val options = options as StandardJavadocDocletOptions
+    options.addStringOption("Xdoclint:none", "-quiet")
+}
 
 // Publishing
 setupPublishingEnv(publishingSimpleConfig(

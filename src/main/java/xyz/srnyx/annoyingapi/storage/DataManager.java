@@ -18,6 +18,8 @@ import java.util.logging.Level;
  * The data manager for the plugin, used to manage the connection and data storage
  */
 public class DataManager {
+    @NotNull private static final String STORAGE_NEW_FILE_NAME = "storage-new.yml";
+    
     /**
      * The {@link AnnoyingPlugin plugin} to use for the data manager
      */
@@ -52,7 +54,8 @@ public class DataManager {
         plugin = config.plugin;
         storageConfig = config;
         dialect = storageConfig.method.dialect.apply(this);
-        tablePrefix = storageConfig.remote_connection != null ? storageConfig.remote_connection.table_prefix : "";
+        AnnoyingPlugin.LOGGER.severe("table_prefix: " + storageConfig.remote_connection.getTablePrefix());
+        tablePrefix = storageConfig.method.isRemote() ? storageConfig.remote_connection.getTablePrefix() : "";
     }
 
     /**
@@ -88,30 +91,28 @@ public class DataManager {
     }
 
     /**
-     * Attempts to migrate data from {@code storage.yml} to {@code storage-new.yml}
+     * Attempts to migrate data from {@code storage.yml} to {@code STORAGE_NEW_FILE_NAME}
      *
      * @return              the new data manager
      */
     @NotNull
     public DataManager attemptDatabaseMigration() {
-        // Check if migration is needed (storage-new.yml exists)
+        // Check if migration is needed (STORAGE_NEW_FILE_NAME exists)
         final File dataFolder = plugin.getDataFolder();
-        final File storageNew = new File(dataFolder, "storage-new.yml");
+        final File storageNew = new File(dataFolder, STORAGE_NEW_FILE_NAME);
         if (!storageNew.exists()) return this;
 
-        // NEW: Load storage-new.yml
-        final StorageConfig storageNewConfig = plugin.newStorageConfig(builder -> builder
-                .file(storageNew)
-                .saveDefaults(false));
+        // NEW: Load STORAGE_NEW_FILE_NAME
+        final StorageConfig storageNewConfig = plugin.newStorageConfig(STORAGE_NEW_FILE_NAME);
         if (storageNewConfig == null) return this;
-        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2storage-new.yml&a, attempting to migrate data from &2" + storageConfig.method + "&a to &2" + storageNewConfig.method + "&a...");
+        AnnoyingPlugin.log(Level.WARNING, "&aSuccessfully found &2" + STORAGE_NEW_FILE_NAME + "&a, attempting to migrate data from &2" + storageConfig.method + "&a to &2" + storageNewConfig.method + "&a...");
 
         // NEW: Connect to new database
         final DataManager newManager;
         try {
             newManager = new DataManager(storageNewConfig);
         } catch (final ConnectionException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&4storage-new.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
+            AnnoyingPlugin.log(Level.SEVERE, "&4" + STORAGE_NEW_FILE_NAME + " &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);
             return this;
         }
 
@@ -146,14 +147,14 @@ public class DataManager {
         // Rename files
         final File storage = storageConfig.getBindFile().toFile();
         if (storage.renameTo(storageOld)) { // OLD: storage.yml -> storage-old.yml
-            if (storageNew.renameTo(storage)) { // NEW: storage-new.yml -> storage.yml
+            if (storageNew.renameTo(storage)) { // NEW: STORAGE_NEW_FILE_NAME -> storage.yml
                 // Update OkaeriConfig bind file for StorageConfig
                 newManager.storageConfig.configure(configure -> configure.bindFile(storage));
             } else {
-                AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4storage-new.yml&c to &4storage.yml&c!\nYou MUST rename &4storage-new.yml&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
+                AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4" + STORAGE_NEW_FILE_NAME + "&c to &4storage.yml&c!\nYou MUST rename &4" + STORAGE_NEW_FILE_NAME + "&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
             }
         } else {
-            AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4storage.yml&c to &4storage-old.yml&c!\nYou MUST rename &4storage.yml&c to &4storage-old.yml&c and &4storage-new.yml&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
+            AnnoyingPlugin.log(Level.SEVERE, "\n----------------------------------------\n&cFailed to rename &4storage.yml&c to &4storage-old.yml&c!\nYou MUST rename &4storage.yml&c to &4storage-old.yml&c and &4" + STORAGE_NEW_FILE_NAME + "&c to &4storage.yml&c manually!\n(stop the server first)\n----------------------------------------");
         }
 
         // NEW: Use new storage
