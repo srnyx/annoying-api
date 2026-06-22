@@ -19,8 +19,8 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
 
     @Override
     public void serialize(@NotNull PlayableSound object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
-        data.set("sound", XSound.of(object.sound).name());
-        data.set("category", object.category != null ? object.category.toString() : null);
+        data.set("sound", object.sound.name());
+        data.set("category", object.category.toString());
         data.set("volume", object.volume);
         data.set("pitch", object.pitch);
     }

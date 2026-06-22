@@ -1,55 +1,52 @@
 package xyz.srnyx.annoyingapi.file;
 
-import org.bukkit.Bukkit;
+import com.cryptomorin.xseries.XSound;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefWorld.WORLD_PLAY_SOUND_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_PLAY_SOUND_METHOD;
 
 
 /**
- * Represents a {@link Sound} with a volume and pitch
+ * Represents a {@link Sound} with a category, volume, pitch
+ * <br>Also has playing methods using {@link XSound}
  */
 public class PlayableSound extends Stringable {
     /**
-     * The {@link Sound} to play
+     * The {@link Sound} to play as a {@link XSound}
      */
-    @NotNull public Sound sound; //TODO use XSound
+    @NotNull public XSound sound;
     /**
-     * The SoundCategory to play the {@link Sound} in
+     * The SoundCategory to play the {@link XSound} in
      */
-    @Nullable public Enum<?> category;
+    @NotNull public XSound.Category category;
     /**
-     * The volume to play the {@link Sound} at
+     * The volume to play the {@link XSound} at
      */
     public float volume;
     /**
-     * The pitch to play the {@link Sound} at
+     * The pitch to play the {@link XSound} at
      */
     public float pitch;
 
     /**
      * {@code 1.11+} Creates a new {@link PlayableSound} object
      *
-     * @param   sound                           {@link #sound}
-     * @param   category                        {@link #category}
-     * @param   volume                          {@link #volume}
-     * @param   pitch                           {@link #pitch}
+     * @param   sound       {@link #sound}
+     * @param   category    {@link #category}
+     * @param   volume      {@link #volume}
+     * @param   pitch       {@link #pitch}
      *
-     * @see     #PlayableSound(Sound, float, float) 1.10.2 and below
+     * @see     #PlayableSound(XSound, float, float)    1.10.2 and below
      */
-    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category, @Nullable Float volume, @Nullable Float pitch) {
+    public PlayableSound(@NotNull XSound sound, @Nullable XSound.Category category, @Nullable Float volume, @Nullable Float pitch) {
         this.sound = sound;
-        this.category = category;
+        this.category = Objects.requireNonNullElse(category, XSound.Category.MASTER);
         this.volume = Objects.requireNonNullElse(volume, 1.0f);
         this.pitch = Objects.requireNonNullElse(pitch, 1.0f);
     }
@@ -57,12 +54,12 @@ public class PlayableSound extends Stringable {
     /**
      * {@code 1.11+} Creates a new {@link PlayableSound} object with a volume and pitch of 1
      *
-     * @param   sound               {@link #sound}
-     * @param   category            {@link #category}
+     * @param   sound       {@link #sound}
+     * @param   category    {@link #category}
      *
-     * @see     #PlayableSound(Sound)   1.10.2 and below
+     * @see     #PlayableSound(XSound)  1.10.2 and below
      */
-    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category) {
+    public PlayableSound(@NotNull XSound sound, @Nullable XSound.Category category) {
         this(sound, category, null, null);
     }
 
@@ -73,7 +70,7 @@ public class PlayableSound extends Stringable {
      * @param   volume  {@link #volume}
      * @param   pitch   {@link #pitch}
      */
-    public PlayableSound(@NotNull Sound sound, float volume, float pitch) {
+    public PlayableSound(@NotNull XSound sound, float volume, float pitch) {
         this(sound, null, volume, pitch);
     }
 
@@ -82,41 +79,33 @@ public class PlayableSound extends Stringable {
      *
      * @param   sound   {@link #sound}
      */
-    public PlayableSound(@NotNull Sound sound) {
+    public PlayableSound(@NotNull XSound sound) {
         this(sound, null, null, null);
     }
 
-    /**
-     * Plays the {@link Sound} at the given {@link Location} in the given {@link World}
-     *
-     * @param   world       the {@link World} to play the {@link Sound} in, or null to play in the default world
-     * @param   location    the {@link Location} to play the {@link Sound} at, or null to play at the world's spawn
-     */
-    public void play(@Nullable World world, @Nullable Location location) {
-        if (world == null) world = Bukkit.getWorlds().get(0);
-        if (location == null) location = world.getSpawnLocation();
+    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category, @Nullable Float volume, @Nullable Float pitch) {
+        this(XSound.of(sound), getCategory(category), volume, pitch);
+    }
 
-        // 1.11+ (SoundCategory)
-        if (category != null && WORLD_PLAY_SOUND_METHOD != null) {
-            try {
-                WORLD_PLAY_SOUND_METHOD.invoke(world, location, sound, category, volume, pitch);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
+    public PlayableSound(@NotNull Sound sound, @Nullable Enum<?> category) {
+        this(XSound.of(sound), getCategory(category), null, null);
+    }
 
-        // 1.10.2-
-        world.playSound(location, sound, volume, pitch);
+    public PlayableSound(@NotNull Sound sound, float volume, float pitch) {
+        this(XSound.of(sound), null, volume, pitch);
+    }
+
+    public PlayableSound(@NotNull Sound sound) {
+        this(XSound.of(sound), null, null, null);
     }
 
     /**
-     * Plays the {@link Sound} in the given {@link World} at the world's spawn
+     * Plays the {@link Sound} at the given {@link Location}
      *
-     * @param   world   the {@link World} to play the {@link Sound} in
+     * @param   location    the {@link Location} to play the {@link Sound} at
      */
-    public void play(@Nullable World world) {
-        play(world, null);
+    public void play(@NotNull Location location) {
+        sound.play(location, volume, pitch);
     }
 
     /**
@@ -126,20 +115,14 @@ public class PlayableSound extends Stringable {
      * @param   location    the {@link Location} to play the {@link Sound} at, or null to play at the player's location
      */
     public void play(@NotNull Player player, @Nullable Location location) {
-        if (location == null) location = player.getLocation();
-
-        // 1.11+ (SoundCategory)
-        if (category != null && PLAYER_PLAY_SOUND_METHOD != null) {
-            try {
-                PLAYER_PLAY_SOUND_METHOD.invoke(player, location, sound, category, volume, pitch);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-
-        // 1.10.2-
-        player.playSound(location, sound, volume, pitch);
+        sound.record()
+                .inCategory(category)
+                .withVolume(volume)
+                .withPitch(pitch)
+                .soundPlayer()
+                .forPlayers(player)
+                .atLocation(location)
+                .play();
     }
 
     /**
@@ -149,5 +132,10 @@ public class PlayableSound extends Stringable {
      */
     public void play(@NotNull Player player) {
         play(player, null);
+    }
+
+    @Nullable
+    private static XSound.Category getCategory(@Nullable Enum<?> category) {
+        return category != null ? Mapper.toEnum(category.name(), XSound.Category.class).orElse(null) : null;
     }
 }
