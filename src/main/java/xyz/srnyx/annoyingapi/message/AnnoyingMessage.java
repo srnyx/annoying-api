@@ -269,9 +269,6 @@ public class AnnoyingMessage extends Stringable {
      * @see             #broadcast(BroadcastType, AnnoyingSender)
      * @see             #broadcast(BroadcastType)
      */
-    //TODO replace BroadcastType with just new component types (title + subtitle + actionbar). they can then be used in send(...). broadcast does some sort of loop.
-    // would need migrations for existing keys. also need to consider keys that are used in BOTH send(...) and broadcast(...).
-    // title/subtitle/full title can just use JsonTitleMessage but with Nullable title/subtitle.
     public void broadcast(@NotNull BroadcastType type, @Nullable AnnoyingSender sender, @Nullable Integer fadeIn, @Nullable Integer stay, @Nullable Integer fadeOut) {
         // Title/subtitle/full title
         if (type.isTitle()) {
@@ -293,7 +290,7 @@ public class AnnoyingMessage extends Stringable {
             }
 
             // Title and subtitle (full title)
-            if (!(jsonMessage instanceof JsonTitleMessage titleMessage)) throw new IllegalStateException("Message is not a title message");
+            if (!(jsonMessage instanceof JsonTitleMessage titleMessage)) throw new IllegalStateException("DEVELOPER: JsonMessage is not a JsonTitleMessage");
             broadcastTitle(
                     new AnnoyingMessage(this, titleMessage.title).toString(sender),
                     new AnnoyingMessage(this, titleMessage.subtitle).toString(sender),
