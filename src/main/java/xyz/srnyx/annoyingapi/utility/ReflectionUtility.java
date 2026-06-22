@@ -4,8 +4,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.ServerSoftware;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -127,26 +127,35 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a {@link Constructor} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
+     * Returns a {@link Constructor} if {@link AnnoyingPlugin#SERVER_SOFTWARE} has the given software, {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
      *
+     * @param   software        the server software or null to ignore software
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
      * @param   patch           the patch version of the minimum version
-     * @param   clazz           the class to get the constructor from
-     * @param   parameterTypes  the parameter types of the constructor
+     * @param   clazz           the class
+     * @param   parameterTypes  the parameter types
      *
-     * @return                  the constructor if the version is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null, otherwise null
+     * @return  the constructor if the server software matches, the version is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null, otherwise null
      *
-     * @param   <T>             the type of the class
+     * @param   <T> the type of the class
      */
     @Nullable
-    public static <T> Constructor<T> getConstructor(int major, int minor, int patch, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
-        if (clazz != null && parameterTypes != null && checkVersion(major, minor, patch)) try {
+    public static <T> Constructor<T> getConstructor(@Nullable ServerSoftware software, int major, int minor, int patch, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
+        if (clazz != null && parameterTypes != null && checkSoftwareAndVersion(software, major, minor, patch)) try {
             return clazz.getConstructor(parameterTypes);
         } catch (final NoSuchMethodException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * {@link #getConstructor(ServerSoftware, int, int, int, Class, Class[])} with {@code software} as {@code null}
+     */
+    @Nullable
+    public static <T> Constructor<T> getConstructor(int major, int minor, int patch, @Nullable Class<T> clazz, @Nullable Class<?>... parameterTypes) {
+        return getConstructor(null, major, minor, patch, clazz, parameterTypes);
     }
 
     /**
@@ -274,6 +283,10 @@ public class ReflectionUtility {
         return clazz == null || clazz == void.class ? null : Array.newInstance(clazz, length);
     }
 
+    private static boolean checkSoftware(@Nullable ServerSoftware software) {
+        return software == null || AnnoyingPlugin.SERVER_SOFTWARE.has(software);
+    }
+
     /**
      * Checks if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
@@ -285,6 +298,10 @@ public class ReflectionUtility {
      */
     private static boolean checkVersion(int major, int minor, int patch) {
     	return AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(major, minor, patch);
+    }
+
+    private static boolean checkSoftwareAndVersion(@Nullable ServerSoftware software, int major, int minor, int patch) {
+        return checkSoftware(software) && checkVersion(major, minor, patch);
     }
 
     /**

@@ -32,10 +32,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRe
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_CONSTRUCTOR_1_13;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_CONSTRUCTOR_1_9;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_GET_EXPERIENCE_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.MERCHANT_RECIPE_CLASS;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.MERCHANT_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.MERCHANT_RECIPE_CONSTRUCTOR_1_14;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.MERCHANT_RECIPE_CONSTRUCTOR_1_18_1;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefRecipeChoice.RECIPE_CHOICE_CLASS;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
@@ -258,6 +255,19 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                     // special_price
                     final int specialPrice = data.getOr("special_price", int.class, 0);
 
+                    // PAPER 1.18.1+
+                    if (MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_18_1 != null) {
+                        // ignore_discounts
+                        final boolean ignoreDiscounts = data.getOr("ignore_discounts", boolean.class, false);
+
+                        try {
+                            return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice, ignoreDiscounts), rawResult);
+                        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    // 1.18.1+
                     try {
                         return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice), rawResult);
                     } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -265,6 +275,19 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                     }
                 }
 
+                // PAPER 1.16.5+
+                if (MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_16_5 != null) {
+                    // ignore_discounts
+                    final boolean ignoreDiscounts = data.getOr("ignore_discounts", boolean.class, false);
+
+                    try {
+                        return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_16_5.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, ignoreDiscounts), rawResult);
+                    } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // 1.14-1.16.4
                 try {
                     return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_14.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier), rawResult);
                 } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {

@@ -62,8 +62,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
-     * The {@link Logger} for the plugin
-     * <br>Uses temporary initialization until the {@link AnnoyingPlugin plugin} is constructed (loaded)
+     * Uses temporary initialization until the {@link AnnoyingPlugin plugin} is constructed (loaded)
      */
     @NotNull public static Logger LOGGER = new Logger("AnnoyingAPI - ?", null) {
         @Override
@@ -72,21 +71,8 @@ public class AnnoyingPlugin extends JavaPlugin {
             super.log(logRecord);
         }
     };
-    /**
-     * The Minecraft version the server is running
-     */
+    @NotNull public static final ServerSoftware SERVER_SOFTWARE = ServerSoftware.get();
     @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
-    /**
-     * Whether the server is running on Folia
-     */
-    public static boolean FOLIA = false;
-
-    static {
-        try {
-            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
-            FOLIA = true;
-        } catch (final ClassNotFoundException ignored) {}
-    }
 
     /**
      * The API options for the plugin
