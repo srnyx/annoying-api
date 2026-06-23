@@ -33,7 +33,6 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
         public PlayableSound s = new PlayableSound(XSound.UI_BUTTON_CLICK, XSound.Category.MASTER, null, null);
     }
 
-    @SuppressWarnings("unchecked")
     private SoundConfig load(String yaml) throws IOException {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "sound.yml", yaml);
         return new ConfigBuilder(new File(file.toString())).config(SoundConfig.class).build();
@@ -48,6 +47,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     @Test
     void basicRoundTrip_soundAndCategory() throws IOException {
         final SoundConfig config = load(yaml("ENTITY_PLAYER_LEVELUP", "MASTER"));
+
         assertNotNull(config.s);
         assertEquals(XSound.ENTITY_PLAYER_LEVELUP, config.s.sound);
         assertEquals(XSound.Category.MASTER, config.s.category);
@@ -56,6 +56,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     @Test
     void volumeAndPitchPreserved() throws IOException {
         final SoundConfig config = load("s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  volume: 0.5\n  pitch: 2.0");
+
         assertEquals(0.5f, config.s.volume, 0.001f);
         assertEquals(2.0f, config.s.pitch, 0.001f);
     }
@@ -63,30 +64,35 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     @Test
     void nullVolumeDefaultsTo1() throws IOException {
         final SoundConfig config = load(yaml("ENTITY_PLAYER_LEVELUP", "MASTER"));
+
         assertEquals(1.0f, config.s.volume, 0.001f);
     }
 
     @Test
     void nullPitchDefaultsTo1() throws IOException {
         final SoundConfig config = load(yaml("ENTITY_PLAYER_LEVELUP", "MASTER"));
+
         assertEquals(1.0f, config.s.pitch, 0.001f);
     }
 
     @Test
     void extremePitchValue_zero() throws IOException {
         final SoundConfig config = load("s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  pitch: 0.0");
+
         assertEquals(0.0f, config.s.pitch, 0.001f);
     }
 
     @Test
     void highVolumeValue() throws IOException {
         final SoundConfig config = load("s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  volume: 3.0");
+
         assertEquals(3.0f, config.s.volume, 0.001f);
     }
 
     @Test
     void blockSoundWithBlocksCategory() throws IOException {
         final SoundConfig config = load(yaml("BLOCK_ANVIL_LAND", "BLOCKS"));
+
         assertEquals(XSound.BLOCK_ANVIL_LAND, config.s.sound);
         assertEquals(XSound.Category.BLOCKS, config.s.category);
     }
@@ -94,6 +100,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     @Test
     void ambientCategory() throws IOException {
         final SoundConfig config = load(yaml("ENTITY_PLAYER_LEVELUP", "AMBIENT"));
+
         assertEquals(XSound.Category.AMBIENT, config.s.category);
     }
 
@@ -152,6 +159,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
                 "s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  volume: 0.75\n  pitch: 1.5");
         new ConfigBuilder(new File(file.toString())).config(SoundConfig.class).build();
         final String content = Files.readString(file, StandardCharsets.UTF_8);
+
         assertTrue(content.contains("0.75"), "File should preserve volume 0.75: " + content);
         assertTrue(content.contains("1.5"), "File should preserve pitch 1.5: " + content);
     }

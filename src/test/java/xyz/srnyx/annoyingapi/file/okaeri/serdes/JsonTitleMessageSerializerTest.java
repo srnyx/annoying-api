@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
+import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
 
@@ -33,8 +34,8 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     private TestConfig load(String yaml) throws IOException {
         final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
         when(mockPlugin.getName()).thenReturn("test");
-        final Path path = xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport.writeYaml(tempDir, "title.yml", yaml);
-        return (TestConfig) new ConfigBuilder(new File(path.toString()))
+        final Path path = ConfigTestSupport.writeYaml(tempDir, "title.yml", yaml);
+        return new ConfigBuilder(new File(path.toString()))
                 .config(TestConfig.class)
                 .configure(opt -> opt.serdes(new JsonTitleMessageSerializer(mockPlugin)))
                 .build();
@@ -46,6 +47,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     void basicDeserialize_titleAndSubtitle() throws IOException {
         final TestConfig config = load("title:\n  title: Hello\n  subtitle: World");
         assertNotNull(config.title);
+
         assertEquals("Hello", config.title.title);
         assertEquals("World", config.title.subtitle);
     }
@@ -53,6 +55,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void missingTitleDefaultsToEmpty() throws IOException {
         final TestConfig config = load("title:\n  subtitle: World");
+
         assertNotNull(config.title);
         assertEquals("", config.title.title);
     }
@@ -60,6 +63,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void missingSubtitleDefaultsToEmpty() throws IOException {
         final TestConfig config = load("title:\n  title: Hello");
+
         assertNotNull(config.title);
         assertEquals("", config.title.subtitle);
     }
@@ -68,6 +72,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     void bothMissingDefaultToEmpty() throws IOException {
         // Empty section → both default to ""
         final TestConfig config = load("title:\n  unrelated: ignored");
+
         assertNotNull(config.title);
         assertEquals("", config.title.title);
         assertEquals("", config.title.subtitle);
@@ -76,6 +81,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void emptyStringTitle_preserved() throws IOException {
         final TestConfig config = load("title:\n  title: \"\"\n  subtitle: Sub");
+
         assertNotNull(config.title);
         assertEquals("", config.title.title);
     }
@@ -83,6 +89,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void emptyStringSubtitle_preserved() throws IOException {
         final TestConfig config = load("title:\n  title: Title\n  subtitle: \"\"");
+
         assertNotNull(config.title);
         assertEquals("", config.title.subtitle);
     }
@@ -91,6 +98,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     void colorCodesInTitle_preservedAsIs() throws IOException {
         // Serializer does not translate & codes — stored verbatim
         final TestConfig config = load("title:\n  title: \"&aGreen Title\"\n  subtitle: Sub");
+
         assertNotNull(config.title);
         assertEquals("&aGreen Title", config.title.title);
     }
@@ -99,7 +107,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void serializeWritesTitleAndSubtitleKeys() throws IOException {
-        final Path path = xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport.writeYaml(tempDir, "title_serial.yml",
+        final Path path = ConfigTestSupport.writeYaml(tempDir, "title_serial.yml",
                 "title:\n  title: T\n  subtitle: S");
         final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
         when(mockPlugin.getName()).thenReturn("test");
@@ -108,6 +116,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
                 .configure(opt -> opt.serdes(new JsonTitleMessageSerializer(mockPlugin)))
                 .build();
         final String content = Files.readString(path, StandardCharsets.UTF_8);
+
         assertTrue(content.contains("title:"), "File should contain 'title:' key: " + content);
         assertTrue(content.contains("subtitle:"), "File should contain 'subtitle:' key: " + content);
     }
@@ -115,6 +124,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void roundTrip_bothFields() throws IOException {
         final TestConfig config = load("title:\n  title: Round\n  subtitle: Trip");
+
         assertNotNull(config.title);
         assertEquals("Round", config.title.title);
         assertEquals("Trip", config.title.subtitle);
@@ -123,6 +133,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @Test
     void roundTrip_emptyFields() throws IOException {
         final TestConfig config = load("title:\n  title: \"\"\n  subtitle: \"\"");
+
         assertNotNull(config.title);
         assertEquals("", config.title.title);
         assertEquals("", config.title.subtitle);

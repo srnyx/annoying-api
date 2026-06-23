@@ -1,14 +1,15 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipechoice;
 
+import eu.okaeri.configs.exception.OkaeriConfigException;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
 import eu.okaeri.configs.serdes.SerializationData;
+import eu.okaeri.configs.util.EnumMatcher;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefRecipeChoice.RECIPE_CHOICE_CLASS;
@@ -51,10 +52,21 @@ public class RecipeChoiceSerializer implements ObjectSerializer<Object> {
     @Override @NotNull
     public Object deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
         // Get type
-        final RecipeChoiceType type = data.get("type", RecipeChoiceType.class);
+        final RecipeChoiceType type;
+        try {
+            type = data.get("type", RecipeChoiceType.class);
+        } catch (final OkaeriConfigException e) {
+            // Invalid type: try to show nice enum warning
+            try {
+                throw new IllegalArgumentException(EnumMatcher.suggest(data.get("type", String.class), RecipeChoiceType.class));
+            } catch (final OkaeriConfigException ignored) {
+                throw new IllegalArgumentException("Missing required field: type");
+            }
+        }
         if (type == null) throw new IllegalArgumentException("Missing required field: type");
 
         if (type == RecipeChoiceType.EXACT) {
+            // EXACT
             if (EXACT_CHOICE_CONSTRUCTOR == null) throw new IllegalStateException("ExactChoice constructor not found");
 
             // choices
@@ -66,6 +78,7 @@ public class RecipeChoiceSerializer implements ObjectSerializer<Object> {
                 throw new RuntimeException("Failed to deserialize ExactChoice", e);
             }
         } else if (type == RecipeChoiceType.MATERIAL) {
+            // MATERIAL
             if (MATERIAL_CHOICE_CONSTRUCTOR == null) throw new IllegalStateException("MaterialChoice constructor not found");
 
             // choices
@@ -79,6 +92,6 @@ public class RecipeChoiceSerializer implements ObjectSerializer<Object> {
         }
 
         // Unknown type
-        throw new IllegalArgumentException("Unknown RecipeChoice type: " + type + " (valid types: " + Arrays.toString(RecipeChoiceType.values()) + ")");
+        throw new IllegalArgumentException(EnumMatcher.suggest(type.name(), RecipeChoiceType.class));
     }
 }

@@ -63,6 +63,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     @Test
     void flatKeyWithHyphenIsRenamedToUnderscore() throws IOException {
         final String content = load(tempDir, "background-tasks: false", FlatConfig.class);
+
         assertFalse(content.contains("background-tasks:"), "Content: " + content);
         assertTrue(content.contains("background_tasks:"), "Content: " + content);
     }
@@ -70,6 +71,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     @Test
     void flatKeyWithoutHyphenIsUnchanged() throws IOException {
         final String content = load(tempDir, "background_tasks: true", FlatConfig.class);
+
         assertTrue(content.contains("background_tasks:"), "Content: " + content);
         assertFalse(content.contains("background-tasks:"), "Content: " + content);
     }
@@ -78,6 +80,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void multipleHyphensInSingleKeyAllReplaced() throws IOException {
         // render-mode has a single hyphen
         final String content = load(tempDir, "render-mode: neon", FlatConfig.class);
+
         assertFalse(content.contains("render-mode:"), "Content: " + content);
         assertTrue(content.contains("render_mode:"), "Content: " + content);
     }
@@ -86,6 +89,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void multipleSiblingKeysAllRenamed() throws IOException {
         final String yaml = "background-tasks: false\nrender-mode: neon";
         final String content = load(tempDir, yaml, FlatConfig.class);
+
         assertFalse(content.contains("background-tasks:"), "Content: " + content);
         assertFalse(content.contains("render-mode:"), "Content: " + content);
         assertTrue(content.contains("background_tasks:"), "Content: " + content);
@@ -95,6 +99,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     @Test
     void keyValuesWithHyphensAreNotReplaced() throws IOException {
         final String content = load(tempDir, "render_mode: \"hello-world\"", FlatConfig.class);
+
         assertTrue(content.contains("hello-world"), "Hyphenated VALUE should be preserved: " + content);
     }
 
@@ -102,6 +107,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void deeplyNestedKeyWithHyphenIsRenamed() throws IOException {
         final String yaml = "inner:\n  setting-name: foo\n  auto-reload: false";
         final String content = load(tempDir, yaml, NestedConfig.class);
+
         assertFalse(content.contains("setting-name:"), "Content: " + content);
         assertFalse(content.contains("auto-reload:"), "Content: " + content);
         assertTrue(content.contains("setting_name:"), "Content: " + content);
@@ -112,6 +118,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void deeplyNestedNoHyphensUnchanged() throws IOException {
         final String yaml = "inner:\n  setting_name: bar\n  auto_reload: true";
         final String content = load(tempDir, yaml, NestedConfig.class);
+
         assertTrue(content.contains("setting_name:"), "Content: " + content);
         assertTrue(content.contains("auto_reload:"), "Content: " + content);
         assertFalse(content.contains("setting-name:"), "Content: " + content);
@@ -122,6 +129,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void threeLayerNestingIsFullyRenamed() throws IOException {
         final String yaml = "level-one:\n  level-two:\n    deep-key: content";
         final String content = load(tempDir, yaml, ThreeLevelConfig.class);
+
         assertFalse(content.contains("level-one:"), "Content: " + content);
         assertFalse(content.contains("level-two:"), "Content: " + content);
         assertFalse(content.contains("deep-key:"), "Content: " + content);
@@ -151,6 +159,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void mixedSiblingKeysOnlyHyphenatedOnesChanged() throws IOException {
         final String yaml = "background-tasks: false\nrender_mode: default";
         final String content = load(tempDir, yaml, FlatConfig.class);
+
         assertFalse(content.contains("background-tasks:"), "Content: " + content);
         assertTrue(content.contains("background_tasks:"), "Content: " + content);
         assertTrue(content.contains("render_mode:"), "Content: " + content);
@@ -160,6 +169,7 @@ public class A0001MigrationTest extends MockBukkitTestSupport {
     void noHyphenatedKeysBothRemainSnakeCase() throws IOException {
         final String yaml = "background_tasks: true\nrender_mode: \"dark\"";
         final String content = load(tempDir, yaml, FlatConfig.class);
+
         assertTrue(content.contains("background_tasks:"), "Content: " + content);
         assertTrue(content.contains("render_mode:"), "Content: " + content);
     }

@@ -37,6 +37,7 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
     @Test
     void basicRoundTrip_speed() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 1\n  ambient: false\n  particles: true");
+
         assertNotNull(config.effect);
         assertEquals(PotionEffectType.SPEED, config.effect.getType());
         assertEquals(200, config.effect.getDuration());
@@ -62,48 +63,56 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
     @Test
     void zeroDuration() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 0\n  amplifier: 0\n  ambient: false\n  particles: true");
+
         assertEquals(0, config.effect.getDuration());
     }
 
     @Test
     void largeDuration() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 2147483647\n  amplifier: 0\n  ambient: false\n  particles: true");
+
         assertEquals(2147483647, config.effect.getDuration());
     }
 
     @Test
     void amplifierZero() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 100\n  amplifier: 0\n  ambient: false\n  particles: true");
+
         assertEquals(0, config.effect.getAmplifier());
     }
 
     @Test
     void amplifierMax_255() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 100\n  amplifier: 255\n  ambient: false\n  particles: true");
+
         assertEquals(255, config.effect.getAmplifier());
     }
 
     @Test
     void ambientTrue() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: true\n  particles: true");
+
         assertTrue(config.effect.isAmbient());
     }
 
     @Test
     void ambientFalse() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: false\n  particles: true");
+
         assertFalse(config.effect.isAmbient());
     }
 
     @Test
     void particlesFalse() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: false\n  particles: false");
+
         assertFalse(config.effect.hasParticles());
     }
 
     @Test
     void particlesTrue() throws IOException {
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: false\n  particles: true");
+
         assertTrue(config.effect.hasParticles());
     }
 
@@ -113,6 +122,7 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
     void iconField_whenConstructor6Available() throws IOException {
         assumeTrue(POTION_EFFECT_CONSTRUCTOR_6 != null, "6-param PotionEffect constructor not available");
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: false\n  particles: true\n  icon: true");
+
         assertNotNull(config.effect);
         assertTrue(config.effect.hasIcon());
     }
@@ -137,6 +147,7 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
     void serializeRoundTrip_fullEffect() throws IOException {
         // Load effect, then verify that saving produces readable YAML on reload
         final TestConfig first = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 1\n  ambient: false\n  particles: true");
+
         assertNotNull(first.effect);
         assertEquals(200, first.effect.getDuration());
         assertEquals(1, first.effect.getAmplifier());
@@ -144,8 +155,9 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void serializeRoundTrip_defaultEffect() throws IOException {
-        // saveDefaults → writes default SPEED/200/0 effect; reload and check
+        // Writes default SPEED/200/0 effect; reload and check
         final TestConfig config = load("");
+
         assertNotNull(config.effect);
         assertEquals(PotionEffectType.SPEED, config.effect.getType());
         assertEquals(200, config.effect.getDuration());

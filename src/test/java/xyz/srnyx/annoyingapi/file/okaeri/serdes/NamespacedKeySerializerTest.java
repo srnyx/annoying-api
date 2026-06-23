@@ -56,7 +56,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     private TestConfig load(String yaml) throws IOException {
         final Path path = ConfigTestSupport.writeYaml(tempDir, "ns.yml", yaml);
         final NamespacedKeySerializer nks = serializer;
-        return (TestConfig) new ConfigBuilder(new File(path.toString()))
+        return new ConfigBuilder(new File(path.toString()))
                 .config(TestConfig.class)
                 .configure(opt -> { if (nks.get()) opt.serdes(nks); })
                 .build();
@@ -74,6 +74,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @Test
     void leftToRight_validKey() throws IOException {
         final TestConfig config = load("key: my_recipe");
+
         assertNotNull(config.key);
         assertEquals("my_recipe", config.key.getKey());
     }
@@ -81,6 +82,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @Test
     void leftToRight_keyWithDigits() throws IOException {
         final TestConfig config = load("key: key_123");
+
         assertNotNull(config.key);
         assertEquals("key_123", config.key.getKey());
     }
@@ -88,6 +90,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @Test
     void leftToRight_namespaceFromPlugin() throws IOException {
         final TestConfig config = load("key: some_key");
+
         assertNotNull(config.key);
         // Plugin name is "test" → namespace should be "test"
         assertEquals("test", config.key.getNamespace());
@@ -96,6 +99,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @Test
     void leftToRight_keyWithUnderscores() throws IOException {
         final TestConfig config = load("key: a_b_c_d");
+
         assertNotNull(config.key);
         assertEquals("a_b_c_d", config.key.getKey());
     }
@@ -103,6 +107,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @Test
     void leftToRight_keyWithDigitsOnly() throws IOException {
         final TestConfig config = load("key: a123");
+
         assertNotNull(config.key);
         assertEquals("a123", config.key.getKey());
     }
@@ -120,12 +125,14 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
                 .configure(opt -> { if (nks.get()) opt.serdes(nks); })
                 .build();
         final String content = Files.readString(path, StandardCharsets.UTF_8);
+
         assertTrue(content.contains("round_trip_key"), "Serialized file should contain the key string: " + content);
     }
 
     @Test
     void roundTrip_keyPreserved() throws IOException {
         final TestConfig config = load("key: round_trip");
+
         assertNotNull(config.key);
         assertEquals("round_trip", config.key.getKey());
     }
@@ -136,6 +143,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     void directLeftToRight_createsCorrectKey() {
         final SerdesContext ctx = SerdesContext.of(new YamlBukkitConfigurer());
         final NamespacedKey key = (NamespacedKey) serializer.leftToRight("my_key", ctx);
+
         assertNotNull(key);
         assertEquals("my_key", key.getKey());
         assertEquals("test", key.getNamespace());
@@ -146,6 +154,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
         final SerdesContext ctx = SerdesContext.of(new YamlBukkitConfigurer());
         final NamespacedKey key = (NamespacedKey) serializer.leftToRight("get_this", ctx);
         final String result = serializer.rightToLeft(key, ctx);
+
         assertEquals("get_this", result);
     }
 }

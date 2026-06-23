@@ -38,7 +38,6 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
         public XSound sound = XSound.UI_BUTTON_CLICK;
     }
 
-    @SuppressWarnings("unchecked")
     private <C extends OkaeriConfig> C load(Path dir, String yaml, Class<C> cls) throws IOException {
         final Path file = ConfigTestSupport.writeYaml(dir, cls.getSimpleName() + ".yml", yaml);
         return new ConfigBuilder(file.toFile())

@@ -93,7 +93,6 @@ public class ColorSerializer implements ObjectSerializer<Color> {
             final Integer red = data.get("red", Integer.class);
             final Integer green = data.get("green", Integer.class);
             final Integer blue = data.get("blue", Integer.class);
-            System.out.println("red: " + red + ", green: " + green + ", blue: " + blue);
             if (red != null && green != null && blue != null) return Color.fromRGB(red, green, blue);
 
             // Unknown custom format (object)

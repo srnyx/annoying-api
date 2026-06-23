@@ -67,24 +67,28 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     @Test
     void numericTicks_20_yields1Second() throws IOException {
         final String content = loadAndReadFile("cache:\n  interval: 20");
+
         assertTrue(content.contains("1s"), "Expected 1s in: " + content);
     }
 
     @Test
     void numericTicks_20_javaObjectReflectsMigratedValue() throws IOException {
         final CacheConfig config = loadWithMigrationThenReload("cache:\n  interval: 20");
+
         assertEquals(Duration.ofSeconds(1), config.cache.interval);
     }
 
     @Test
     void numericTicks_0_yieldsPT0S() throws IOException {
         final String content = loadAndReadFile("cache:\n  interval: 0");
+
         assertTrue(content.contains("0"), "Expected 0 in: " + content);
     }
 
     @Test
     void numericTicks_15_yields750ms() throws IOException {
         final String content = loadAndReadFile("cache:\n  interval: 15");
+
         // 15 * 50ms = 750ms
         assertTrue(content.contains("750ms"), "Expected 750ms in: " + content);
     }
@@ -92,12 +96,14 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     @Test
     void numericTicks_400_yields20Seconds() throws IOException {
         final String content = loadAndReadFile("cache:\n  interval: 400");
+
         assertTrue(content.contains("20s"), "Expected 20s in: " + content);
     }
 
     @Test
     void numericTicks_72000_yields1Hour() throws IOException {
         final String content = loadAndReadFile("cache:\n  interval: 72000");
+
         assertTrue(content.contains("1h"), "Expected 1h in: " + content);
     }
 
@@ -105,6 +111,7 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     void alreadyStringValue_isNotMigrated() throws IOException {
         // "20s" is not Long-parseable → guard returns false
         final String content = loadAndReadFile("cache:\n  interval: \"20s\"");
+
         assertFalse(content.contains("1s"), "Should NOT have been migrated: " + content);
     }
 
@@ -112,6 +119,7 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     void existingDurationString_isNotMigrated() throws IOException {
         // "PT1S" is not Long-parseable → guard returns false
         final String content = loadAndReadFile("cache:\n  interval: 1s");
+
         assertTrue(content.contains("1s"), "Should still contain 1s: " + content);
         assertFalse(content.contains("50ms"), "Should NOT have been re-converted: " + content);
     }
@@ -120,14 +128,15 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     void missingCacheSection_doesNotMigrate() throws IOException {
         // No cache key in YAML; default value is 30s
         final String content = loadAndReadFile("");
+
         assertTrue(content.contains("30s"), "Should NOT have been migrated: " + content);
     }
 
     @Test
-    void decimalStringNotMigrated() throws IOException {
-        // "15.5" is not a valid Long → guard returns false
-        final String content = loadAndReadFile("cache:\n  interval: \"15.5\"");
-        assertFalse(content.contains("s"), "Decimal should not trigger migration: " + content);
+    void decimalStringNotMigrated() {
+        // "15.5" is neither a valid Long (migration guard returns false) nor a valid
+        // Duration string (okaeri can't parse it), so loading throws OkaeriException
+        assertThrows(Exception.class, () -> loadAndReadFile("cache:\n  interval: \"15.5\""));
     }
 
     @Test
@@ -155,6 +164,7 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     void migrationReturns1TickProperly() throws IOException {
         // 1 tick = 50ms
         final String content = loadAndReadFile("cache:\n  interval: 1");
+
         assertTrue(content.contains("50ms"), "Expected 50ms in: " + content);
     }
 }

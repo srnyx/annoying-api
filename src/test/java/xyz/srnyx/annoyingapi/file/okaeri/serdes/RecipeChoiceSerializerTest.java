@@ -44,6 +44,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     @Test
     void materialChoice_singleMaterial() throws IOException {
         final TestConfig config = load("choice:\n  type: MATERIAL\n  choices:\n    - STONE");
+
         assertNotNull(config.choice);
         assertInstanceOf(RecipeChoice.MaterialChoice.class, config.choice);
         final RecipeChoice.MaterialChoice mc = (RecipeChoice.MaterialChoice) config.choice;
@@ -55,6 +56,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     void materialChoice_multipleMaterials() throws IOException {
         final TestConfig config = load("choice:\n  type: MATERIAL\n  choices:\n    - STONE\n    - COBBLESTONE\n    - GRAVEL");
         final RecipeChoice.MaterialChoice mc = (RecipeChoice.MaterialChoice) config.choice;
+
         assertEquals(3, mc.getChoices().size());
         assertTrue(mc.getChoices().contains(Material.STONE));
         assertTrue(mc.getChoices().contains(Material.COBBLESTONE));
@@ -65,6 +67,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     void materialChoice_diamondAndGold() throws IOException {
         final TestConfig config = load("choice:\n  type: MATERIAL\n  choices:\n    - DIAMOND\n    - GOLD_INGOT");
         final RecipeChoice.MaterialChoice mc = (RecipeChoice.MaterialChoice) config.choice;
+
         assertEquals(2, mc.getChoices().size());
     }
 
@@ -73,6 +76,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     @Test
     void exactChoice_singleItemStack() throws IOException {
         final TestConfig config = load("choice:\n  type: EXACT\n  choices:\n    - material: DIAMOND\n      amount: 1");
+
         assertNotNull(config.choice);
         assertInstanceOf(RecipeChoice.ExactChoice.class, config.choice);
         final RecipeChoice.ExactChoice ec = (RecipeChoice.ExactChoice) config.choice;
@@ -82,9 +86,9 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void exactChoice_multipleItemStacks() throws IOException {
-        final TestConfig config = load(
-                "choice:\n  type: EXACT\n  choices:\n    - material: DIAMOND\n      amount: 1\n    - material: GOLD_INGOT\n      amount: 1");
+        final TestConfig config = load("choice:\n  type: EXACT\n  choices:\n    - material: DIAMOND\n      amount: 1\n    - material: GOLD_INGOT\n      amount: 1");
         final RecipeChoice.ExactChoice ec = (RecipeChoice.ExactChoice) config.choice;
+
         assertEquals(2, ec.getChoices().size());
     }
 
@@ -105,6 +109,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     @Test
     void materialChoice_roundTrip() throws IOException {
         final TestConfig first = load("choice:\n  type: MATERIAL\n  choices:\n    - STONE");
+
         assertInstanceOf(RecipeChoice.MaterialChoice.class, first.choice);
         assertEquals(Material.STONE, ((RecipeChoice.MaterialChoice) first.choice).getChoices().get(0));
     }
@@ -113,6 +118,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     void exactChoice_roundTrip_materialPreserved() throws IOException {
         final TestConfig config = load("choice:\n  type: EXACT\n  choices:\n    - material: IRON_INGOT\n      amount: 1");
         final RecipeChoice.ExactChoice ec = (RecipeChoice.ExactChoice) config.choice;
+
         assertEquals(Material.IRON_INGOT, ec.getChoices().get(0).getType());
     }
 }

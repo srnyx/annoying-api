@@ -20,25 +20,19 @@ public class XBaseSerializer implements ObjectSerializer<XBase<?, ?>> {
 
     @Override
     public boolean supports(@NotNull Class<?> type) {
-        final boolean supports = XBase.class.isAssignableFrom(type);
-        System.out.println(type + " supports: " + supports);
-        return supports;
+        return XBase.class.isAssignableFrom(type);
     }
 
     @Override
     public void serialize(@NotNull XBase<?, ?> object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
-        final String name = object.name();
-        System.out.println("serialize name: " + name);
-        data.setValue(name);
+        data.setValue(object.name());
     }
 
     @Override @Nullable
     public XBase<?, ?> deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
         final String name = data.getValue(String.class);
-        System.out.println("deserialize name: " + name);
         if (name == null) return null;
         final Class<?> type = generics.getType();
-        System.out.println("type: " + type);
 
         // XMaterial (doesn't have of(String) method)
         if (XMaterial.class.isAssignableFrom(type)) return XMaterial.matchXMaterial(name).orElse(null);
@@ -53,12 +47,8 @@ public class XBaseSerializer implements ObjectSerializer<XBase<?, ?>> {
             }
 
             // Invoke method
-            final XBase<?, ?> base = ((Optional<XBase<?, ?>>) method.invoke(null, name)).orElse(null);
-            System.out.println("base: " + base);
-            return base;
+            return ((Optional<XBase<?, ?>>) method.invoke(null, name)).orElse(null);
         } catch (final IllegalArgumentException | ReflectiveOperationException e) {
-            System.out.println("Failed to deserialize " + type + " from " + name);
-            e.printStackTrace();
             return null;
         }
     }
