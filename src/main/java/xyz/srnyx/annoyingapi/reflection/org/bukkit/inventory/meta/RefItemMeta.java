@@ -1,9 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta;
 
 import org.bukkit.inventory.meta.ItemMeta;
-
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;

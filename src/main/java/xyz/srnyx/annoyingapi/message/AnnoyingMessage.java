@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.message;
 
+import com.cryptomorin.xseries.messages.Titles;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -17,7 +18,6 @@ import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_SEND_TITLE_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSpigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
 
 
@@ -424,17 +423,7 @@ public class AnnoyingMessage extends Stringable {
      * @see                 #broadcast(BroadcastType)
      */
     private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
-        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if (PLAYER_SEND_TITLE_METHOD != null) {
-            try {
-                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-        //noinspection deprecation
-        players.forEach(player -> player.sendTitle(title, subtitle));
+        for (final Player player : Bukkit.getOnlinePlayers()) Titles.sendTitle(player, fadeIn, stay, fadeOut, title, subtitle);
     }
 
     /**

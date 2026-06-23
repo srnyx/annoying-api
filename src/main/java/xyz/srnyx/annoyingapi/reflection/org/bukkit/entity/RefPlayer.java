@@ -14,11 +14,6 @@ import java.lang.reflect.Method;
  */
 public class RefPlayer {
     /**
-     * 1.11+ org.bukkit.entity.Player#sendTitle(String, String, int, int, int)
-     */
-    @Nullable public static final Method PLAYER_SEND_TITLE_METHOD = ReflectionUtility.getMethod(1, 11, 0, Player.class, "sendTitle", String.class, String.class, int.class, int.class, int.class);
-
-    /**
      * This class cannot be instantiated
      *
      * @throws  UnsupportedOperationException   if this class is instantiated

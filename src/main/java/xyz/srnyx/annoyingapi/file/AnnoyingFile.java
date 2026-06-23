@@ -1,12 +1,14 @@
 package xyz.srnyx.annoyingapi.file;
 
+import com.cryptomorin.xseries.XEnchantment;
+import com.cryptomorin.xseries.XPotion;
+import com.cryptomorin.xseries.XSound;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -14,11 +16,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefRegistry;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
-import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 import xyz.srnyx.javautilities.FileUtility;
 import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -279,9 +278,9 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * @return          the {@link Sound} or empty if it's invalid
      */
     @NotNull
-    public Optional<Sound> getSound(@NotNull String path) {
+    public Optional<XSound> getSound(@NotNull String path) {
         return Optional.ofNullable(getString(path))
-                .flatMap(s -> Mapper.toEnum(s, Sound.class))
+                .flatMap(XSound::of)
                 .or(() -> getDef(path));
     }
 
@@ -295,16 +294,16 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     @NotNull
     public Optional<PlayableSound> getPlayableSound(@NotNull String path) {
         final Optional<PlayableSound> def = getDef(path);
-        final Optional<Sound> sound = getSound(path + ".sound");
+        final Optional<XSound> sound = getSound(path + ".sound");
         if (sound.isEmpty()) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
         // Get category
-        Enum<?> category = null;
+        XSound.Category category = null;
         final String categoryString = section.getString("category");
         if (categoryString != null) try {
-            category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
+            category = Mapper.toEnum(categoryString, XSound.Category.class).orElse(null);
         } catch (final IllegalArgumentException e) {
             log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
         }
@@ -347,12 +346,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Get type
-        final Optional<PotionEffectType> typeOptional = RefRegistry.getEffect(typeString);
+        final Optional<XPotion> typeOptional = XPotion.of(typeString);
         if (typeOptional.isEmpty()) {
             if (log) log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
-        final PotionEffectType type = typeOptional.get();
+        final PotionEffectType type = typeOptional.get().getPotionEffectType();
 
         // Get duration, amplifier, ambient, & particles
         final int duration = section.getInt("duration", 1);
@@ -542,12 +541,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Optional<Enchantment> enchantment = RefRegistry.getEnchantment(enchantmentKey);
+                final Optional<XEnchantment> enchantment = XEnchantment.of(enchantmentKey);
                 if (enchantment.isEmpty()) {
                     if (log) log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
-                meta.addEnchant(enchantment.get(), enchantmentsSection.getInt(enchantmentKey), true);
+                meta.addEnchant(enchantment.get().get(), enchantmentsSection.getInt(enchantmentKey), true);
             }
 
             // Flags

@@ -1,9 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.entity;
 
 import org.bukkit.entity.Entity;
-
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Method;

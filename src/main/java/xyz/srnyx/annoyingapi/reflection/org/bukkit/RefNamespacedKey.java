@@ -1,9 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit;
 
 import org.bukkit.plugin.Plugin;
-
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Constructor;
@@ -18,10 +16,6 @@ public class RefNamespacedKey {
      * 1.12+ org.bukkit.NamespacedKey
      */
     @Nullable public static final Class<?> NAMESPACED_KEY_CLASS = ReflectionUtility.getClass(1, 12, 0, RefNamespacedKey.class);
-    /**
-     * 1.12+ org.bukkit.NamespacedKey#minecraft(String)
-     */
-    @Nullable public static final Method MINECRAFT_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "minecraft", String.class);
     /**
      * 1.12+ org.bukkit.NamespacedKey(org.bukkit.plugin.Plugin, String)
      */
