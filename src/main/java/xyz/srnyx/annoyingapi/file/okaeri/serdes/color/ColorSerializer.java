@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes.color;
 
+import eu.okaeri.configs.exception.OkaeriConfigException;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
@@ -69,24 +70,33 @@ public class ColorSerializer implements ObjectSerializer<Color> {
 
         // CUSTOM
         if (format == ColorFormat.CUSTOM) {
-            // Single int
-            final Integer rgb = data.getValue(Integer.class);
-            if (rgb != null) return Color.fromRGB(rgb);
+            // Single values
+            if (data.isValue()) {
+                // Single int
+                try {
+                    final Integer rgb = data.getValue(Integer.class);
+                    if (rgb != null) return Color.fromRGB(rgb);
+                } catch (final OkaeriConfigException ignored) {}
 
-            // Single hex
-            String hex = data.getValue(String.class);
-            if (hex != null) {
-                if (hex.startsWith("#")) hex = hex.substring(1);
-                return Color.fromRGB(Integer.parseInt(hex, 16));
+                // Single hex
+                String hex = data.getValue(String.class);
+                if (hex != null) {
+                    if (hex.startsWith("#")) hex = hex.substring(1);
+                    return Color.fromRGB(Integer.parseInt(hex, 16));
+                }
+
+                // Unknown custom format (single)
+                throw new IllegalArgumentException("Invalid custom color format");
             }
 
             // Separate RGB
             final Integer red = data.get("red", Integer.class);
             final Integer green = data.get("green", Integer.class);
             final Integer blue = data.get("blue", Integer.class);
+            System.out.println("red: " + red + ", green: " + green + ", blue: " + blue);
             if (red != null && green != null && blue != null) return Color.fromRGB(red, green, blue);
 
-            // Unknown custom format
+            // Unknown custom format (object)
             throw new IllegalArgumentException("Invalid custom color format");
         }
 

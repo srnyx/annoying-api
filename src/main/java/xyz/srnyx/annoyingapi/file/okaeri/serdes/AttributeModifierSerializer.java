@@ -66,14 +66,17 @@ public class AttributeModifierSerializer implements ObjectSerializer<Object> {
 
     @Override @NotNull
     public Object deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
-        // name, operation
+        // name
         final String name = data.get("name", String.class);
-        final Enum<?> operation = data.get("operation", ATTRIBUTE_MODIFIER_OPERATION_ENUM);
         if (name == null) throw new IllegalArgumentException("Missing required field: name");
-        if (operation == null) throw new IllegalArgumentException("Missing required field: operation");
 
         // amount
-        final double amount = data.get("amount", double.class);
+        final Double amount = data.get("amount", Double.class);
+        if (amount == null) throw new IllegalArgumentException("Missing required field: amount");
+
+        // operation
+        final Enum<?> operation = data.get("operation", ATTRIBUTE_MODIFIER_OPERATION_ENUM);
+        if (operation == null) throw new IllegalArgumentException("Missing required field: operation");
 
         // slot
         Object slot;

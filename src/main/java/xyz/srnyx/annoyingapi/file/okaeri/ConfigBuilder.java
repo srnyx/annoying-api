@@ -38,7 +38,6 @@ public class ConfigBuilder {
     @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
     @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
     private boolean renameKebabCaseToSnakeCase = true;
-    private boolean saveDefaults = true;
 
     public ConfigBuilder(@Nullable AnnoyingPlugin plugin, @NotNull File file) {
         this.plugin = plugin;
@@ -143,12 +142,6 @@ public class ConfigBuilder {
     }
 
     @NotNull
-    public ConfigBuilder saveDefaults(boolean saveDefaults) {
-        this.saveDefaults = saveDefaults;
-        return this;
-    }
-
-    @NotNull
     public <C> C build() {
         if (config == null) throw new IllegalStateException("Config must be set");
 
@@ -194,8 +187,8 @@ public class ConfigBuilder {
             if (configure != null) configure.accept(opt);
         });
 
-        // Save defaults
-        if (saveDefaults) config.saveDefaults();
+        // Save defaults (basically just creates file if it doesn't exist)
+        config.saveDefaults();
 
         // Initial load (for migrations)
         config.load();
@@ -208,6 +201,9 @@ public class ConfigBuilder {
 
         // ConfigMigrations
         config.migrate(configMigrations.toArray(new ConfigMigration[0]));
+
+        // Manually save in-case no migrations occured
+        config.save();
 
         return (C) config;
     }
