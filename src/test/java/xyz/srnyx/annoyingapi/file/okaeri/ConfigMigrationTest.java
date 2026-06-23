@@ -20,14 +20,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class ConfigMigrationTest {
+public class ConfigMigrationTest extends MockBukkitTestSupport {
     @TempDir(cleanup = CleanupMode.NEVER)
     Path tempDir;
-
-    @BeforeAll
-    static void bootstrapBukkit() {
-        ConfigTestSupport.bootstrapBukkit();
-    }
 
     @Test
     void migratesKebabCaseMockConfigAndPreservesNestedValues() throws IOException {

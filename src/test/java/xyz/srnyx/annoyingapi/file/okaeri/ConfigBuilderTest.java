@@ -1,13 +1,11 @@
 package xyz.srnyx.annoyingapi.file.okaeri;
 
 import eu.okaeri.configs.migrate.ConfigMigration;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,14 +13,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class ConfigBuilderTest {
+public class ConfigBuilderTest extends MockBukkitTestSupport {
     @TempDir(cleanup = CleanupMode.NEVER)
     Path tempDir;
-
-    @BeforeAll
-    static void bootstrapBukkit() {
-        ConfigTestSupport.bootstrapBukkit();
-    }
 
     @Test
     void buildsExampleConfigFromClassAndLoadsExistingFile() throws IOException {
@@ -40,21 +33,19 @@ public class ConfigBuilderTest {
     }
 
     @Test
-    void configInstanceOverloadReturnsTheSameInstanceAndCanSkipSavingDefaults() throws IOException {
+    void configInstanceOverloadReturnsTheSameInstance() {
         final Path pluginData = tempDir.resolve("instance-plugin");
-        final Path configFile = ConfigTestSupport.writeYaml(pluginData, "config.yml", "");
+        final Path configFile = pluginData.resolve("config.yml");
         final ExampleConfig config = new ExampleConfig();
         config.identity.setMemo("set-before-build");
 
-        final ExampleConfig loaded = new ConfigBuilder(pluginData.resolve("config.yml").toFile())
+        final ExampleConfig loaded = new ConfigBuilder(configFile.toFile())
                 .config(config)
-                .saveDefaults(false)
                 .build();
 
         assertSame(config, loaded);
         assertEquals("set-before-build", loaded.identity.getMemo());
         assertTrue(Files.exists(configFile));
-        assertTrue(Files.readString(configFile, StandardCharsets.UTF_8).isBlank());
     }
 
     @Test

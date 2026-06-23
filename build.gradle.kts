@@ -198,7 +198,7 @@ generateAnnoyingApiRuntimeLibraryEnum(runtimeLibraries, GenerateRuntimeLibraryEn
     relocateImports = false))
 
 // Repositories
-repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP)
+repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.PAPER)
 
 // Dependencies
 dependencies {
@@ -208,6 +208,10 @@ dependencies {
 
     // Optional
     compileOnly("me.clip:placeholderapi:2.12.2")
+
+    // Testing
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.18:2.85.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }
 
 // Blossom (see java-templates module)
@@ -215,6 +219,10 @@ sourceSets.main { blossom.javaSources { property("annoying_api_version", version
 
 // Testing
 setupTesting(junitBomConfig = DependencyConfig(version = "6.1.0"))
+
+// Exclude spigot-api from test classpath so MockBukkit's paper-api 1.18.2 takes precedence
+configurations.named("testRuntimeClasspath") { exclude(group = "org.spigotmc", module = "spigot-api") }
+configurations.named("testCompileClasspath") { exclude(group = "org.spigotmc", module = "spigot-api") }
 
 // Silence missing Javadoc warnings
 tasks.withType<Javadoc> {
