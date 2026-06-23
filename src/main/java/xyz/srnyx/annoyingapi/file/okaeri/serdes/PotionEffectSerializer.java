@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_6;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_HAS_ICON_METHOD;
 
 
@@ -57,8 +57,8 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
 
         // 1.13+ icon
         final Boolean icon = data.get("icon", Boolean.class);
-        if (icon != null && POTION_EFFECT_CONSTRUCTOR_6 != null) try {
-            return POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, icon);
+        if (icon != null && POTION_EFFECT_CONSTRUCTOR_1_13 != null) try {
+            return POTION_EFFECT_CONSTRUCTOR_1_13.newInstance(type, duration, amplifier, ambient, particles, icon);
         } catch (final Exception e) {
             e.printStackTrace();
         }

@@ -1,12 +1,8 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit;
 
-import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.World;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
@@ -28,11 +24,6 @@ public class RefWorld {
      * 1.13+ {@code org.bukkit.World#setGameRuleValue(org.bukkit.GameRule<T>, T)}
      */
     @Nullable public static final Method WORLD_SET_GAME_RULE_VALUE_METHOD = ReflectionUtility.getMethod(1, 13, 0, World.class, "setGameRuleValue", RefGameRule.GAME_RULE_CLASS, Object.class);
-
-    /**
-     * 1.11+ org.bukkit.World#playSound(Location, Sound, SoundCategory, float, float)
-     */
-    @Nullable public static final Method WORLD_PLAY_SOUND_METHOD = ReflectionUtility.getMethod(1, 11, 0, World.class, "playSound", Location.class, Sound.class, RefSoundCategory.SOUND_CATEGORY_ENUM, float.class, float.class);
 
     /**
      * Gets a game rule value from a world

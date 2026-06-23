@@ -40,7 +40,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRec
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefDamageable.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_6;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 
 
 /**
@@ -361,8 +361,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final boolean particles = section.getBoolean("particles", true);
 
         // 1.13+ icon
-        if (POTION_EFFECT_CONSTRUCTOR_6 != null) try {
-            return Optional.of(POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
+        if (POTION_EFFECT_CONSTRUCTOR_1_13 != null) try {
+            return Optional.of(POTION_EFFECT_CONSTRUCTOR_1_13.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }

@@ -16,7 +16,7 @@ public class RefPotionEffect {
     /**
      * 1.13+ org.bukkit.PotionEffect(PotionEffectType, int, int, boolean, boolean, boolean)
      */
-    @Nullable public static final Constructor<PotionEffect> POTION_EFFECT_CONSTRUCTOR_6 = ReflectionUtility.getConstructor(1, 13, 0, PotionEffect.class, PotionEffectType.class, int.class, int.class, boolean.class, boolean.class, boolean.class);
+    @Nullable public static final Constructor<PotionEffect> POTION_EFFECT_CONSTRUCTOR_1_13 = ReflectionUtility.getConstructor(1, 13, 0, PotionEffect.class, PotionEffectType.class, int.class, int.class, boolean.class, boolean.class, boolean.class);
 
     /**
      * 1.13 org.bukkit.PotionEffect#hasIcon()

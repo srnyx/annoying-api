@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_6;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 
 
 /**
@@ -120,7 +120,7 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void iconField_whenConstructor6Available() throws IOException {
-        assumeTrue(POTION_EFFECT_CONSTRUCTOR_6 != null, "6-param PotionEffect constructor not available");
+        assumeTrue(POTION_EFFECT_CONSTRUCTOR_1_13 != null, "6-param PotionEffect constructor not available");
         final TestConfig config = load("effect:\n  type: speed\n  duration: 200\n  amplifier: 0\n  ambient: false\n  particles: true\n  icon: true");
 
         assertNotNull(config.effect);
