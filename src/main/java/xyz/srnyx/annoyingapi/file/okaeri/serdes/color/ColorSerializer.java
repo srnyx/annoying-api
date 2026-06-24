@@ -1,6 +1,5 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes.color;
 
-import eu.okaeri.configs.exception.OkaeriConfigException;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
@@ -8,10 +7,12 @@ import eu.okaeri.configs.serdes.SerdesContext;
 import eu.okaeri.configs.serdes.SerializationData;
 import org.bukkit.Color;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class ColorSerializer implements ObjectSerializer<Color> {
@@ -35,78 +36,75 @@ public class ColorSerializer implements ObjectSerializer<Color> {
 
     @Override
     public void serialize(@NotNull Color object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
-        // Get format
-        final ColorFormat format = getFormat(data.getContext());
-
-        // NAME
-        if (format == ColorFormat.NAME) {
-            data.set("color", COLOR_TO_NAME.get(object));
-            return;
-        }
+        // Get formats
+        final Set<ColorFormat> format = getFormats(data.getContext());
 
         // CUSTOM
-        if (format == ColorFormat.CUSTOM) {
+        if (format.contains(ColorFormat.CUSTOM)) {
             data.set("red", object.getRed());
             data.set("green", object.getGreen());
             data.set("blue", object.getBlue());
             return;
         }
 
-        // Unknown format
-        throw new IllegalArgumentException("DEVELOPER: Unsupported color format: " + format);
+        // NAME
+        if (format.contains(ColorFormat.NAME)) {
+            data.set("color", COLOR_TO_NAME.get(object));
+            return;
+        }
+
+        // No supported formats
+        throw new IllegalArgumentException("No supported color formats found");
     }
 
-    @Override @NotNull
+    @Override @Nullable
     public Color deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
-        // Get format
-        final ColorFormat format = getFormat(data.getContext());
-
-        // NAME
-        if (format == ColorFormat.NAME) {
-            final String name = data.get("color", String.class);
-            if (name == null) throw new IllegalStateException("Color name is required");
-            return NAME_TO_COLOR.get(name.toUpperCase());
-        }
+        // Get formats
+        final Set<ColorFormat> formats = getFormats(data.getContext());
 
         // CUSTOM
-        if (format == ColorFormat.CUSTOM) {
-            // Single values
+        if (formats.contains(ColorFormat.CUSTOM)) {
             if (data.isValue()) {
+                // Get single value
+                final String value = data.getValue(String.class);
+                if (value == null) return null;
+
                 // Single int
                 try {
-                    final Integer rgb = data.getValue(Integer.class);
-                    if (rgb != null) return Color.fromRGB(rgb);
-                } catch (final OkaeriConfigException ignored) {}
+                    return Color.fromRGB(Integer.parseInt(value));
+                } catch (final NumberFormatException ignored) {}
 
                 // Single hex
-                String hex = data.getValue(String.class);
-                if (hex != null) {
-                    if (hex.startsWith("#")) hex = hex.substring(1);
+                String hex = value.toUpperCase();
+                if (hex.startsWith("#")) hex = hex.substring(1);
+                try {
                     return Color.fromRGB(Integer.parseInt(hex, 16));
-                }
-
-                // Unknown custom format (single)
-                throw new IllegalArgumentException("Invalid custom color format");
+                } catch (final NumberFormatException ignored) {}
+            } else {
+                // Separate RGB
+                final Integer red = data.get("red", Integer.class);
+                final Integer green = data.get("green", Integer.class);
+                final Integer blue = data.get("blue", Integer.class);
+                if (red != null && green != null && blue != null) return Color.fromRGB(red, green, blue);
             }
-
-            // Separate RGB
-            final Integer red = data.get("red", Integer.class);
-            final Integer green = data.get("green", Integer.class);
-            final Integer blue = data.get("blue", Integer.class);
-            if (red != null && green != null && blue != null) return Color.fromRGB(red, green, blue);
-
-            // Unknown custom format (object)
-            throw new IllegalArgumentException("Invalid custom color format");
         }
 
-        // Unknown format
-        throw new IllegalArgumentException("DEVELOPER: Unsupported color format: " + format);
+        // NAME
+        if (formats.contains(ColorFormat.NAME)) {
+            final String value = data.getValue(String.class);
+            if (value == null) return null;
+            return NAME_TO_COLOR.get(value.toUpperCase());
+        }
+
+        // No supported formats
+        throw new IllegalArgumentException("No supported color formats found");
     }
 
     @NotNull
-    private static ColorFormat getFormat(@NotNull SerdesContext context) {
+    private static Set<ColorFormat> getFormats(@NotNull SerdesContext context) {
         return context.getAttachment(ColorSpecData.class)
-                .map(ColorSpecData::format)
-                .orElse(ColorFormat.CUSTOM);
+                .map(ColorSpecData::formats)
+                .filter(formats -> !formats.isEmpty()) // Default to all
+                .orElseGet(() -> Set.of(ColorFormat.values()));
     }
 }

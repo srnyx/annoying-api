@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ColorSpec {
-    //TODO allow multiple
-    ColorFormat format() default ColorFormat.CUSTOM;
+    /**
+     * Defaults to all {@link ColorFormat ColorFormats}
+     */
+    ColorFormat[] formats() default {};
 }
