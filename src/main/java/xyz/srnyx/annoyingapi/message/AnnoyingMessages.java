@@ -6,6 +6,8 @@ import eu.okaeri.validator.annotation.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
+import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
+import xyz.srnyx.javautilities.MapGenerator;
 
 import java.util.Map;
 
@@ -17,22 +19,41 @@ public class AnnoyingMessages extends OkaeriConfig {
     @Comment
     @Comment
     @Comment("Messages for general plugin usage")
-    @NotNull public Plugin plugin = new Plugin(this);
+    @NotNull public Plugin plugin;
 
     @Comment
     @Comment("Error messages when a player does something wrong")
-    @NotNull public Error error = new Error(this);
+    @NotNull public Error error;
 
 
     @org.jetbrains.annotations.NotNull private transient final AnnoyingPlugin annoyingPlugin;
+    @org.jetbrains.annotations.NotNull private transient final String defaultPrefix;
+    @org.jetbrains.annotations.NotNull private transient final String defaultP;
+    @org.jetbrains.annotations.NotNull private transient final String defaultS;
 
     public AnnoyingMessages(@org.jetbrains.annotations.NotNull AnnoyingPlugin annoyingPlugin) {
         this.annoyingPlugin = annoyingPlugin;
+        this.defaultPrefix = annoyingPlugin.options.messagesOptions.defaults.prefix;
+        this.defaultP = annoyingPlugin.options.messagesOptions.defaults.p;
+        this.defaultS = annoyingPlugin.options.messagesOptions.defaults.s;
+
+        this.plugin = new Plugin(this);
+        this.error = new Error(this);
     }
 
     @org.jetbrains.annotations.NotNull
     public JsonChatMessage defaultMessage(@org.jetbrains.annotations.NotNull String raw) {
         return new JsonChatMessage(annoyingPlugin, raw);
+    }
+
+    @org.jetbrains.annotations.NotNull
+    public JsonChatMessage defaultMessage(@org.jetbrains.annotations.NotNull Map<String, String> components) {
+        return new JsonChatMessage(annoyingPlugin, components);
+    }
+
+    @org.jetbrains.annotations.NotNull
+    public JsonTitleMessage defaultTitle(@org.jetbrains.annotations.NotNull String title, @org.jetbrains.annotations.NotNull String subtitle) {
+        return new JsonTitleMessage(annoyingPlugin, title, subtitle);
     }
 
     public static class Plugin extends SubConfig<AnnoyingMessages> {
@@ -45,10 +66,10 @@ public class AnnoyingMessages extends OkaeriConfig {
         @Comment("Using a global placeholder is just like any other placeholder! Simply surround the placeholder name with \"%\" (ex: \"%prefix%\")")
         @Comment("WARNING: Global placeholders can conflict with local placeholders! Please be wary when creating your own global placeholder(s)!")
         @Comment("It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)")
-        @NotNull public Map<String, String> global_placeholders = Map.of(
-                "prefix", "&3&lANNOYING &8&l| &b",
-                "p", "&b",
-                "s", "&3",
+        @NotNull public Map<String, String> global_placeholders = MapGenerator.LINKED_HASH_MAP.mapOf(
+                "prefix", getRoot().defaultPrefix,
+                "p", getRoot().defaultP,
+                "s", getRoot().defaultS,
                 "pe", "&c",
                 "se", "&4");
 

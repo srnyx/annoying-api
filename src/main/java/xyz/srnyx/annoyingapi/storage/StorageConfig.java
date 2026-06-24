@@ -8,6 +8,7 @@ import eu.okaeri.validator.annotation.Nullable;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
+import xyz.srnyx.javautilities.MapGenerator;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -174,7 +175,7 @@ public class StorageConfig extends OkaeriConfig {
         @Comment("Additional properties for the connection")
         @Comment("You may need to remove useUnicode and characterEncoding if you're using PostgreSQL")
         @Comment("It's recommended to keep 'autoReconnect: true'")
-        @NotNull public Map<String, String> properties = Map.of(
+        @NotNull public Map<String, String> properties = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "autoReconnect", "true",
                 "useUnicode", "true",
                 "characterEncoding", "UTF-8");
