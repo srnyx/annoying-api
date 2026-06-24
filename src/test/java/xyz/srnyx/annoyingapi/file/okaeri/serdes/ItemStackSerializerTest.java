@@ -8,13 +8,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -44,7 +41,7 @@ public class ItemStackSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        return loadFromYaml(tempDir, yaml, TestConfig.class);
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ Material and amount
@@ -104,6 +101,19 @@ public class ItemStackSerializerTest extends MockBukkitTestSupport {
 
         assertNotNull(meta);
         assertEquals("§aGreen Item", meta.getDisplayName());
+    }
+
+    @Test
+    void colorCodeInName_colorsPreservedAfterDeserialization() throws IOException {
+        final Path path = ConfigTestSupport.writeYaml(tempDir, TestConfig.class.getName() + ".yml", "item:\n  material: DIAMOND\n  name: \"&aGreen Item\"");
+        final TestConfig config = configBuilder(path, TestConfig.class).build();
+        final String contents = Files.readString(path);
+        final ItemStack item = config.item;
+        final ItemMeta meta = item.getItemMeta();
+
+        assertNotNull(meta);
+        assertEquals("§aGreen Item", meta.getDisplayName());
+        assertTrue(contents.contains("&aGreen Item"), "Serialized file should contain the color code: " + contents);
     }
 
     @Test
@@ -230,10 +240,7 @@ public class ItemStackSerializerTest extends MockBukkitTestSupport {
     void serializeRoundTrip_materialPreserved() throws IOException {
         // saveDefaults writes the default STONE item; reload and verify
         final Path file = ConfigTestSupport.writeYaml(tempDir, "roundtrip.yml", "");
-        new ConfigBuilder(new File(file.toString()))
-                .config(TestConfig.class)
-                .build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, TestConfig.class);
 
         assertTrue(content.contains("STONE"), "Round-trip file should contain 'STONE': " + content);
         assertTrue(content.contains("material:"), "Round-trip file should contain 'material:': " + content);

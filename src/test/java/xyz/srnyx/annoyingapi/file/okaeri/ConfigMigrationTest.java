@@ -2,10 +2,10 @@ package xyz.srnyx.annoyingapi.file.okaeri;
 
 import eu.okaeri.configs.migrate.ConfigMigration;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_snake_case;
 
 import java.io.IOException;
@@ -196,8 +196,7 @@ public class ConfigMigrationTest extends MockBukkitTestSupport {
 
     @NotNull
     private ExampleConfig loadConfig(@NotNull Path configFile, @NotNull ConfigMigration... migrations) {
-        return new ConfigBuilder(configFile.toFile())
-                .config(ExampleConfig.class)
+        return configBuilder(configFile, ExampleConfig.class)
                 .internalStateMigrations(migrations)
                 .build();
     }

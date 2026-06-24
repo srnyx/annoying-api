@@ -1,20 +1,17 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 
+import be.seeseemelk.mockbukkit.MockBukkit;
+import be.seeseemelk.mockbukkit.MockPlugin;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import org.bukkit.NamespacedKey;
-import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
-
-import eu.okaeri.configs.configurer.Configurer;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import eu.okaeri.configs.serdes.SerdesContext;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,30 +19,26 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
-import static org.mockito.Mockito.*;
-
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CLASS;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 
 
 /**
- * Tests for {@link NamespacedKeySerializer}.
+ * Tests for {@link NamespacedKeySerializer}
  *
  * <p>NamespacedKey is a 1.12+ API. All tests are skipped if {@code NAMESPACED_KEY_CLASS == null}.
- * Uses a Mockito mock for the {@link Plugin} interface (only {@code getName()} is used).
  */
 public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     @TempDir Path tempDir;
 
-    private Plugin pluginMock;
+    private MockPlugin pluginMock;
     private NamespacedKeySerializer serializer;
 
     @BeforeEach
     void skipIfNoNamespacedKey() {
         assumeTrue(NAMESPACED_KEY_CLASS != null, "NamespacedKey not available — skipping on pre-1.12 runtime");
         assumeTrue(NAMESPACED_KEY_CONSTRUCTOR != null, "NamespacedKey constructor not available");
-        pluginMock = mock(Plugin.class);
-        when(pluginMock.getName()).thenReturn("test");
+        pluginMock = MockBukkit.createMockPlugin();
         serializer = new NamespacedKeySerializer(pluginMock);
     }
 
@@ -56,8 +49,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
     private TestConfig load(String yaml) throws IOException {
         final Path path = ConfigTestSupport.writeYaml(tempDir, "ns.yml", yaml);
         final NamespacedKeySerializer nks = serializer;
-        return new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
+        return configBuilder(path, TestConfig.class)
                 .configure(opt -> { if (nks.get()) opt.serdes(nks); })
                 .build();
     }
@@ -92,8 +84,8 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
         final TestConfig config = load("key: some_key");
 
         assertNotNull(config.key);
-        // Plugin name is "test" → namespace should be "test"
-        assertEquals("test", config.key.getNamespace());
+        // Namespace should be lowercase plugin name
+        assertEquals(pluginMock.getName().toLowerCase(), config.key.getNamespace());
     }
 
     @Test
@@ -120,9 +112,10 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
         // Load with a specific key, check that the file contains the key string
         final Path path = ConfigTestSupport.writeYaml(tempDir, "ns_serial.yml", "key: round_trip_key");
         final NamespacedKeySerializer nks = serializer;
-        new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> { if (nks.get()) opt.serdes(nks); })
+        configBuilder(path, TestConfig.class)
+                .configure(opt -> {
+                    if (nks.get()) opt.serdes(nks);
+                })
                 .build();
         final String content = Files.readString(path, StandardCharsets.UTF_8);
 
@@ -146,7 +139,7 @@ public class NamespacedKeySerializerTest extends MockBukkitTestSupport {
 
         assertNotNull(key);
         assertEquals("my_key", key.getKey());
-        assertEquals("test", key.getNamespace());
+        assertEquals(pluginMock.getName().toLowerCase(), key.getNamespace());
     }
 
     @Test

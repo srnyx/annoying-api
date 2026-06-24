@@ -4,11 +4,9 @@ import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.serdes.commons.duration.DurationSpec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,8 +39,7 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
     /** Loads the config with the S0001 migration registered, then returns the raw file content. */
     private String loadAndReadFile(String yaml) throws IOException {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "config.yml", yaml);
-        new ConfigBuilder(new File(file.toString()))
-                .config(CacheConfig.class)
+        configBuilder(file, CacheConfig.class)
                 .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration())
                 .build();
         return Files.readString(file, StandardCharsets.UTF_8);
@@ -53,15 +50,12 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "config.yml", yaml);
 
         // First pass: apply migration
-        new ConfigBuilder(new File(file.toString()))
-                .config(CacheConfig.class)
+        configBuilder(file, CacheConfig.class)
                 .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration())
                 .build();
 
         // Second pass: no migration; read migrated value
-        return new ConfigBuilder(new File(file.toString()))
-                .config(CacheConfig.class)
-                .build();
+        return configBuilder(file, CacheConfig.class).build();
     }
 
     @Test
@@ -144,15 +138,13 @@ public class S0001MigrationTest extends MockBukkitTestSupport {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "idempotent.yml", "cache:\n  interval: 20");
 
         // First pass: migrate 20 → PT1S
-        new ConfigBuilder(new File(file.toString()))
-                .config(CacheConfig.class)
+        configBuilder(file, CacheConfig.class)
                 .configMigrations(new S0001_Cache_interval_ticks_to_duration())
                 .build();
         final String afterFirst = Files.readString(file, StandardCharsets.UTF_8);
 
         // Second pass: migration should not trigger again (PT1S is not Long-parseable)
-        new ConfigBuilder(new File(file.toString()))
-                .config(CacheConfig.class)
+        configBuilder(file, CacheConfig.class)
                 .configMigrations(new S0001_Cache_interval_ticks_to_duration())
                 .build();
         final String afterSecond = Files.readString(file, StandardCharsets.UTF_8);

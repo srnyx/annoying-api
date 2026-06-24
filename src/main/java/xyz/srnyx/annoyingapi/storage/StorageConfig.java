@@ -104,7 +104,7 @@ public class StorageConfig extends OkaeriConfig {
         }
 
         // If downloading library, connect using an IsolatedClassLoader
-        if (method.library != null) {
+        if (method.library != null && plugin.libraryManager != null) {
             // Get IsolatedClassLoader of library
             final IsolatedClassLoader classLoader;
             try {

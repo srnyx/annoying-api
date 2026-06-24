@@ -10,28 +10,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSpec;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 
 /**
- * Tests for {@link RecipeSerializer}.
- *
- * <p>Requires MockBukkit for Bukkit object construction and Mockito for {@link AnnoyingPlugin}.
- * The serializer is injected via the {@code configure()} callback since ConfigBuilder only
- * registers it when {@code plugin != null}.
+ * Tests for {@link RecipeSerializer}
  */
 public class RecipeSerializerTest extends MockBukkitTestSupport {
     @TempDir Path tempDir;
@@ -55,23 +46,12 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
 
     // ------------------------------------------------------------------ Load helper
 
-    private <C extends OkaeriConfig> C load(String yaml, Class<C> cls) throws IOException {
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        final Path path = ConfigTestSupport.writeYaml(tempDir, cls.getSimpleName() + ".yml", yaml);
-        final RecipeSerializer serializer = new RecipeSerializer(mockPlugin);
-        return new ConfigBuilder(new File(path.toString()))
-                .config(cls)
-                .configure(opt -> opt.serdes(serializer))
-                .build();
-    }
-
     private ShapelessConfig loadShapeless(String yaml) throws IOException {
-        return load(yaml, ShapelessConfig.class);
+        return loadConfig(tempDir, yaml, ShapelessConfig.class);
     }
 
     private ShapedConfig loadShaped(String yaml) throws IOException {
-        return load(yaml, ShapedConfig.class);
+        return loadConfig(tempDir, yaml, ShapedConfig.class);
     }
 
     // ------------------------------------------------------------------ ShapelessRecipe
@@ -133,7 +113,7 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
             public Recipe recipe = null;
         }
 
-        assertThrows(Exception.class, () -> load(
+        assertThrows(Exception.class, () -> loadConfig(tempDir,
                 "recipe:\n  shapeless: true\n  shape:\n    - \"S\"\n  ingredients:\n    S: STONE\n  result:\n    material: DIAMOND\n    amount: 1",
                 (Class) NoSpecConfig.class));
     }
@@ -176,7 +156,7 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void furnaceRecipe_ingredientAndResult() throws IOException {
-        final FurnaceConfig config = load(
+        final FurnaceConfig config = loadConfig(tempDir,
                 "recipe:\n  ingredient: IRON_ORE\n  experience: 0.7\n  result:\n    material: IRON_INGOT\n    amount: 1",
                 FurnaceConfig.class);
 
@@ -186,7 +166,7 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void furnaceRecipe_experience() throws IOException {
-        final FurnaceConfig config = load(
+        final FurnaceConfig config = loadConfig(tempDir,
                 "recipe:\n  ingredient: IRON_ORE\n  experience: 0.7\n  result:\n    material: IRON_INGOT\n    amount: 1",
                 FurnaceConfig.class);
 
@@ -196,7 +176,7 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
     @Test
     void furnaceRecipe_defaultCookingTime_noException() throws IOException {
         // cooking_time omitted → defaults to PT10S (200 ticks)
-        assertDoesNotThrow(() -> load(
+        assertDoesNotThrow(() -> loadConfig(tempDir,
                 "recipe:\n  ingredient: IRON_ORE\n  experience: 0.0\n  result:\n    material: IRON_INGOT\n    amount: 1",
                 FurnaceConfig.class));
     }

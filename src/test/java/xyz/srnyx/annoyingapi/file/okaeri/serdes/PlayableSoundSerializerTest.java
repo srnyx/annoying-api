@@ -7,14 +7,10 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import xyz.srnyx.annoyingapi.file.PlayableSound;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,8 +30,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     }
 
     private SoundConfig load(String yaml) throws IOException {
-        final Path file = ConfigTestSupport.writeYaml(tempDir, "sound.yml", yaml);
-        return new ConfigBuilder(new File(file.toString())).config(SoundConfig.class).build();
+        return loadConfig(tempDir, yaml, SoundConfig.class);
     }
 
     private static String yaml(String sound, String category) {
@@ -140,10 +135,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
     void serializeRoundTrip_preservesSoundAndCategory() throws IOException {
         // saveDefaults writes the PlayableSound default (UI_BUTTON_CLICK / MASTER)
         final Path file = ConfigTestSupport.writeYaml(tempDir, "serial.yml", "");
-        new ConfigBuilder(new File(file.toString()))
-                .config(SoundConfig.class)
-                .build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, SoundConfig.class);
 
         assertTrue(content.contains(XSound.UI_BUTTON_CLICK.name()), "Serialized file should contain sound name: " + content);
         assertTrue(content.contains(XSound.Category.MASTER.name()), "Serialized file should contain category: " + content);
@@ -157,8 +149,7 @@ public class PlayableSoundSerializerTest extends MockBukkitTestSupport {
         load("s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  volume: 0.75\n  pitch: 1.5");
         final Path file = ConfigTestSupport.writeYaml(tempDir, "serial2.yml",
                 "s:\n  sound: ENTITY_PLAYER_LEVELUP\n  category: MASTER\n  volume: 0.75\n  pitch: 1.5");
-        new ConfigBuilder(new File(file.toString())).config(SoundConfig.class).build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, SoundConfig.class);
 
         assertTrue(content.contains("0.75"), "File should preserve volume 0.75: " + content);
         assertTrue(content.contains("1.5"), "File should preserve pitch 1.5: " + content);

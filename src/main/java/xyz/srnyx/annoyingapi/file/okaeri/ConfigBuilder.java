@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 
 public class ConfigBuilder {
-    @Nullable public final AnnoyingPlugin plugin;
+    @NotNull public final AnnoyingPlugin plugin;
 
     @NotNull private File file;
     @Nullable private OkaeriConfig config;
@@ -39,16 +39,9 @@ public class ConfigBuilder {
     @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
     private boolean renameKebabCaseToSnakeCase = true;
 
-    public ConfigBuilder(@Nullable AnnoyingPlugin plugin, @NotNull File file) {
+    public ConfigBuilder(@NotNull AnnoyingPlugin plugin, @NotNull File file) {
         this.plugin = plugin;
         this.file = file;
-
-        // Use AnnoyingPlugin.LOGGER directly to avoid Minecraft version check
-        if (plugin == null) AnnoyingPlugin.LOGGER.warning("DEVELOPER: Plugin is null for ConfigBuilder! This may cause issues with serializers that require a plugin instance");
-    }
-
-    public ConfigBuilder(@NotNull File file) {
-        this(null, file);
     }
 
     /**
@@ -73,7 +66,6 @@ public class ConfigBuilder {
 
     @NotNull
     public ConfigBuilder file(@NotNull String name) {
-        if (plugin == null) throw new IllegalStateException("Plugin must be set! Maybe use file(File) instead?");
         return file(new File(plugin.getDataFolder(), name));
     }
 
@@ -153,6 +145,8 @@ public class ConfigBuilder {
             if (this.configurer != null) this.configurer.accept(configurer);
             opt.configurer(
                     configurer,
+
+                    // Okaeri serdes
                     new SerdesCommons(),
                     new SerdesBukkit(),
 
@@ -160,24 +154,21 @@ public class ConfigBuilder {
                     registry -> {
                         registry.register(new ColorSerializer());
                         registry.register(new ColorAttachmentResolver());
+                        registry.register(new RecipeSerializer(plugin));
                         registry.register(new RecipeAttachmentResolver());
                         registry.register(new RecipeChoiceSerializer());
                         registry.register(new AttributeModifierSerializer(plugin));
                         registry.register(new ItemStackSerializer());
+                        registry.register(new JsonChatMessageSerializer(plugin));
+                        registry.register(new JsonTitleMessageSerializer(plugin));
                         registry.register(new PlayableSoundSerializer());
                         registry.register(new PotionEffectSerializer());
                         registry.register(new XBaseSerializer());
                     });
 
-            // Conditional serdes (requires plugin)
-            if (plugin != null) {
-                opt.serdes(new RecipeSerializer(plugin));
-                opt.serdes(new JsonChatMessageSerializer(plugin));
-                opt.serdes(new JsonTitleMessageSerializer(plugin));
-
-                final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
-                if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
-            }
+            // Conditional serdes
+            final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);
+            if (namespacedKeySerializer.get()) opt.serdes(namespacedKeySerializer);
 
             // Other options
             opt.validator(new AnnoyingConfigValidator());

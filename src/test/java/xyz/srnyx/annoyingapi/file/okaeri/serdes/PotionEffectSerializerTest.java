@@ -5,7 +5,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,7 +29,7 @@ public class PotionEffectSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        return loadFromYaml(tempDir, yaml, TestConfig.class);
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ Happy path

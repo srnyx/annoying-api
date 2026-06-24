@@ -6,7 +6,7 @@ import org.bukkit.inventory.RecipeChoice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -36,7 +36,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        return loadFromYaml(tempDir, yaml, TestConfig.class);
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ MaterialChoice

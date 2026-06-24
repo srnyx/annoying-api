@@ -3,26 +3,18 @@ package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 import eu.okaeri.configs.OkaeriConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 
 /**
- * Tests for {@link JsonTitleMessageSerializer}.
- *
- * <p>Uses Mockito for a minimal {@link AnnoyingPlugin} mock registered via the {@code configure()} callback.
+ * Tests for {@link JsonTitleMessageSerializer}
  */
 public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     @TempDir Path tempDir;
@@ -32,13 +24,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        final Path path = ConfigTestSupport.writeYaml(tempDir, "title.yml", yaml);
-        return new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> opt.serdes(new JsonTitleMessageSerializer(mockPlugin)))
-                .build();
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ Deserialization
@@ -109,13 +95,7 @@ public class JsonTitleMessageSerializerTest extends MockBukkitTestSupport {
     void serializeWritesTitleAndSubtitleKeys() throws IOException {
         final Path path = ConfigTestSupport.writeYaml(tempDir, "title_serial.yml",
                 "title:\n  title: T\n  subtitle: S");
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> opt.serdes(new JsonTitleMessageSerializer(mockPlugin)))
-                .build();
-        final String content = Files.readString(path, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(path, TestConfig.class);
 
         assertTrue(content.contains("title:"), "File should contain 'title:' key: " + content);
         assertTrue(content.contains("subtitle:"), "File should contain 'subtitle:' key: " + content);

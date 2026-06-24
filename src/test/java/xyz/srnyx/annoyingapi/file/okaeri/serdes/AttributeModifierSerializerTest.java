@@ -5,13 +5,10 @@ import org.bukkit.attribute.AttributeModifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +38,7 @@ public class AttributeModifierSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        return loadFromYaml(tempDir, yaml, TestConfig.class);
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ Happy path
@@ -110,10 +107,7 @@ public class AttributeModifierSerializerTest extends MockBukkitTestSupport {
 
         final Path file = ConfigTestSupport.writeYaml(tempDir, "attr_serial.yml",
                 "modifier:\n  name: speed_boost\n  operation: ADD_NUMBER\n  amount: 0.5");
-        new ConfigBuilder(new java.io.File(file.toString()))
-                .config(TestConfig.class)
-                .build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, TestConfig.class);
 
         assertTrue(content.contains("speed_boost"), "File should contain modifier name: " + content);
         assertTrue(content.contains("ADD_NUMBER") || content.contains("operation:"),

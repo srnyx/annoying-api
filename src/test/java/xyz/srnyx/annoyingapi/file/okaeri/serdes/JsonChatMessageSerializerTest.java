@@ -3,26 +3,18 @@ package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 import eu.okaeri.configs.OkaeriConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 
 /**
- * Tests for {@link JsonChatMessageSerializer}.
- *
- * <p>Uses Mockito to create a minimal {@link AnnoyingPlugin} mock and registers the serializer
- * via the {@code configure()} callback since ConfigBuilder only registers it when plugin != null.
+ * Tests for {@link JsonChatMessageSerializer}
  */
 public class JsonChatMessageSerializerTest extends MockBukkitTestSupport {
     @TempDir Path tempDir;
@@ -32,13 +24,7 @@ public class JsonChatMessageSerializerTest extends MockBukkitTestSupport {
     }
 
     private TestConfig load(String yaml) throws IOException {
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        final Path path = xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport.writeYaml(tempDir, "chat.yml", yaml);
-        return new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> opt.serdes(new JsonChatMessageSerializer(mockPlugin)))
-                .build();
+        return loadConfig(tempDir, yaml, TestConfig.class);
     }
 
     // ------------------------------------------------------------------ Deserialization
@@ -106,29 +92,17 @@ public class JsonChatMessageSerializerTest extends MockBukkitTestSupport {
 
     @Test
     void singleComponentSerialized_asScalarInFile() throws IOException {
-        final Path path = xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport.writeYaml(tempDir, "chat_serial.yml", "message: \"Hello\"");
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> opt.serdes(new JsonChatMessageSerializer(mockPlugin)))
-                .build();
-        final String content = Files.readString(path, StandardCharsets.UTF_8);
+        final Path path = ConfigTestSupport.writeYaml(tempDir, "chat_serial.yml", "message: \"Hello\"");
+        final String content = buildAndReadFile(path, TestConfig.class);
 
         assertTrue(content.contains("Hello"), "Scalar component should appear in file: " + content);
     }
 
     @Test
     void multipleComponentsSerialized_keysInFile() throws IOException {
-        final Path path = xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport.writeYaml(tempDir, "chat_serial2.yml",
+        final Path path = ConfigTestSupport.writeYaml(tempDir, "chat_serial2.yml",
                 "message:\n  suggest_run: /cmd\n  hover: Hover");
-        final AnnoyingPlugin mockPlugin = mock(AnnoyingPlugin.class);
-        when(mockPlugin.getName()).thenReturn("test");
-        new ConfigBuilder(new File(path.toString()))
-                .config(TestConfig.class)
-                .configure(opt -> opt.serdes(new JsonChatMessageSerializer(mockPlugin)))
-                .build();
-        final String content = Files.readString(path, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(path, TestConfig.class);
 
         assertTrue(content.contains("suggest_run:"), "Map key 'suggest_run' should appear in file: " + content);
         assertTrue(content.contains("hover:"), "Map key 'hover' should appear in file: " + content);

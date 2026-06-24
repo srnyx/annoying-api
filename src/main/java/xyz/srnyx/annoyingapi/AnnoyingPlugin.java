@@ -80,8 +80,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
      * The {@link AnnoyingLibraryManager} for the plugin to manage {@link AnnoyingLibrary libraries}
+     * <br><i>Only {@code null} in unit tests
      */
-    @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
+    @Nullable public final AnnoyingLibraryManager libraryManager = createLibraryManager();
     /**
      * Loader for OkaeriConfig configs
      */
@@ -129,7 +130,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         LOGGER = getLogger();
 
         // Load Okaeri Configs
-        if (!libraryManager.loadLibrary(
+        if (libraryManager != null && !libraryManager.loadLibrary(
                 AnnoyingAPILibrary.XSERIES,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
@@ -137,6 +138,12 @@ public class AnnoyingPlugin extends JavaPlugin {
                 AnnoyingAPILibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) throw new RuntimeException("Failed to load Okaeri Configs");
 
         configLoader = new ConfigLoader(this);
+    }
+
+    // Exists to allow MockAnnoyingPlugin in unit tests to override
+    @Nullable
+    protected AnnoyingLibraryManager createLibraryManager() {
+        return new AnnoyingLibraryManager(this, "libs");
     }
 
     /**
@@ -149,7 +156,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         // Load required libraries
-        if (!libraryManager.loadLibrary(options.pluginOptions.libraries)) {
+        if (libraryManager != null && !libraryManager.loadLibrary(options.pluginOptions.libraries)) {
             log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because required libraries failed to load");
             disablePlugin();
             return;
@@ -293,7 +300,7 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Do automatic registration
         if (!packages.isEmpty()) {
             // Load Reflections library
-            libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
+            if (libraryManager != null) libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
 
             // Register classes
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
@@ -346,6 +353,19 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Enable/disable interval cache saving (depending on config)
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
+        // Send startup messages
+        sendStartupMessages();
+
+        // Check for updates
+        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
+        updateChecker.checkUpdate();
+
+        // Custom onEnable
+        enable();
+    }
+
+    // Separate method to allow MockAnnoyingPlugin in unit tests to override
+    protected void sendStartupMessages() {
         // Get start message colors
         final AnnoyingMessages annoyingMessages = getAnnoyingMessages();
         final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
@@ -355,7 +375,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Get start messages
         final PluginDescriptionFile description = getDescription();
-        final String nameVersion = name + " v" + description.getVersion();
+        final String nameVersion = getName() + " v" + description.getVersion();
         final String authors = "By " + String.join(", ", description.getAuthors());
         final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
         final int lineLength = Math.max(nameVersion.length(), authors.length());
@@ -367,13 +387,6 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(Level.INFO, primaryColor + nameVersion);
         log(Level.INFO, primaryColor + authors);
         log(Level.INFO, line);
-
-        // Check for updates
-        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
-        updateChecker.checkUpdate();
-
-        // Custom onEnable
-        enable();
     }
 
     /**

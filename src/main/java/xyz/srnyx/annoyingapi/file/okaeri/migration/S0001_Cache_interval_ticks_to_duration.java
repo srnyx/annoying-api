@@ -2,7 +2,6 @@ package xyz.srnyx.annoyingapi.file.okaeri.migration;
 
 import eu.okaeri.configs.exception.OkaeriConfigException;
 import eu.okaeri.configs.migrate.builtin.NamedMigration;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 
 import java.time.Duration;
 
@@ -20,7 +19,6 @@ public class S0001_Cache_interval_ticks_to_duration extends NamedMigration {
                     } catch (final OkaeriConfigException e) {
                         return false;
                     }
-                    AnnoyingPlugin.LOGGER.severe("interval: " + interval);
                     if (interval == null) return false;
 
                     // Convert to Duration

@@ -3,19 +3,14 @@ package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import eu.okaeri.configs.OkaeriConfig;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,10 +34,7 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
     }
 
     private <C extends OkaeriConfig> C load(Path dir, String yaml, Class<C> cls) throws IOException {
-        final Path file = ConfigTestSupport.writeYaml(dir, cls.getSimpleName() + ".yml", yaml);
-        return new ConfigBuilder(file.toFile())
-                .config(cls)
-                .build();
+        return loadConfig(dir, yaml, cls);
     }
 
     // ------------------------------------------------------------------ XMaterial
@@ -103,11 +95,8 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
     @Test
     void serializeXMaterial_writesName() throws IOException {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "mat_serial.yml", "");
-        new ConfigBuilder(new File(file.toString()))
-                .config(MaterialConfig.class)
-                .build();
         // Default is STONE → file should contain "STONE"
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, MaterialConfig.class);
 
         assertTrue(content.contains("STONE"), "Serialized file should contain 'STONE': " + content);
     }
@@ -115,8 +104,7 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
     @Test
     void serializeXSound_writesName() throws IOException {
         final Path file = ConfigTestSupport.writeYaml(tempDir, "snd_serial.yml", "");
-        new ConfigBuilder(new File(file.toString())).config(SoundConfig.class).build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, SoundConfig.class);
 
         assertTrue(content.contains(XSound.UI_BUTTON_CLICK.name()), "Serialized file should contain 'UI_BUTTON_CLICK': " + content);
     }

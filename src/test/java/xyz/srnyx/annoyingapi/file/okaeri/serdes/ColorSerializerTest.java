@@ -2,20 +2,15 @@ package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 
 import eu.okaeri.configs.OkaeriConfig;
 import org.bukkit.Color;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorFormat;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSpec;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,10 +38,8 @@ public class ColorSerializerTest extends MockBukkitTestSupport {
         public Color c = Color.RED;
     }
 
-    @SuppressWarnings("unchecked")
     private <C extends OkaeriConfig> C load(String yaml, Class<C> cls) throws IOException {
-        final Path file = ConfigTestSupport.writeYaml(tempDir, cls.getSimpleName() + ".yml", yaml);
-        return new ConfigBuilder(new File(file.toString())).config(cls).build();
+        return loadConfig(tempDir, yaml, cls);
     }
 
     // ------------------------------------------------------------------ NAME format
@@ -113,10 +106,7 @@ public class ColorSerializerTest extends MockBukkitTestSupport {
     void nameFormat_serializeRoundTrip_RED() throws IOException {
         // saveDefaults writes the default (Color.RED) using NAME format
         final Path file = ConfigTestSupport.writeYaml(tempDir, "nameRound.yml", "");
-        new ConfigBuilder(new File(file.toString()))
-                .config(NameFormatConfig.class)
-                .build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, NameFormatConfig.class);
 
         assertTrue(content.contains("RED"), "Serialized NAME format should contain 'RED': " + content);
         assertTrue(content.contains("color:"), "Serialized NAME format should contain 'color:' key: " + content);
@@ -184,8 +174,7 @@ public class ColorSerializerTest extends MockBukkitTestSupport {
     void customFormat_serializeRoundTrip_writesRgb() throws IOException {
         // saveDefaults with default Color.RED (CUSTOM) → writes red/green/blue keys
         final Path file = ConfigTestSupport.writeYaml(tempDir, "customRound.yml", "");
-        new ConfigBuilder(new File(file.toString())).config(CustomFormatConfig.class).build();
-        final String content = Files.readString(file, StandardCharsets.UTF_8);
+        final String content = buildAndReadFile(file, CustomFormatConfig.class);
 
         assertTrue(content.contains("red:"), "CUSTOM format should serialize with 'red:' key: " + content);
         assertTrue(content.contains("green:"), "CUSTOM format should serialize with 'green:' key: " + content);

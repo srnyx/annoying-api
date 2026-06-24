@@ -4,13 +4,10 @@ import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.exception.ValidationException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
-import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
-import xyz.srnyx.annoyingapi.file.okaeri.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.annotation.DurationRange;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.annotation.PatternCollection;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -39,14 +36,6 @@ public class AnnoyingConfigValidatorTest extends MockBukkitTestSupport {
     public static class PatternConfig extends OkaeriConfig {
         @PatternCollection("^[a-z]+$")
         public Set<String> tokens = new HashSet<>(Set.of("abc"));
-    }
-
-    // --- helper ---
-
-    @SuppressWarnings("unchecked")
-    private <C extends OkaeriConfig> C load(String yaml, Class<C> cls) throws IOException {
-        final Path p = ConfigTestSupport.writeYaml(tempDir, cls.getSimpleName() + ".yml", yaml);
-        return new ConfigBuilder(new File(p.toString())).config(cls).build();
     }
 
     // --- tests ---
@@ -81,36 +70,36 @@ public class AnnoyingConfigValidatorTest extends MockBukkitTestSupport {
 
     @Test
     void validDurationPassesIsValid() throws IOException {
-        final DurationConfig config = load("interval: PT30S", DurationConfig.class);
+        final DurationConfig config = loadConfig(tempDir, "interval: PT30S", DurationConfig.class);
         final AnnoyingConfigValidator validator = new AnnoyingConfigValidator();
         assertTrue(validator.isValid(config));
     }
 
     @Test
     void durationBelowMinThrowsValidationException() {
-        assertThrows(ValidationException.class, () -> load("interval: PT3S", DurationConfig.class));
+        assertThrows(ValidationException.class, () -> loadConfig(tempDir, "interval: PT3S", DurationConfig.class));
     }
 
     @Test
     void durationAboveMaxThrowsValidationException() {
-        assertThrows(ValidationException.class, () -> load("interval: PT2M", DurationMaxConfig.class));
+        assertThrows(ValidationException.class, () -> loadConfig(tempDir, "interval: PT2M", DurationMaxConfig.class));
     }
 
     @Test
     void validationExceptionMessageContainsFieldName() {
-        final ValidationException ex = assertThrows(ValidationException.class, () -> load("interval: PT3S", DurationConfig.class));
+        final ValidationException ex = assertThrows(ValidationException.class, () -> loadConfig(tempDir, "interval: PT3S", DurationConfig.class));
         assertTrue(ex.getMessage().contains("interval"), "Message: " + ex.getMessage());
     }
 
     @Test
     void validationExceptionMessageContainsViolatingValue() {
-        final ValidationException ex = assertThrows(ValidationException.class, () -> load("interval: PT3S", DurationConfig.class));
+        final ValidationException ex = assertThrows(ValidationException.class, () -> loadConfig(tempDir, "interval: PT3S", DurationConfig.class));
         assertTrue(ex.getMessage().contains("PT3S"), "Message: " + ex.getMessage());
     }
 
     @Test
     void validPatternCollectionPassesIsValid() throws IOException {
-        final PatternConfig config = load("tokens:\n  - abc\n  - xyz", PatternConfig.class);
+        final PatternConfig config = loadConfig(tempDir, "tokens:\n  - abc\n  - xyz", PatternConfig.class);
         final AnnoyingConfigValidator validator = new AnnoyingConfigValidator();
 
         assertTrue(validator.isValid(config));
@@ -118,12 +107,12 @@ public class AnnoyingConfigValidatorTest extends MockBukkitTestSupport {
 
     @Test
     void patternCollectionViolationThrowsValidationException() {
-        assertThrows(ValidationException.class, () -> load("tokens:\n  - ABC", PatternConfig.class));
+        assertThrows(ValidationException.class, () -> loadConfig(tempDir, "tokens:\n  - ABC", PatternConfig.class));
     }
 
     @Test
     void durationAtExactMinBoundPasses() throws IOException {
-        final DurationConfig config = load("interval: PT5S", DurationConfig.class);
+        final DurationConfig config = loadConfig(tempDir, "interval: PT5S", DurationConfig.class);
         final AnnoyingConfigValidator validator = new AnnoyingConfigValidator();
 
         assertTrue(validator.isValid(config));

@@ -2,8 +2,7 @@ package xyz.srnyx.annoyingapi.file.okaeri;
 
 import eu.okaeri.configs.migrate.ConfigMigration;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.CleanupMode;
-import org.junit.jupiter.api.io.TempDir;
+import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,17 +13,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class ConfigBuilderTest extends MockBukkitTestSupport {
-    @TempDir(cleanup = CleanupMode.NEVER)
-    Path tempDir;
-
     @Test
     void buildsExampleConfigFromClassAndLoadsExistingFile() throws IOException {
-        final Path pluginData = tempDir.resolve("builder-plugin");
-        ConfigTestSupport.writeYaml(pluginData, "config.yml", "");
+        final Path pluginData = PLUGIN.getDataFolder().toPath();
+        ConfigTestSupport.writeYaml(PLUGIN.getDataFolder().toPath(), "config.yml", "");
 
-        final ExampleConfig config = new ConfigBuilder(pluginData.resolve("config.yml").toFile())
-                .config(ExampleConfig.class)
-                .build();
+        final ExampleConfig config = configBuilder(pluginData.resolve("config.yml"), ExampleConfig.class).build();
 
         assertAll(
                 () -> assertEquals("example-identity", config.identity.name),
@@ -34,12 +28,12 @@ public class ConfigBuilderTest extends MockBukkitTestSupport {
 
     @Test
     void configInstanceOverloadReturnsTheSameInstance() {
-        final Path pluginData = tempDir.resolve("instance-plugin");
+        final Path pluginData = PLUGIN.getDataFolder().toPath();
         final Path configFile = pluginData.resolve("config.yml");
         final ExampleConfig config = new ExampleConfig();
         config.identity.setMemo("set-before-build");
 
-        final ExampleConfig loaded = new ConfigBuilder(configFile.toFile())
+        final ExampleConfig loaded = new ConfigBuilder(PLUGIN, configFile.toFile())
                 .config(config)
                 .build();
 
@@ -50,7 +44,7 @@ public class ConfigBuilderTest extends MockBukkitTestSupport {
 
     @Test
     void configureCallbackCanOverrideDefaultOrphanRemovalAndCustomMigrationsRun() throws IOException {
-        final Path configFile = ConfigTestSupport.writeYaml(tempDir, "custom.yml", """
+        final Path configFile = ConfigTestSupport.writeYaml(PLUGIN.getDataFolder().toPath(), "custom.yml", """
                 identity:
                   name: configured
                   build: 3
@@ -63,8 +57,7 @@ public class ConfigBuilderTest extends MockBukkitTestSupport {
             return true;
         };
 
-        final ExampleConfig loaded = new ConfigBuilder(configFile.toFile())
-                .config(ExampleConfig.class)
+        final ExampleConfig loaded = configBuilder(configFile, ExampleConfig.class)
                 .configure(configure -> configure.removeOrphans(false))
                 .configMigrations(migration)
                 .build();

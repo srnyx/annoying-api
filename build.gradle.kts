@@ -19,20 +19,11 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "0866cc0"
+    id("xyz.srnyx.gradle-galaxy") version "7047f3d"
     id("com.gradleup.shadow") version "9.4.2"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
-
-val javaVersion: JavaVersion = JavaVersion.VERSION_17
-
-spigotAPI(config = DependencyConfig(version = "1.8.8"))
-setupMC(javaSetupConfig = JavaSetupConfig(
-    group = "xyz.srnyx",
-    version = "5.2.1",
-    description = "General purpose API with tons of features",
-    javaVersion = javaVersion))
 
 // Runtime libraries
 val okaeriConfigsVersion: String = "df8ae69"
@@ -188,6 +179,15 @@ val runtimeLibraries = listOf(
         version = "42.7.11",
         relocations = listOf(Relocation("org.postgresql"))))
 
+val javaVersion: JavaVersion = JavaVersion.VERSION_17
+
+spigotAPI(config = DependencyConfig(version = "1.8.8"))
+setupMC(javaSetupConfig = JavaSetupConfig(
+    group = "xyz.srnyx",
+    version = "5.2.1",
+    description = "General purpose API with tons of features",
+    javaVersion = javaVersion))
+
 // Process runtime libraries
 processRuntimeLibraries(runtimeLibraries, RuntimeLibrariesConfig(
     configurations = listOf("compileOnlyApi", "testImplementation"),
@@ -208,31 +208,22 @@ dependencies {
 
     // Optional
     compileOnly("me.clip:placeholderapi:2.12.2")
-
-    // Testing
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.18:2.85.2")
-    testImplementation("org.mockito:mockito-core:5.11.0")
 }
 
 // Blossom (see java-templates module)
-sourceSets.main { blossom.javaSources { property("annoying_api_version", version.toString()) } }
+sourceSets.main {
+    blossom.javaSources { property("annoying_api_version", version.toString()) }
+}
 
 // Testing
-setupTesting(junitBomConfig = DependencyConfig(version = "6.1.0"))
-
-// Exclude spigot-api from test classpath so MockBukkit's paper-api 1.18.2 takes precedence
-configurations.named("testRuntimeClasspath") { exclude(group = "org.spigotmc", module = "spigot-api") }
-configurations.named("testCompileClasspath") { exclude(group = "org.spigotmc", module = "spigot-api") }
-
-// Silence missing Javadoc warnings
-tasks.withType<Javadoc> {
-    val options = options as StandardJavadocDocletOptions
-    options.addStringOption("Xdoclint:none", "-quiet")
-}
+setupMockBukkit(
+    junitBomConfig = DependencyConfig(version = "6.1.0"),
+    mockBukkitDependencyConfig = DependencyConfig(version = "3.9.0"))
 
 // Publishing
 setupPublishingEnv(publishingSimpleConfig(
     artifactId = "annoying-api",
+    silenceMissingJavadocWarnings = true,
     url = "https://annoying-api.srnyx.com",
     licenses = listOf(LicenseData.MIT),
     developers = listOf(DeveloperData.srnyx),
