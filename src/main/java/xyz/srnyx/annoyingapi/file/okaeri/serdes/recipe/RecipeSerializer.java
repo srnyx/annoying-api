@@ -1,5 +1,7 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
@@ -100,36 +102,39 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             // shapeless
             data.set("shapeless", true);
 
-            final Map<Character, Material> ingredientMap = new HashMap<>();
+            final BiMap<Character, Material> ingredientMap = HashBiMap.create();
 
-            // shape TODO: this may cause characters to change every load
+            // shape
             final StringBuilder[] rows = {new StringBuilder(), new StringBuilder(), new StringBuilder()};
             final List<ItemStack> ingredientList = shapeless.getIngredientList();
             for (int i = 0; i < ingredientList.size(); i++) {
-                Character key = null;
                 final Material material = ingredientList.get(i).getType();
 
-                // Get key from ingredient name
-                final String ingredient = material.name().toUpperCase();
-                for (int j = 0; j < ingredient.length(); j++) {
-                    key = ingredient.charAt(j);
-                    if (ingredientMap.containsKey(key)) continue;
-                    ingredientMap.put(key, material);
-                    break;
-                }
-
-                // All characters in ingredient name are taken
+                // Get existing key
+                Character key = ingredientMap.inverse().get(material);
                 if (key == null) {
-                    // Find first unused letter
-                    for (char c = 'A'; c <= 'Z'; c++) {
-                        if (ingredientMap.containsKey(c)) continue;
-                        key = c;
+                    // Get key from ingredient name
+                    final String ingredient = material.name().toUpperCase();
+                    for (int j = 0; j < ingredient.length(); j++) {
+                        key = ingredient.charAt(j);
+                        if (ingredientMap.containsKey(key)) continue;
                         ingredientMap.put(key, material);
                         break;
                     }
 
-                    // All letters are taken
-                    if (key == null) throw new IllegalStateException("Too many ingredients in shapeless recipe, cannot assign character key");
+                    // All characters in ingredient name are taken
+                    if (key == null) {
+                        // Find first unused letter
+                        for (char c = 'A'; c <= 'Z'; c++) {
+                            if (ingredientMap.containsKey(c)) continue;
+                            key = c;
+                            ingredientMap.put(key, material);
+                            break;
+                        }
+
+                        // All letters are taken
+                        if (key == null) throw new IllegalStateException("Too many ingredients in shapeless recipe, cannot assign character key");
+                    }
                 }
 
                 // Add to shape row

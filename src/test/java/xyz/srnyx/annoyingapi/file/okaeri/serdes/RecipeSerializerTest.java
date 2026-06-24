@@ -15,6 +15,7 @@ import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSpec;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -96,6 +97,24 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
         assertTrue(types.contains(Material.STONE));
         assertTrue(types.contains(Material.OAK_LOG));
         assertTrue(types.contains(Material.GOLD_INGOT));
+    }
+
+    @Test
+    void shapelessRecipe_SerializeMultipleLoads() throws IOException {
+        // Ingredient character keys shouldn't change every time the recipe is serialized
+        final ShapelessConfig config = loadShapeless("recipe:\n  shapeless: true\n  shape:\n    - \"ABC\"\n    - \"BBA\"\n  ingredients:\n    A: STONE\n    B: GOLD_BLOCK\n    C: GOLD_INGOT\n  result:\n    material: DIAMOND\n    amount: 1");
+        final Path file = tempDir.resolve(ShapelessConfig.class.getName() + ".yml");
+
+        // Load 1
+        final String contents1 = Files.readString(file);
+        assertTrue(contents1.contains("S: STONE"), "Serialized file should contain 'S: STONE': " + contents1);
+        assertTrue(contents1.contains("G: GOLD_BLOCK"), "Serialized file should contain 'G: GOLD_BLOCK': " + contents1);
+        assertTrue(contents1.contains("O: GOLD_INGOT"), "Serialized file should contain 'O: GOLD_INGOT': " + contents1);
+
+        // Load 2
+        config.load(true);
+        final String contents2 = Files.readString(file);
+        assertEquals(contents1, contents2, "Serialized file from load #2 should be identical to load #1: " + contents2);
     }
 
     @Test
@@ -193,8 +212,7 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
             shapeRow.append(key);
             ingredients.append("    ").append(key).append(": STONE\n");
         }
-        final String yaml = "recipe:\n  shapeless: true\n  shape:\n    - \"" + shapeRow + "\"\n  ingredients:\n"
-                + ingredients + "  result:\n    material: DIAMOND\n    amount: 1";
+        final String yaml = "recipe:\n  shapeless: true\n  shape:\n    - \"" + shapeRow + "\"\n  ingredients:\n" + ingredients + "  result:\n    material: DIAMOND\n    amount: 1";
         final ShapelessConfig config = loadShapeless(yaml);
 
         assertNotNull(config.recipe);

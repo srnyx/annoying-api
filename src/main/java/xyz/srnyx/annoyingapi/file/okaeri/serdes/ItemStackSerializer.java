@@ -168,7 +168,6 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
         // Meta stuff
         final ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            // TODO: name/lore: color stuff might be removed when re-serializing. might need custom ItemStackWrapper that keeps raw values stored. and switch to minimessage?
             // name
             final String name = data.get("name", String.class);
             if (name != null) meta.setDisplayName(BukkitUtility.color(name));
@@ -178,7 +177,6 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
             if (lore != null && !lore.isEmpty()) meta.setLore(BukkitUtility.colorCollection(lore));
 
             // enchantments
-            //TODO use XSeries because enchantments changed names between versions
             final Map<XEnchantment, Integer> enchantments = data.getAsMap("enchantments", XEnchantment.class, int.class);
             if (enchantments != null) for (final Map.Entry<XEnchantment, Integer> enchantment : enchantments.entrySet()) {
                 meta.addEnchant(enchantment.getKey().get(), enchantment.getValue(), true);
