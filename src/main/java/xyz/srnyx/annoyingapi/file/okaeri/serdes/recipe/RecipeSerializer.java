@@ -1,7 +1,5 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
@@ -102,7 +100,9 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             // shapeless
             data.set("shapeless", true);
 
-            final BiMap<Character, Material> ingredientMap = HashBiMap.create();
+            // Ingredients bimap (BiMap class doesn't exist during runtime)
+            final Map<Character, Material> characterToMaterial = new HashMap<>();
+            final Map<Material, Character> materialToCharacter = new HashMap<>();
 
             // shape
             final StringBuilder[] rows = {new StringBuilder(), new StringBuilder(), new StringBuilder()};
@@ -111,14 +111,15 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                 final Material material = ingredientList.get(i).getType();
 
                 // Get existing key
-                Character key = ingredientMap.inverse().get(material);
+                Character key = materialToCharacter.get(material);
                 if (key == null) {
                     // Get key from ingredient name
                     final String ingredient = material.name().toUpperCase();
                     for (int j = 0; j < ingredient.length(); j++) {
                         key = ingredient.charAt(j);
-                        if (ingredientMap.containsKey(key)) continue;
-                        ingredientMap.put(key, material);
+                        if (characterToMaterial.containsKey(key)) continue;
+                        characterToMaterial.put(key, material);
+                        materialToCharacter.put(material, key);
                         break;
                     }
 
@@ -126,13 +127,14 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                     if (key == null) {
                         // Find first unused letter
                         for (char c = 'A'; c <= 'Z'; c++) {
-                            if (ingredientMap.containsKey(c)) continue;
+                            if (characterToMaterial.containsKey(c)) continue;
                             key = c;
-                            ingredientMap.put(key, material);
+                            characterToMaterial.put(key, material);
+                            materialToCharacter.put(material, key);
                             break;
                         }
 
-                        // All letters are taken
+                        // All letters are taken (shouldn't happen: can't have more than 9 ingredients)
                         if (key == null) throw new IllegalStateException("Too many ingredients in shapeless recipe, cannot assign character key");
                     }
                 }
@@ -143,7 +145,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             data.set("shape", List.of(rows[0].toString(), rows[1].toString(), rows[2].toString()));
 
             // ingredients
-            data.set("ingredients", ingredientMap);
+            data.set("ingredients", characterToMaterial);
 
             return;
         }
