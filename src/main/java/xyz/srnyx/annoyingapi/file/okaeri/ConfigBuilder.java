@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_snake_case;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.*;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorAttachmentResolver;
@@ -21,6 +22,7 @@ import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipechoice.RecipeChoiceSeriali
 import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +40,10 @@ public class ConfigBuilder {
     @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
     @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
     private boolean renameKebabCaseToSnakeCase = true;
+    /**
+     * Whether to delete the old file in the {@code default} folder from legacy {@link AnnoyingResource}
+     */
+    private boolean deleteOldDefaultFile = true;
 
     public ConfigBuilder(@NotNull AnnoyingPlugin plugin, @NotNull File file) {
         this.plugin = plugin;
@@ -134,6 +140,12 @@ public class ConfigBuilder {
     }
 
     @NotNull
+    public ConfigBuilder deleteOldDefaultFile(boolean deleteOldDefaultFile) {
+        this.deleteOldDefaultFile = deleteOldDefaultFile;
+        return this;
+    }
+
+    @NotNull
     public <C> C build() {
         if (config == null) throw new IllegalStateException("Config must be set");
 
@@ -195,6 +207,13 @@ public class ConfigBuilder {
 
         // Manually save in-case no migrations occured
         config.save();
+
+        // Delete old default file if new file in plugin data folder
+        if (deleteOldDefaultFile) {
+            final Path dataFolder = plugin.getDataFolder().toPath();
+            final Path filePath = file.toPath();
+            if (filePath.startsWith(dataFolder)) plugin.deleteOldFile(Path.of("default").resolve(dataFolder.relativize(filePath)));
+        }
 
         return (C) config;
     }

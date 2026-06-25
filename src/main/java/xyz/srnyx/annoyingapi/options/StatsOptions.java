@@ -62,6 +62,10 @@ public class StatsOptions extends Stringable {
          * <br><i>This is overriden by {@link #loader} if both are provided.</i>
          */
         @Nullable public Integer id;
+        /**
+         * Whether to delete the old bstats.yml file when the plugin is loaded
+         */
+        public boolean deleteOldBStatsFile = true;
 
         /**
          * {@link #loader}
@@ -78,6 +82,15 @@ public class StatsOptions extends Stringable {
         @NotNull
         public StatsOptions.BStatsOptions id(int id) {
             this.id = id;
+            return this;
+        }
+
+        /**
+         * {@link #deleteOldBStatsFile}
+         */
+        @NotNull
+        public StatsOptions.BStatsOptions deleteOldBStatsFile(boolean deleteOldBStatsFile) {
+            this.deleteOldBStatsFile = deleteOldBStatsFile;
             return this;
         }
     }

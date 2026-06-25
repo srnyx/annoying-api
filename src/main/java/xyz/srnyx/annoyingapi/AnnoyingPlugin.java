@@ -49,6 +49,8 @@ import xyz.srnyx.javautilities.objects.SemanticVersion;
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
@@ -155,6 +157,12 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        // Delete outdated bstats.yml files
+        if (options.statsOptions.bStats.deleteOldBStatsFile) {
+            deleteOldFile(Path.of("bstats.yml"));
+            deleteOldFile(Path.of("default", "bstats.yml"));
+        }
+
         // Load required libraries
         if (libraryManager != null && !libraryManager.loadLibrary(options.pluginOptions.libraries)) {
             log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because required libraries failed to load");
@@ -727,6 +735,29 @@ public class AnnoyingPlugin extends JavaPlugin {
 
     public void logErrorTrack(@Nullable Object message) {
         logErrorTrack(null, message, null);
+    }
+
+    public void deleteOldFile(@NotNull Path path) {
+        final Path dataFolder = getDataFolder().toPath();
+        final Path fullPath = dataFolder.resolve(path);
+
+        // Delete file
+        try {
+            Files.deleteIfExists(fullPath);
+        } catch (final Exception e) {
+            log(Level.WARNING, "&cFailed to delete old &4" + path + "&c file! This file is no longer used and can be safely deleted.", e);
+        }
+
+        // Delete empty parent directories of old file
+        Path parent = fullPath.getParent();
+        while (parent != null && !parent.equals(dataFolder)) {
+            try {
+                Files.delete(parent);
+            } catch (final Exception e) {
+                break; // Stop if we can't delete a directory (probably not empty)
+            }
+            parent = parent.getParent();
+        }
     }
 
     /**
