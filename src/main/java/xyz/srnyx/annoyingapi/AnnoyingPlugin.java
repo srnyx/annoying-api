@@ -333,18 +333,18 @@ public class AnnoyingPlugin extends JavaPlugin {
                 }
 
                 @Override
-                public void setMessages(@NotNull AnnoyingMessages messages) {
+                public void accept(@NotNull AnnoyingMessages messages) {
                     this.messages = messages;
                 }
 
                 @Override @NotNull
-                public AnnoyingMessages getMessages() {
+                public AnnoyingMessages get() {
                     return messages;
                 }
             };
             provider.register();
         }
-        provider.setMessages(configLoader.build(options.messagesOptions.builder));
+        provider.accept(configLoader.build(options.messagesOptions.builder));
 
         // Manual stats registration
         registerBStatsManually();
@@ -409,7 +409,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public void reloadPlugin() {
         // Reload messages
         final MessagesProvider provider = getRegistrable(MessagesProvider.class);
-        if (provider != null) provider.getMessages().load(true);
+        if (provider != null) provider.get().load(true);
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;
@@ -548,7 +548,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull
     public final AnnoyingMessages getAnnoyingMessages() {
-        return getMessagesProvider().getMessages();
+        return getMessagesProvider().get();
     }
 
     /**
