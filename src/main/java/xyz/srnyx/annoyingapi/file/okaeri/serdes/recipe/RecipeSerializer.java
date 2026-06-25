@@ -209,7 +209,8 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             if (ingredient == null) throw new IllegalArgumentException("Missing required field: ingredient");
 
             // experience
-            final float experience = data.get("experience", float.class);
+            final Float experience = data.get("experience", Float.class);
+            if (experience == null) throw new IllegalArgumentException("Missing required field: experience");
 
             // cooking_time
             final Duration cookingTime = data.getOr("cooking_time", Duration.class, Duration.ofSeconds(10));

@@ -130,8 +130,8 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
                 }
 
                 // floats
-                if (CUSTOM_MODEL_DATA_COMPONENT_GET_FLAGS_METHOD != null) try {
-                    final List<?> floats = (List<?>) CUSTOM_MODEL_DATA_COMPONENT_GET_FLAGS_METHOD.invoke(component);
+                if (CUSTOM_MODEL_DATA_COMPONENT_GET_FLOATS_METHOD != null) try {
+                    final List<?> floats = (List<?>) CUSTOM_MODEL_DATA_COMPONENT_GET_FLOATS_METHOD.invoke(component);
                     if (!floats.isEmpty()) data.set("custom-model-data-components.floats", floats);
                 } catch (final Exception e) {
                     e.printStackTrace();

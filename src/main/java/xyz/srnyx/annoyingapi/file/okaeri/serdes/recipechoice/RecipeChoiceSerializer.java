@@ -71,6 +71,7 @@ public class RecipeChoiceSerializer implements ObjectSerializer<Object> {
 
             // choices
             final List<ItemStack> choices = data.getAsList("choices", ItemStack.class);
+            if (choices == null) throw new IllegalArgumentException("Missing required field: choices");
 
             try {
                 return EXACT_CHOICE_CONSTRUCTOR.newInstance(choices);
@@ -83,6 +84,7 @@ public class RecipeChoiceSerializer implements ObjectSerializer<Object> {
 
             // choices
             final List<Material> choices = data.getAsList("choices", Material.class);
+            if (choices == null) throw new IllegalArgumentException("Missing required field: choices");
 
             try {
                 return MATERIAL_CHOICE_CONSTRUCTOR.newInstance(choices);

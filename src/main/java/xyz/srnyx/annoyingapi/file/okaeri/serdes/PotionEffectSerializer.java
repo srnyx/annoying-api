@@ -9,7 +9,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_HAS_ICON_METHOD;
@@ -50,10 +52,16 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
         if (type == null) throw new IllegalArgumentException(EnumMatcher.suggest(typeName, POTION_EFFECT_TYPE_NAMES, 5));
 
         // duration, amplifier, ambient, particles
-        final int duration = data.get("duration", int.class);
-        final int amplifier = data.get("amplifier", int.class);
-        final boolean ambient = data.get("ambient", boolean.class);
-        final boolean particles = data.get("particles", boolean.class);
+        final List<String> missing = new ArrayList<>();
+        final Integer duration = data.get("duration", Integer.class);
+        if (duration == null) missing.add("duration");
+        final Integer amplifier = data.get("amplifier", Integer.class);
+        if (amplifier == null) missing.add("amplifier");
+        final Boolean ambient = data.get("ambient", Boolean.class);
+        if (ambient == null) missing.add("ambient");
+        final Boolean particles = data.get("particles", Boolean.class);
+        if (particles == null) missing.add("particles");
+        if (!missing.isEmpty()) throw new IllegalArgumentException("Missing required field(s): "+ String.join(", ", missing));
 
         // 1.13+ icon
         final Boolean icon = data.get("icon", Boolean.class);

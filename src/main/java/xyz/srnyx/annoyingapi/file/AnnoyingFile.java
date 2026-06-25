@@ -800,6 +800,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         public static <R extends Options<R>> Options<R> load(@NotNull ConfigurationSection section) {
             final Options<R> options = new Options<>();
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
+            if (section.contains("replace")) options.replace = section.getBoolean("replace");
             return options;
         }
 

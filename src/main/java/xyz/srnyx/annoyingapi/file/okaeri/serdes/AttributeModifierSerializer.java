@@ -82,16 +82,18 @@ public class AttributeModifierSerializer implements ObjectSerializer<Object> {
         Object slot;
         if (EQUIPMENT_SLOT_GROUP_ANY != null && EQUIPMENT_SLOT_GROUP_GET_BY_NAME_METHOD != null) {
             // 1.20.5+
-            try {
-                slot = EQUIPMENT_SLOT_GROUP_GET_BY_NAME_METHOD.invoke(null, data.get("slot", String.class));
+            slot = EQUIPMENT_SLOT_GROUP_ANY;
+            final String slotName = data.get("slot", String.class);
+            if (slotName != null) try {
+                slot = EQUIPMENT_SLOT_GROUP_GET_BY_NAME_METHOD.invoke(null, slotName);
             } catch (final Exception e) {
-                slot = EQUIPMENT_SLOT_GROUP_ANY;
                 e.printStackTrace();
             }
         } else {
             // 1.20.4-
             slot = data.get("slot", EquipmentSlot.class);
         }
+        if (slot == null) throw new IllegalArgumentException("Missing required field: slot");
 
         // Return constructed AttributeModifier
         final Object attributeModifier = RefAttributeModifier.constructAttributeModifier(plugin, name, amount, operation, slot);
