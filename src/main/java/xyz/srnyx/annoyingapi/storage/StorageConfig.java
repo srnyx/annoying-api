@@ -8,6 +8,7 @@ import eu.okaeri.validator.annotation.Nullable;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationTickFallback;
 import xyz.srnyx.javautilities.MapGenerator;
 
 import java.io.File;
@@ -166,7 +167,7 @@ public class StorageConfig extends OkaeriConfig {
         @Comment("By default (if null), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore")
         @Comment("To remove the table prefix, set it to an empty string ('')")
         @Comment("DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)")
-        @NotNull private String table_prefix = getDefaultTablePrefix();
+        @Nullable private String table_prefix = getDefaultTablePrefix();
 
         /**
          * Additional custom properties for the remote connection
@@ -237,7 +238,8 @@ public class StorageConfig extends OkaeriConfig {
          * The interval to save the cache (if {@link #save_on} contains {@link SaveOn#INTERVAL})
          */
         @Comment("The interval in which the cache will save to the database (only applicable if 'INTERVAL' is in 'save_on')")
-        @Comment("Make sure to specify units (s, m, h, etc.), else it will default to Minecraft ticks! :)")
+        @Comment("Make sure to specify units (s, m, h, etc.)!")
+        @DurationTickFallback
         @NotNull public Duration interval = Duration.ofMinutes(5);
 
         @org.jetbrains.annotations.NotNull

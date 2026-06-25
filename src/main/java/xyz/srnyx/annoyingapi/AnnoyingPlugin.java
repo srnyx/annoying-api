@@ -19,7 +19,6 @@ import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
-import xyz.srnyx.annoyingapi.file.okaeri.migration.S0001_Cache_interval_ticks_to_duration;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
@@ -577,8 +576,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public StorageConfig newStorageConfig(@NotNull String fileName) {
         return configLoader.build(configBuilder -> configBuilder
                 .config(new StorageConfig(this))
-                .file(fileName)
-                .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration()));
+                .file(fileName));
     }
 
     @Nullable

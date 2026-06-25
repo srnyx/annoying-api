@@ -16,6 +16,7 @@ import xyz.srnyx.annoyingapi.file.okaeri.migration.A0001_Rename_kebab_case_to_sn
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.*;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorAttachmentResolver;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeAttachmentResolver;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipechoice.RecipeChoiceSerializer;
@@ -165,6 +166,7 @@ public class ConfigBuilder {
                     // Custom serdes
                     registry -> {
                         registry.register(new ColorSerializer());
+                        registry.register(new DurationSerializer());
                         registry.register(new ColorAttachmentResolver());
                         registry.register(new RecipeSerializer(plugin));
                         registry.register(new RecipeAttachmentResolver());
