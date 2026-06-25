@@ -69,23 +69,23 @@ public class RefAttributeModifier {
      * @param   slot        {@link EquipmentSlot} or {@link RefEquipmentSlotGroup#EQUIPMENT_SLOT_GROUP_CLASS}
      */
     @Nullable
-    public static Object constructAttributeModifier(@Nullable Plugin plugin, @NotNull String name, double amount, @NotNull Object operation, @NotNull Object slot) {
+    public static Object constructAttributeModifier(@Nullable Plugin plugin, @NotNull String name, double amount, @NotNull Object operation, @Nullable Object slot) {
         // 1.21+
-        if (plugin != null && ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21 != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
+        if (plugin != null && slot != null && ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21 != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
             return ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), amount, operation, slot);
         } catch (final Exception e) {
             e.printStackTrace();
         }
 
         // 1.20.5+
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_20_5 != null) try {
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_20_5 != null && slot != null) try {
             return ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_20_5.newInstance(UUID.randomUUID(), name, amount, operation, slot);
         } catch (final Exception e) {
             e.printStackTrace();
         }
 
         // 1.13.2+
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2 != null) try {
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2 != null && slot != null) try {
             return ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2.newInstance(UUID.randomUUID(), name, amount, operation, slot);
         } catch (final Exception e) {
             e.printStackTrace();

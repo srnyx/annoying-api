@@ -93,7 +93,6 @@ public class AttributeModifierSerializer implements ObjectSerializer<Object> {
             // 1.20.4-
             slot = data.get("slot", EquipmentSlot.class);
         }
-        if (slot == null) throw new IllegalArgumentException("Missing required field: slot");
 
         // Return constructed AttributeModifier
         final Object attributeModifier = RefAttributeModifier.constructAttributeModifier(plugin, name, amount, operation, slot);
