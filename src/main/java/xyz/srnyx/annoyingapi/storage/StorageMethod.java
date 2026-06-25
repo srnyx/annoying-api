@@ -3,7 +3,8 @@ package xyz.srnyx.annoyingapi.storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
@@ -12,6 +13,7 @@ import xyz.srnyx.annoyingapi.storage.dialects.sql.MariaDBDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.MySQLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.PostgreSQLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLiteDialect;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -26,7 +28,7 @@ public enum StorageMethod {
     /**
      * H2 storage method
      */
-    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), RuntimeLibrary.H2),
+    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), AnnoyingAPILibrary.H2),
     /**
      * SQLite storage method
      */
@@ -42,7 +44,7 @@ public enum StorageMethod {
     /**
      * PostgreSQL storage method
      */
-    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", RuntimeLibrary.POSTGRESQL, 5432),
+    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", AnnoyingAPILibrary.POSTGRESQL, 5432),
     /**
      * JSON storage method
      */
@@ -67,9 +69,9 @@ public enum StorageMethod {
      */
     @Nullable public final Function<Path, String> url;
     /**
-     * The {@link RuntimeLibrary} to download/load if the method requires one
+     * The {@link AnnoyingLibrary} to download/load if the method requires one
      */
-    @Nullable public final RuntimeLibrary library;
+    @Nullable public final AnnoyingLibrary library;
     /**
      * The default port for the method (only for remote connections)
      */
@@ -83,7 +85,7 @@ public enum StorageMethod {
      * @param library   {@link #library}
      * @param url       {@link #url}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable RuntimeLibrary library) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = url;
@@ -100,7 +102,7 @@ public enum StorageMethod {
      * @param library     {@link #library}
      * @param defaultPort {@link #defaultPort}
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable RuntimeLibrary library, int defaultPort) {
+    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable AnnoyingLibrary library, int defaultPort) {
         this.dialect = dialect;
         this.driver = driver;
         this.url = file -> url;
@@ -157,10 +159,7 @@ public enum StorageMethod {
      */
     @NotNull
     public static StorageMethod get(@Nullable String name) {
-        if (name != null) try {
-            return valueOf(name.toUpperCase());
-        } catch (final IllegalArgumentException ignored) {}
-        return H2;
+        return Mapper.toEnum(name, StorageMethod.class).orElse(H2);
     }
 
     /**

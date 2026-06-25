@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.persistence;
 
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 

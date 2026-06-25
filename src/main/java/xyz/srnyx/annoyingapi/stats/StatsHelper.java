@@ -4,6 +4,7 @@ import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 
 
@@ -30,16 +31,17 @@ public class StatsHelper implements Annoyable {
     }
 
     public @NotNull String @Nullable [] getStorageCacheSaveOn() {
-        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.saveOn.stream()
+        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.getSaveOn().stream()
                 .map(Enum::name)
                 .toArray(String[]::new);
     }
 
     @Nullable
     public Long getStorageCacheInterval() {
-        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.interval;
+        return plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.interval.toMillis();
     }
 
+    //TODO
 //    @Nullable
 //    public Integer getStorageConfiguredTableCount() {
 //        return plugin.dataManager == null ? null : plugin.dataManager.dialect
@@ -47,17 +49,18 @@ public class StatsHelper implements Annoyable {
 
     @NotNull
     public String[] getMessagesPluginGlobalPlaceholdersKeys() {
-        return plugin.globalPlaceholders.keySet().toArray(new String[0]);
+        final AnnoyingMessages msgs = plugin.getAnnoyingMessages();
+        return msgs.plugin.global_placeholders.keySet().toArray(new String[0]);
     }
 
     @Nullable
     public String getMessagesPluginSplittersJson() {
-        return plugin.messages == null ? null : plugin.messages.getString(plugin.options.messagesOptions.keys.splitterJson);
+        return plugin.getAnnoyingMessages().plugin.splitters.json;
     }
 
     @Nullable
     public String getMessagesPluginSplittersPlaceholder() {
-        return plugin.messages == null ? null : plugin.messages.getString(plugin.options.messagesOptions.keys.splitterPlaceholder);
+        return plugin.getAnnoyingMessages().plugin.splitters.placeholder;
     }
 
     @Nullable

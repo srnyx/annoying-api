@@ -1,22 +1,23 @@
 package xyz.srnyx.annoyingapi.message;
 
+import com.cryptomorin.xseries.messages.Titles;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.command.AnnoyingSender;
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
+import xyz.srnyx.annoyingapi.message.json.AnnoyingJSON;
+import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
+import xyz.srnyx.annoyingapi.message.json.message.JsonMessage;
+import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -25,63 +26,54 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.RefClickEvent.RefAction.COPY_TO_CLIPBOARD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.PLAYER_SEND_TITLE_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefPlayer.RefSpigot.PLAYER_SPIGOT_SEND_MESSAGE_METHOD;
 
 
 /**
- * Represents a message from the {@link MessagesOptions#fileName} file
+ * Represents a message from the messages file
  */
-public class AnnoyingMessage {
+public class AnnoyingMessage extends Stringable {
     /**
      * The {@link AnnoyingPlugin} instance
      */
     @NotNull private final AnnoyingPlugin plugin;
     /**
-     * The key of the message in the messages file
+     * The value of the message in the messages file
      */
-    @NotNull private final String key;
+    @NotNull private final JsonMessage jsonMessage;
     /**
      * Whether to parse PAPI placeholders
      */
-    private final boolean parsePapiPlaceholders;
+    private boolean parsePapiPlaceholders;
     /**
      * The replacements for the message
      */
     @NotNull private final Set<Replacement> replacements = new HashSet<>();
     /**
-     * The cached splitter for placeholder parameters
-     */
-    @Nullable private String splitterPlaceholder;
-    /**
      * Cached components to improve performance
      * <br>Only used if the message doesn't contain {@code %command%}
-     * <br>This is reset if {@link #replacements} are modified
+     * <br>This is reset if {@link #parsePapiPlaceholders} or {@link #replacements} are modified
      */
-    @Nullable private BaseComponent[] components;
+    @NotNull private BaseComponent @Nullable [] components;
 
-    /**
-     * Constructs a new {@link AnnoyingMessage} with the specified key
-     *
-     * @param   plugin                  {@link #plugin}
-     * @param   key                     {@link #key}
-     * @param   parsePapiPlaceholders   {@link #parsePapiPlaceholders}
-     */
-    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key, boolean parsePapiPlaceholders) {
-        this.plugin = plugin;
-        this.key = key;
-        this.parsePapiPlaceholders = parsePapiPlaceholders;
-        plugin.globalPlaceholders.forEach((placeholder, value) -> replace("%" + placeholder + "%", value));
+    public AnnoyingMessage(@NotNull JsonMessage jsonMessage) {
+        this.plugin = jsonMessage.plugin;
+        this.jsonMessage = jsonMessage;
+        plugin.getAnnoyingMessages().plugin.global_placeholders.forEach((placeholder, placeholderValue) -> replace("%" + placeholder + "%", placeholderValue));
     }
 
-    /**
-     * Constructs a new {@link AnnoyingMessage} with the specified key and PAPI placeholders enabled
-     *
-     * @param   plugin  {@link #plugin}
-     * @param   key     {@link #key}
-     */
-    public AnnoyingMessage(@NotNull AnnoyingPlugin plugin, @NotNull String key) {
-        this(plugin, key, true);
+    public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull JsonMessage newMessage) {
+        this.plugin = message.plugin;
+        this.jsonMessage = newMessage;
+        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
+        this.replacements.addAll(message.replacements);
+    }
+
+    public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull String newMessage) {
+        this.plugin = message.plugin;
+        this.jsonMessage = new JsonChatMessage(plugin, newMessage);
+        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
+        this.replacements.addAll(message.replacements);
     }
 
     /**
@@ -90,26 +82,18 @@ public class AnnoyingMessage {
      * @param   message the {@link AnnoyingMessage} to copy
      */
     public AnnoyingMessage(@NotNull AnnoyingMessage message) {
-        this.plugin = message.plugin;
-        this.key = message.key;
-        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
-        this.replacements.addAll(message.replacements);
-        this.splitterPlaceholder = message.splitterPlaceholder;
-        this.components = message.components;
+        this(message, message.jsonMessage);
     }
 
     /**
-     * Constructs a new {@link AnnoyingMessage} from another {@link AnnoyingMessage} with a new key
-     *
-     * @param   message the {@link AnnoyingMessage} to copy
-     * @param   newKey  the new key to use
+     * @see #parsePapiPlaceholders
      */
-    public AnnoyingMessage(@NotNull AnnoyingMessage message, @NotNull String newKey) {
-        this.plugin = message.plugin;
-        this.key = newKey;
-        this.parsePapiPlaceholders = message.parsePapiPlaceholders;
-        this.replacements.addAll(message.replacements);
-        this.splitterPlaceholder = message.splitterPlaceholder;
+    @NotNull
+    public AnnoyingMessage parsePapiPlaceholders(boolean parsePapiPlaceholders) {
+        if (parsePapiPlaceholders == this.parsePapiPlaceholders) return this;
+        if (components != null) components = null; // Remove cached components
+        this.parsePapiPlaceholders = parsePapiPlaceholders;
+        return this;
     }
 
     /**
@@ -157,99 +141,73 @@ public class AnnoyingMessage {
      */
     @NotNull
     public BaseComponent[] getComponents(@Nullable AnnoyingSender sender) {
-        if (components != null) { //noinspection NullableProblems
-            return components; // Use cached components
-        }
-        final AnnoyingJSON json = new AnnoyingJSON();
+        // Use cached components
+        if (components != null) return components;
 
-        // Get messages file
-        final AnnoyingResource messages = plugin.messages;
-        if (messages == null) return json.build();
+        // Cast to JsonChatMessage
+        if (!(jsonMessage instanceof JsonChatMessage chatMessage)) throw new IllegalStateException("Message is not a chat message");
+
+        // Add %command% replacement
         replaceCommand(sender);
 
-        // Get player, splitterJson, & section
+        // Get player
         final Player player = sender == null || !sender.isPlayer ? null : sender.getPlayer();
-        final String splitterJson = plugin.getMessagesString(plugin.options.messagesOptions.keys.splitterJson);
-        final ConfigurationSection section = messages.getConfigurationSection(key);
 
-        // Single component
-        if (section == null) {
-            String string = messages.getString(key);
-            if (string == null) return json.append(key, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!").build();
-
-            // Process replacements
-            for (final Replacement replacement : replacements) string = replacement.process(string);
-            if (parsePapiPlaceholders) string = plugin.parsePapiPlaceholders(player, string);
-
-            // Build components
-            final String[] split = string.split(splitterJson, 3);
-            final BaseComponent[] newComponents = json.append(split[0], extractHover(split), ClickEvent.Action.SUGGEST_COMMAND, extractFunction(split)).build();
-
-            // Cache (if %command% not present) & return components
-            if (!string.contains("%command%")) components = newComponents;
-            return newComponents;
-        }
-
-        // Multiple components
-        boolean shouldCache = true;
-        for (final Map.Entry<String, Object> entry : section.getValues(false).entrySet()) {
-            final String subKey = entry.getKey();
-            final Object value = entry.getValue();
-            if (!(value instanceof String subMessage)) {
-                json.append(key + "." + subKey, "&cCheck &4" + plugin.options.messagesOptions.fileName + "&c!");
-                continue;
-            }
-
-            // Only cache if %command% not present
-            if (shouldCache && subMessage.contains("%command%")) shouldCache = false;
+        // Get JSON components
+        final AnnoyingJSON json = new AnnoyingJSON();
+        for (final Map.Entry<String, String> entry : chatMessage.components.entrySet()) {
+            final String key = entry.getKey();
+            String value = entry.getValue();
 
             // Process replacements
-            for (final Replacement replacement : replacements) subMessage = replacement.process(subMessage);
-            if (parsePapiPlaceholders) subMessage = plugin.parsePapiPlaceholders(player, subMessage);
+            for (final Replacement replacement : replacements) value = replacement.process(value);
 
-            // Get component parts
-            final String[] split = subMessage.split(splitterJson, 3);
-            final String display = split[0];
-            final String hover = extractHover(split);
-            final String function = extractFunction(split);
+            // Parse PAPI placeholders
+            if (parsePapiPlaceholders) value = plugin.parsePapiPlaceholders(player, value);
 
-            // No function component
-            if (function == null) {
-                json.append(display, hover);
-                continue;
+            final String[] split = value.split(plugin.getAnnoyingMessages().plugin.splitters.json, 3);
+            // Text
+            final String text = split[0];
+            // Hover
+            final String splitHover = split.length >= 2 ? split[1] : null;
+            final String hover = splitHover != null && BukkitUtility.stripUntranslatedColor(splitHover).isEmpty() ? null : splitHover;
+            // Action
+            final String splitAction = split.length >= 3 ? split[2] : null;
+            final String actionValue = splitAction != null && BukkitUtility.stripUntranslatedColor(splitAction).isEmpty() ? null : splitAction;
+
+            if (actionValue != null) {
+                // Suggest
+                if (key.startsWith("suggest")) {
+                    json.append(text, hover, ClickEvent.Action.SUGGEST_COMMAND, actionValue);
+                    continue;
+                }
+
+                // Copy
+                if (COPY_TO_CLIPBOARD != null && key.startsWith("copy")) {
+                    json.append(text, hover, COPY_TO_CLIPBOARD, actionValue);
+                    continue;
+                }
+
+                // Chat
+                if (key.startsWith("chat")) {
+                    json.append(text, hover, ClickEvent.Action.RUN_COMMAND, actionValue);
+                    continue;
+                }
+
+                // Web
+                if (key.startsWith("web")) {
+                    json.append(text, hover, ClickEvent.Action.OPEN_URL, actionValue);
+                    continue;
+                }
             }
 
-            // Prompt component
-            if (subKey.startsWith("suggest")) {
-                json.append(display, hover, ClickEvent.Action.SUGGEST_COMMAND, function);
-                continue;
-            }
-
-            // Clipboard component
-            if (COPY_TO_CLIPBOARD != null && subKey.startsWith("copy")) {
-                json.append(display, hover, COPY_TO_CLIPBOARD, function);
-                continue;
-            }
-
-            // Chat component
-            if (subKey.startsWith("chat")) {
-                json.append(display, hover, ClickEvent.Action.RUN_COMMAND, function);
-                continue;
-            }
-
-            // Web component
-            if (subKey.startsWith("web")) {
-                json.append(display, hover, ClickEvent.Action.OPEN_URL, function);
-                continue;
-            }
-
-            // Text component
-            json.append(display, hover);
+            // Text
+            json.append(text, hover);
         }
 
         // Build, cache, & return components
         final BaseComponent[] newComponents = json.build();
-        if (shouldCache) components = newComponents;
+        if (chatMessage.shouldCache()) components = newComponents;
         return newComponents;
     }
 
@@ -331,9 +289,10 @@ public class AnnoyingMessage {
             }
 
             // Title and subtitle (full title)
+            if (!(jsonMessage instanceof JsonTitleMessage titleMessage)) throw new IllegalStateException("DEVELOPER: JsonMessage is not a JsonTitleMessage");
             broadcastTitle(
-                    new AnnoyingMessage(this, key + ".title").toString(sender),
-                    new AnnoyingMessage(this, key + ".subtitle").toString(sender),
+                    new AnnoyingMessage(this, titleMessage.title).toString(sender),
+                    new AnnoyingMessage(this, titleMessage.subtitle).toString(sender),
                     fadeIn, stay, fadeOut);
             return;
         }
@@ -452,32 +411,6 @@ public class AnnoyingMessage {
     }
 
     /**
-     * Extracts the hover component from the specified {@link String} array. This will return {@code null} if the hover component is empty (stripped of color)
-     *
-     * @param   split   the {@link String} array to extract the hover component from
-     *
-     * @return          the hover component, or {@code null} if the hover component is empty
-     */
-    @Nullable
-    private String extractHover(@NotNull String[] split) {
-        final String hover = split.length >= 2 ? split[1] : null;
-        return hover != null && BukkitUtility.stripUntranslatedColor(hover).isEmpty() ? null : hover;
-    }
-
-    /**
-     * Extracts the function from the specified {@link String} array. This will return {@code null} if the function is empty (stripped of color)
-     *
-     * @param   split   the {@link String} array to extract the function from
-     *
-     * @return          the function, or {@code null} if the function is empty
-     */
-    @Nullable
-    private String extractFunction(@NotNull String[] split) {
-        final String function = split.length >= 3 ? split[2] : null;
-        return function != null && BukkitUtility.stripUntranslatedColor(function).isEmpty() ? null : function;
-    }
-
-    /**
      * Broadcasts the specified title and subtitle to all online players. {@code fadeIn}, {@code stay}, and {@code fadeOut} are 1.11+ only and will be ignored on older versions
      *
      * @param   title       the title to broadcast
@@ -490,17 +423,7 @@ public class AnnoyingMessage {
      * @see                 #broadcast(BroadcastType)
      */
     private void broadcastTitle(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
-        final Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-        if (PLAYER_SEND_TITLE_METHOD != null) {
-            try {
-                for (final Player player : players) PLAYER_SEND_TITLE_METHOD.invoke(player, title, subtitle, fadeIn, stay, fadeOut);
-            } catch (final IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-        //noinspection deprecation
-        players.forEach(player -> player.sendTitle(title, subtitle));
+        for (final Player player : Bukkit.getOnlinePlayers()) Titles.sendTitle(player, fadeIn, stay, fadeOut, title, subtitle);
     }
 
     /**
@@ -537,13 +460,13 @@ public class AnnoyingMessage {
             if (type == null) return input.replace(before, value);
 
             // Parameter placeholder
-            if (splitterPlaceholder == null) splitterPlaceholder = plugin.getMessagesString(plugin.options.messagesOptions.keys.splitterPlaceholder);
-            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + splitterPlaceholder) + ".*?%").matcher(input);
+            final String placeholderSplitter = plugin.getAnnoyingMessages().plugin.splitters.placeholder;
+            final Matcher matcher = Pattern.compile("%" + Pattern.quote(before.replace("%", "") + placeholderSplitter) + ".*?%").matcher(input);
             final String match;
             final String parameter;
             if (matcher.find()) { // find the placeholder (%<placeholder><splitter><input>%) in the message
                 match = matcher.group(); // get the placeholder
-                final String split = match.split(splitterPlaceholder, 2)[1]; // get the input part of the placeholder
+                final String split = match.split(placeholderSplitter, 2)[1]; // get the input part of the placeholder
                 parameter = split.substring(0, split.length() - 1); // remove the closing % from the input part
             } else {
                 match = before; // use the original placeholder

@@ -1,12 +1,12 @@
 package xyz.srnyx.annoyingapi;
 
+import eu.okaeri.configs.OkaeriConfig;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.byteflux.libby.relocation.Relocation;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -18,8 +18,13 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
+import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.S0001_Cache_interval_ticks_to_duration;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
+import xyz.srnyx.annoyingapi.message.MessagesProvider;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
 import xyz.srnyx.annoyingapi.stats.StatsHelper;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
@@ -35,9 +40,7 @@ import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
 import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
-import xyz.srnyx.annoyingapi.file.AnnoyingResource;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.MapGenerator;
@@ -59,8 +62,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("EmptyMethod")
 public class AnnoyingPlugin extends JavaPlugin {
     /**
-     * The {@link Logger} for the plugin
-     * <br>Uses temporary initialization until the {@link AnnoyingPlugin plugin} is constructed (loaded)
+     * Uses temporary initialization until the {@link AnnoyingPlugin plugin} is constructed (loaded)
      */
     @NotNull public static Logger LOGGER = new Logger("AnnoyingAPI - ?", null) {
         @Override
@@ -69,39 +71,26 @@ public class AnnoyingPlugin extends JavaPlugin {
             super.log(logRecord);
         }
     };
-    /**
-     * The Minecraft version the server is running
-     */
+    @NotNull public static final ServerSoftware SERVER_SOFTWARE = ServerSoftware.get();
     @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
-    /**
-     * Whether the server is running on Folia
-     */
-    public static boolean FOLIA = false;
-
-    static {
-        try {
-            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
-            FOLIA = true;
-        } catch (final ClassNotFoundException ignored) {}
-    }
 
     /**
      * The API options for the plugin
      */
     @NotNull public final AnnoyingOptions options = AnnoyingOptions.load(getResource("plugin.yml"));
     /**
-     * The {@link AnnoyingLibraryManager} for the plugin to manage {@link RuntimeLibrary libraries}
+     * The {@link AnnoyingLibraryManager} for the plugin to manage {@link AnnoyingLibrary libraries}
+     * <br><i>Only {@code null} in unit tests
      */
-    @NotNull public final AnnoyingLibraryManager libraryManager = new AnnoyingLibraryManager(this, "libs");
+    @Nullable public final AnnoyingLibraryManager libraryManager = createLibraryManager();
+    /**
+     * Loader for OkaeriConfig configs
+     */
+    @NotNull public final ConfigLoader configLoader;
+    /**
+     * Helper for stats providers (bStats, FastStats, etc.)
+     */
     @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
-    /**
-     * The {@link AnnoyingResource} that contains the plugin's messages
-     */
-    @Nullable public AnnoyingResource messages;
-    /**
-     * {@link MessagesOptions.MessageKeys#globalPlaceholders}
-     */
-    @NotNull public final Map<String, String> globalPlaceholders = new HashMap<>();
     /**
      * The {@link DataManager} for the plugin
      */
@@ -139,6 +128,22 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public AnnoyingPlugin() {
         LOGGER = getLogger();
+
+        // Load Okaeri Configs
+        if (libraryManager != null && !libraryManager.loadLibrary(
+                AnnoyingAPILibrary.XSERIES,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_BUKKIT,
+                AnnoyingAPILibrary.OKAERI_CONFIGS_VALIDATOR_OKAERI)) throw new RuntimeException("Failed to load Okaeri Configs");
+
+        configLoader = new ConfigLoader(this);
+    }
+
+    // Exists to allow MockAnnoyingPlugin in unit tests to override
+    @Nullable
+    protected AnnoyingLibraryManager createLibraryManager() {
+        return new AnnoyingLibraryManager(this, "libs");
     }
 
     /**
@@ -150,9 +155,17 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onLoad() {
+        // Load required libraries
+        if (libraryManager != null && !libraryManager.loadLibrary(options.pluginOptions.libraries)) {
+            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because required libraries failed to load");
+            disablePlugin();
+            return;
+        }
+
         selectorManager.registerSelectors();
-        loadMessages();
         loadDataManger(null, false);
+
+        // Run custom onLoad
         load();
     }
 
@@ -189,7 +202,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     public final void onDisable() {
         if (dataManager != null) {
             // Save cache
-            if (dataManager.storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.DISABLE)) dataManager.dialect.saveCache();
+            if (dataManager.storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.DISABLE)) dataManager.dialect.saveCache();
             // Close connection (if SQL)
             if (dataManager.dialect instanceof SQLDialect) try {
                 ((SQLDialect) dataManager.dialect).connection.close();
@@ -275,18 +288,94 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
-        // Load required libraries
-        options.pluginOptions.libraries.forEach(libraryManager::loadLibrary);
+        // Register manually-defined Registrables & PAPI expansion
+        options.registrationOptions.toRegister.forEach(Registrable::register);
+        papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+        if (papiInstalled) options.registrationOptions.getPapiExpansionToRegister().ifPresent(PlaceholderExpansion::register);
 
+        // Get packages for automatic registration
+        final Set<String> packages = new HashSet<>(options.registrationOptions.automaticRegistration.packages);
+        if (options.registrationOptions.automaticRegistration.addPrimaryPackage) packages.add(getClass().getPackageName());
+
+        // Do automatic registration
+        if (!packages.isEmpty()) {
+            // Load Reflections library
+            if (libraryManager != null) libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
+
+            // Register classes
+            final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
+            for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
+                // Ignore interfaces, abstract classes, and anonymous classes
+                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers()) || clazz.isAnonymousClass()) continue;
+                // Ignore classes with @Registrable.Ignore and specific ignored classes
+                if (clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
+
+                // Register class
+                final String className = clazz.getSimpleName();
+                log(Level.INFO, "Automatically registering " + className);
+                try {
+                    clazz.getConstructor(this.getClass()).newInstance(this).register();
+                } catch (final Throwable t) {
+                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + className, t);
+                }
+            }
+        }
+
+        // Load messages
+        MessagesProvider provider = getRegistrable(MessagesProvider.class);
+        if (provider == null) {
+            provider = new MessagesProvider() {
+                private AnnoyingMessages messages;
+
+                @Override @NotNull
+                public AnnoyingPlugin getAnnoyingPlugin() {
+                    return AnnoyingPlugin.this;
+                }
+
+                @Override
+                public void setMessages(@NotNull AnnoyingMessages messages) {
+                    this.messages = messages;
+                }
+
+                @Override @NotNull
+                public AnnoyingMessages getMessages() {
+                    return messages;
+                }
+            };
+            provider.register();
+        }
+        provider.setMessages(configLoader.build(options.messagesOptions.builder));
+
+        // Manual stats registration
+        registerBStatsManually();
+        registerFastStatsManually();
+
+        // Enable/disable interval cache saving (depending on config)
+        if (dataManager != null) dataManager.toggleIntervalCacheSaving();
+
+        // Send startup messages
+        sendStartupMessages();
+
+        // Check for updates
+        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
+        updateChecker.checkUpdate();
+
+        // Custom onEnable
+        enable();
+    }
+
+    // Separate method to allow MockAnnoyingPlugin in unit tests to override
+    protected void sendStartupMessages() {
         // Get start message colors
-        final String primaryColorString = globalPlaceholders.get("p");
+        final AnnoyingMessages annoyingMessages = getAnnoyingMessages();
+        final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
         final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = globalPlaceholders.get("s");
+        final String secondaryColorString = annoyingMessages.plugin.global_placeholders.get("s");
         final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
 
         // Get start messages
         final PluginDescriptionFile description = getDescription();
-        final String nameVersion = name + " v" + description.getVersion();
+        final String nameVersion = getName() + " v" + description.getVersion();
         final String authors = "By " + String.join(", ", description.getAuthors());
         final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
         final int lineLength = Math.max(nameVersion.length(), authors.length());
@@ -298,48 +387,6 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(Level.INFO, primaryColor + nameVersion);
         log(Level.INFO, primaryColor + authors);
         log(Level.INFO, line);
-
-        // Check for updates
-        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
-        updateChecker.checkUpdate();
-
-        // Register manually-defined Registrables & PAPI expansion
-        options.registrationOptions.toRegister.forEach(Registrable::register);
-        papiInstalled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
-        if (papiInstalled) options.registrationOptions.getPapiExpansionToRegister().ifPresent(PlaceholderExpansion::register);
-
-        // Automatic registration
-        final Set<String> packages = options.registrationOptions.automaticRegistration.packages;
-        if (!packages.isEmpty()) {
-            // Load Reflections library
-            libraryManager.loadLibrary(RuntimeLibrary.REFLECTIONS);
-
-            // Register classes
-            final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
-            for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
-                // Ignore interfaces and abstract classes
-                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
-                // Ignore classes with @Registrable.Ignore and specific ignored classes
-                if (clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
-
-                // Register class
-                try {
-                    clazz.getConstructor(this.getClass()).newInstance(this).register();
-                } catch (final Throwable t) {
-                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + clazz.getSimpleName(), t);
-                }
-            }
-        }
-
-        // Manual stats registration
-        registerBStatsManually();
-        registerFastStatsManually();
-
-        // Enable/disable interval cache saving (depending on config)
-        if (dataManager != null) dataManager.toggleIntervalCacheSaving();
-
-        // Custom onEnable
-        enable();
     }
 
     /**
@@ -353,21 +400,24 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     /**
-     * Reloads the plugin ({@link #messages}, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
+     * Reloads the plugin (messages, etc...). This will not trigger {@link #onLoad()} or {@link #onEnable()}
      * <p>This is not run automatically (such as {@link #onEnable()} and {@link #onDisable()}), it is to be used manually by the plugin itself (ex: in a {@code /reload} command)
      * <p><b>Do not override this method! Override {@link #reload()} instead</b>
      *
      * @see #reload()
      */
     public void reloadPlugin() {
-        loadMessages();
+        // Reload messages
+        final MessagesProvider provider = getRegistrable(MessagesProvider.class);
+        if (provider != null) provider.getMessages().load(true);
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;
         boolean saveCache = false;
         if (options.dataOptions.enabled) {
-            storageConfig = new StorageConfig(new AnnoyingResource(this, "storage.yml"));
-            saveCache = storageConfig.cache.saveOn.contains(StorageConfig.SaveOn.RELOAD) || (dataManager != null && dataManager.storageConfig.cache.enabled && !storageConfig.cache.enabled);
+            storageConfig = newStorageConfig();
+            if (storageConfig == null) throw new RuntimeException("Failed to load storage config");
+            saveCache = storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.RELOAD) || (dataManager != null && dataManager.storageConfig.cache.enabled && !storageConfig.cache.enabled);
         }
         // Load data manager
         loadDataManger(storageConfig, saveCache);
@@ -488,27 +538,17 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    /**
-     * Loads the messages.yml file to {@link #messages} and {@link #globalPlaceholders}
-     */
-    public void loadMessages() {
-        messages = new AnnoyingResource(this, options.messagesOptions.fileName, options.messagesOptions.fileOptions);
-        // globalPlaceholders
-        globalPlaceholders.clear();
-        final ConfigurationSection section = messages.getConfigurationSection(options.messagesOptions.keys.globalPlaceholders);
-        if (section != null) section.getKeys(false).forEach(key -> globalPlaceholders.put(key, section.getString(key)));
+    @NotNull
+    public MessagesProvider getMessagesProvider() {
+        return Objects.requireNonNull(getRegistrable(MessagesProvider.class), "Messages not loaded yet");
     }
 
     /**
-     * Gets a string from {@link #messages} with the specified key
-     *
-     * @param   key the key of the string
-     *
-     * @return      the string, or the {@code key} if {@link #messages} is {@code null} or the string is not found
+     * Not overrideable as it would cause a {@link NoClassDefFoundError} for {@link OkaeriConfig} in consumers!
      */
     @NotNull
-    public String getMessagesString(@NotNull String key) {
-        return messages != null ? messages.getString(key, key) : key;
+    public final AnnoyingMessages getAnnoyingMessages() {
+        return getMessagesProvider().getMessages();
     }
 
     /**
@@ -523,6 +563,19 @@ public class AnnoyingPlugin extends JavaPlugin {
     public String parsePapiPlaceholders(@Nullable OfflinePlayer player, @Nullable String message) {
         if (message == null) return "null";
         return papiInstalled ? PlaceholderAPI.setPlaceholders(player, message) : message;
+    }
+
+    @Nullable
+    public StorageConfig newStorageConfig(@NotNull String fileName) {
+        return configLoader.build(configBuilder -> configBuilder
+                .config(new StorageConfig(this))
+                .file(fileName)
+                .internalStateMigrations(new S0001_Cache_interval_ticks_to_duration()));
+    }
+
+    @Nullable
+    public StorageConfig newStorageConfig() {
+        return newStorageConfig("storage.yml");
     }
 
     /**
@@ -553,9 +606,15 @@ public class AnnoyingPlugin extends JavaPlugin {
             return;
         }
 
+        // Get storage config
+        if (storageConfig == null) {
+            storageConfig = newStorageConfig();
+            if (storageConfig == null) throw new RuntimeException("Failed to load storage config");
+        }
+
         // Connect to database
         try {
-            dataManager = new DataManager(storageConfig == null ? new StorageConfig(new AnnoyingResource(this, "storage.yml")) : storageConfig);
+            dataManager = new DataManager(storageConfig);
         } catch (final ConnectionException e) {
             dataManager = null;
             log(Level.SEVERE, "&4storage.yml &8|&c Failed to connect to database! URL: '&4" + e.url + "&c' Properties: &4" + e.getPropertiesRedacted(), e);

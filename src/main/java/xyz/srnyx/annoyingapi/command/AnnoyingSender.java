@@ -10,9 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.command.selector.Selector;
 import xyz.srnyx.annoyingapi.command.selector.SelectorOptional;
-import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.options.MessagesOptions;
+import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.javautilities.objects.Arguments;
 
@@ -105,17 +104,17 @@ public class AnnoyingSender extends Arguments implements Annoyable {
     }
 
     /**
-     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link MessagesOptions.MessageKeys#playerOnly} message
+     * Checks if the {@link CommandSender} is a {@link Player}. If they aren't, it sends the {@link AnnoyingMessages.Error#player_only} message
      *
      * @return  whether the {@link CommandSender} is a {@link Player}
      */
     public boolean checkPlayer() {
-        if (!isPlayer) new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.playerOnly).send(this);
+        if (!isPlayer) plugin.getAnnoyingMessages().error.player_only.newAnnoyingMessage().send(this);
         return isPlayer;
     }
 
     /**
-     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link MessagesOptions.MessageKeys#noPermission} message
+     * Checks if the {@link CommandSender} has the specified permission. If they don't, it sends the {@link AnnoyingMessages.Error#no_permission} message
      *
      * @param   permission  the permission to check
      *
@@ -123,7 +122,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      */
     public boolean checkPermission(@NotNull String permission) {
         final boolean hasPermission = cmdSender.hasPermission(permission);
-        if (!hasPermission) new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.noPermission)
+        if (!hasPermission) plugin.getAnnoyingMessages().error.no_permission.newAnnoyingMessage()
                 .replace("%permission%", permission)
                 .send(this);
         return hasPermission;
@@ -412,7 +411,7 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      * @param   argument    the argument to replace {@code %argument%} with
      */
     public void invalidArgument(@Nullable Object argument) {
-        new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.invalidArgument)
+        plugin.getAnnoyingMessages().error.invalid_argument.newAnnoyingMessage()
                 .replace("%argument%", String.valueOf(argument))
                 .send(this);
     }
@@ -433,6 +432,6 @@ public class AnnoyingSender extends Arguments implements Annoyable {
      * Sends the invalid arguments message
      */
     public void invalidArguments() {
-        new AnnoyingMessage(plugin, plugin.options.messagesOptions.keys.invalidArguments).send(this);
+        plugin.getAnnoyingMessages().error.invalid_arguments.newAnnoyingMessage().send(this);
     }
 }

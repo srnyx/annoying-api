@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.message;
+package xyz.srnyx.annoyingapi.message.json;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -15,7 +15,7 @@ import java.util.List;
 
 
 /**
- * Class to manage and build JSON messages ({@link BaseComponent}[])
+ * Class to manage and build JSON messages ({@link BaseComponent BaseComponent[]})
  */
 public class AnnoyingJSON {
     /**

@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.hover.content;
 
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Constructor;

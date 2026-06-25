@@ -8,7 +8,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.library.RuntimeLibrary;
+import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
+
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -38,7 +39,7 @@ public class ItemData extends Data<ItemStack> {
     }
 
     /**
-     * If the {@link RuntimeLibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given supplier and return the result
+     * If the {@link AnnoyingAPILibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given supplier and return the result
      *
      * @param   supplier    the supplier to attempt
      *
@@ -46,17 +47,17 @@ public class ItemData extends Data<ItemStack> {
      */
     @NotNull
     public Optional<String> attemptItemNbtApi(@NotNull Supplier<String> supplier) {
-        plugin.libraryManager.loadIfNotLoaded(RuntimeLibrary.ITEM_NBT_API);
+        if (plugin.libraryManager != null) plugin.libraryManager.loadIfNotLoaded(AnnoyingAPILibrary.ITEM_NBT_API);
         return Optional.ofNullable(supplier.get());
     }
 
     /**
-     * If the {@link RuntimeLibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given runnable
+     * If the {@link AnnoyingAPILibrary#ITEM_NBT_API} library isn't loaded, load it. Then attempt to run the given runnable
      *
      * @param   runnable    the runnable to attempt
      */
     public void attemptItemNbtApi(@NotNull Runnable runnable) {
-        plugin.libraryManager.loadIfNotLoaded(RuntimeLibrary.ITEM_NBT_API);
+        if (plugin.libraryManager != null) plugin.libraryManager.loadIfNotLoaded(AnnoyingAPILibrary.ITEM_NBT_API);
         runnable.run();
     }
 

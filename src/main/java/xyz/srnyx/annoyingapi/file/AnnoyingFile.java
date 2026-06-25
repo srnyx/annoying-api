@@ -1,12 +1,14 @@
 package xyz.srnyx.annoyingapi.file;
 
+import com.cryptomorin.xseries.XEnchantment;
+import com.cryptomorin.xseries.XPotion;
+import com.cryptomorin.xseries.XSound;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -14,12 +16,10 @@ import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefRegistry;
-import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefSoundCategory;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
-import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 import xyz.srnyx.javautilities.FileUtility;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.io.File;
@@ -27,11 +27,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 
@@ -43,7 +39,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRec
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefDamageable.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.*;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_6;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 
 
 /**
@@ -54,7 +50,7 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect
  * @see         AnnoyingResource
  * @see         AnnoyingData
  */
-@SuppressWarnings("unchecked")
+@Deprecated @SuppressWarnings("unchecked")
 public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     /**
      * The {@link AnnoyingPlugin} instance
@@ -282,12 +278,10 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      * @return          the {@link Sound} or empty if it's invalid
      */
     @NotNull
-    public Optional<Sound> getSound(@NotNull String path) {
-        final String sound = getString(path);
-        if (sound != null) try {
-            return Optional.of(Sound.valueOf(sound.toUpperCase()));
-        } catch (final IllegalArgumentException ignored) {}
-        return getDef(path);
+    public Optional<XSound> getSound(@NotNull String path) {
+        return Optional.ofNullable(getString(path))
+                .flatMap(XSound::of)
+                .or(() -> getDef(path));
     }
 
     /**
@@ -300,16 +294,16 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
     @NotNull
     public Optional<PlayableSound> getPlayableSound(@NotNull String path) {
         final Optional<PlayableSound> def = getDef(path);
-        final Optional<Sound> sound = getSound(path + ".sound");
+        final Optional<XSound> sound = getSound(path + ".sound");
         if (sound.isEmpty()) return def;
         final ConfigurationSection section = getConfigurationSection(path);
         if (section == null) return def;
 
         // Get category
-        Enum<?> category = null;
+        XSound.Category category = null;
         final String categoryString = section.getString("category");
         if (categoryString != null) try {
-            category = ReflectionUtility.getEnumValue(1, 11, 0, RefSoundCategory.SOUND_CATEGORY_ENUM, categoryString.toUpperCase());
+            category = Mapper.toEnum(categoryString, XSound.Category.class).orElse(null);
         } catch (final IllegalArgumentException e) {
             log(Level.WARNING, path, "&cInvalid sound category: &4" + categoryString);
         }
@@ -352,12 +346,12 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Get type
-        final Optional<PotionEffectType> typeOptional = RefRegistry.getEffect(typeString);
+        final Optional<XPotion> typeOptional = XPotion.of(typeString);
         if (typeOptional.isEmpty()) {
             if (log) log(Level.WARNING, path, "&cInvalid potion effect type: &4" + typeString);
             return def;
         }
-        final PotionEffectType type = typeOptional.get();
+        final PotionEffectType type = typeOptional.get().getPotionEffectType();
 
         // Get duration, amplifier, ambient, & particles
         final int duration = section.getInt("duration", 1);
@@ -366,8 +360,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final boolean particles = section.getBoolean("particles", true);
 
         // 1.13+ icon
-        if (POTION_EFFECT_CONSTRUCTOR_6 != null) try {
-            return Optional.of(POTION_EFFECT_CONSTRUCTOR_6.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
+        if (POTION_EFFECT_CONSTRUCTOR_1_13 != null) try {
+            return Optional.of(POTION_EFFECT_CONSTRUCTOR_1_13.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -400,7 +394,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
      *
      * @return          the {@code AttributeModifier} or empty if it's invalid
      */
-    @NotNull @SuppressWarnings("unchecked")
+    @NotNull
     public <G> Optional<G> getAttributeModifier(@NotNull String path, boolean log) {
         final Optional<G> def = getDef(path);
         if (ATTRIBUTE_MODIFIER_OPERATION_ENUM == null) return def;
@@ -415,10 +409,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // operation
-        final Object operation;
-        try {
-            operation = Enum.valueOf(ATTRIBUTE_MODIFIER_OPERATION_ENUM, operationString);
-        } catch (final IllegalArgumentException e) {
+        final Object operation = Mapper.toEnum(operationString, ATTRIBUTE_MODIFIER_OPERATION_ENUM).orElse(null);
+        if (operation == null) {
             if (log) log(Level.WARNING, path, "&cInvalid attribute modifier operation: &4" + operationString);
             return def;
         }
@@ -427,19 +419,18 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         final double amount = section.getDouble("amount");
 
         // 1.13.2+
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_5 != null) {
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2 != null) {
             // slot
             EquipmentSlot slot = null;
             final String equipmentSlotString = section.getString("slot");
-            if (equipmentSlotString != null) try {
-                slot = EquipmentSlot.valueOf(equipmentSlotString);
-            } catch (final IllegalArgumentException e) {
-                if (log) log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
+            if (equipmentSlotString != null) {
+                slot = Mapper.toEnum(equipmentSlotString, EquipmentSlot.class).orElse(null);
+                if (slot == null && log) log(Level.WARNING, path, "&cInvalid equipment slot: &4" + equipmentSlotString);
             }
 
             // Return
             try {
-                return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_5.newInstance(UUID.randomUUID(), name, amount, operation, slot));
+                return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2.newInstance(UUID.randomUUID(), name, amount, operation, slot));
             } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 return def;
@@ -447,8 +438,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         }
 
         // Return
-        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_3 != null) try {
-            return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_3.newInstance(name, amount, operation));
+        if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9 != null) try {
+            return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9.newInstance(name, amount, operation));
         } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -550,24 +541,22 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // Enchantments
             final ConfigurationSection enchantmentsSection = section.getConfigurationSection("enchantments");
             if (enchantmentsSection != null) for (final String enchantmentKey : enchantmentsSection.getKeys(false)) {
-                final Optional<Enchantment> enchantment = RefRegistry.getEnchantment(enchantmentKey);
+                final Optional<XEnchantment> enchantment = XEnchantment.of(enchantmentKey);
                 if (enchantment.isEmpty()) {
                     if (log) log(Level.WARNING, path, "&cInvalid enchantment: &4" + enchantmentKey);
                     continue;
                 }
-                meta.addEnchant(enchantment.get(), enchantmentsSection.getInt(enchantmentKey), true);
+                meta.addEnchant(enchantment.get().get(), enchantmentsSection.getInt(enchantmentKey), true);
             }
 
             // Flags
             section.getStringList("flags").stream()
                     .map(string -> {
-                        try {
-                            return ItemFlag.valueOf(string.toUpperCase());
-                        } catch (final IllegalArgumentException e) {
-                            if (log) log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
-                            return null;
-                        }
+                        final ItemFlag flag = Mapper.toEnum(string, ItemFlag.class).orElse(null);
+                        if (flag == null && log) log(Level.WARNING, section.getCurrentPath() + "." + "flags", "&cInvalid item flag: &4" + string);
+                        return flag;
                     })
+                    .filter(Objects::nonNull)
                     .forEach(meta::addItemFlags);
 
             // 1.11+ (unbreakable)
@@ -584,11 +573,8 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
                     final String pathString = attributeModifiersSection.getCurrentPath() + "." + attributeKey;
 
                     // Get attribute
-                    final Object attribute;
-                    try {
-                        //noinspection unchecked
-                        attribute = Enum.valueOf(ATTRIBUTE_ENUM, attributeKey.toUpperCase());
-                    } catch (final IllegalArgumentException e) {
+                    final Object attribute = Mapper.toEnum(attributeKey, ATTRIBUTE_ENUM).orElse(null);
+                    if (attribute == null) {
                         if (log) log(Level.WARNING, pathString, "&cInvalid attribute: &4" + attributeKey);
                         continue;
                     }
@@ -814,6 +800,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         public static <R extends Options<R>> Options<R> load(@NotNull ConfigurationSection section) {
             final Options<R> options = new Options<>();
             if (section.contains("canBeEmpty")) options.canBeEmpty = section.getBoolean("canBeEmpty");
+            if (section.contains("replace")) options.replace = section.getBoolean("replace");
             return options;
         }
 

@@ -1,9 +1,7 @@
 package xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat;
 
 import net.md_5.bungee.api.chat.ClickEvent;
-
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 

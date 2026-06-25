@@ -2,9 +2,7 @@ package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
-
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 

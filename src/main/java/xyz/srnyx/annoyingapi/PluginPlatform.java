@@ -5,6 +5,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
@@ -70,10 +71,8 @@ public class PluginPlatform extends Stringable {
             AnnoyingPlugin.log(Level.WARNING, "&6platform&e is null for section &6" + section.getCurrentPath());
             return Optional.empty();
         }
-        final Platform platform;
-        try {
-            platform = Platform.valueOf(platformName.toUpperCase());
-        } catch (final IllegalArgumentException e) {
+        final Platform platform = Mapper.toEnum(platformName, Platform.class).orElse(null);
+        if (platform == null) {
             AnnoyingPlugin.log(Level.WARNING, "&eInvalid platform &6" + platformName + "&e for section &6" + section.getCurrentPath());
             return Optional.empty();
         }
@@ -333,9 +332,8 @@ public class PluginPlatform extends Stringable {
                 final ConfigurationSection platformSection = platformsSection.getConfigurationSection(platformKey);
                 if (platformSection == null) {
                     final String platformKeyString = platformsSection.getString(platformKey);
-                    if (platformKeyString != null) try {
-                        multi.addIfAbsent(new PluginPlatform(Platform.valueOf(platformKey.toUpperCase()), platformKeyString));
-                    } catch (final IllegalArgumentException ignored) {}
+                    Mapper.toEnum(platformKeyString, Platform.class)
+                            .ifPresent(platform -> multi.addIfAbsent(new PluginPlatform(platform, platformKeyString)));
                     continue;
                 }
                 // Section

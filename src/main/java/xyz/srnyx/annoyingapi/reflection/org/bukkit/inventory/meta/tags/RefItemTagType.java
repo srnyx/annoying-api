@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.tags;
 
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 

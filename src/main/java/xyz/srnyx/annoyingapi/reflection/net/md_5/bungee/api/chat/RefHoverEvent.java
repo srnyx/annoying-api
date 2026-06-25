@@ -2,10 +2,8 @@ package xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat;
 
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.reflection.net.md_5.bungee.api.chat.hover.content.RefContent;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 

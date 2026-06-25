@@ -17,6 +17,10 @@ import java.util.logging.Level;
  * Represents a class that can be used to manage data
  *
  * @param   <T> the type of target to manage data for
+ *
+ * @see StringData
+ * @see EntityData
+ * @see ItemData
  */
 public abstract class Data<T> extends Stringable implements Annoyable {
     /**

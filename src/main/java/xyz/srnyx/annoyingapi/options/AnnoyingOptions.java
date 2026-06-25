@@ -62,8 +62,6 @@ public class AnnoyingOptions extends Stringable {
         if (registrationOptionsSection != null) options.registrationOptions(RegistrationOptions.load(registrationOptionsSection));
         final ConfigurationSection dataOptionsSection = section.getConfigurationSection("dataOptions");
         if (dataOptionsSection != null) options.dataOptions(DataOptions.load(dataOptionsSection));
-        final ConfigurationSection messagesOptionsSection = section.getConfigurationSection("messagesOptions");
-        if (messagesOptionsSection != null) options.messagesOptions(MessagesOptions.load(messagesOptionsSection));
         return options;
     }
 

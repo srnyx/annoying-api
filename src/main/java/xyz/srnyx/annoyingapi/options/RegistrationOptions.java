@@ -170,6 +170,10 @@ public class RegistrationOptions extends Stringable {
      */
     public static class AutomaticRegistration extends Stringable {
         /**
+         * Whether to automatically add the primary package to {@link #packages}
+         */
+        public boolean addPrimaryPackage = true;
+        /**
          * The packages to scan for {@link Registrable}s
          */
         @NotNull public final Set<String> packages = new HashSet<>();
@@ -197,8 +201,22 @@ public class RegistrationOptions extends Stringable {
         @NotNull
         public static AutomaticRegistration load(@NotNull ConfigurationSection section) {
             final AutomaticRegistration automaticRegistration = new AutomaticRegistration();
+            if (section.contains("addPrimaryPackage")) automaticRegistration.addPrimaryPackage(section.getBoolean("addPrimaryPackage"));
             if (section.contains("packages")) automaticRegistration.packages(section.getStringList("packages"));
             return automaticRegistration;
+        }
+
+        /**
+         * Sets {@link #addPrimaryPackage}
+         *
+         * @param   addPrimaryPackage   whether to automatically add the primary package to {@link #packages}
+         *
+         * @return  this {@link AutomaticRegistration} instance for chaining
+         */
+        @NotNull
+        public AutomaticRegistration addPrimaryPackage(boolean addPrimaryPackage) {
+            this.addPrimaryPackage = addPrimaryPackage;
+            return this;
         }
 
         /**

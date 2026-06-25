@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 
+@Registrable.Ignore
 public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registrable {
     @Nullable public L loader;
 
@@ -27,9 +28,9 @@ public abstract class StatsProvider<L extends StatsLoader<?, ?>> extends Registr
         final AnnoyingPlugin plugin = getAnnoyingPlugin();
 
         // Load required libraries
-        final Collection<AnnoyingLibrary> libraries = getRequiredLibraries();
-        if (libraries != null) {
-            for (final AnnoyingLibrary library : libraries) if (!plugin.libraryManager.loadLibrary(library)) return;
+        if (plugin.libraryManager != null) {
+            final Collection<AnnoyingLibrary> libraries = getRequiredLibraries();
+            if (libraries != null) for (final AnnoyingLibrary library : libraries) if (!plugin.libraryManager.loadLibrary(library)) return;
         }
 
         // Create loader

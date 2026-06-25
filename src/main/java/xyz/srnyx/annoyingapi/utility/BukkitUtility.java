@@ -24,7 +24,8 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.entity.RefEntity.*;
  * Utility methods relating to Bukkit
  */
 public class BukkitUtility {
-    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)[&§][0-9A-FK-OR]");
+    private static final char ALT_COLOR_CHAR = '&';
+    @NotNull private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)[" + ALT_COLOR_CHAR + ChatColor.COLOR_CHAR + "][0-9A-FK-OR]");
 
     /**
      * Translates {@code &} color codes to {@link ChatColor}
@@ -35,11 +36,11 @@ public class BukkitUtility {
      */
     @NotNull
     public static String color(@Nullable Object object) {
-        return ChatColor.translateAlternateColorCodes('&', String.valueOf(object));
+        return ChatColor.translateAlternateColorCodes(ALT_COLOR_CHAR, String.valueOf(object));
     }
 
     /**
-     * Translates {@code &} color codes to {@link ChatColor} for multiple strings
+     * Translates {@link #ALT_COLOR_CHAR} color codes to {@link ChatColor} for multiple strings
      *
      * @param   object1 the first object/string to translate
      * @param   objects the other objects/strings to translate
@@ -48,14 +49,11 @@ public class BukkitUtility {
      */
     @NotNull
     public static List<String> color(@Nullable Object object1, @Nullable Object... objects) {
-        final List<String> list = new ArrayList<>();
-        list.add(color(object1));
-        for (final Object object : objects) list.add(color(object));
-        return list;
+        return colorCollection(Arrays.asList(object1, objects));
     }
 
     /**
-     * Translates {@code &} color codes to {@link ChatColor} for a {@link Collection} of strings
+     * Translates {@link #ALT_COLOR_CHAR} color codes to {@link ChatColor} for a {@link Collection} of strings
      *
      * @param   objects the objects/strings to translate
      *
@@ -70,7 +68,7 @@ public class BukkitUtility {
     }
 
     /**
-     * Strips untranslated {@link ChatColor ChatColors} (using {@code &}) from a {@link String}
+     * Strips untranslated {@link ChatColor ChatColors} (using {@link #ALT_COLOR_CHAR}) from a {@link String}
      *
      * @param   string  the {@link String} to strip
      *
@@ -82,7 +80,7 @@ public class BukkitUtility {
     }
 
     /**
-     * Translates hex color codes to {@code &x} color codes
+     * Translates hex color codes to {@link #ALT_COLOR_CHAR} + {@code x} color codes
      *
      * @param   hex the hex color code
      *
@@ -91,9 +89,36 @@ public class BukkitUtility {
     @NotNull
     public static String hexColor(@NotNull String hex) {
         if (hex.startsWith("#")) hex = hex.substring(1);
-        final StringBuilder builder = new StringBuilder("&x");
-        for (final char character : hex.toCharArray()) builder.append('&').append(character);
+        final StringBuilder builder = new StringBuilder(ALT_COLOR_CHAR + "x");
+        for (final char character : hex.toCharArray()) builder.append(ALT_COLOR_CHAR).append(character);
         return builder.toString();
+    }
+
+    /**
+     * Replaces {@link ChatColor#COLOR_CHAR} with {@link #ALT_COLOR_CHAR}
+     */
+    @NotNull
+    public static String colorCharToAlt(@Nullable Object string) {
+        return String.valueOf(string).replace(ChatColor.COLOR_CHAR, ALT_COLOR_CHAR);
+    }
+
+    /**
+     * Replaces {@link ChatColor#COLOR_CHAR} with {@link #ALT_COLOR_CHAR} for each string
+     */
+    @NotNull
+    public static List<String> colorCharToAlt(@Nullable Object object1, @Nullable Object... objects) {
+        return colorCharToAltCollection(Arrays.asList(object1, objects));
+    }
+
+    /**
+     * Replaces {@link ChatColor#COLOR_CHAR} with {@link #ALT_COLOR_CHAR} for each string
+     */
+    @NotNull
+    public static List<String> colorCharToAltCollection(@Nullable Collection<?> objects) {
+        if (objects == null) return new ArrayList<>();
+        final List<String> list = new ArrayList<>();
+        for (final Object string : objects) list.add(colorCharToAlt(string));
+        return list;
     }
 
     /**

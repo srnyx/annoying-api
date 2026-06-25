@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * An abstract class for classes that can be registered/unregistered by the plugin
  */
+@Registrable.Ignore
 public abstract class Registrable extends Stringable implements Annoyable {
     /**
      * Constructs a new {@link Registrable} for registration

@@ -1,12 +1,11 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute;
 
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 
 /**
- * org.bukkit.attribute.Attribute
+ * 1.9+ org.bukkit.attribute.Attribute
  */
 public enum RefAttribute {;
     /**

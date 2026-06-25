@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta;
 
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Method;
@@ -15,6 +14,11 @@ public class RefDamageable {
      * 1.13+ org.bukkit.inventory.meta.Damageable
      */
     @Nullable public static final Class<?> DAMAGEABLE_CLASS = ReflectionUtility.getClass(1, 13, 0, RefDamageable.class);
+
+    /**
+     * 1.13+ org.bukkit.inventory.meta.Damageable#getDamage()
+     */
+    @Nullable public static final Method DAMAGEABLE_GET_DAMAGE_METHOD = ReflectionUtility.getMethod(1, 13, 0, DAMAGEABLE_CLASS, "getDamage");
 
     /**
      * 1.13+ org.bukkit.inventory.meta.Damageable#setDamage(int)

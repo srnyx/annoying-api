@@ -4,11 +4,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import xyz.srnyx.annoyingapi.message.AnnoyingMessage;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
@@ -145,7 +142,7 @@ public abstract class AnnoyingCommand extends Registrable implements TabExecutor
 
         // Argument check
         if (!getArgsPredicate().test(args)) {
-            new AnnoyingMessage(getAnnoyingPlugin(), getAnnoyingPlugin().options.messagesOptions.keys.invalidArguments).send(sender);
+            getAnnoyingPlugin().getAnnoyingMessages().error.invalid_arguments.newAnnoyingMessage().send(sender);
             return true;
         }
 

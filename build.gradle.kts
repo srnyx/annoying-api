@@ -5,37 +5,30 @@ import xyz.srnyx.gradlegalaxy.data.annoyingapi.Relocation
 import xyz.srnyx.gradlegalaxy.data.annoyingapi.RuntimeLibrary
 import xyz.srnyx.gradlegalaxy.data.config.DependencyConfig
 import xyz.srnyx.gradlegalaxy.data.config.JavaSetupConfig
+import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.GenerateRuntimeLibraryEnumConfig
+import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.RuntimeLibrariesConfig
 import xyz.srnyx.gradlegalaxy.data.config.publishing.TextArtifact
 import xyz.srnyx.gradlegalaxy.data.config.publishing.publishingSimpleConfig
 import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
 import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
 import xyz.srnyx.gradlegalaxy.enums.Repository
 import xyz.srnyx.gradlegalaxy.enums.repository
-import xyz.srnyx.gradlegalaxy.utility.dependencyRelocate
-import xyz.srnyx.gradlegalaxy.utility.setupMC
-import xyz.srnyx.gradlegalaxy.utility.setupPublishingEnv
-import xyz.srnyx.gradlegalaxy.utility.spigotAPI
+import xyz.srnyx.gradlegalaxy.utility.*
 
 
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "3.0.1"
+    id("xyz.srnyx.gradle-galaxy") version "3.1.0"
     id("com.gradleup.shadow") version "9.4.2"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
 
-val javaVersion = JavaVersion.VERSION_17
-
-spigotAPI(config = DependencyConfig(version = "1.8.8"))
-setupMC(javaSetupConfig = JavaSetupConfig(
-    group = "xyz.srnyx",
-    version = "5.2.1",
-    description = "General purpose API with tons of features",
-    javaVersion = javaVersion))
-
-// Libraries downloaded at runtime
+// Runtime libraries
+val okaeriConfigsVersion: String = "df8ae69"
+val bStatsVersion: String = "3.2.1"
+val fastStatsVersion: String = "0.27.1"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
@@ -44,6 +37,63 @@ val runtimeLibraries = listOf(
         artifact = "annotations",
         version = "26.1.0"),
     RuntimeLibrary(
+        name = "xseries",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "com.github.cryptomorin",
+        artifact = "XSeries",
+        version = "13.7.0",
+        relocations = listOf(Relocation("com.cryptomorin.xseries"))),
+    RuntimeLibrary(
+        name = "okaeri_configs_core",
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-configs-core",
+        version = okaeriConfigsVersion,
+        relocations = listOf(Relocation("eu.okaeri"))),
+    RuntimeLibrary(
+        name = "okaeri_configs_yaml_bukkit",
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-configs-yaml-bukkit",
+        version = okaeriConfigsVersion,
+        relocations = listOf(Relocation("eu.okaeri")),
+        dependencies = listOf("okaeri_configs_core")),
+    RuntimeLibrary(
+        name = "okaeri_configs_serdes_commons",
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-configs-serdes-commons",
+        version = okaeriConfigsVersion,
+        relocations = listOf(Relocation("eu.okaeri")),
+        dependencies = listOf("okaeri_configs_core")),
+    RuntimeLibrary(
+        name = "okaeri_configs_serdes_bukkit",
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-configs-serdes-bukkit",
+        version = okaeriConfigsVersion,
+        relocations = listOf(Relocation("eu.okaeri")),
+        dependencies = listOf(
+            "okaeri_configs_core",
+            "okaeri_configs_yaml_bukkit")),
+    RuntimeLibrary(
+        name = "okaeri_validator",
+        repositories = listOf(Repository.OKAERI_RELEASES.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-validator",
+        version = "2.0.5",
+        relocations = listOf(Relocation("eu.okaeri"))),
+    RuntimeLibrary(
+        name = "okaeri_configs_validator_okaeri",
+        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
+        group = "eu.okaeri",
+        artifact = "okaeri-configs-validator-okaeri",
+        version = okaeriConfigsVersion,
+        relocations = listOf(Relocation("eu.okaeri")),
+        dependencies = listOf(
+            "okaeri_configs_core",
+            "okaeri_validator")),
+    RuntimeLibrary(
         name = "item_nbt_api",
         repositories = listOf(Repository.CODE_MC.url),
         group = "de.tr7zw",
@@ -51,31 +101,69 @@ val runtimeLibraries = listOf(
         version = "2.15.7",
         relocations = listOf(Relocation("de.tr7zw.changeme.nbtapi"))),
     RuntimeLibrary(
-        name = "bstats",
+        name = "bstats_base",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.bstats",
+        artifact = "bstats-base",
+        version = bStatsVersion,
+        relocations = listOf(Relocation("org.bstats"))),
+    RuntimeLibrary(
+        name = "bstats_bukkit",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "org.bstats",
         artifact = "bstats-bukkit",
-        version = "3.2.1",
-        relocations = listOf(Relocation("org.bstats"))),
+        version = bStatsVersion,
+        relocations = listOf(Relocation("org.bstats")),
+        dependencies = listOf("bstats_base")),
     RuntimeLibrary(
-        name = "faststats",
+        name = "faststats_core",
+        repositories = listOf(
+            Repository.FASTSTATS_RELEASES.url,
+            Repository.FASTSTATS_SNAPSHOTS.url),
+        group = "dev.faststats.metrics",
+        artifact = "core",
+        version = fastStatsVersion,
+        excludes = listOf(Exclude("com.google.code.gson", "gson")),
+        relocations = listOf(Relocation("dev.faststats"))),
+    RuntimeLibrary(
+        name = "faststats_config",
+        repositories = listOf(
+            Repository.FASTSTATS_RELEASES.url,
+            Repository.FASTSTATS_SNAPSHOTS.url),
+        group = "dev.faststats.metrics",
+        artifact = "config",
+        version = fastStatsVersion,
+        excludes = listOf(Exclude("com.google.code.gson", "gson")),
+        relocations = listOf(Relocation("dev.faststats")),
+        dependencies = listOf("faststats_core")),
+    RuntimeLibrary(
+        name = "faststats_bukkit",
         repositories = listOf(
             Repository.FASTSTATS_RELEASES.url,
             Repository.FASTSTATS_SNAPSHOTS.url),
         group = "dev.faststats.metrics",
         artifact = "bukkit",
-        version = "0.25.1",
+        version = fastStatsVersion,
         excludes = listOf(Exclude("com.google.code.gson", "gson")),
-        relocations = listOf(Relocation("dev.faststats"))),
+        relocations = listOf(Relocation("dev.faststats")),
+        dependencies = listOf(
+            "faststats_core",
+            "faststats_config")),
+    RuntimeLibrary(
+        name = "javassist",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.javassist",
+        artifact = "javassist",
+        version = "3.28.0-GA",
+        relocations = listOf(Relocation("javassist.", "{package}.libs.javassist."))),
     RuntimeLibrary(
         name = "reflections",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "org.reflections",
         artifact = "reflections",
         version = "0.10.2",
-        relocations = listOf(
-            Relocation("javassist.", "{package}.libs.javassist."),
-            Relocation("org.reflections"))),
+        relocations = listOf(Relocation("org.reflections")),
+        dependencies = listOf("javassist")),
     RuntimeLibrary(
         name = "h2",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
@@ -91,34 +179,51 @@ val runtimeLibraries = listOf(
         version = "42.7.11",
         relocations = listOf(Relocation("org.postgresql"))))
 
+val javaVersion: JavaVersion = JavaVersion.VERSION_17
+
+spigotAPI(config = DependencyConfig(version = "1.8.8"))
+setupMC(javaSetupConfig = JavaSetupConfig(
+    group = "xyz.srnyx",
+    version = "5.2.1",
+    description = "General purpose API with tons of features",
+    javaVersion = javaVersion))
+
+// Process runtime libraries
+processRuntimeLibraries(runtimeLibraries, RuntimeLibrariesConfig(
+    configurations = listOf("compileOnlyApi", "testImplementation"),
+    relocate = false))
+
+// Generate runtime library enum
+generateAnnoyingApiRuntimeLibraryEnum(runtimeLibraries, GenerateRuntimeLibraryEnumConfig(
+    relocateImports = false))
+
 // Repositories
-repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP)
-for (library in runtimeLibraries) repository(*library.repositories.toTypedArray())
+repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.PAPER)
 
 // Dependencies
 dependencies {
-    compileOnly("me.clip:placeholderapi:2.12.2")
-    compileOnly("org.jetbrains:annotations:26.1.0")
+    // Bundled
     dependencyRelocate("net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby", configuration = "api")
     dependencyRelocate("xyz.srnyx:java-utilities:c53df5b", "xyz.srnyx.javautilities", configuration = "api")
 
-    // Runtime libraries
-    for (library in runtimeLibraries) compileOnlyApi("${library.group}:${library.artifact}:${library.version}") {
-        library.excludes.forEach { exclude(it.group, it.module) }
-    }
+    // Optional
+    compileOnly("me.clip:placeholderapi:2.12.2")
 }
 
 // Blossom (see java-templates module)
-sourceSets.main { blossom.javaSources {
-    property("annoying_api_version", version.toString())
+sourceSets.main {
+    blossom.javaSources { property("annoying_api_version", version.toString()) }
+}
 
-    // Runtime libraries
-    for (library in runtimeLibraries) property("${library.name}_version", library.version)
-} }
+// Testing
+setupMockBukkit(
+    junitBomConfig = DependencyConfig(version = "6.1.0"),
+    mockBukkitDependencyConfig = DependencyConfig(version = "3.9.0"))
 
 // Publishing
 setupPublishingEnv(publishingSimpleConfig(
     artifactId = "annoying-api",
+    silenceMissingJavadocWarnings = true,
     url = "https://annoying-api.srnyx.com",
     licenses = listOf(LicenseData.MIT),
     developers = listOf(DeveloperData.srnyx),
@@ -134,6 +239,7 @@ setupPublishingEnv(publishingSimpleConfig(
                     Exclude("xyz.srnyx", "java-utilities")))
             return@TextArtifact Json {
                 prettyPrint = true
+                prettyPrintIndent = "  "
             }.encodeToString(metadata)
         },
         classifier = "metadata",
