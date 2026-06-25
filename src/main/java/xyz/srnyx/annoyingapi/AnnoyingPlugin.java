@@ -352,7 +352,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             };
             provider.register();
         }
-        provider.accept(configLoader.build(options.messagesOptions.builder));
+        provider.build();
 
         // Manual stats registration
         registerBStatsManually();

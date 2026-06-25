@@ -34,10 +34,6 @@ public class AnnoyingOptions extends Stringable {
      * {@link DataOptions}
      */
     @NotNull public DataOptions dataOptions = new DataOptions();
-    /**
-     * {@link MessagesOptions}
-     */
-    @NotNull public MessagesOptions messagesOptions = new MessagesOptions();
 
     /**
      * Constructs a new {@link AnnoyingOptions} instance with default values
@@ -155,32 +151,6 @@ public class AnnoyingOptions extends Stringable {
     @NotNull
     public AnnoyingOptions dataOptions(@NotNull Consumer<DataOptions> consumer) {
         consumer.accept(dataOptions);
-        return this;
-    }
-
-    /**
-     * Sets {@link #messagesOptions}
-     *
-     * @param   messagesOptions the new {@link #messagesOptions}
-     *
-     * @return                  the {@link AnnoyingOptions} instance for chaining
-     */
-    @NotNull
-    public AnnoyingOptions messagesOptions(@NotNull MessagesOptions messagesOptions) {
-        this.messagesOptions = messagesOptions;
-        return this;
-    }
-
-    /**
-     * Sets {@link #messagesOptions}
-     *
-     * @param   consumer    the consumer to accept the {@link MessagesOptions}
-     *
-     * @return              the {@link AnnoyingOptions} instance for chaining
-     */
-    @NotNull
-    public AnnoyingOptions messagesOptions(@NotNull Consumer<MessagesOptions> consumer) {
-        consumer.accept(messagesOptions);
         return this;
     }
 

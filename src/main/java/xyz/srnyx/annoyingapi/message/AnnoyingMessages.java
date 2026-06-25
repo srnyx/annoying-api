@@ -33,9 +33,9 @@ public class AnnoyingMessages extends OkaeriConfig {
 
     public AnnoyingMessages(@org.jetbrains.annotations.NotNull AnnoyingPlugin annoyingPlugin) {
         this.annoyingPlugin = annoyingPlugin;
-        this.defaultPrefix = annoyingPlugin.options.messagesOptions.defaults.prefix;
-        this.defaultP = annoyingPlugin.options.messagesOptions.defaults.p;
-        this.defaultS = annoyingPlugin.options.messagesOptions.defaults.s;
+        this.defaultPrefix = annoyingPlugin.getMessagesProvider().defaults.prefix;
+        this.defaultP = annoyingPlugin.getMessagesProvider().defaults.p;
+        this.defaultS = annoyingPlugin.getMessagesProvider().defaults.s;
 
         this.plugin = new Plugin(this);
         this.error = new Error(this);
