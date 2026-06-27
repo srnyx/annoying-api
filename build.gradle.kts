@@ -21,7 +21,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "75f72f6"
+    id("xyz.srnyx.gradle-galaxy") version "2031daf"
     id("com.gradleup.shadow") version "9.4.3"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
