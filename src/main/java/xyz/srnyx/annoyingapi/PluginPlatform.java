@@ -1,22 +1,23 @@
 package xyz.srnyx.annoyingapi;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import xyz.srnyx.annoyingapi.utility.ConfigurationUtility;
 import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 
 /**
  * Contains information about a plugin on a {@link Platform}
  */
-public class PluginPlatform extends Stringable {
+public class PluginPlatform extends Stringable implements Comparable<PluginPlatform> {
     /**
      * The platform the plugin is on
      */
@@ -25,10 +26,6 @@ public class PluginPlatform extends Stringable {
      * The identifier of the plugin on the platform
      */
     @NotNull public final String identifier;
-    /**
-     * The author of the plugin (only required for {@link Platform#HANGAR})
-     */
-    @Nullable public String author;
 
     /**
      * Creates a new {@link PluginPlatform}
@@ -39,20 +36,11 @@ public class PluginPlatform extends Stringable {
     public PluginPlatform(@NotNull Platform platform, @NotNull String identifier) {
         this.platform = platform;
         this.identifier = identifier;
-        if (platform.requiresAuthor) AnnoyingPlugin.log(Level.WARNING, "&ePlugin platform &6" + platform + "&e requires an author");
     }
 
-    /**
-     * Creates a new {@link PluginPlatform}
-     *
-     * @param   platform    {@link #platform}
-     * @param   identifier  {@link #identifier}
-     * @param   author      {@link #author}
-     */
-    public PluginPlatform(@NotNull Platform platform, @NotNull String identifier, @Nullable String author) {
-        this.platform = platform;
-        this.identifier = identifier;
-        this.author = author;
+    @Override
+    public int compareTo(@NonNull PluginPlatform o) {
+        return platform.compareTo(o.platform);
     }
 
     /**
@@ -84,16 +72,6 @@ public class PluginPlatform extends Stringable {
             return Optional.empty();
         }
 
-        // author
-        if (platform.requiresAuthor) {
-            final String author = section.getString("author");
-            if (author == null) {
-                AnnoyingPlugin.log(Level.WARNING, "&eauthor&e is null for author-required platform &6" + platform.name() + "&e with identifier &6" + identifier);
-                return Optional.empty();
-            }
-            return Optional.of(new PluginPlatform(platform, identifier, author));
-        }
-
         return Optional.of(new PluginPlatform(platform, identifier));
     }
 
@@ -113,57 +91,12 @@ public class PluginPlatform extends Stringable {
      * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
      *
      * @param   identifier  {@link #identifier}
-     * @param   author      {@link #author}
      *
      * @return              a new {@link PluginPlatform}
      */
     @NotNull
-    public static PluginPlatform hangar(@NotNull String identifier, @NotNull String author) {
-        return new PluginPlatform(Platform.HANGAR, identifier, author);
-    }
-
-    /**
-     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
-     *
-     * @param   identifier                  {@link #identifier}
-     * @param   plugin                      the plugin to get the {@link #author} from
-     *
-     * @return                              a new {@link PluginPlatform}
-     *
-     * @throws  IllegalArgumentException    if the plugin has no authors
-     */
-    @NotNull
-    public static PluginPlatform hangar(@NotNull String identifier, @NotNull Plugin plugin) throws IllegalArgumentException {
-        final List<String> authors = plugin.getDescription().getAuthors();
-        if (authors.isEmpty()) throw new IllegalArgumentException("No authors found for plugin " + plugin.getName() + ", but Hangar requires an author for identifier " + identifier);
-        return hangar(identifier, authors.get(0));
-    }
-
-    /**
-     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
-     *
-     * @param   plugin  the plugin to get the {@link #identifier} from
-     * @param   author  {@link #author}
-     *
-     * @return          a new {@link PluginPlatform}
-     */
-    @NotNull
-    public static PluginPlatform hangar(@NotNull Plugin plugin, @NotNull String author) {
-        return hangar(plugin.getName(), author);
-    }
-
-    /**
-     * Creates a new {@link PluginPlatform} for {@link Platform#HANGAR}
-     *
-     * @param   plugin                      the plugin to get the {@link #identifier} and {@link #author} from
-     *
-     * @return                              a new {@link PluginPlatform}
-     *
-     * @throws  IllegalArgumentException    if the plugin has no authors
-     */
-    @NotNull
-    public static PluginPlatform hangar(@NotNull Plugin plugin) throws IllegalArgumentException {
-        return hangar(plugin.getName(), plugin);
+    public static PluginPlatform hangar(@NotNull String identifier) {
+        return new PluginPlatform(Platform.HANGAR, identifier);
     }
 
     /**
@@ -223,49 +156,35 @@ public class PluginPlatform extends Stringable {
          * <p>Project ID <i>or</i> slug
          * <p><b>Example:</b> {@code gzktm9GG} <i>or</i> {@code annoying-api}
          */
-        MODRINTH(false),
+        MODRINTH,
         /**
          * <a href="https://hangar.papermc.io/">{@code https://hangar.papermc.io/}</a>
          * <p>Slug
          * <p><b>Example:</b> {@code srnyx/AnnoyingAPI}
          */
-        HANGAR(true),
+        HANGAR,
         /**
          * <a href="https://spigotmc.org/resources">{@code https://spigotmc.org/resources}</a>
          * <p>Project ID
          * <p><b>Example:</b> {@code 106637}
          */
-        SPIGOT(false),
+        SPIGOT,
         /**
          * <a href="https://dev.bukkit.org/projects">{@code https://dev.bukkit.org/projects}</a>
          * <p>Project ID <i>or</i> slug
          * <p><b>Example:</b> {@code 728930} <i>or</i> {@code annoying-api}
          */
-        BUKKIT(false),
+        BUKKIT,
         /**
          * An external direct-download URL
          * <p><b>Example:</b> {@code https://ci.dmulloy2.net/job/ProtocolLib/lastSuccessfulBuild/artifact/target/ProtocolLib.jar}
          */
-        EXTERNAL(false),
+        EXTERNAL,
         /**
          * A URL that the user can manually download the plugin from
          * <p><b>Example:</b> {@code https://github.com/srnyx/annoying-api/releases/latest}
          */
-        MANUAL(false);
-
-        /**
-         * Whether this {@link Platform} requires an author
-         */
-        public final boolean requiresAuthor;
-
-        /**
-         * Creates a new {@link Platform}
-         *
-         * @param   requiresAuthor  {@link #requiresAuthor}
-         */
-        Platform(boolean requiresAuthor) {
-            this.requiresAuthor = requiresAuthor;
-        }
+        MANUAL
     }
 
     /**
@@ -276,7 +195,7 @@ public class PluginPlatform extends Stringable {
         /**
          * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
          */
-        @NotNull public final Set<PluginPlatform> pluginPlatforms = new HashSet<>();
+        @NotNull public final Set<PluginPlatform> pluginPlatforms = new TreeSet<>();
 
         /**
          * Creates a new empty {@link Multi}
@@ -291,7 +210,7 @@ public class PluginPlatform extends Stringable {
          * @param   pluginPlatforms {@link #pluginPlatforms}
          */
         public Multi(@NotNull Collection<PluginPlatform> pluginPlatforms) {
-            pluginPlatforms.forEach(this::addIfAbsent);
+            this.pluginPlatforms.addAll(pluginPlatforms);
         }
 
         /**
@@ -301,6 +220,13 @@ public class PluginPlatform extends Stringable {
          */
         public Multi(@NotNull PluginPlatform... pluginPlatforms) {
             this(Arrays.asList(pluginPlatforms));
+        }
+
+        /**
+         * Copy constructor
+         */
+        public Multi(@NotNull Multi multi) {
+            this.pluginPlatforms.addAll(multi.pluginPlatforms);
         }
 
         /**
@@ -315,33 +241,48 @@ public class PluginPlatform extends Stringable {
         public static Multi load(@NotNull ConfigurationSection section, @NotNull String key) {
             final Multi multi = new Multi();
 
-            // Map list
+            // Map list (legacy, deprecated)
             final ConfigurationSection platformsSection = section.getConfigurationSection(key);
             if (platformsSection == null) {
                 ConfigurationUtility.toConfigurationList(section.getMapList(key)).stream()
                         .map(PluginPlatform::load)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .forEach(multi::addIfAbsent);
+                        .forEach(multi.pluginPlatforms::add);
                 return multi;
             }
 
             // Key list
             for (final String platformKey : platformsSection.getKeys(false)) {
-                // String
                 final ConfigurationSection platformSection = platformsSection.getConfigurationSection(platformKey);
+
+                // String
                 if (platformSection == null) {
-                    final String platformKeyString = platformsSection.getString(platformKey);
-                    Mapper.toEnum(platformKeyString, Platform.class)
-                            .ifPresent(platform -> multi.addIfAbsent(new PluginPlatform(platform, platformKeyString)));
+                    final String identifier = platformsSection.getString(platformKey);
+                    if (identifier != null) Mapper.toEnum(platformKey, Platform.class).ifPresent(platform -> multi.pluginPlatforms.add(new PluginPlatform(platform, identifier)));
                     continue;
                 }
+
                 // Section
-                final Optional<PluginPlatform> pluginPlatform = PluginPlatform.load(platformSection);
-                pluginPlatform.ifPresent(multi::addIfAbsent);
+                PluginPlatform.load(platformSection).ifPresent(multi.pluginPlatforms::add);
             }
 
             return multi;
+        }
+
+        /**
+         * Loads a {@link Multi} from the given {@link JsonObject}
+         */
+        @NotNull
+        public static TreeSet<PluginPlatform> load(@NotNull JsonObject json) {
+            final TreeSet<PluginPlatform> platforms = new TreeSet<>();
+            for (final Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                Mapper.toEnum(entry.getKey(), Platform.class)
+                        .ifPresent(platform -> Mapper.convertJsonElement(entry.getValue(), JsonPrimitive.class)
+                                .flatMap(primitive -> Mapper.convertJsonPrimitive(primitive, String.class))
+                                .ifPresent(identifier -> platforms.add(new PluginPlatform(platform, identifier))));
+            }
+            return platforms;
         }
 
         /**
@@ -371,40 +312,14 @@ public class PluginPlatform extends Stringable {
         }
 
         /**
-         * Adds the given {@link PluginPlatform plugin platforms} to this {@link Multi}
+         * Removes the {@link PluginPlatform} for the given {@link Platform platforms}
          *
-         * @param   pluginPlatforms the {@link PluginPlatform plugin platforms} to add
-         *
-         * @return                  whether a {@link PluginPlatform plugin platform} was added
-         */
-        public boolean add(@NotNull PluginPlatform... pluginPlatforms) {
-            return this.pluginPlatforms.addAll(Arrays.asList(pluginPlatforms));
-        }
-
-        /**
-         * Adds the given {@link PluginPlatform plugin platforms} to this {@link Multi} if they don't already exist
-         *
-         * @param   pluginPlatforms the {@link PluginPlatform plugin platforms} to add
-         *
-         * @return                  whether a {@link PluginPlatform plugin platform} was added
-         */
-        public boolean addIfAbsent(@NotNull PluginPlatform... pluginPlatforms) {
-            final Set<PluginPlatform> toAdd = Arrays.stream(pluginPlatforms)
-                    .filter(filter -> get(filter.platform).isEmpty())
-                    .collect(Collectors.toSet());
-            return this.pluginPlatforms.addAll(toAdd);
-        }
-
-        /**
-         * Removes the {@link PluginPlatform plugin platforms} for the given {@link Platform platforms}
-         *
-         * @param   platforms   the {@link Platform platforms} to remove the {@link PluginPlatform plugin platforms} for
+         * @param   platforms   the {@link Platform} to remove the {@link PluginPlatform plugin platforms} for
          *
          * @return              whether a {@link PluginPlatform plugin platform} was removed
          */
-        public boolean remove(@NotNull Platform... platforms) {
-            final List<Platform> toRemove = Arrays.asList(platforms);
-            return pluginPlatforms.removeIf(filter -> toRemove.contains(filter.platform));
+        public boolean remove(@NotNull Platform platforms) {
+            return pluginPlatforms.removeIf(filter -> filter.platform == platforms);
         }
 
         @Override @NotNull

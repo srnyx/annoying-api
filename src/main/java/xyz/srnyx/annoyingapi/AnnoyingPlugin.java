@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi;
 
+import com.google.gson.JsonObject;
 import eu.okaeri.configs.OkaeriConfig;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -43,11 +44,15 @@ import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.MapGenerator;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -363,8 +368,20 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Send startup messages
         sendStartupMessages();
 
+        // Get update platforms from platforms.json resource
+        final PluginPlatform.Multi platforms = new PluginPlatform.Multi(options.pluginOptions.updatePlatforms);
+        final InputStream platformsJson = getResource("platforms.json");
+        if (platformsJson != null) try {
+            Mapper.toJson(new String(platformsJson.readAllBytes(), StandardCharsets.UTF_8))
+                    .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
+                    .flatMap(object -> Mapper.convertJsonElement(object.get("platforms"), JsonObject.class))
+                    .ifPresent(platformsObject -> platforms.pluginPlatforms.addAll(PluginPlatform.Multi.load(platformsObject)));
+        } catch (final IOException e) {
+            logErrorTrack(Level.WARNING, "&cFailed to parse resource &4platforms.json", e);
+        }
+
         // Check for updates
-        updateChecker = new UpdateChecker(this, options.pluginOptions.updatePlatforms);
+        updateChecker = new UpdateChecker(this, platforms);
         updateChecker.checkUpdate();
 
         // Custom onEnable
@@ -546,7 +563,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     }
 
     @NotNull
-    public MessagesProvider getMessagesProvider() {
+    public MessagesProvider getMessages() {
         return Objects.requireNonNull(getRegistrable(MessagesProvider.class), "Messages not loaded yet");
     }
 
@@ -555,7 +572,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull
     public final AnnoyingMessages getAnnoyingMessages() {
-        return getMessagesProvider().get();
+        return getMessages().get();
     }
 
     /**
@@ -718,6 +735,18 @@ public class AnnoyingPlugin extends JavaPlugin {
         log(level, message, throwable);
 
         // FastStats error tracking
+        errorTrack(message, throwable);
+    }
+
+    public void logErrorTrack(@Nullable Level level, @Nullable Object message) {
+        logErrorTrack(level, message, null);
+    }
+
+    public void logErrorTrack(@Nullable Object message) {
+        logErrorTrack(null, message, null);
+    }
+
+    public void errorTrack(@Nullable Object message, @Nullable Throwable throwable) {
         final FastStatsProvider<?> fastStatsProvider = getRegistrable(FastStatsProvider.class);
         if (fastStatsProvider == null || fastStatsProvider.loader == null) return;
         if (throwable != null) {
@@ -727,12 +756,12 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
     }
 
-    public void logErrorTrack(@Nullable Level level, @Nullable Object message) {
-        logErrorTrack(level, message, null);
+    public void errorTrack(@Nullable Object message) {
+        errorTrack(message, null);
     }
 
-    public void logErrorTrack(@Nullable Object message) {
-        logErrorTrack(null, message, null);
+    public void errorTrack(@Nullable Throwable throwable) {
+        errorTrack(null, throwable);
     }
 
     public void deleteOldFile(@NotNull Path path) {

@@ -2,21 +2,17 @@ package xyz.srnyx.annoyingapi.dependency;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.InvalidDescriptionException;
 import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
-
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -94,7 +90,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         }
 
         // Hangar
-        final Optional<PluginPlatform> hangar = platforms.get(PluginPlatform.Platform.HANGAR);
+        final Optional<String> hangar = platforms.getIdentifier(PluginPlatform.Platform.HANGAR);
         if (hangar.isPresent()) {
             hangar(dependency, hangar.get());
             return;
@@ -165,24 +161,20 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
      * <p>This will download the appropriate Minecraft version of the plugin
      *
      * @param   dependency  the {@link AnnoyingDependency} to download
-     * @param   platform    the {@link PluginPlatform} containing the plugin information
+     * @param   identifier  the identifier of the plugin on Hangar (author/name)
      */
-    private void hangar(@NotNull AnnoyingDependency dependency, @NotNull PluginPlatform platform) {
-        if (platform.author == null) {
-            fail(dependency, platform.platform);
-            return;
-        }
-        final String url = "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/";
-
+    private void hangar(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
+        final String url = "https://hangar.papermc.io/api/v1/projects/" + identifier + "/";
         final Optional<String> latest = HttpUtility.getString(userAgent, url + "latestrelease", null);
+
         // Request failed
         if (latest.isEmpty()) {
-            fail(dependency, platform.platform);
+            fail(dependency, PluginPlatform.Platform.HANGAR);
             return;
         }
 
         // Download file
-        downloadFile(dependency, platform.platform, url + "versions/" + latest.get() + "/PAPER/download");
+        downloadFile(dependency, PluginPlatform.Platform.HANGAR, url + "versions/" + latest.get() + "/PAPER/download");
     }
 
     /**
@@ -219,9 +211,9 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
                     .get("file").getAsJsonObject()
                     .get("externalUrl").getAsString();
             if (externalUrl.endsWith(".jar")) {
-                platforms.addIfAbsent(PluginPlatform.external(externalUrl));
+                platforms.pluginPlatforms.add(PluginPlatform.external(externalUrl));
             } else {
-                platforms.addIfAbsent(PluginPlatform.manual(externalUrl));
+                platforms.pluginPlatforms.add(PluginPlatform.manual(externalUrl));
             }
 
             // Retry download

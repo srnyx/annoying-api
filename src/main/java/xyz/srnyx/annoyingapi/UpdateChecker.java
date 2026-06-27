@@ -10,12 +10,14 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.Annoyable;
 import xyz.srnyx.javautilities.HttpUtility;
+import xyz.srnyx.javautilities.MiscUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -40,7 +42,11 @@ public class UpdateChecker extends Stringable implements Annoyable {
     /**
      * The current version of the plugin
      */
-    @NotNull private final SemanticVersion currentVersion;
+    @NotNull private final String currentVersion;
+    /**
+     * {@code null} if on a snapshot/development version
+     */
+    @Nullable private final SemanticVersion currentVersionSemantic;
     /**
      * The user agent to use when making requests
      */
@@ -64,9 +70,10 @@ public class UpdateChecker extends Stringable implements Annoyable {
     public UpdateChecker(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginDescriptionFile pluginDescription, @NotNull PluginPlatform.Multi platforms) {
         this.annoyingPlugin = annoyingPlugin;
         this.pluginName = pluginDescription.getName();
-        this.currentVersion = new SemanticVersion(pluginDescription.getVersion());
+        this.currentVersion = pluginDescription.getVersion();
+        this.currentVersionSemantic = MiscUtility.handleException(() -> new SemanticVersion(currentVersion)).orElse(null);
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
-        this.platforms = platforms;
+        this.platforms = new PluginPlatform.Multi(platforms);
         this.latestVersion = retrieveLatestVersion()
                 .map(SemanticVersion::new)
                 .orElse(null);
@@ -106,10 +113,10 @@ public class UpdateChecker extends Stringable implements Annoyable {
     @SuppressWarnings("UnusedReturnValue")
     public boolean checkUpdate() {
         final boolean update = isUpdateAvailable();
-        if (update && latestVersion != null) annoyingPlugin.getAnnoyingMessages().plugin.update_available.newAnnoyingMessage()
+        if (update) annoyingPlugin.getAnnoyingMessages().plugin.update_available.newMessage()
                 .replace("%plugin%", pluginName)
-                .replace("%current%", currentVersion.version)
-                .replace("%new%", latestVersion.version)
+                .replace("%current%", currentVersion)
+                .replace("%new%", Objects.requireNonNull(latestVersion).version)
                 .log(Level.WARNING);
         return update;
     }
@@ -120,7 +127,9 @@ public class UpdateChecker extends Stringable implements Annoyable {
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     public boolean isUpdateAvailable() {
-        return latestVersion != null && latestVersion.isGreaterThan(currentVersion);
+        if (latestVersion == null) return false;
+        if (currentVersionSemantic == null) return true;
+        return latestVersion.isGreaterThan(currentVersionSemantic);
     }
 
     @NotNull
@@ -138,13 +147,13 @@ public class UpdateChecker extends Stringable implements Annoyable {
         }
 
         // Hangar
-        final Optional<PluginPlatform> hangarPlatform = platforms.get(PluginPlatform.Platform.HANGAR);
-        if (hangarPlatform.isPresent()) {
+        final Optional<String> hangarIdentifier = platforms.getIdentifier(PluginPlatform.Platform.HANGAR);
+        if (hangarIdentifier.isPresent()) {
             try {
-                final Optional<String> hangar = hangar(hangarPlatform.get());
+                final Optional<String> hangar = hangar(hangarIdentifier.get());
                 if (hangar.isPresent()) return hangar;
             } catch (final Exception e) {
-                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Hangar for the latest version of " + pluginName, e);
+                annoyingPlugin.errorTrack("Failed to check Hangar for the latest version of " + pluginName, e);
                 return fail(PluginPlatform.Platform.HANGAR);
             }
         }
@@ -156,7 +165,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
                 final Optional<String> spigot = spigot(spigotIdentifier.get());
                 if (spigot.isPresent()) return spigot;
             } catch (final Exception e) {
-                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Spigot for the latest version of " + pluginName, e);
+                annoyingPlugin.errorTrack("Failed to check Spigot for the latest version of " + pluginName, e);
                 return fail(PluginPlatform.Platform.SPIGOT);
             }
         }
@@ -195,13 +204,13 @@ public class UpdateChecker extends Stringable implements Annoyable {
     /**
      * Checks Hangar for the latest version
      *
-     * @param   platform    the {@link PluginPlatform} information
+     * @param   identifier  the identifier of the plugin on Hangar (author/name)
      *
      * @return              the latest version, or empty if an error occurred
      */
     @NotNull
-    private Optional<String> hangar(@NotNull PluginPlatform platform) {
-        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + platform.author + "/" + platform.identifier + "/versions", null)
+    private Optional<String> hangar(@NotNull String identifier) {
+        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + identifier + "/versions", null)
                 .map(element -> element.getAsJsonObject().getAsJsonArray("result"));
 
         // Request failed
@@ -273,6 +282,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
      */
     @NotNull
     private Optional<String> fail(@NotNull PluginPlatform.Platform platform) {
+        AnnoyingPlugin.log(Level.WARNING, "Failed to check " + platform.name() + " for the latest version of " + pluginName);
         platforms.remove(platform);
         return retrieveLatestVersion();
     }

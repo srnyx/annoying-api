@@ -13,7 +13,7 @@ public class JsonMessage {
     }
 
     @NotNull
-    public AnnoyingMessage newAnnoyingMessage() {
+    public AnnoyingMessage newMessage() {
         return new AnnoyingMessage(this);
     }
 }

@@ -1,4 +1,4 @@
-name: Maven Publish (Releases)
+name: Publish (Releases)
 on:
   release:
     types:
@@ -9,6 +9,6 @@ jobs:
   build:
     uses: srnyx/tools/.github/workflows/maven_publish.yml@main
     with:
-      name: Annoying API
       channel: releases
+      task: build publish publishMods
     secrets: inherit

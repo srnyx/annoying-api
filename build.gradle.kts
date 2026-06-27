@@ -7,8 +7,10 @@ import xyz.srnyx.gradlegalaxy.data.config.DependencyConfig
 import xyz.srnyx.gradlegalaxy.data.config.JavaSetupConfig
 import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.GenerateRuntimeLibraryEnumConfig
 import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.RuntimeLibrariesConfig
+import xyz.srnyx.gradlegalaxy.data.config.publishing.PublishingPlatformConfig
 import xyz.srnyx.gradlegalaxy.data.config.publishing.TextArtifact
 import xyz.srnyx.gradlegalaxy.data.config.publishing.publishingSimpleConfig
+import xyz.srnyx.gradlegalaxy.data.platforms.PluginPlatform
 import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
 import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
 import xyz.srnyx.gradlegalaxy.enums.Repository
@@ -19,10 +21,11 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "3.1.0"
-    id("com.gradleup.shadow") version "9.4.2"
+    id("xyz.srnyx.gradle-galaxy") version "84a4391"
+    id("com.gradleup.shadow") version "9.4.3"
     id("net.kyori.blossom") version "2.2.0"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
+    id("me.modmuss50.mod-publish-plugin") version "2.1.1"
 }
 
 // Runtime libraries
@@ -184,7 +187,6 @@ val javaVersion: JavaVersion = JavaVersion.VERSION_17
 spigotAPI(config = DependencyConfig(version = "1.8.8"))
 setupMC(javaSetupConfig = JavaSetupConfig(
     group = "xyz.srnyx",
-    version = "5.2.1",
     description = "General purpose API with tons of features",
     javaVersion = javaVersion))
 
@@ -220,7 +222,7 @@ setupMockBukkit(
     junitBomConfig = DependencyConfig(version = "6.1.0"),
     mockBukkitDependencyConfig = DependencyConfig(version = "3.9.0"))
 
-// Publishing
+// Library publishing
 setupPublishingEnv(publishingSimpleConfig(
     artifactId = "annoying-api",
     silenceMissingJavadocWarnings = true,
@@ -244,3 +246,12 @@ setupPublishingEnv(publishingSimpleConfig(
         },
         classifier = "metadata",
         extension = "json"))))
+
+// Platform publishing
+setupPublishingPlatforms(
+    config = PublishingPlatformConfig(
+        platforms = mapOf(
+            PluginPlatform.MODRINTH to "gzktm9GG",
+            PluginPlatform.CURSEFORGE to "728930"),
+        loaders = listOf("spigot", "paper", "purpur", "folia")),
+    modrinthAction = { optional("placeholderapi") })
