@@ -20,6 +20,8 @@ import java.util.List;
  * Represents the general options for the plugin
  */
 public class PluginOptions extends Stringable {
+    public boolean sendStartupMessages = true;
+    public boolean doUpdateCheck = true;
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingLibrary AnnoyingLibraries} to load <b>before</b> initializing the plugin
      * <br>This is only needed if you have a library that is required to load before the plugin initializes, otherwise you can just load the library yourself when the plugin enables
@@ -58,6 +60,25 @@ public class PluginOptions extends Stringable {
         options.dependencies.addAll(AnnoyingDependency.loadList(section, "dependencies"));
         options.updatePlatforms = PluginPlatform.Multi.load(section, "updatePlatforms");
         return options;
+    }
+
+    @NotNull
+    public PluginOptions applyMockTemplate() {
+        return this
+                .sendStartupMessages(false)
+                .doUpdateCheck(false);
+    }
+
+    @NotNull
+    public PluginOptions sendStartupMessages(boolean sendStartupMessages) {
+        this.sendStartupMessages = sendStartupMessages;
+        return this;
+    }
+
+    @NotNull
+    public PluginOptions doUpdateCheck(boolean doUpdateCheck) {
+        this.doUpdateCheck = doUpdateCheck;
+        return this;
     }
 
     /**

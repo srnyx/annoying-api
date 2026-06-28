@@ -365,8 +365,29 @@ public class AnnoyingPlugin extends JavaPlugin {
         // Enable/disable interval cache saving (depending on config)
         if (dataManager != null) dataManager.toggleIntervalCacheSaving();
 
-        // Send startup messages
-        sendStartupMessages();
+        if (options.pluginOptions.sendStartupMessages) {
+            // Get start message colors
+            final AnnoyingMessages annoyingMessages = getAnnoyingMessages();
+            final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
+            final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
+            final String secondaryColorString = annoyingMessages.plugin.global_placeholders.get("s");
+            final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
+
+            // Get start messages
+            final PluginDescriptionFile description = getDescription();
+            final String nameVersion = getName() + " v" + description.getVersion();
+            final String authors = "By " + String.join(", ", description.getAuthors());
+            final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
+            final int lineLength = Math.max(nameVersion.length(), authors.length());
+            lineBuilder.append("-".repeat(lineLength));
+            final String line = lineBuilder.toString();
+
+            // Send start messages
+            log(Level.INFO, line);
+            log(Level.INFO, primaryColor + nameVersion);
+            log(Level.INFO, primaryColor + authors);
+            log(Level.INFO, line);
+        }
 
         // Get update platforms from platforms.json resource
         final PluginPlatform.Multi platforms = new PluginPlatform.Multi(options.pluginOptions.updatePlatforms);
@@ -381,36 +402,13 @@ public class AnnoyingPlugin extends JavaPlugin {
         }
 
         // Check for updates
-        updateChecker = new UpdateChecker(this, platforms);
-        updateChecker.checkUpdate();
+        if (options.pluginOptions.doUpdateCheck) {
+            updateChecker = new UpdateChecker(this, platforms);
+            updateChecker.checkUpdate();
+        }
 
         // Custom onEnable
         enable();
-    }
-
-    // Separate method to allow MockAnnoyingPlugin in unit tests to override
-    protected void sendStartupMessages() {
-        // Get start message colors
-        final AnnoyingMessages annoyingMessages = getAnnoyingMessages();
-        final String primaryColorString = annoyingMessages.plugin.global_placeholders.get("p");
-        final String primaryColor = primaryColorString != null ? BukkitUtility.color(primaryColorString) : ChatColor.AQUA.toString();
-        final String secondaryColorString = annoyingMessages.plugin.global_placeholders.get("s");
-        final String secondaryColor = secondaryColorString != null ? BukkitUtility.color(secondaryColorString) : ChatColor.DARK_AQUA.toString();
-
-        // Get start messages
-        final PluginDescriptionFile description = getDescription();
-        final String nameVersion = getName() + " v" + description.getVersion();
-        final String authors = "By " + String.join(", ", description.getAuthors());
-        final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
-        final int lineLength = Math.max(nameVersion.length(), authors.length());
-        lineBuilder.append("-".repeat(lineLength));
-        final String line = lineBuilder.toString();
-
-        // Send start messages
-        log(Level.INFO, line);
-        log(Level.INFO, primaryColor + nameVersion);
-        log(Level.INFO, primaryColor + authors);
-        log(Level.INFO, line);
     }
 
     /**
