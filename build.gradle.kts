@@ -21,11 +21,11 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "8d36906"
+    id("xyz.srnyx.gradle-galaxy") version "1ae6fb2"
     id("com.gradleup.shadow") version "9.4.3"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
-    id("me.modmuss50.mod-publish-plugin") version "2.1.1"
+    id("me.modmuss50.mod-publish-plugin") version "f229e09"
 }
 
 // Runtime libraries
@@ -253,5 +253,6 @@ setupPublishingPlatforms(
         platforms = mapOf(
             PluginPlatform.MODRINTH to "gzktm9GG",
             PluginPlatform.CURSEFORGE to "728930"),
-        loaders = listOf("spigot", "paper", "purpur", "folia")),
-    modrinthAction = { optional("placeholderapi") })
+        loaders = listOf("spigot", "paper", "purpur", "folia"),
+        addAnnoyingApiDependency = false,
+        modrinthAction = { optional("placeholderapi") }))
