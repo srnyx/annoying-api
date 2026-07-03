@@ -25,7 +25,7 @@ plugins {
     id("com.gradleup.shadow") version "9.4.3"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
-    id("me.modmuss50.mod-publish-plugin") version "f229e09"
+    id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
 }
 
 // Runtime libraries
