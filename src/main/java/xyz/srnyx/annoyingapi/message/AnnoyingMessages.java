@@ -1,9 +1,9 @@
 package xyz.srnyx.annoyingapi.message;
 
-import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
 import eu.okaeri.validator.annotation.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
 import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
@@ -14,7 +14,7 @@ import java.util.Map;
 
 // Can't use @Header (@Include in consumer plugins doesn't include headers).
 // Put in top key's @Comment instead.
-public class AnnoyingMessages extends OkaeriConfig {
+public class AnnoyingMessages extends RootConfig {
     @Comment("DOCUMENTATION: https://annoying-api.srnyx.com/wiki/messages-file")
     @Comment
     @Comment

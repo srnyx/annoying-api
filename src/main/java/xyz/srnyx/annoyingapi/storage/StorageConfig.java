@@ -1,12 +1,12 @@
 package xyz.srnyx.annoyingapi.storage;
 
-import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.annotation.Comment;
 import eu.okaeri.configs.annotation.Header;
 import eu.okaeri.validator.annotation.NotNull;
 import eu.okaeri.validator.annotation.Nullable;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationTickFallback;
 import xyz.srnyx.javautilities.MapGenerator;
@@ -22,7 +22,7 @@ import java.util.*;
 
 @Header("DOCUMENTATION: https://annoying-api.srnyx.com/wiki/data-storage")
 @Header("The documentation includes the process for method migration (e.g. H2 -> MYSQL, etc.)")
-public class StorageConfig extends OkaeriConfig {
+public class StorageConfig extends RootConfig {
     @Comment
     @Comment
     @Comment("The method that data will be stored. Available options are listed below")
