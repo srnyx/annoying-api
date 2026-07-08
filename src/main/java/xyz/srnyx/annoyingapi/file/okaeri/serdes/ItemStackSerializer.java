@@ -40,10 +40,14 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
 
     @Override
     public void serialize(@NotNull ItemStack object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
-        // material, amount
+        // material
         data.set("material", object.getType().name());
-        data.set("amount", object.getAmount());
 
+        // amount
+        final int amount = object.getAmount();
+        if (amount != 1) data.set("amount", amount);
+
+        // Get ItemMeta
         final ItemMeta meta = object.getItemMeta();
         final boolean hasMeta = meta != null;
 
@@ -51,13 +55,15 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
         if (DAMAGEABLE_CLASS != null && DAMAGEABLE_GET_DAMAGE_METHOD != null) {
             // 1.13+
             if (hasMeta) try {
-                data.set("durability", DAMAGEABLE_GET_DAMAGE_METHOD.invoke(meta));
+                final int damage = (int) DAMAGEABLE_GET_DAMAGE_METHOD.invoke(meta);
+                if (damage != 0) data.set("durability", damage);
             } catch (final Exception e) {
                 e.printStackTrace();
             }
         } else {
             // 1.12.2
-            data.set("durability", object.getDurability());
+            final short durability = object.getDurability();
+            if (durability != 0) data.set("durability", durability);
         }
 
         // Meta stuff
@@ -154,12 +160,13 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
     public ItemStack deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
         // material
         final Material material = data.get("material", Material.class);
+        if (material == null) throw new IllegalArgumentException("Missing required field: material");
 
         // amount -> 1
-        final int amount = data.getOr("amount", int.class, 1);
+        final int amount = data.getOr("amount", Integer.class, 1);
 
         // durability -> damage -> 0
-        final int durability = data.getOr("durability", int.class, data.getOr("damage", int.class, 0));
+        final int durability = data.getOr("durability", Integer.class, data.getOr("damage", Integer.class, 0));
 
         // Create ItemStack
         final boolean useDamageable = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null;
@@ -177,9 +184,10 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
             if (lore != null && !lore.isEmpty()) meta.setLore(BukkitUtility.colorCollection(lore));
 
             // enchantments
-            final Map<XEnchantment, Integer> enchantments = data.getAsMap("enchantments", XEnchantment.class, int.class);
+            final Map<XEnchantment, Integer> enchantments = data.getAsMap("enchantments", XEnchantment.class, Integer.class);
             if (enchantments != null) for (final Map.Entry<XEnchantment, Integer> enchantment : enchantments.entrySet()) {
-                meta.addEnchant(enchantment.getKey().get(), enchantment.getValue(), true);
+                final Integer level = enchantment.getValue();
+                if (level != null) meta.addEnchant(enchantment.getKey().get(), level, true);
             }
 
             // flags
@@ -214,7 +222,7 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
 
             // 1.14+ (custom model data)
             if (ITEM_META_SET_CUSTOM_MODEL_DATA != null) {
-                final int customModelData = data.getOr("custom-model-data", int.class, 0);
+                final int customModelData = data.getOr("custom-model-data", Integer.class, 0);
                 if (customModelData != 0) try {
                     ITEM_META_SET_CUSTOM_MODEL_DATA.invoke(meta, customModelData);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
@@ -249,7 +257,7 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
 
                 // floats
                 if (CUSTOM_MODEL_DATA_COMPONENT_SET_FLOATS_METHOD != null) {
-                    final List<?> floats = data.getAsList("custom-model-data-components.floats", float.class);
+                    final List<?> floats = data.getAsList("custom-model-data-components.floats", Float.class);
                     if (floats != null && !floats.isEmpty()) try {
                         CUSTOM_MODEL_DATA_COMPONENT_SET_FLOATS_METHOD.invoke(component, floats);
                     } catch (final IllegalAccessException | InvocationTargetException e) {
