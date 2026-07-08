@@ -13,25 +13,10 @@ public class StatsHelper extends AnnoyableClass {
         super(plugin);
     }
 
-    @Nullable
-    public String getStorageMethodName() {
-        return annoyingPlugin.dataManager == null ? null : annoyingPlugin.dataManager.storageConfig.method.name();
-    }
-
-    @Nullable
-    public Boolean getStorageCacheEnabled() {
-        return annoyingPlugin.dataManager == null ? null : annoyingPlugin.dataManager.storageConfig.cache.enabled;
-    }
-
     public @NotNull String @Nullable [] getStorageCacheSaveOn() {
         return annoyingPlugin.dataManager == null ? null : annoyingPlugin.dataManager.storageConfig.cache.getSaveOn().stream()
                 .map(Enum::name)
                 .toArray(String[]::new);
-    }
-
-    @Nullable
-    public Long getStorageCacheInterval() {
-        return annoyingPlugin.dataManager == null ? null : annoyingPlugin.dataManager.storageConfig.cache.interval.toMillis();
     }
 
     //TODO
@@ -44,16 +29,6 @@ public class StatsHelper extends AnnoyableClass {
     public String[] getMessagesPluginGlobalPlaceholdersKeys() {
         final AnnoyingMessages msgs = annoyingPlugin.getAnnoyingMessages();
         return msgs.plugin.global_placeholders.keySet().toArray(new String[0]);
-    }
-
-    @Nullable
-    public String getMessagesPluginSplittersJson() {
-        return annoyingPlugin.getAnnoyingMessages().plugin.splitters.json;
-    }
-
-    @Nullable
-    public String getMessagesPluginSplittersPlaceholder() {
-        return annoyingPlugin.getAnnoyingMessages().plugin.splitters.placeholder;
     }
 
     @Nullable

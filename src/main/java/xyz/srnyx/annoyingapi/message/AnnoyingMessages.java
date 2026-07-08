@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.message;
 import eu.okaeri.configs.annotation.Comment;
 import eu.okaeri.validator.annotation.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.annotations.Stat;
 import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
@@ -88,9 +89,11 @@ public class AnnoyingMessages extends RootConfig {
             }
 
             @Comment("This is the splitter for the JSON components. Default: \"@@\"")
+            @Stat
             @NotNull public String json = "@@";
 
             @Comment("This is the splitter for placeholders with parameters. Default: \"==\"")
+            @Stat
             @NotNull public String placeholder = "==";
         }
     }
