@@ -21,17 +21,17 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "1ae6fb2"
+    id("xyz.srnyx.gradle-galaxy") version "3.2.0"
     id("com.gradleup.shadow") version "9.4.3"
+    id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
-    id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
 }
 
 // Runtime libraries
 val okaeriConfigsVersion: String = "df8ae69"
 val bStatsVersion: String = "3.2.1"
-val fastStatsVersion: String = "0.27.1"
+val fastStatsVersion: String = "0.27.2"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
