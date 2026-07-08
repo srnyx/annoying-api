@@ -13,19 +13,19 @@ public class AnnoyableClass implements Annoyable {
     /**
      * The {@link AnnoyingPlugin} instance
      */
-    @NotNull protected final AnnoyingPlugin plugin;
+    @NotNull protected final AnnoyingPlugin annoyingPlugin;
 
     /**
      * Creates a new {@link AnnoyableClass} with the given plugin
      *
-     * @param   plugin  {@link #plugin}
+     * @param   annoyingPlugin  {@link #annoyingPlugin}
      */
-    public AnnoyableClass(@NotNull AnnoyingPlugin plugin) {
-        this.plugin = plugin;
+    public AnnoyableClass(@NotNull AnnoyingPlugin annoyingPlugin) {
+        this.annoyingPlugin = annoyingPlugin;
     }
 
     @Override @NotNull
     public AnnoyingPlugin getAnnoyingPlugin() {
-        return plugin;
+        return annoyingPlugin;
     }
 }

@@ -12,7 +12,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.newNamespacedKeyThrow;
 
 
 /**
@@ -71,8 +71,8 @@ public class RefAttributeModifier {
     @Nullable
     public static Object constructAttributeModifier(@Nullable Plugin plugin, @NotNull String name, double amount, @NotNull Object operation, @Nullable Object slot) {
         // 1.21+
-        if (plugin != null && slot != null && ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21 != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
-            return ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), amount, operation, slot);
+        if (plugin != null && slot != null && ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21 != null) try {
+            return ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_21.newInstance(newNamespacedKeyThrow(plugin, name), amount, operation, slot);
         } catch (final Exception e) {
             e.printStackTrace();
         }

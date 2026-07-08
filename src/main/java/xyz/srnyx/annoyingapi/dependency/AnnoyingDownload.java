@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.PluginPlatform;
-import xyz.srnyx.annoyingapi.parents.Annoyable;
+import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
 
@@ -30,8 +30,7 @@ import java.util.logging.Level;
 /**
  * Used for downloading {@link AnnoyingDependency AnnoyingDependencies}
  */
-public class AnnoyingDownload extends Stringable implements Annoyable {
-    @NotNull private final AnnoyingPlugin plugin;
+public class AnnoyingDownload extends AnnoyableClass {
     @NotNull private final String userAgent;
     @NotNull private final List<AnnoyingDependency> dependencies;
     @Nullable private Runnable finishRunnable;
@@ -44,7 +43,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
      * @param   dependencies    the {@link AnnoyingDependency}s to download
      */
     public AnnoyingDownload(@NotNull AnnoyingPlugin plugin, @NotNull List<AnnoyingDependency> dependencies) {
-        this.plugin = plugin;
+        super(plugin);
         this.userAgent = plugin.getName() + "/" + plugin.getDescription().getVersion() + " via AnnoyingAPI/" + BuildProperties.ANNOYING_API_VERSION + " (dependency)";
         this.dependencies = dependencies;
     }
@@ -60,8 +59,8 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     }
 
     @Override @NotNull
-    public AnnoyingPlugin getAnnoyingPlugin() {
-        return plugin;
+    public String toString() {
+        return Stringable.toString(this);
     }
 
     /**
@@ -72,7 +71,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
     public void downloadPlugins(@Nullable Runnable finishRunnable) {
         this.finishRunnable = finishRunnable;
         this.remaining = dependencies.size();
-        dependencies.forEach(dependency -> plugin.scheduler.attemptAsync(() -> attemptDownload(dependency)));
+        dependencies.forEach(dependency -> annoyingPlugin.scheduler.attemptAsync(() -> attemptDownload(dependency)));
     }
 
     /**
@@ -297,7 +296,7 @@ public class AnnoyingDownload extends Stringable implements Annoyable {
         remaining--;
         if (remaining != 0) return;
         AnnoyingPlugin.log(Level.INFO, "&a&lAll &2&l" + dependencies.size() + "&a&l plugins have been processed! &aPlease resolve any errors and then restart the server.");
-        Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+        Bukkit.getScheduler().callSyncMethod(annoyingPlugin, () -> {
             if (finishRunnable != null) finishRunnable.run();
             return null;
         });

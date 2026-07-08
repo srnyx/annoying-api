@@ -37,7 +37,6 @@ public class EntityData extends StringData {
     /**
      * Construct a new {@link EntityData} for the given entity
      *
-     * @param   plugin  {@link #plugin}
      * @param   entity  {@link #entity} and {@link #target} (uses entity UUID)
      */
     public EntityData(@NotNull AnnoyingPlugin plugin, @NotNull Entity entity) {
@@ -66,7 +65,7 @@ public class EntityData extends StringData {
                 // Get PDC
                 persistentDataContainer = PERSISTENT_DATA_HOLDER_GET_PERSISTENT_DATA_CONTAINER_METHOD.invoke(entity);
                 // Check if already converted
-                convertedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, CONVERTED_KEY);
+                convertedKey = newNamespacedKeyThrow(annoyingPlugin, CONVERTED_KEY);
                 if (PERSISTENT_DATA_CONTAINER_GET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE) != null) return Collections.emptyMap();
                 // Set converted key if onlyTryOnce is true
                 if (onlyTryOnce) PERSISTENT_DATA_CONTAINER_SET_METHOD.invoke(persistentDataContainer, convertedKey, PERSISTENT_DATA_TYPE_BYTE, (byte) 1);
@@ -79,7 +78,7 @@ public class EntityData extends StringData {
             final Map<String, Object> namespacedKeys = new HashMap<>();
             if (PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD != null && NAMESPACED_KEY_GET_NAMESPACE_METHOD != null && NAMESPACED_KEY_GET_KEY_METHOD != null) {
                 // 1.16.1+ (getKeys)
-                final String pluginName = plugin.getName().toLowerCase();
+                final String pluginName = annoyingPlugin.getName().toLowerCase();
                 try {
                     for (final Object namespacedKey : (Set<?>) PERSISTENT_DATA_CONTAINER_GET_KEYS_METHOD.invoke(persistentDataContainer)) {
                         final String namespace = (String) NAMESPACED_KEY_GET_NAMESPACE_METHOD.invoke(namespacedKey);
@@ -96,7 +95,7 @@ public class EntityData extends StringData {
                 if (keys == null || keys.isEmpty()) return Collections.emptyMap();
                 try {
                      for (final String key : keys) {
-                         final Object namespacedKey = NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key);
+                         final Object namespacedKey = newNamespacedKeyThrow(annoyingPlugin, key);
                          namespacedKeys.put(key, namespacedKey);
                      }
                 } catch (final ReflectiveOperationException e) {
@@ -131,8 +130,8 @@ public class EntityData extends StringData {
         }
 
         // 1.13.2- (file)
-        final AnnoyingData file = new AnnoyingData(plugin, plugin.options.dataOptions.entities.path + "/" + target + ".yml", plugin.options.dataOptions.entities.fileOptions);
-        final ConfigurationSection section = file.getConfigurationSection(plugin.options.dataOptions.entities.section);
+        final AnnoyingData file = new AnnoyingData(annoyingPlugin, annoyingPlugin.options.dataOptions.entities.path + "/" + target + ".yml", annoyingPlugin.options.dataOptions.entities.fileOptions);
+        final ConfigurationSection section = file.getConfigurationSection(annoyingPlugin.options.dataOptions.entities.section);
         if (section == null || section.getBoolean("annoyingapi.converted")) return Collections.emptyMap();
         // Convert
         final Map<String, String> failed = new HashMap<>();

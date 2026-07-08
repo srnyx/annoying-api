@@ -16,6 +16,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe;
+import xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.javautilities.FileUtility;
@@ -31,12 +33,9 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute.ATTRIBUTE_ENUM;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.RefOperation.ATTRIBUTE_MODIFIER_OPERATION_ENUM;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefDamageable.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItemMeta.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
@@ -362,7 +361,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         // 1.13+ icon
         if (POTION_EFFECT_CONSTRUCTOR_1_13 != null) try {
             return Optional.of(POTION_EFFECT_CONSTRUCTOR_1_13.newInstance(type, duration, amplifier, ambient, particles, section.getBoolean("icon", true)));
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (final ReflectiveOperationException e) {
             e.printStackTrace();
         }
 
@@ -431,7 +430,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
             // Return
             try {
                 return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_13_2.newInstance(UUID.randomUUID(), name, amount, operation, slot));
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            } catch (final ReflectiveOperationException e) {
                 e.printStackTrace();
                 return def;
             }
@@ -440,7 +439,7 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
         // Return
         if (ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9 != null) try {
             return Optional.of((G) ATTRIBUTE_MODIFIER_CONSTRUCTOR_1_9.newInstance(name, amount, operation));
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (final ReflectiveOperationException e) {
             e.printStackTrace();
         }
         return def;
@@ -702,43 +701,31 @@ public class AnnoyingFile<T extends AnnoyingFile<T>> extends YamlConfiguration {
 
         // Shapeless
         if (section.getBoolean("shapeless")) {
-            ShapelessRecipe shapeless;
-            if (SHAPELESS_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
-                try {
-                    // 1.12+
-                    shapeless = SHAPELESS_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
-                } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    // 1.11-
-                    shapeless = new ShapelessRecipe(result);
-                }
-            } else {
-                // 1.11-
-                shapeless = new ShapelessRecipe(result);
+            // Create shapeless recipe
+            final ShapelessRecipe shapeless = RefShapelessRecipe.newShapelessRecipe(result, plugin, name);
+
+            // Set ingredients
+            for (final Map.Entry<Character, Material> entry : ingredientMaterials.entrySet()) {
+                final String key = entry.getKey().toString();
+                shapeless.addIngredient(
+                        shape.stream()
+                                .mapToInt(s -> s.length() - s.replace(key, "").length())
+                                .sum(),
+                        entry.getValue());
             }
-            for (Map.Entry<Character, Material> entry : ingredientMaterials.entrySet()) shapeless.addIngredient(shape.stream()
-                    .mapToInt(s -> s.length() - s.replace(entry.getKey().toString(), "").length())
-                    .sum(), entry.getValue());
+
             return Optional.of(shapeless);
         }
 
         // Shaped
-        ShapedRecipe shaped;
-        if (SHAPED_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
-            try {
-                // 1.12+
-                shaped = SHAPED_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                // 1.11-
-                shaped = new ShapedRecipe(result);
-            }
-        } else {
-            // 1.11-
-            shaped = new ShapedRecipe(result);
-        }
+        final ShapedRecipe shaped = RefShapedRecipe.newShapedRecipe(result, plugin, name);
+
+        // Set shape and ingredients
         shaped.shape(shape.stream()
                 .map(string -> string.replace("-", " "))
                 .toArray(String[]::new));
         ingredientMaterials.forEach(shaped::setIngredient);
+
         return Optional.of(shaped);
     }
 

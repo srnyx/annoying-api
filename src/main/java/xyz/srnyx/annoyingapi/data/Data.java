@@ -2,11 +2,9 @@ package xyz.srnyx.annoyingapi.data;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.parents.Annoyable;
+import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.Optional;
@@ -22,11 +20,7 @@ import java.util.logging.Level;
  * @see EntityData
  * @see ItemData
  */
-public abstract class Data<T> extends Stringable implements Annoyable {
-    /**
-     * The {@link AnnoyingPlugin plugin} instance
-     */
-    @NotNull protected final AnnoyingPlugin plugin;
+public abstract class Data<T> extends AnnoyableClass {
     /**
      * The target to manage data for
      */
@@ -35,17 +29,16 @@ public abstract class Data<T> extends Stringable implements Annoyable {
     /**
      * Construct a new {@link Data} for the given target
      *
-     * @param   plugin  {@link #plugin}
      * @param   target  {@link #target}
      */
     protected Data(@NotNull AnnoyingPlugin plugin, @NotNull T target) {
-        this.plugin = plugin;
+        super(plugin);
         this.target = target;
     }
 
     @Override @NotNull
-    public AnnoyingPlugin getAnnoyingPlugin() {
-        return plugin;
+    public String toString() {
+        return Stringable.toString(this);
     }
 
     /**
@@ -161,6 +154,6 @@ public abstract class Data<T> extends Stringable implements Annoyable {
      * @param   t       the {@link Throwable} that caused the error
      */
     protected void sendError(@NotNull String action, @Nullable Throwable t) {
-        plugin.logErrorTrack(Level.WARNING, "&cFailed to " + action + " data for &4" + BukkitUtility.stripUntranslatedColor(target.toString()) + "&c!", t);
+        annoyingPlugin.logErrorTrack(Level.WARNING, "&cFailed to " + action + " data for &4" + BukkitUtility.stripUntranslatedColor(target.toString()) + "&c!", t);
     }
 }

@@ -1,10 +1,12 @@
 package xyz.srnyx.annoyingapi.reflection.org.bukkit;
 
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.utility.ReflectionUtility;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 
@@ -28,6 +30,23 @@ public class RefNamespacedKey {
      * 1.12+ org.bukkit.NamespacedKey#getKey()
      */
     @Nullable public static final Method NAMESPACED_KEY_GET_KEY_METHOD = ReflectionUtility.getMethod(1, 12, 0, NAMESPACED_KEY_CLASS, "getKey");
+
+    @Nullable
+    public static Object newNamespacedKey(@NotNull Plugin plugin, @NotNull String key) {
+        try {
+            return newNamespacedKeyThrow(plugin, key);
+        } catch (final IllegalStateException ignored) {
+        } catch (final ReflectiveOperationException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @NotNull
+    public static Object newNamespacedKeyThrow(@NotNull Plugin plugin, @NotNull String key) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (NAMESPACED_KEY_CONSTRUCTOR == null) throw new IllegalStateException("NamespacedKey constructor is not available");
+        return NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, key);
+    }
 
     /**
      * This class cannot be instantiated

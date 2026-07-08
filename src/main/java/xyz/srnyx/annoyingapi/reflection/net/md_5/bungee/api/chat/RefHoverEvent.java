@@ -40,7 +40,7 @@ public class RefHoverEvent {
             if (contents == null) return getDefaultHoverEvent(action, content);
             Array.set(contents, 0, TEXT_CONSTRUCTOR.newInstance(content));
             return HOVER_EVENT_CONSTRUCTOR.newInstance(action, contents);
-        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
+        } catch (final ReflectiveOperationException ignored) {}
         return getDefaultHoverEvent(action, content);
     }
 

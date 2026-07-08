@@ -1,10 +1,8 @@
 package xyz.srnyx.annoyingapi.data;
 
 import org.bukkit.OfflinePlayer;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
 import xyz.srnyx.annoyingapi.storage.CachedValue;
@@ -34,14 +32,13 @@ public class StringData extends Data<String> {
     /**
      * Construct a new {@link StringData} for the given string
      *
-     * @param   plugin  {@link #plugin}
      * @param   table   {@link #table}
      * @param   string  {@link #target}
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull String table, @NotNull String string) {
         super(plugin, string);
-        if (plugin.dataManager == null) throw new IllegalStateException(plugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
-        this.table = plugin.dataManager.getTableName(table);
+        if (annoyingPlugin.dataManager == null) throw new IllegalStateException(annoyingPlugin.options.dataOptions.enabled ? "Data manager is not initialized!" : "Data manager is not enabled! Plugin devs: enable it by setting options.dataOptions.enabled to true");
+        this.table = annoyingPlugin.dataManager.getTableName(table);
         useCache(null);
     }
 
@@ -49,7 +46,6 @@ public class StringData extends Data<String> {
      * Construct a new {@link StringData} for the given {@link OfflinePlayer}
      * <br>This uses the same table used for {@link EntityData} ({@link EntityData#TABLE_NAME}) and the player's UUID as the target
      *
-     * @param   plugin  {@link #plugin}
      * @param   player  the player to get/store the data for
      */
     public StringData(@NotNull AnnoyingPlugin plugin, @NotNull OfflinePlayer player) {
@@ -66,44 +62,44 @@ public class StringData extends Data<String> {
      */
     @NotNull
     public StringData useCache(@Nullable Boolean useCache) {
-        this.useCache = plugin.dataManager != null && plugin.dataManager.storageConfig.cache.enabled && (useCache == null ? plugin.options.dataOptions.useCacheDefault : useCache);
+        this.useCache = annoyingPlugin.dataManager != null && annoyingPlugin.dataManager.storageConfig.cache.enabled && (useCache == null ? annoyingPlugin.options.dataOptions.useCacheDefault : useCache);
         return this;
     }
 
     @Override @Nullable
     public String get(@NotNull String key) {
-        if (plugin.dataManager == null) {
+        if (annoyingPlugin.dataManager == null) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to get &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!");
             return null;
         }
 
         // Get the data from the cache
         if (useCache) {
-            final CachedValue cached = plugin.dataManager.dialect.getFromCache(table, target, key);
+            final CachedValue cached = annoyingPlugin.dataManager.dialect.getFromCache(table, target, key);
             if (cached != null) return cached.value();
         }
 
         // Get the data from the database
-        final String data = plugin.dataManager.dialect.getFromDatabase(table, target, key).orElse(null);
-        if (useCache) plugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(data));
+        final String data = annoyingPlugin.dataManager.dialect.getFromDatabase(table, target, key).orElse(null);
+        if (useCache) annoyingPlugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(data));
         return data;
     }
 
     @Override
     protected boolean set(@NotNull String key, @NotNull String value) {
-        if (plugin.dataManager == null) {
+        if (annoyingPlugin.dataManager == null) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!");
             return false;
         }
 
         // Set the data in the cache
         if (useCache) {
-            plugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(value));
+            annoyingPlugin.dataManager.dialect.setToCache(table, target, key, new CachedValue(value));
             return true;
         }
 
         // Set the data in the database
-        final FailedSet failed = plugin.dataManager.dialect.setToDatabase(table, target, key, value);
+        final FailedSet failed = annoyingPlugin.dataManager.dialect.setToDatabase(table, target, key, value);
         if (failed != null) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to set &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!", failed.exception());
             return false;
@@ -113,19 +109,19 @@ public class StringData extends Data<String> {
 
     @Override
     public boolean remove(@NotNull String key) {
-        if (plugin.dataManager == null) {
+        if (annoyingPlugin.dataManager == null) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to remove &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!");
             return false;
         }
 
         // Remove the data from the cache
         if (useCache) {
-            plugin.dataManager.dialect.markRemovedInCache(table, target, key);
+            annoyingPlugin.dataManager.dialect.markRemovedInCache(table, target, key);
             return true;
         }
 
         // Remove the data from the database
-        if (!plugin.dataManager.dialect.removeValueFromDatabase(table, target, key)) {
+        if (!annoyingPlugin.dataManager.dialect.removeValueFromDatabase(table, target, key)) {
             AnnoyingPlugin.log(Level.SEVERE, "&cFailed to remove &4" + key + "&c for &4" + target + "&c in &4" + table + "&c. DEVELOPERS: Make sure you added the table/column to DataOptions!");
             return false;
         }

@@ -8,7 +8,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
-import xyz.srnyx.annoyingapi.parents.Annoyable;
+import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.MiscUtility;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
@@ -25,16 +25,12 @@ import java.util.logging.Level;
 /**
  * Class for handling update checking
  */
-public class UpdateChecker extends Stringable implements Annoyable {
+public class UpdateChecker extends AnnoyableClass {
     /**
      * The current version of Minecraft in short form (ex: 1.17 instead of 1.17.0)
      */
     @NotNull private static final String MINECRAFT_VERSION_SHORT = AnnoyingPlugin.MINECRAFT_VERSION.patch != 0 ? AnnoyingPlugin.MINECRAFT_VERSION.version : AnnoyingPlugin.MINECRAFT_VERSION.major + "." + AnnoyingPlugin.MINECRAFT_VERSION.minor;
 
-    /**
-     * The {@link AnnoyingPlugin plugin} instance
-     */
-    @NotNull private final AnnoyingPlugin annoyingPlugin;
     /**
      * The name of the plugin to check for updates
      */
@@ -68,7 +64,7 @@ public class UpdateChecker extends Stringable implements Annoyable {
      * @param   platforms           {@link #platforms}
      */
     public UpdateChecker(@NotNull AnnoyingPlugin annoyingPlugin, @NotNull PluginDescriptionFile pluginDescription, @NotNull PluginPlatform.Multi platforms) {
-        this.annoyingPlugin = annoyingPlugin;
+        super(annoyingPlugin);
         this.pluginName = pluginDescription.getName();
         this.currentVersion = pluginDescription.getVersion();
         this.currentVersionSemantic = MiscUtility.handleException(() -> new SemanticVersion(currentVersion)).orElse(null);
@@ -101,8 +97,8 @@ public class UpdateChecker extends Stringable implements Annoyable {
     }
 
     @Override @NotNull
-    public AnnoyingPlugin getAnnoyingPlugin() {
-        return annoyingPlugin;
+    public String toString() {
+        return Stringable.toString(this);
     }
 
     /**

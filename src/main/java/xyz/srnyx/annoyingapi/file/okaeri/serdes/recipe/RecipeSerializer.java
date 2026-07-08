@@ -10,7 +10,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.material.MaterialData;
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
@@ -24,22 +23,18 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_CLASS;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_GET_COOKING_TIME_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_GET_EXPERIENCE_METHOD;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.COOKING_RECIPE_GET_INPUT;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_CONSTRUCTOR_1_13;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_CONSTRUCTOR_1_9;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefCookingRecipe.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.FURNACE_RECIPE_GET_EXPERIENCE_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefFurnaceRecipe.newFurnaceRecipe;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefMerchantRecipe.*;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefRecipeChoice.RECIPE_CHOICE_CLASS;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe.SHAPED_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.SHAPELESS_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapedRecipe.newShapedRecipe;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefShapelessRecipe.newShapelessRecipe;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefSmithingRecipe.SMITHING_RECIPE_CLASS;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefSmithingRecipe.SMITHING_RECIPE_CONSTRUCTOR;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.StonecuttingRecipe.STONECUTTING_RECIPE_CLASS;
-import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.StonecuttingRecipe.STONECUTTING_RECIPE_CONSTRUCTOR;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefSmithingRecipe.newSmithingRecipe;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefStonecuttingRecipe.STONECUTTING_RECIPE_CLASS;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.RefStonecuttingRecipe.newStonecuttingRecipe;
 
 
 public class RecipeSerializer implements ObjectSerializer<Recipe> {
@@ -142,7 +137,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                 // Add to shape row
                 rows[i / 3].append(key);
             }
-            data.set("shape", List.of(rows[0].toString(), rows[1].toString(), rows[2].toString()));
+            data.setCollection("shape", List.of(rows[0].toString(), rows[1].toString(), rows[2].toString()), String.class);
 
             // ingredients
             data.set("ingredients", characterToMaterial);
@@ -156,7 +151,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             data.set("shapeless", false);
 
             // shape
-            data.set("shape", shaped.getShape());
+            data.setArray("shape", shaped.getShape(), String.class);
 
             // ingredients
             final Map<Character, Material> ingredientMap = new HashMap<>();
@@ -201,7 +196,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         final Class<?> type = generics.getType();
 
         // CookingRecipe or FurnaceRecipe
-        final boolean cooking = COOKING_RECIPE_CLASS != null && COOKING_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null && COOKING_RECIPE_CLASS.isAssignableFrom(type);
+        final boolean cooking = COOKING_RECIPE_CLASS != null && COOKING_RECIPE_CLASS.isAssignableFrom(type);
         final boolean furnace = FurnaceRecipe.class.isAssignableFrom(type);
         if (cooking || furnace) {
             // ingredient
@@ -210,29 +205,19 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
             // experience
             final Float experience = data.get("experience", Float.class);
-            if (experience == null) throw new IllegalArgumentException("Missing required field: experience");
 
             // cooking_time
             final Duration cookingTime = data.getOr("cooking_time", Duration.class, Duration.ofSeconds(10));
             final int cookingTimeTicks = (int) (cookingTime.toMillis() / 50);
 
             // 1.14+ CookingRecipe
-            if (cooking) try {
-                return storeRawResult((Recipe) COOKING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks), rawResult);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
+            if (cooking) {
+                final Recipe recipe = newCookingRecipe(plugin, name, result, ingredient, experience, cookingTimeTicks);
+                if (recipe != null) return storeRawResult(recipe, result);
+            }
 
-            // 1.13+ FurnaceRecipe
-            if (FURNACE_RECIPE_CONSTRUCTOR_1_13 != null && NAMESPACED_KEY_CONSTRUCTOR != null) try {
-                return storeRawResult(FURNACE_RECIPE_CONSTRUCTOR_1_13.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient, experience, cookingTimeTicks), rawResult);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
-
-            // 1.9+ FurnaceRecipe
-            if (FURNACE_RECIPE_CONSTRUCTOR_1_9 != null) try {
-                return storeRawResult(FURNACE_RECIPE_CONSTRUCTOR_1_9.newInstance(result, new MaterialData(ingredient), experience), rawResult);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException ignored) {}
-
-            // 1.8.8- FurnaceRecipe
-            return storeRawResult(new FurnaceRecipe(result, ingredient), rawResult);
+            // FurnaceRecipe
+            return storeRawResult(newFurnaceRecipe(result, ingredient, experience, plugin, name, cookingTimeTicks), rawResult);
         }
 
         // 1.9+ MerchantRecipe
@@ -242,91 +227,41 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             if (maxUses == null) throw new IllegalArgumentException("Missing required field: max_uses");
 
             // uses
-            final int uses = data.getOr("uses", int.class, 0);
+            final int uses = data.getOr("uses", Integer.class, 0);
 
             // experience_reward
-            final boolean experienceReward = data.getOr("experience_reward", boolean.class, false);
+            final boolean experienceReward = data.getOr("experience_reward", Boolean.class, false);
+            
+            // villager_experience
+            final int villagerExperience = data.getOr("villager_experience", Integer.class, 0);
 
-            // 1.14+
-            if (MERCHANT_RECIPE_CONSTRUCTOR_1_14 != null) {
-                // villager_experience
-                final int villagerExperience = data.getOr("villager_experience", int.class, 0);
+            // price_multiplier
+            final float priceMultiplier = data.getOr("price_multiplier", Float.class, 0.0f);
+            
+            // demand
+            final int demand = data.getOr("demand", Integer.class, 0);
 
-                // price_multiplier
-                final float priceMultiplier = data.getOr("price_multiplier", float.class, 0.0f);
+            // special_price
+            final int specialPrice = data.getOr("special_price", Integer.class, 0);
+            
+            // ignore_discounts (PAPER)
+            final boolean ignoreDiscounts = data.getOr("ignore_discounts", Boolean.class, false);
 
-                // 1.18.1+
-                if (MERCHANT_RECIPE_CONSTRUCTOR_1_18_1 != null) {
-                    // demand
-                    final int demand = data.getOr("demand", int.class, 0);
-
-                    // special_price
-                    final int specialPrice = data.getOr("special_price", int.class, 0);
-
-                    // PAPER 1.18.1+
-                    if (MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_18_1 != null) {
-                        // ignore_discounts
-                        final boolean ignoreDiscounts = data.getOr("ignore_discounts", boolean.class, false);
-
-                        try {
-                            return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice, ignoreDiscounts), rawResult);
-                        } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    // 1.18.1+
-                    try {
-                        return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_18_1.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice), rawResult);
-                    } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                // PAPER 1.16.5+
-                if (MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_16_5 != null) {
-                    // ignore_discounts
-                    final boolean ignoreDiscounts = data.getOr("ignore_discounts", boolean.class, false);
-
-                    try {
-                        return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_PAPER_1_16_5.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier, ignoreDiscounts), rawResult);
-                    } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                // 1.14-1.16.4
-                try {
-                    return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR_1_14.newInstance(result, uses, maxUses, experienceReward, villagerExperience, priceMultiplier), rawResult);
-                } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            // 1.9+
-            if (MERCHANT_RECIPE_CONSTRUCTOR != null) try {
-                return storeRawResult((Recipe) MERCHANT_RECIPE_CONSTRUCTOR.newInstance(result, uses, maxUses, experienceReward), rawResult);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-
-            // 1.8.8- (shouldn't happen)
-            throw new IllegalStateException("Could not find a valid MerchantRecipe constructor");
+            // Create MerchantRecipe
+            final Recipe recipe = newMerchantRecipe(result, maxUses, uses, experienceReward, villagerExperience, priceMultiplier, demand, specialPrice, ignoreDiscounts);
+            if (recipe == null) throw new IllegalStateException("Could not find a valid MerchantRecipe constructor");
+            return storeRawResult(recipe, rawResult);
         }
 
         // 1.14+ StonecuttingRecipe
         if (STONECUTTING_RECIPE_CLASS != null && STONECUTTING_RECIPE_CLASS.isAssignableFrom(type)) {
-            if (STONECUTTING_RECIPE_CONSTRUCTOR == null || NAMESPACED_KEY_CONSTRUCTOR == null) throw new IllegalStateException("StonecuttingRecipe constructor not found");
-
             // ingredient
             final Material ingredient = data.get("ingredient", Material.class);
             if (ingredient == null) throw new IllegalArgumentException("Missing required field: ingredient");
 
-            try {
-                return storeRawResult((Recipe) STONECUTTING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, ingredient), rawResult);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new IllegalStateException("Could not create StonecuttingRecipe", e);
-            }
+            final Recipe recipe = newStonecuttingRecipe(plugin, name, result, ingredient);
+            if (recipe == null) throw new IllegalStateException("Could not find a valid StonecuttingRecipe constructor");
+            return storeRawResult(recipe, rawResult);
         }
 
         // 1.16.1+ SmithingRecipe
@@ -341,11 +276,9 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             final Object addition = data.get("addition", RECIPE_CHOICE_CLASS);
             if (addition == null) throw new IllegalArgumentException("Missing required field: addition");
 
-            try {
-                return storeRawResult((Recipe) SMITHING_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result, base, addition), rawResult);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new IllegalStateException("Could not create SmithingRecipe", e);
-            }
+            final Recipe recipe = newSmithingRecipe(plugin, name, result, base, addition);
+            if (recipe == null) throw new IllegalStateException("Could not find a valid SmithingRecipe constructor");
+            return storeRawResult(recipe, rawResult);
         }
 
         // shape
@@ -357,22 +290,9 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         if (ingredients == null || ingredients.isEmpty()) throw new IllegalArgumentException("Missing required field: ingredients");
 
         // shapeless
-        if (data.get("shapeless", boolean.class)) {
+        if (data.getOr("shapeless", Boolean.class, false)) {
             // Create shapeless recipe
-            ShapelessRecipe shapeless;
-            if (SHAPELESS_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
-                try {
-                    // 1.12+
-                    shapeless = SHAPELESS_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
-                } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                    // 1.11-
-                    shapeless = new ShapelessRecipe(result);
-                }
-            } else {
-                // 1.11-
-                shapeless = new ShapelessRecipe(result);
-            }
+            final ShapelessRecipe shapeless = newShapelessRecipe(result, plugin, name);
 
             // Set ingredients
             for (final Map.Entry<Character, Material> entry : ingredients.entrySet()) {
@@ -388,19 +308,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         }
 
         // shaped
-        ShapedRecipe shaped;
-        if (SHAPED_RECIPE_CONSTRUCTOR != null && NAMESPACED_KEY_CONSTRUCTOR != null) {
-            try {
-                // 1.12+
-                shaped = SHAPED_RECIPE_CONSTRUCTOR.newInstance(NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, name), result);
-            } catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                // 1.11-
-                shaped = new ShapedRecipe(result);
-            }
-        } else {
-            // 1.11-
-            shaped = new ShapedRecipe(result);
-        }
+        final ShapedRecipe shaped = newShapedRecipe(result, plugin, name);
 
         // Set shape and ingredients
         shaped.shape(shape.stream()

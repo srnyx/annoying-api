@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CLASS;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_CONSTRUCTOR;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.NAMESPACED_KEY_GET_KEY_METHOD;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.RefNamespacedKey.newNamespacedKeyThrow;
 
 
 public class NamespacedKeySerializer extends BidirectionalTransformer<String, Object> implements Supplier<Boolean> {
@@ -34,11 +35,11 @@ public class NamespacedKeySerializer extends BidirectionalTransformer<String, Ob
     @Override @NotNull
     public Object leftToRight(@NotNull String data, @NotNull SerdesContext serdesContext) {
         if (NAMESPACED_KEY_CONSTRUCTOR == null) {
-            throw new IllegalStateException("Plugin is null or NamespacedKey constructor is null, cannot transform String to NamespacedKey");
+            throw new IllegalStateException("NamespacedKey constructor is null, cannot transform String to NamespacedKey");
         }
 
         try {
-            return NAMESPACED_KEY_CONSTRUCTOR.newInstance(plugin, data);
+            return newNamespacedKeyThrow(plugin, data);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to transform String to NamespacedKey", e);
         }
@@ -47,7 +48,7 @@ public class NamespacedKeySerializer extends BidirectionalTransformer<String, Ob
     @Override @NotNull
     public String rightToLeft(@NotNull Object data, @NotNull SerdesContext serdesContext) {
         if (NAMESPACED_KEY_GET_KEY_METHOD == null) {
-            throw new IllegalStateException("Plugin is null or NamespacedKey getKey method is null, cannot transform NamespacedKey to String");
+            throw new IllegalStateException("NamespacedKey getKey method is null, cannot transform NamespacedKey to String");
         }
 
         try {
