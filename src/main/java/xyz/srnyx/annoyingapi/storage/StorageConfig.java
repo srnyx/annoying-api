@@ -89,7 +89,7 @@ public class StorageConfig extends RootConfig {
         String url = method.url.apply(dataPath);
         final Properties properties = new Properties();
         if (method.isRemote()) {
-            url += remote_connection.host + ":" + remote_connection.getPort() + "/" + remote_connection.database;
+            url += remote_connection.host + ":" + remote_connection.port + "/" + remote_connection.database;
             properties.putAll(remote_connection.properties);
             if (!remote_connection.username.isEmpty()) properties.setProperty("user", remote_connection.username);
             if (!remote_connection.password.isEmpty()) properties.setProperty("password", remote_connection.password);
@@ -146,7 +146,7 @@ public class StorageConfig extends RootConfig {
         @NotNull public String host = "localhost";
         @Comment("The port of the database")
         @Comment("Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL")
-        @Nullable private Integer port = getRoot().method.defaultPort;
+        public int port = Objects.requireNonNullElse(getRoot().method.defaultPort, 3306);
 
         @Comment
         @Comment("The name of the database")
@@ -167,7 +167,7 @@ public class StorageConfig extends RootConfig {
         @Comment("By default (if null), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore")
         @Comment("To remove the table prefix, set it to an empty string ('')")
         @Comment("DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)")
-        @Nullable private String table_prefix = getDefaultTablePrefix();
+        @Nullable public String table_prefix = getDefaultTablePrefix(getRoot().plugin);
 
         /**
          * Additional custom properties for the remote connection
@@ -181,34 +181,9 @@ public class StorageConfig extends RootConfig {
                 "useUnicode", "true",
                 "characterEncoding", "UTF-8");
 
-        @org.jetbrains.annotations.Nullable
-        public Integer getPort() {
-            if (port == null) {
-                final Integer newPort = getRoot().method.defaultPort;
-                if (!Objects.equals(port, newPort)) {
-                    port = newPort;
-                    save();
-                }
-            }
-            return port;
-        }
-
         @org.jetbrains.annotations.NotNull
-        public String getTablePrefix() {
-            if (table_prefix == null) {
-                final String newTablePrefix = getDefaultTablePrefix();
-                if (!Objects.equals(table_prefix, newTablePrefix)) {
-                    table_prefix = newTablePrefix;
-                    save();
-                }
-            }
-            return table_prefix;
-        }
-
-
-        @org.jetbrains.annotations.NotNull
-        public String getDefaultTablePrefix() {
-            return getRoot().plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_";
+        public static String getDefaultTablePrefix(@org.jetbrains.annotations.NotNull AnnoyingPlugin plugin) {
+            return plugin.getName().toLowerCase().replaceAll("[^a-z0-9]", "") + "_";
         }
     }
 

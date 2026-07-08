@@ -20,6 +20,8 @@ import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigLoader;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.S0001_Remote_connection_null_table_prefix;
+import xyz.srnyx.annoyingapi.file.okaeri.migration.S0002_Remote_connection_null_port;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
@@ -375,7 +377,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
             // Get start messages
             final PluginDescriptionFile description = getDescription();
-            final String nameVersion = getName() + " v" + description.getVersion();
+            final String nameVersion = getName() + " " + description.getVersion();
             final String authors = "By " + String.join(", ", description.getAuthors());
             final StringBuilder lineBuilder = new StringBuilder(secondaryColor);
             final int lineLength = Math.max(nameVersion.length(), authors.length());
@@ -591,6 +593,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     public StorageConfig newStorageConfig(@NotNull String fileName) {
         return configLoader.build(configBuilder -> configBuilder
                 .config(new StorageConfig(this))
+                .internalStateMigrations(
+                        new S0001_Remote_connection_null_table_prefix(this),
+                        new S0002_Remote_connection_null_port())
                 .file(fileName));
     }
 

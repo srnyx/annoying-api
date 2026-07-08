@@ -54,7 +54,7 @@ public class DataManager {
         plugin = config.plugin;
         storageConfig = config;
         dialect = storageConfig.method.dialect.apply(this);
-        tablePrefix = storageConfig.method.isRemote() ? storageConfig.remote_connection.getTablePrefix() : "";
+        tablePrefix = storageConfig.method.isRemote() ? storageConfig.remote_connection.table_prefix : "";
     }
 
     /**
