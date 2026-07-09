@@ -6,10 +6,10 @@ import eu.okaeri.validator.annotation.NotNull;
 import eu.okaeri.validator.annotation.Nullable;
 import net.byteflux.libby.classloader.IsolatedClassLoader;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.annotations.Stat;
 import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationTickFallback;
+import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.javautilities.MapGenerator;
 
 import java.io.File;

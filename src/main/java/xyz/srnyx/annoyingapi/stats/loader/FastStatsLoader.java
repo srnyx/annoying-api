@@ -7,12 +7,12 @@ import dev.faststats.bukkit.BukkitContext;
 import dev.faststats.data.Metric;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.schema.FieldDeclaration;
-import eu.okaeri.configs.schema.GenericsDeclaration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
-import xyz.srnyx.annoyingapi.annotations.Stat;
+import xyz.srnyx.annoyingapi.stats.Stat;
+import xyz.srnyx.annoyingapi.stats.Statable;
 
 import java.lang.reflect.Modifier;
 import java.time.Duration;
@@ -118,27 +118,46 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
             // Ignore transient
             if (Modifier.isTransient(field.getField().getModifiers())) continue;
 
-            final String entryName = prefix + field.getName();
             final Object value = field.getValue();
-            final GenericsDeclaration type = field.getType();
+            if (value == null) continue;
+            final String entryName = prefix + field.getName();
 
             // Config
-            if (type.isConfig()) {
-                processFields(entryName + "_", map, (OkaeriConfig) value);
+            if (value instanceof OkaeriConfig subConfig) {
+                processFields(entryName + "_", map, subConfig);
                 continue;
             }
 
             // Check @Stat
             if (field.getAnnotation(Stat.class).isEmpty()) continue;
 
-            final Class<?> rawType = type.getType();
             // Collection/array (unsupported)
+            final Class<?> rawType = field.getType().getType();
             if (rawType.isArray() || Collection.class.isAssignableFrom(rawType)) continue;
-            // Duration
-            if (rawType == Duration.class) {
-                map.put(entryName, String.valueOf(((Duration) value).toMillis()));
+
+            // Statable
+            if (value instanceof Statable statable) {
+                final Map<String, Object> statMap = statable.toStatMap();
+                if (statMap != null) {
+                    // Map
+                    for (final Map.Entry<String, Object> entry : statMap.entrySet()) {
+                        final Object stat = entry.getValue();
+                        if (stat != null) map.put(entryName + "_" + entry.getKey(), String.valueOf(stat));
+                    }
+                } else {
+                    // Value
+                    final Object stat = statable.toStatValue();
+                    if (stat != null) map.put(entryName, String.valueOf(stat));
+                }
                 continue;
             }
+
+            // Duration
+            if (value instanceof Duration duration) {
+                map.put(entryName, String.valueOf(duration.toMillis()));
+                continue;
+            }
+
             // Else
             map.put(entryName, String.valueOf(value));
         }

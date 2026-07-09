@@ -3,11 +3,11 @@ package xyz.srnyx.annoyingapi.message;
 import eu.okaeri.configs.annotation.Comment;
 import eu.okaeri.validator.annotation.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
-import xyz.srnyx.annoyingapi.annotations.Stat;
 import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
 import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
+import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.javautilities.MapGenerator;
 
 import java.util.Map;
