@@ -20,7 +20,7 @@ public class AnnoyingConfig extends OkaeriConfig {
             current = ((OkaeriConfig) current).get(parts[i]);
             if (current == null) return null;
 
-            if (i == parts.length - 1) return type.cast(current);
+            if (i == parts.length - 1) return type.isInstance(current) ? type.cast(current) : null;
 
             if (!(current instanceof OkaeriConfig)) return null;
         }
