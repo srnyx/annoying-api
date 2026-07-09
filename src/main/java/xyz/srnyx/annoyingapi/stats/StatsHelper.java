@@ -38,6 +38,6 @@ public class StatsHelper extends AnnoyableClass {
 
     @Nullable
     public String getUpdateCheckerOutdatedLatestVersion() {
-        return annoyingPlugin.updateChecker != null && annoyingPlugin.updateChecker.latestVersion != null && annoyingPlugin.updateChecker.isUpdateAvailable() ? annoyingPlugin.updateChecker.latestVersion.toString() : null;
+        return annoyingPlugin.updateChecker != null && annoyingPlugin.updateChecker.latestVersion != null && annoyingPlugin.updateChecker.isUpdateAvailable() ? annoyingPlugin.updateChecker.latestVersion.version().version : null;
     }
 }

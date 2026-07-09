@@ -217,6 +217,9 @@ public class ConfigBuilder {
             if (filePath.startsWith(dataFolder)) plugin.deleteOldFile(Path.of("default").resolve(dataFolder.relativize(filePath)));
         }
 
+        // RootConfig#onLoad
+        if (config instanceof final RootConfig rootConfig) rootConfig.onLoad();
+
         return (C) config;
     }
 }

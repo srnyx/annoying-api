@@ -210,9 +210,9 @@ public class AnnoyingDownload extends AnnoyableClass {
                     .get("file").getAsJsonObject()
                     .get("externalUrl").getAsString();
             if (externalUrl.endsWith(".jar")) {
-                platforms.pluginPlatforms.add(PluginPlatform.external(externalUrl));
+                platforms.add(PluginPlatform.external(externalUrl));
             } else {
-                platforms.pluginPlatforms.add(PluginPlatform.manual(externalUrl));
+                platforms.add(PluginPlatform.manual(externalUrl));
             }
 
             // Retry download
