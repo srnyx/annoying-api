@@ -129,11 +129,28 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
             }
 
             // Check @Stat
-            if (field.getAnnotation(Stat.class).isEmpty()) continue;
+            final Stat stat = field.getAnnotation(Stat.class).orElse(null);
+            if (stat == null) continue;
 
-            // Collection/array (unsupported)
-            final Class<?> rawType = field.getType().getType();
-            if (rawType.isArray() || Collection.class.isAssignableFrom(rawType)) continue;
+            // Array/Collection/Map (partly supported)
+            final boolean isArray = field.getType().getType().isArray();
+            if (isArray || value instanceof Collection || value instanceof Map) {
+                if (stat.size()) {
+                    // Get size
+                    final int size;
+                    if (isArray) {
+                        size = ((Object[]) value).length;
+                    } else if (value instanceof Collection<?> collection) {
+                        size = collection.size();
+                    } else {
+                        size = ((Map<?, ?>) value).size();
+                    }
+
+                    // Put size
+                    map.put(entryName + "_size", String.valueOf(size));
+                }
+                continue;
+            }
 
             // Statable
             if (value instanceof Statable statable) {
@@ -141,13 +158,13 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
                 if (statMap != null) {
                     // Map
                     for (final Map.Entry<String, Object> entry : statMap.entrySet()) {
-                        final Object stat = entry.getValue();
-                        if (stat != null) map.put(entryName + "_" + entry.getKey(), String.valueOf(stat));
+                        final Object mapValue = entry.getValue();
+                        if (mapValue != null) map.put(entryName + "_" + entry.getKey(), String.valueOf(mapValue));
                     }
                 } else {
                     // Value
-                    final Object stat = statable.toStatValue();
-                    if (stat != null) map.put(entryName, String.valueOf(stat));
+                    final Object statValue = statable.toStatValue();
+                    if (statValue != null) map.put(entryName, String.valueOf(statValue));
                 }
                 continue;
             }
