@@ -139,7 +139,7 @@ public class StorageConfig extends RootConfig {
     /**
      * The remote connection details/properties
      */
-    public static class RemoteConnection extends SubConfig<StorageConfig> {
+    public static class RemoteConnection extends SubConfig<StorageConfig, StorageConfig> {
         public RemoteConnection(@org.jetbrains.annotations.NotNull StorageConfig root) {
             super(root);
         }
@@ -148,7 +148,7 @@ public class StorageConfig extends RootConfig {
         @NotNull public String host = "localhost";
         @Comment("The port of the database")
         @Comment("Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL")
-        public int port = Objects.requireNonNullElse(getRoot().method.defaultPort, 3306);
+        public int port = Objects.requireNonNullElse(getParent().method.defaultPort, 3306);
 
         @Comment
         @Comment("The name of the database")
@@ -169,7 +169,7 @@ public class StorageConfig extends RootConfig {
         @Comment("By default (if null), the table prefix will be the name of the plugin (special characters and spaces removed, all lowercase) followed by an underscore")
         @Comment("To remove the table prefix, set it to an empty string ('')")
         @Comment("DO NOT CHANGE THIS AFTER YOU'VE STARTED USING THE PLUGIN (unless you're migrating or fine with losing data)")
-        @Nullable public String table_prefix = getDefaultTablePrefix(getRoot().plugin);
+        @Nullable public String table_prefix = getDefaultTablePrefix(getParent().plugin);
 
         /**
          * Additional custom properties for the remote connection
@@ -192,7 +192,7 @@ public class StorageConfig extends RootConfig {
     /**
      * Options for the data cache (stored differently per method)
      */
-    public static class Cache extends SubConfig<StorageConfig> {
+    public static class Cache extends SubConfig<StorageConfig, StorageConfig> {
         public Cache(@org.jetbrains.annotations.NotNull StorageConfig root) {
             super(root);
         }
