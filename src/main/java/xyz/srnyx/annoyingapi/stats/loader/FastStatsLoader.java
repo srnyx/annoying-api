@@ -14,6 +14,7 @@ import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.annoyingapi.stats.Statable;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -139,7 +140,7 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
                     // Get size
                     final int size;
                     if (isArray) {
-                        size = ((Object[]) value).length;
+                        size = Array.getLength(value);
                     } else if (value instanceof Collection<?> collection) {
                         size = collection.size();
                     } else {
