@@ -316,6 +316,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             if (libraryManager != null) libraryManager.loadLibrary(AnnoyingAPILibrary.REFLECTIONS);
 
             // Register classes
+            final Set<String> registered = new HashSet<>();
             final Set<Class<? extends Registrable>> ignoredClasses = options.registrationOptions.automaticRegistration.ignoredClasses;
             for (final Class<? extends Registrable> clazz : AnnoyingReflections.getSubTypesOf(packages, Registrable.class)) {
                 // Ignore interfaces, abstract classes, and anonymous classes
@@ -325,13 +326,15 @@ public class AnnoyingPlugin extends JavaPlugin {
 
                 // Register class
                 final String className = clazz.getSimpleName();
-                log(Level.INFO, "Automatically registering " + className);
+                log(Level.FINE, "Automatically registering " + className);
                 try {
                     clazz.getConstructor(this.getClass()).newInstance(this).register();
+                    registered.add(className);
                 } catch (final Throwable t) {
                     logErrorTrack(Level.WARNING, "&eFailed to register &6" + className, t);
                 }
             }
+            log(Level.INFO, "Automatically registered " + registered.size() + " classes: " + String.join(", ", registered));
         }
 
         // Load messages
