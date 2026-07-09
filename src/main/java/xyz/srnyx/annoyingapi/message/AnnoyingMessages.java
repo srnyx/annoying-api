@@ -7,6 +7,7 @@ import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.message.json.message.JsonChatMessage;
 import xyz.srnyx.annoyingapi.message.json.message.JsonTitleMessage;
+import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.javautilities.MapGenerator;
 
 import java.util.Map;
@@ -66,6 +67,7 @@ public class AnnoyingMessages extends RootConfig {
         @Comment("Using a global placeholder is just like any other placeholder! Simply surround the placeholder name with \"%\" (ex: \"%prefix%\")")
         @Comment("WARNING: Global placeholders can conflict with local placeholders! Please be wary when creating your own global placeholder(s)!")
         @Comment("It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)")
+        @Stat
         @NotNull public Map<String, String> global_placeholders = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "prefix", getRoot().defaultPrefix,
                 "p", getRoot().defaultP,
@@ -88,9 +90,11 @@ public class AnnoyingMessages extends RootConfig {
             }
 
             @Comment("This is the splitter for the JSON components. Default: \"@@\"")
+            @Stat
             @NotNull public String json = "@@";
 
             @Comment("This is the splitter for placeholders with parameters. Default: \"==\"")
+            @Stat
             @NotNull public String placeholder = "==";
         }
     }

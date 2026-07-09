@@ -5,13 +5,25 @@ import dev.faststats.FeatureFlagService;
 import dev.faststats.Metrics;
 import dev.faststats.bukkit.BukkitContext;
 import dev.faststats.data.Metric;
+import eu.okaeri.configs.OkaeriConfig;
+import eu.okaeri.configs.schema.FieldDeclaration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
+import xyz.srnyx.annoyingapi.stats.Stat;
+import xyz.srnyx.annoyingapi.stats.Statable;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Modifier;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 
@@ -19,6 +31,11 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     @NotNull public final ErrorTracker errorTracker = ErrorTracker.contextAware();
 
     @Nullable private BukkitContext apiStats;
+
+    @Nullable
+    public Map<String, Supplier<OkaeriConfig>> getConfigs() {
+        return null;
+    }
 
     /**
      * Do not use {@link BukkitContext.Factory#metrics(Function)}, {@link BukkitContext.Factory#featureFlagService(Function)}, or other similar service creators <b>unless</b> you want to overwrite the default ones the API creates!
@@ -32,23 +49,23 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     @Override
     public void load() {
         final AnnoyingPlugin plugin = getAnnoyingPlugin();
-        final List<Metric<?>> commonMetrics = List.of(
+        final List<Metric<?>> commonMetrics = new ArrayList<>(List.of(
                 Metric.string("annoying_api_version", () -> BuildProperties.ANNOYING_API_VERSION),
-                Metric.string("storage_method", plugin.statsHelper::getStorageMethodName),
-                Metric.bool("storage_cache_enabled", plugin.statsHelper::getStorageCacheEnabled),
-                Metric.stringArray("storage_cache_save_on", plugin.statsHelper::getStorageCacheSaveOn),
-                Metric.number("storage_cache_interval", plugin.statsHelper::getStorageCacheInterval),
-                Metric.stringArray("messages_plugin_global_placeholders_keys", plugin.statsHelper::getMessagesPluginGlobalPlaceholdersKeys),
-                Metric.string("messages_plugin_splitters_json", plugin.statsHelper::getMessagesPluginSplittersJson),
-                Metric.string("messages_plugin_splitters_placeholder", plugin.statsHelper::getMessagesPluginSplittersPlaceholder),
                 Metric.string("placeholderapi_version", plugin.statsHelper::getPlaceholderAPIVersion),
-                Metric.string("update_checker_outdated_latest_version", plugin.statsHelper::getUpdateCheckerOutdatedLatestVersion));
+                Metric.string("update_checker_outdated_latest_version", plugin.statsHelper::getUpdateCheckerOutdatedLatestVersion),
+                Metric.stringArray("storage_cache_save_on", plugin.statsHelper::getStorageCacheSaveOn),
+                Metric.stringArray("messages_plugin_global_placeholders_keys", plugin.statsHelper::getMessagesPluginGlobalPlaceholdersKeys)));
+
+        // Storage
+        commonMetrics.add(Metric.stringMap("storage", () -> plugin.dataManager == null ? null : processFields(plugin.dataManager.storageConfig)));
 
         // API
         apiStats = new BukkitContext.Factory(plugin, "724dd679781f2a22c15aefa4b8a7bbcd")
                 .errorTrackerService(errorTracker)
                 .metrics(factory -> {
                     factory.addMetric(Metric.string("plugins", plugin::getName));
+                    factory.addMetric(Metric.stringMap("messages", () -> processFields(plugin.getAnnoyingMessages())));
+
                     commonMetrics.forEach(factory::addMetric);
                     return factory.create();
                 })
@@ -59,6 +76,15 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
         final BukkitContext.Factory context = new BukkitContext.Factory(plugin, getId())
                 .errorTrackerService(errorTracker)
                 .metrics(factory -> {
+                    // messages
+                    factory.addMetric(Metric.stringMap("messages", () -> processFields(plugin.getMessages().get())));
+
+                    // Custom configs
+                    final Map<String, Supplier<OkaeriConfig>> configs = getConfigs();
+                    if (configs != null) for (final Map.Entry<String, Supplier<OkaeriConfig>> entry : configs.entrySet()) {
+                        factory.addMetric(Metric.stringMap(entry.getKey(), () -> processFields(entry.getValue().get())));
+                    }
+
                     commonMetrics.forEach(factory::addMetric);
                     mutateMetricsFactory(factory);
                     return factory.create();
@@ -79,5 +105,79 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     public void unload() {
         if (apiStats != null) apiStats.shutdown();
         if (stats != null) stats.shutdown();
+    }
+
+    @NotNull
+    private static Map<String, String> processFields(@NotNull OkaeriConfig config) {
+        final Map<String, String> map = new LinkedHashMap<>();
+        processFields("", map, config);
+        return map;
+    }
+
+    private static void processFields(@NotNull String prefix, @NotNull Map<String, String> map, @NotNull OkaeriConfig config) {
+        for (final FieldDeclaration field : config.getDeclaration().getFields()) {
+            // Ignore transient
+            if (Modifier.isTransient(field.getField().getModifiers())) continue;
+
+            final Object value = field.getValue();
+            if (value == null) continue;
+            final String entryName = prefix + field.getName();
+
+            // Config
+            if (value instanceof OkaeriConfig subConfig) {
+                processFields(entryName + "_", map, subConfig);
+                continue;
+            }
+
+            // Check @Stat
+            final Stat stat = field.getAnnotation(Stat.class).orElse(null);
+            if (stat == null) continue;
+
+            // Array/Collection/Map (partly supported)
+            final boolean isArray = field.getType().getType().isArray();
+            if (isArray || value instanceof Collection || value instanceof Map) {
+                if (stat.size()) {
+                    // Get size
+                    final int size;
+                    if (isArray) {
+                        size = Array.getLength(value);
+                    } else if (value instanceof Collection<?> collection) {
+                        size = collection.size();
+                    } else {
+                        size = ((Map<?, ?>) value).size();
+                    }
+
+                    // Put size
+                    map.put(entryName + "_size", String.valueOf(size));
+                }
+                continue;
+            }
+
+            // Statable
+            if (value instanceof Statable statable) {
+                final Map<String, Object> statMap = statable.toStatMap();
+                if (statMap != null) {
+                    // Map
+                    for (final Map.Entry<String, Object> entry : statMap.entrySet()) {
+                        final Object mapValue = entry.getValue();
+                        if (mapValue != null) map.put(entryName + "_" + entry.getKey(), String.valueOf(mapValue));
+                    }
+                } else {
+                    // Value
+                    final Object statValue = statable.toStatValue();
+                    if (statValue != null) map.put(entryName, String.valueOf(statValue));
+                }
+                continue;
+            }
+
+            // Duration
+            if (value instanceof Duration duration) {
+                map.put(entryName, String.valueOf(duration.toMillis()));
+                continue;
+            }
+
+            // Else
+            map.put(entryName, String.valueOf(value));
+        }
     }
 }

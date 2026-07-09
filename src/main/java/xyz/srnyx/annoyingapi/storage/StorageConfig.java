@@ -9,6 +9,7 @@ import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationTickFallback;
+import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.javautilities.MapGenerator;
 
 import java.io.File;
@@ -43,6 +44,7 @@ public class StorageConfig extends RootConfig {
     @Comment("These methods are NOT recommended as they impact performance significantly! It's strongly recommended to at least keep the cache enabled")
     @Comment("- JSON")
     @Comment("- YAML")
+    @Stat
     @NotNull public StorageMethod method = StorageMethod.H2;
 
     @Comment
@@ -196,6 +198,7 @@ public class StorageConfig extends RootConfig {
         }
 
         @Comment("Whether to enable using the cache")
+        @Stat
         public boolean enabled = true;
 
         /**
@@ -207,6 +210,7 @@ public class StorageConfig extends RootConfig {
         @Comment("- RELOAD (recommended): When the plugin (not the server) is reloaded")
         @Comment("- DISABLE (highly recommended): When the plugin is disabled (including on server shutdown)")
         @Comment("- INTERVAL (recommended): Automatically at a fixed interval (see 'interval' below)")
+        @Stat
         @NotNull private Set<SaveOn> save_on = SaveOn.VALUES;
 
         /**
@@ -214,7 +218,7 @@ public class StorageConfig extends RootConfig {
          */
         @Comment("The interval in which the cache will save to the database (only applicable if 'INTERVAL' is in 'save_on')")
         @Comment("Make sure to specify units (s, m, h, etc.)!")
-        @DurationTickFallback
+        @DurationTickFallback @Stat
         @NotNull public Duration interval = Duration.ofMinutes(5);
 
         @org.jetbrains.annotations.NotNull

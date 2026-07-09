@@ -6,9 +6,11 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.srnyx.annoyingapi.stats.Statable;
 import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -16,7 +18,7 @@ import java.util.Objects;
  * Represents a {@link Sound} with a category, volume, pitch
  * <br>Also has playing methods using {@link XSound}
  */
-public class PlayableSound extends Stringable {
+public class PlayableSound extends Stringable implements Statable {
     /**
      * The {@link Sound} to play as a {@link XSound}
      */
@@ -132,6 +134,15 @@ public class PlayableSound extends Stringable {
      */
     public void play(@NotNull Player player) {
         play(player, null);
+    }
+
+    @Override @NotNull
+    public Map<String, Object> toStatMap() {
+        return Map.of(
+                "sound", sound.name(),
+                "category", category.name(),
+                "volume", volume,
+                "pitch", pitch);
     }
 
     @Nullable
