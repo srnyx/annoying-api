@@ -45,7 +45,6 @@ import xyz.srnyx.annoyingapi.events.PlayerDamageByPlayerEvent;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
-import xyz.srnyx.javautilities.MapGenerator;
 import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 
@@ -110,7 +109,7 @@ public class AnnoyingPlugin extends JavaPlugin {
     /**
      * Custom events/listeners for the API
      */
-    @NotNull public final Map<Class<? extends Event>, AnnoyingListener> customEvents = MapGenerator.HASH_MAP.mapOf(
+    @NotNull public final Map<Class<? extends Event>, AnnoyingListener> customEvents = Map.of(
             AdvancedPlayerMoveEvent.class, new AdvancedPlayerMoveEvent.Handler(this),
             PlayerDamageByPlayerEvent.class, new PlayerDamageByPlayerEvent.Handler(this));
     /**
@@ -398,7 +397,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             Mapper.toJson(new String(platformsJson.readAllBytes(), StandardCharsets.UTF_8))
                     .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
                     .flatMap(object -> Mapper.convertJsonElement(object.get("platforms"), JsonObject.class))
-                    .ifPresent(platformsObject -> platforms.pluginPlatforms.addAll(PluginPlatform.Multi.load(platformsObject)));
+                    .ifPresent(platformsObject -> platforms.addAll(PluginPlatform.Multi.load(platformsObject)));
         } catch (final IOException e) {
             logErrorTrack(Level.WARNING, "&cFailed to parse resource &4platforms.json", e);
         }

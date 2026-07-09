@@ -11,12 +11,10 @@ import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.MiscUtility;
+import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -30,6 +28,7 @@ public class UpdateChecker extends AnnoyableClass {
      * The current version of Minecraft in short form (ex: 1.17 instead of 1.17.0)
      */
     @NotNull private static final String MINECRAFT_VERSION_SHORT = AnnoyingPlugin.MINECRAFT_VERSION.patch != 0 ? AnnoyingPlugin.MINECRAFT_VERSION.version : AnnoyingPlugin.MINECRAFT_VERSION.major + "." + AnnoyingPlugin.MINECRAFT_VERSION.minor;
+    @NotNull private static final String SPIGET_RESOURCES_URL = "https://api.spiget.org/v2/resources/";
 
     /**
      * The name of the plugin to check for updates
@@ -54,7 +53,7 @@ public class UpdateChecker extends AnnoyableClass {
     /**
      * The latest version of the plugin
      */
-    @Nullable public final SemanticVersion latestVersion;
+    @Nullable public final LatestVersion latestVersion;
 
     /**
      * Creates a new {@link UpdateChecker} object
@@ -70,9 +69,7 @@ public class UpdateChecker extends AnnoyableClass {
         this.currentVersionSemantic = MiscUtility.handleException(() -> new SemanticVersion(currentVersion)).orElse(null);
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = new PluginPlatform.Multi(platforms);
-        this.latestVersion = retrieveLatestVersion()
-                .map(SemanticVersion::new)
-                .orElse(null);
+        this.latestVersion = retrieveLatestVersion();
     }
 
     /**
@@ -112,7 +109,8 @@ public class UpdateChecker extends AnnoyableClass {
         if (update) annoyingPlugin.getAnnoyingMessages().plugin.update_available.newMessage()
                 .replace("%plugin%", pluginName)
                 .replace("%current%", currentVersion)
-                .replace("%new%", Objects.requireNonNull(latestVersion).version)
+                .replace("%new%", Objects.requireNonNull(latestVersion).version.version)
+                .replace("%link%", latestVersion.link)
                 .log(Level.WARNING);
         return update;
     }
@@ -125,49 +123,27 @@ public class UpdateChecker extends AnnoyableClass {
     public boolean isUpdateAvailable() {
         if (latestVersion == null) return false;
         if (currentVersionSemantic == null) return true;
-        return latestVersion.isGreaterThan(currentVersionSemantic);
+        return latestVersion.version.isGreaterThan(currentVersionSemantic);
     }
 
-    @NotNull
-    private Optional<String> retrieveLatestVersion() {
-        // Modrinth
-        final Optional<String> modrinthIdentifier = platforms.getIdentifier(PluginPlatform.Platform.MODRINTH);
-        if (modrinthIdentifier.isPresent()) {
+    @Nullable
+    private LatestVersion retrieveLatestVersion() {
+        for (final PluginPlatform platform : platforms) {
             try {
-                final Optional<String> modrinth = modrinth(modrinthIdentifier.get());
-                if (modrinth.isPresent()) return modrinth;
+                final Optional<LatestVersion> version = switch (platform.platform) {
+                    case MODRINTH -> modrinth(platform.identifier);
+                    case HANGAR -> hangar(platform.identifier);
+                    case SPIGOT -> spigot(platform.identifier);
+                    default -> Optional.empty();
+                };
+                if (version.isPresent()) return version.get();
             } catch (final Exception e) {
-                annoyingPlugin.logErrorTrack(Level.WARNING, "Failed to check Modrinth for the latest version of " + pluginName, e);
-                return fail(PluginPlatform.Platform.MODRINTH);
+                annoyingPlugin.errorTrack("Failed to check " + platform.platform + " for the latest version of " + pluginName, e);
             }
         }
 
-        // Hangar
-        final Optional<String> hangarIdentifier = platforms.getIdentifier(PluginPlatform.Platform.HANGAR);
-        if (hangarIdentifier.isPresent()) {
-            try {
-                final Optional<String> hangar = hangar(hangarIdentifier.get());
-                if (hangar.isPresent()) return hangar;
-            } catch (final Exception e) {
-                annoyingPlugin.errorTrack("Failed to check Hangar for the latest version of " + pluginName, e);
-                return fail(PluginPlatform.Platform.HANGAR);
-            }
-        }
-
-        // Spigot
-        final Optional<String> spigotIdentifier = platforms.getIdentifier(PluginPlatform.Platform.SPIGOT);
-        if (spigotIdentifier.isPresent()) {
-            try {
-                final Optional<String> spigot = spigot(spigotIdentifier.get());
-                if (spigot.isPresent()) return spigot;
-            } catch (final Exception e) {
-                annoyingPlugin.errorTrack("Failed to check Spigot for the latest version of " + pluginName, e);
-                return fail(PluginPlatform.Platform.SPIGOT);
-            }
-        }
-
-        // No platforms left
-        return Optional.empty();
+        AnnoyingPlugin.log(Level.WARNING, "&cRan out of platforms to check for the latest version of &4" + pluginName + "&c (platforms: " + platforms + ")");
+        return null;
     }
 
     /**
@@ -178,23 +154,30 @@ public class UpdateChecker extends AnnoyableClass {
      * @return              the latest version, or empty if an error occurred
      */
     @NotNull
-    private Optional<String> modrinth(@NotNull String identifier) {
-        try {
-            final Optional<JsonArray> json = HttpUtility.getJson(userAgent,
-                    "https://api.modrinth.com/v2/project/" + identifier + "/version" +
-                            "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                            "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D" +
-                            "&include_changelog=false", null)
-                    .map(JsonElement::getAsJsonArray);
-
-            // Request failed
-            if (json.isEmpty()) return fail(PluginPlatform.Platform.MODRINTH);
-
-            // Return the latest version
-            return json.get().size() != 0 ? json.map(versions -> versions.get(0).getAsJsonObject().get("version_number").getAsString()) : fail(PluginPlatform.Platform.MODRINTH);
-        } catch (final IllegalStateException e) {
-            return fail(PluginPlatform.Platform.MODRINTH);
-        }
+    private Optional<LatestVersion> modrinth(@NotNull String identifier) {
+        return HttpUtility.getJson(userAgent,
+                "https://api.modrinth.com/v2/project/" + identifier + "/version" +
+                        "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
+                        "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D" +
+                        "&include_changelog=false", null)
+                .flatMap(element -> Mapper.convertJsonElement(element, JsonArray.class))
+                .filter(versions -> versions.size() != 0)
+                .map(versions -> {
+                    for (final JsonElement version : versions) {
+                        final JsonObject versionObject = Mapper.convertJsonElement(version, JsonObject.class).orElse(null);
+                        if (versionObject == null) continue;
+                        final String versionType = Mapper.convertJsonElementToPrimitive(versionObject.get("version_type"), String.class).orElse(null);
+                        if (versionType != null && versionType.equals("release")) return versionObject;
+                    }
+                    return null;
+                })
+                .map(version -> {
+                    final String id = Mapper.convertJsonElementToPrimitive(version.get("id"), String.class).orElse(null);
+                    if (id == null) return null;
+                    final String versionNumber = Mapper.convertJsonElementToPrimitive(version.get("version_number"), String.class).orElse(null);
+                    if (versionNumber == null) return null;
+                    return new LatestVersion(versionNumber, "https://modrinth.com/project/" + identifier + "/version/" + id);
+                });
     }
 
     /**
@@ -205,49 +188,18 @@ public class UpdateChecker extends AnnoyableClass {
      * @return              the latest version, or empty if an error occurred
      */
     @NotNull
-    private Optional<String> hangar(@NotNull String identifier) {
-        final Optional<JsonArray> json = HttpUtility.getJson(userAgent, "https://hangar.papermc.io/api/v1/projects/" + identifier + "/versions", null)
-                .map(element -> element.getAsJsonObject().getAsJsonArray("result"));
-
-        // Request failed
-        if (json.isEmpty()) return fail(PluginPlatform.Platform.HANGAR);
-
-        // Get supported versions
-        final Map<String, OffsetDateTime> result = new HashMap<>();
-        try {
-            for (final JsonElement versionElement : json.get()) {
-                final JsonObject version = versionElement.getAsJsonObject();
-                final JsonObject platformsObject = version.getAsJsonObject("platformDependencies");
-                if (platformsObject == null) continue;
-                final JsonArray paper = platformsObject.getAsJsonArray("PAPER");
-                if (paper != null) for (final JsonElement paperElement : paper) {
-                    final String paperVersion = paperElement.getAsString();
-                    if (paperVersion.equals(MINECRAFT_VERSION_SHORT)) {
-                        final String name = version.get("name").getAsString();
-                        final OffsetDateTime createdAt = OffsetDateTime.parse(version.get("createdAt").getAsString());
-
-                        // If it's a duplicate version, keep the latest
-                        final OffsetDateTime existing = result.get(name);
-                        if (existing != null) {
-                            if (createdAt.isAfter(existing)) result.put(name, createdAt);
-                            break;
-                        }
-
-                        // Add the version to results
-                        result.put(name, createdAt);
-                        break;
-                    }
-                }
-            }
-        } catch (final Exception e) {
-            return fail(PluginPlatform.Platform.HANGAR);
-        }
-
-        // Get the latest version
-        final Optional<String> latest = result.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey);
-        return latest.isPresent() ? latest : fail(PluginPlatform.Platform.HANGAR);
+    private Optional<LatestVersion> hangar(@NotNull String identifier) {
+        return HttpUtility.getJson(userAgent,
+                        "https://hangar.papermc.io/api/v1/projects/" + identifier + "/versions" +
+                        "?platform=PAPER" +
+                        "&platformVersion=" + MINECRAFT_VERSION_SHORT +
+                        "&channel=Release&limit=1",null)
+                .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
+                .flatMap(object -> Mapper.convertJsonElement(object.get("result"), JsonArray.class))
+                .filter(array -> array.size() != 0)
+                .flatMap(version -> Mapper.convertJsonElement(version.get(0), JsonObject.class))
+                .flatMap(object -> Mapper.convertJsonElementToPrimitive(object.get("name"), String.class))
+                .map(version -> new LatestVersion(version, "https://hangar.papermc.io/" + identifier + "/versions/" + version));
     }
 
     /**
@@ -258,28 +210,24 @@ public class UpdateChecker extends AnnoyableClass {
      * @return              the latest version, or empty if an error occurred
      */
     @NotNull
-    private Optional<String> spigot(@NotNull String identifier) {
-        final Optional<String> json = HttpUtility.getJson(userAgent, "https://api.spiget.org/v2/resources/" + identifier + "/versions/latest", null)
-                .map(element -> element.getAsJsonObject().get("name").getAsString());
-
-        // Request failed
-        if (json.isEmpty()) return fail(PluginPlatform.Platform.SPIGOT);
-
-        // Return the latest version
-        return json;
+    private Optional<LatestVersion> spigot(@NotNull String identifier) {
+        return HttpUtility.getJson(userAgent, SPIGET_RESOURCES_URL + identifier + "/versions/latest", null)
+                .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
+                .flatMap(object -> Mapper.convertJsonElementToPrimitive(object.get("name"), String.class))
+                .map(version -> {
+                    // spigotmc.org/resources/IDENTIFIER/update?update=UPDATE else spigotmc.org/resources/IDENTIFIER/updates
+                    final String update = "https://spigotmc.org/resources/" + identifier + "/update" + HttpUtility.getJson(userAgent, SPIGET_RESOURCES_URL + identifier + "/updates/latest", null)
+                            .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
+                            .flatMap(updateObject -> Mapper.convertJsonElementToPrimitive(updateObject.get("id"), Long.class))
+                            .map(updateId -> "?update=" + updateId)
+                            .orElse("s");
+                    return new LatestVersion(version, update);
+                });
     }
 
-    /**
-     * Remove the failed platform from the list of platforms and retry {@link #retrieveLatestVersion() getting the latest version}
-     *
-     * @param   platform    the platform that failed
-     *
-     * @return              the latest version, or empty if an error occurred
-     */
-    @NotNull
-    private Optional<String> fail(@NotNull PluginPlatform.Platform platform) {
-        AnnoyingPlugin.log(Level.WARNING, "Failed to check " + platform.name() + " for the latest version of " + pluginName);
-        platforms.remove(platform);
-        return retrieveLatestVersion();
+    public record LatestVersion(@NotNull SemanticVersion version, @NotNull String link) {
+        public LatestVersion(@NotNull String version, @NotNull String link) {
+            this(new SemanticVersion(version), link);
+        }
     }
 }

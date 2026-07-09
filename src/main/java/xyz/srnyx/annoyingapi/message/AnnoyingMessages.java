@@ -79,8 +79,8 @@ public class AnnoyingMessages extends RootConfig {
 
         @Comment
         @Comment("Message sent in the console when an update for the plugin is available")
-        @Comment("Placeholders: %plugin%, %current%, %new%")
-        @NotNull public JsonChatMessage update_available = getRoot().defaultMessage("%pe%A new version of %se%%plugin%%pe% is available! | Current: %se%%current%%pe% | Latest: %se%%new%");
+        @Comment("Placeholders: %plugin%, %current%, %new%, %link%")
+        @NotNull public JsonChatMessage update_available = getRoot().defaultMessage("%pe%A new version of %se%%plugin%%pe% is available! | Current: %se%%current%%pe% | Latest: %se%%new% (%link%)");
 
         public static class Splitters extends SubConfig<Plugin> {
             public Splitters(@org.jetbrains.annotations.NotNull Plugin root) {

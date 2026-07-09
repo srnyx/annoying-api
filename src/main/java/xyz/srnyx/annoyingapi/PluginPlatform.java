@@ -191,12 +191,7 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
      * A collection of {@link PluginPlatform}s
      */
     @SuppressWarnings("UnusedReturnValue")
-    public static class Multi extends Stringable {
-        /**
-         * The {@link PluginPlatform PluginPlatforms} in this {@link Multi Multi}
-         */
-        @NotNull public final Set<PluginPlatform> pluginPlatforms = new TreeSet<>();
-
+    public static class Multi extends TreeSet<PluginPlatform> {
         /**
          * Creates a new empty {@link Multi}
          */
@@ -206,27 +201,16 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
 
         /**
          * Creates a new {@link Multi} with the given {@link PluginPlatform}s
-         *
-         * @param   pluginPlatforms {@link #pluginPlatforms}
          */
         public Multi(@NotNull Collection<PluginPlatform> pluginPlatforms) {
-            this.pluginPlatforms.addAll(pluginPlatforms);
+            super(pluginPlatforms);
         }
 
         /**
          * Creates a new {@link Multi} with the given {@link PluginPlatform}s
-         *
-         * @param   pluginPlatforms {@link #pluginPlatforms}
          */
         public Multi(@NotNull PluginPlatform... pluginPlatforms) {
             this(Arrays.asList(pluginPlatforms));
-        }
-
-        /**
-         * Copy constructor
-         */
-        public Multi(@NotNull Multi multi) {
-            this.pluginPlatforms.addAll(multi.pluginPlatforms);
         }
 
         /**
@@ -248,7 +232,7 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
                         .map(PluginPlatform::load)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .forEach(multi.pluginPlatforms::add);
+                        .forEach(multi::add);
                 return multi;
             }
 
@@ -259,12 +243,12 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
                 // String
                 if (platformSection == null) {
                     final String identifier = platformsSection.getString(platformKey);
-                    if (identifier != null) Mapper.toEnum(platformKey, Platform.class).ifPresent(platform -> multi.pluginPlatforms.add(new PluginPlatform(platform, identifier)));
+                    if (identifier != null) Mapper.toEnum(platformKey, Platform.class).ifPresent(platform -> multi.add(new PluginPlatform(platform, identifier)));
                     continue;
                 }
 
                 // Section
-                PluginPlatform.load(platformSection).ifPresent(multi.pluginPlatforms::add);
+                PluginPlatform.load(platformSection).ifPresent(multi::add);
             }
 
             return multi;
@@ -294,7 +278,7 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
          */
         @NotNull
         public Optional<PluginPlatform> get(@NotNull Platform platform) {
-            return pluginPlatforms.stream()
+            return stream()
                     .filter(filter -> filter.platform == platform)
                     .findFirst();
         }
@@ -319,12 +303,7 @@ public class PluginPlatform extends Stringable implements Comparable<PluginPlatf
          * @return              whether a {@link PluginPlatform plugin platform} was removed
          */
         public boolean remove(@NotNull Platform platforms) {
-            return pluginPlatforms.removeIf(filter -> filter.platform == platforms);
-        }
-
-        @Override @NotNull
-        public String toString() {
-            return pluginPlatforms.toString();
+            return removeIf(filter -> filter.platform == platforms);
         }
     }
 }

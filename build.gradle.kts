@@ -22,7 +22,7 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "3.2.0"
-    id("com.gradleup.shadow") version "9.4.3"
+    id("com.gradleup.shadow") version "9.5.1"
     id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
@@ -206,7 +206,7 @@ repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLA
 dependencies {
     // Bundled
     dependencyRelocate("net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby", configuration = "api")
-    dependencyRelocate("xyz.srnyx:java-utilities:c53df5b", "xyz.srnyx.javautilities", configuration = "api")
+    dependencyRelocate("xyz.srnyx:java-utilities:3575647", "xyz.srnyx.javautilities", configuration = "api")
 
     // Optional
     compileOnly("me.clip:placeholderapi:2.12.2")
