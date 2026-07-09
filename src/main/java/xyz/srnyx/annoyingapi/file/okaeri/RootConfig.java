@@ -1,9 +1,7 @@
 package xyz.srnyx.annoyingapi.file.okaeri;
 
-import eu.okaeri.configs.OkaeriConfig;
 
-
-public class RootConfig extends OkaeriConfig {
+public class RootConfig extends AnnoyingConfig {
     public void onLoad() {}
 
     public void reload() {

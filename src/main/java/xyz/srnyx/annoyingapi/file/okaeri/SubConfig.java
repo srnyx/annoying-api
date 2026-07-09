@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 
-public class SubConfig<R extends OkaeriConfig> extends OkaeriConfig {
+public class SubConfig<R extends OkaeriConfig> extends AnnoyingConfig {
     /**
      * This only exists for defaults!
      */
