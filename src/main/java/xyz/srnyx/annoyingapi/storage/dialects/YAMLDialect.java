@@ -10,11 +10,7 @@ import xyz.srnyx.annoyingapi.storage.CachedValue;
 import xyz.srnyx.javautilities.FileUtility;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -93,7 +89,8 @@ public class YAMLDialect extends Dialect {
                 tableData.put(target, targetMap);
             }
             tablesKeys.put(table, keys);
-            data.put(table, tableData);
+            // Need to use newManager to get table name to apply prefix if new manager is SQL
+            data.put(newManager.getTableName(table), tableData);
         }
         return Optional.of(new MigrationData(tablesKeys, data));
     }
@@ -109,19 +106,19 @@ public class YAMLDialect extends Dialect {
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
-        final Set<ConcurrentHashMap.Entry<String, CachedValue>> entrySet = data.entrySet();
+    protected List<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
+        final Set<Map.Entry<String, String>> entrySet = data.entrySet();
 
         // Set data in file
         final AnnoyingData file = getTableFromDatabase(table);
         ConfigurationSection targetData = file.getConfigurationSection(target);
         if (targetData == null) targetData = file.createSection(target);
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) targetData.set(entry.getKey(), entry.getValue().value());
+        for (final Map.Entry<String, String> entry : entrySet) targetData.set(entry.getKey(), entry.getValue());
 
         // Return failures if saving fails
-        final Set<FailedSet> failed = new HashSet<>();
+        final List<FailedSet> failed = new ArrayList<>();
         if (file.save()) return failed;
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value()));
+        for (final Map.Entry<String, String> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue()));
         return failed;
     }
 

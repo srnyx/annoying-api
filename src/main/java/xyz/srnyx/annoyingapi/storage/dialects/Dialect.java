@@ -6,10 +6,7 @@ import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
 import xyz.srnyx.annoyingapi.storage.CachedValue;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -42,7 +39,7 @@ public abstract class Dialect {
      */
     @Nullable
     public CachedValue getFromCache(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getFromCacheImpl(table, target, key);
+        return getFromCacheImpl(table.toLowerCase(), target, key.toLowerCase());
     }
 
     /**
@@ -54,11 +51,13 @@ public abstract class Dialect {
      * @param   value   the value
      */
     public void setToCache(@NotNull String table, @NotNull String target, @NotNull String key, @Nullable CachedValue value) {
+        final String tableLower = table.toLowerCase();
+        final String keyLower = key.toLowerCase();
         if (value == null) {
-            markRemovedInCache(table, target, key);
+            markRemovedInCache(tableLower, target, keyLower);
             return;
         }
-        setToCacheImpl(table, target, key, value);
+        setToCacheImpl(tableLower, target, keyLower, value);
     }
 
     /**
@@ -69,7 +68,7 @@ public abstract class Dialect {
      * @param   key     the key
      */
     public void markRemovedInCache(@NotNull String table, @NotNull String target, @NotNull String key) {
-        markRemovedInCacheImpl(table, target, key);
+        markRemovedInCacheImpl(table.toLowerCase(), target, key.toLowerCase());
     }
 
     /**
@@ -86,7 +85,7 @@ public abstract class Dialect {
      * @param   target  the target to save
      */
     public void saveCache(@NotNull String table, @NotNull String target) {
-        saveCacheImpl(table, target);
+        saveCacheImpl(table.toLowerCase(), target);
     }
 
     /**
@@ -112,7 +111,7 @@ public abstract class Dialect {
      */
     @NotNull
     public final Optional<String> getFromDatabase(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return getFromDatabaseImpl(table, target, key.toLowerCase());
+        return getFromDatabaseImpl(table.toLowerCase(), target, key.toLowerCase());
     }
 
     /**
@@ -127,7 +126,7 @@ public abstract class Dialect {
      */
     @Nullable
     public final FailedSet setToDatabase(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        return setToDatabaseImpl(table, target, key.toLowerCase(), value);
+        return setToDatabaseImpl(table.toLowerCase(), target, key.toLowerCase(), value);
     }
 
     /**
@@ -140,10 +139,12 @@ public abstract class Dialect {
      * @return          set of failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Set<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
-        final ConcurrentHashMap<String, CachedValue> dataLower = new ConcurrentHashMap<>();
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue());
-        return setToDatabaseImpl(table, target, dataLower);
+    public final List<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull Map<String, CachedValue> data) {
+        final Map<String, String> dataLower = new LinkedHashMap<>();
+        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) {
+            dataLower.put(entry.getKey().toLowerCase(), entry.getValue().value());
+        }
+        return setToDatabaseImpl(table.toLowerCase(), target, dataLower);
     }
 
     /**
@@ -151,16 +152,16 @@ public abstract class Dialect {
      *
      * @param   data    the data to set
      *
-     * @return          set of failed values as {@link FailedSet FailedSets}
+     * @return  failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    public final Set<FailedSet> setToDatabase(@NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data) {
-        final Set<FailedSet> failed = new HashSet<>();
+    public final List<FailedSet> setToDatabase(@NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data) {
+        final List<FailedSet> failed = new ArrayList<>();
         for (final Map.Entry<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> entry : data.entrySet()) {
             final String table = entry.getKey();
             for (final Map.Entry<String, ConcurrentHashMap<String, CachedValue>> entry1 : entry.getValue().entrySet()) {
-                final Set<FailedSet> failedSet = setToDatabase(table, entry1.getKey(), entry1.getValue());
-                if (!failedSet.isEmpty()) failed.addAll(failedSet);
+                final List<FailedSet> failedList = setToDatabase(table, entry1.getKey(), entry1.getValue());
+                if (!failedList.isEmpty()) failed.addAll(failedList);
             }
         }
         return failed;
@@ -176,7 +177,7 @@ public abstract class Dialect {
      * @return          true if the value was successfully removed, false otherwise
      */
     public final boolean removeValueFromDatabase(@NotNull String table, @NotNull String target, @NotNull String key) {
-        return removeFromDatabaseImpl(table, target, key.toLowerCase());
+        return removeFromDatabaseImpl(table.toLowerCase(), target, key.toLowerCase());
     }
 
     /**
@@ -265,10 +266,10 @@ public abstract class Dialect {
      * @param   target  the target to set to
      * @param   data    the data to set
      *
-     * @return          set of failed values as {@link FailedSet FailedSets}
+     * @return  failed values as {@link FailedSet FailedSets}
      */
     @NotNull
-    protected abstract Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data);
+    protected abstract List<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data);
 
     /**
      * Remove a value from the database

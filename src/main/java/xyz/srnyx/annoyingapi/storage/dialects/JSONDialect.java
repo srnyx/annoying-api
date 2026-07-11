@@ -19,11 +19,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -119,7 +115,8 @@ public class JSONDialect extends Dialect {
                 targetData.put(entry.getKey(), targetMap);
             }
             tablesKeys.put(table, keys);
-            data.put(table, targetData);
+            // Need to use newManager to get table name to apply prefix if new manager is SQL
+            data.put(newManager.getTableName(table), targetData);
         }
         return Optional.of(new MigrationData(tablesKeys, data));
     }
@@ -137,18 +134,18 @@ public class JSONDialect extends Dialect {
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
-        final Set<ConcurrentHashMap.Entry<String, CachedValue>> entrySet = data.entrySet();
+    protected List<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
+        final Set<Map.Entry<String, String>> entrySet = data.entrySet();
 
         // Set data in file
         final JsonFile file = getTableFromDatabase(table);
         final JsonObject targetData = file.getTargetDataCreate(target);
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) targetData.addProperty(entry.getKey(), entry.getValue().value());
+        for (final Map.Entry<String, String> entry : entrySet) targetData.addProperty(entry.getKey(), entry.getValue());
 
         // Return failures if saving fails
-        final Set<FailedSet> failed = new HashSet<>();
+        final List<FailedSet> failed = new ArrayList<>();
         if (file.save()) return failed;
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value()));
+        for (final Map.Entry<String, String> entry : entrySet) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue()));
         return failed;
     }
 

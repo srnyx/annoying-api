@@ -21,7 +21,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "3.2.0"
+    id("xyz.srnyx.gradle-galaxy") version "a6e2414"
     id("com.gradleup.shadow") version "9.5.1"
     id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
     id("net.kyori.blossom") version "2.2.0"
@@ -175,12 +175,28 @@ val runtimeLibraries = listOf(
         version = "7.1.0",
         relocations = listOf(Relocation("com.zaxxer.hikari"))),
     RuntimeLibrary(
+        name = "reactive_streams",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.reactivestreams",
+        artifact = "reactive-streams",
+        version = "1.0.4",
+        relocations = listOf(Relocation("org.reactivestreams"))),
+    RuntimeLibrary(
+        name = "r2dbc_spi",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "io.r2dbc",
+        artifact = "r2dbc-spi",
+        version = "1.0.0.RELEASE",
+        relocations = listOf(Relocation("io.r2dbc")),
+        dependencies = listOf("reactive_streams")),
+    RuntimeLibrary(
         name = "jooq",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "org.jooq",
         artifact = "jooq",
-        version = "3.21.6",
-        relocations = listOf(Relocation("org.jooq"))),
+        version = "3.19.36", // Keep on 3.19.x for Java 17 support (https://www.jooq.org/download/support-matrix-jdk#oss)
+        relocations = listOf(Relocation("org.jooq")),
+        dependencies = listOf("r2dbc_spi")),
     RuntimeLibrary(
         name = "h2",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),

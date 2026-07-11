@@ -13,23 +13,39 @@ import org.jooq.impl.SQLDataType;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.data.StringData;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
-import xyz.srnyx.annoyingapi.storage.*;
+import xyz.srnyx.annoyingapi.storage.CachedValue;
+import xyz.srnyx.annoyingapi.storage.ConnectionException;
+import xyz.srnyx.annoyingapi.storage.DataManager;
+import xyz.srnyx.annoyingapi.storage.FailedSet;
+import xyz.srnyx.annoyingapi.storage.StorageMethod;
 
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 /**
  * SQL dialect for a specific type of database
  */
 public class SQLDialect extends Dialect {
+    private static boolean HIKARI_LOGS_QUIETED = false;
+    static {
+        // Disable jOOQ startup logs
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
+    }
+
     @NotNull public final HikariDataSource dataSource;
     @NotNull public final DSLContext dsl;
     /**
@@ -55,15 +71,15 @@ public class SQLDialect extends Dialect {
      */
     public SQLDialect(@NotNull DataManager dataManager, @NotNull org.jooq.SQLDialect jooqDialect) throws ConnectionException {
         super(dataManager);
-        if (dataManager.storageConfig.method.driver == null || dataManager.storageConfig.method.url == null) {
+        if (dataManager.storageConfig.method.sqlInfo == null) {
             throw new IllegalStateException("The storage method " + dataManager.storageConfig.method + " is not an SQL method");
         }
         final Path dataPath = dataManager.storageConfig.plugin.getDataFolder().toPath();
 
         // Get url & properties
-        String url = dataManager.storageConfig.method.url.apply(dataPath);
+        String url = dataManager.storageConfig.method.sqlInfo.url().apply(dataPath);
         final Properties properties = new Properties();
-        if (dataManager.storageConfig.method.isRemote()) {
+        if (dataManager.storageConfig.method.isSQLRemote()) {
             url += dataManager.storageConfig.remote_connection.host + ":" + dataManager.storageConfig.remote_connection.port + "/" + dataManager.storageConfig.remote_connection.database;
             properties.putAll(dataManager.storageConfig.remote_connection.properties);
             if (!dataManager.storageConfig.remote_connection.username.isEmpty()) properties.setProperty("user", dataManager.storageConfig.remote_connection.username);
@@ -71,16 +87,28 @@ public class SQLDialect extends Dialect {
         }
         final String finalUrl = url;
 
-        // Download HikariCP and jOOQ libraries
+        // Load required libraries
         if (dataManager.plugin.libraryManager != null) {
-            // HikariCP
+            // Load HikariCP library
             if (!dataManager.plugin.libraryManager.loadLibrary(AnnoyingAPILibrary.HIKARICP)) {
                 throw new ConnectionException("Failed to download HikariCP library for " + dataManager.storageConfig.method, finalUrl, properties);
             }
-            // jOOQ
-            if (!dataManager.plugin.libraryManager.loadLibrary(AnnoyingAPILibrary.JOOQ)) {
-                throw new ConnectionException("Failed to download jOOQ library for " + dataManager.storageConfig.method, finalUrl, properties);
+
+            // Load driver's required library
+            if (dataManager.storageConfig.method.sqlInfo.library() != null && !dataManager.plugin.libraryManager.loadLibrary(dataManager.storageConfig.method.sqlInfo.library())) {
+                throw new ConnectionException("Failed to download required library " + dataManager.storageConfig.method.sqlInfo.library().getId() + " for " + dataManager.storageConfig.method, finalUrl, properties);
             }
+        }
+
+        // Quiet HikariCP's lifecycle logs
+        if (!HIKARI_LOGS_QUIETED) {
+            HIKARI_LOGS_QUIETED = true;
+            try {
+                final Class<?> configurator = Class.forName("org.apache.logging.log4j.core.config.Configurator");
+                final Class<?> level = Class.forName("org.apache.logging.log4j.Level");
+                final Object WARN = level.getField("WARN").get(null);
+                configurator.getMethod("setLevel", String.class, level).invoke(null, HikariDataSource.class.getPackageName(), WARN);
+            } catch (final ReflectiveOperationException ignored) {}
         }
 
         // SQLite: create parent directories
@@ -94,71 +122,72 @@ public class SQLDialect extends Dialect {
         hikariConfig.setDataSourceProperties(properties);
 
         // If downloading library, connect using an IsolatedClassLoader
-        if (dataManager.storageConfig.method.library != null && dataManager.plugin.libraryManager != null) {
+        if (dataManager.plugin.libraryManager != null && dataManager.storageConfig.method.sqlInfo.library() != null) {
             // Get IsolatedClassLoader of library
             final IsolatedClassLoader classLoader;
             try {
-                classLoader = dataManager.plugin.libraryManager.loadLibraryIsolated(dataManager.storageConfig.method.library);
+                classLoader = dataManager.plugin.libraryManager.loadLibraryIsolated(dataManager.storageConfig.method.sqlInfo.library());
             } catch (final Exception e) {
                 throw new ConnectionException(e, finalUrl, properties);
             }
             if (classLoader == null) throw new ConnectionException("Failed to load library for " + dataManager.storageConfig.method, finalUrl, properties);
 
             // Get driver class
-            final Class<?> driverClass;
+            final Method connectMethod;
+            final Driver driver;
             try {
-                driverClass = classLoader.loadClass(dataManager.storageConfig.method.driver);
-            } catch (final ClassNotFoundException e) {
+                final Class<?> driverClass = classLoader.loadClass(dataManager.storageConfig.method.sqlInfo.driver());
+                connectMethod = driverClass.getMethod("connect", String.class, Properties.class);
+                driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
+            } catch (final ReflectiveOperationException e) {
                 throw new ConnectionException(e, finalUrl, properties);
             }
 
             // Create DSL from IsolatedClassLoader
             hikariConfig.setDataSource(new DataSource() {
-                @Override
+                @Override @NotNull
                 public Connection getConnection() throws SQLException {
                     try {
-                        return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.getDeclaredConstructor().newInstance(), finalUrl, properties);
+                        return (Connection) connectMethod.invoke(driver, finalUrl, properties);
                     } catch (final Exception e) {
                         throw new SQLException(e);
                     }
                 }
 
-                @Override
-                public Connection getConnection(String username, String password) {
-                    throw new UnsupportedOperationException("getConnection(String, String) is not supported for IsolatedClassLoader");
+                @Override @NotNull
+                public Connection getConnection(String username, String password) throws SQLFeatureNotSupportedException {
+                    throw new SQLFeatureNotSupportedException("getConnection(String, String) is not supported for IsolatedClassLoader of custom data source implementation");
                 }
-                @Override
-                public PrintWriter getLogWriter() {
-                    throw new UnsupportedOperationException("getLogWriter() is not supported for IsolatedClassLoader");
+                @Override @NotNull
+                public PrintWriter getLogWriter() throws SQLFeatureNotSupportedException {
+                    throw new SQLFeatureNotSupportedException("getLogWriter() is not supported for IsolatedClassLoader of custom data source implementation");
                 }
                 @Override
                 public void setLogWriter(PrintWriter out) {
-                    throw new UnsupportedOperationException("setLogWriter(PrintWriter) is not supported for IsolatedClassLoader");
+                    dataManager.plugin.logErrorTrack(Level.WARNING, "&4setLogWriter(PrintWriter)&c is not supported for IsolatedClassLoader of custom data source implementation");
                 }
                 @Override
-                public void setLoginTimeout(int seconds) {
-                    throw new UnsupportedOperationException("setLoginTimeout(int) is not supported for IsolatedClassLoader");
-                }
+                public void setLoginTimeout(int seconds) {}
                 @Override
                 public int getLoginTimeout() {
-                    throw new UnsupportedOperationException("getLoginTimeout() is not supported for IsolatedClassLoader");
+                    return 0;
                 }
-                @Override
-                public <T> T unwrap(Class<T> iface) {
-                    throw new UnsupportedOperationException("unwrap(Class<T>) is not supported for IsolatedClassLoader");
+                @Override @NotNull
+                public <T> T unwrap(Class<T> iface) throws SQLException {
+                    throw new SQLException("Not a wrapper");
                 }
                 @Override
                 public boolean isWrapperFor(Class<?> iface) {
-                    throw new UnsupportedOperationException("isWrapperFor(Class<?>) is not supported for IsolatedClassLoader");
+                    return false;
                 }
-                @Override
-                public Logger getParentLogger() {
-                    throw new UnsupportedOperationException("getParentLogger() is not supported for IsolatedClassLoader");
+                @Override @NotNull
+                public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                    throw new SQLFeatureNotSupportedException("getParentLogger() is not supported for IsolatedClassLoader of custom data source implementation");
                 }
             });
         } else {
             // Driver class already exists on classpath
-            hikariConfig.setDriverClassName(dataManager.storageConfig.method.driver);
+            hikariConfig.setDriverClassName(dataManager.storageConfig.method.sqlInfo.driver());
             hikariConfig.setJdbcUrl(finalUrl);
         }
 
@@ -247,8 +276,8 @@ public class SQLDialect extends Dialect {
     protected Optional<String> getFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         try {
             return dsl
-                    .selectFrom(table)
-                    .where(StringData.TARGET_COLUMN, target)
+                    .selectFrom(table(table))
+                    .where(field(StringData.TARGET_COLUMN).eq(target))
                     .fetchOptional()
                     .map(record -> record.get(key, String.class));
         } catch (final DataAccessException e) {
@@ -259,37 +288,43 @@ public class SQLDialect extends Dialect {
 
     @Override @Nullable
     protected FailedSet setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
-        try {
-            dsl
-                    .insertInto(DSL.table(table))
-                    .set(DSL.field(StringData.TARGET_COLUMN), target)
-                    .set(DSL.field(key), value)
-                    .onDuplicateKeyUpdate()
-                    .set(DSL.field(key), value)
-                    .execute();
-            return null;
-        } catch (final DataAccessException e) {
-            return new FailedSet(table, target, key, value, e);
-        }
+        return setToDatabaseImpl(table, target, Map.of(key, value)).stream()
+                .findFirst().orElse(null);
     }
 
     @Override @NotNull
-    protected Set<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull ConcurrentHashMap<String, CachedValue> data) {
-        InsertSetMoreStep<Record> insertStep = dsl
-                .insertInto(DSL.table(table))
-                .set(DSL.field(StringData.TARGET_COLUMN), target);
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) {
-            insertStep = insertStep.set(DSL.field(entry.getKey()), entry.getValue().value());
-        }
-
-        // Execute
+    protected List<FailedSet> setToDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull Map<String, String> data) {
         try {
-            insertStep.execute();
-            return Collections.emptySet();
+            upsert(table, target, data);
+            return Collections.emptyList();
         } catch (final DataAccessException e) {
-            final Set<FailedSet> failed = new HashSet<>();
-            for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue().value(), e));
+            final List<FailedSet> failed = new ArrayList<>();
+            for (final Map.Entry<String, String> entry : data.entrySet()) failed.add(new FailedSet(table, target, entry.getKey(), entry.getValue(), e));
             return failed;
+        }
+    }
+
+    /**
+     * Update given columns for target if it already exists, otherwise insert new row
+     * <br>Done as explicit UPDATE-then-INSERT-if-missing rather than jOOQ's {@code onDuplicateKeyUpdate}/{@code onConflict}
+     * emulation, since that emulation requires real primary key metadata that a dynamically-named {@link DSL#table(String)}
+     * doesn't carry (this fails on H2 with "cannot be emulated when inserting into non-updatable tables")
+     *
+     * @param   table   the table to upsert into
+     * @param   target  the target to upsert
+     * @param   values  the column/value pairs to upsert
+     *
+     * @throws  DataAccessException if a database access error occurs
+     */
+    private void upsert(@NotNull String table, @NotNull String target, @NotNull Map<String, String> values) {
+        int updated = dsl.update(table(table))
+                .set(values.entrySet().stream().collect(Collectors.toMap(entry -> field(entry.getKey()), Map.Entry::getValue)))
+                .where(field(StringData.TARGET_COLUMN).eq(target))
+                .execute();
+        if (updated == 0) {
+            InsertSetMoreStep<Record> insertStep = dsl.insertInto(table(table)).set(field(StringData.TARGET_COLUMN), target);
+            for (final Map.Entry<String, String> entry : values.entrySet()) insertStep = insertStep.set(field(entry.getKey()), entry.getValue());
+            insertStep.execute();
         }
     }
 
@@ -297,9 +332,9 @@ public class SQLDialect extends Dialect {
     protected boolean removeFromDatabaseImpl(@NotNull String table, @NotNull String target, @NotNull String key) {
         try {
             dsl
-                    .update(DSL.table(table))
-                    .setNull(DSL.field(key))
-                    .where(DSL.field(StringData.TARGET_COLUMN, String.class).eq(target))
+                    .update(table(table))
+                    .setNull(field(key))
+                    .where(field(StringData.TARGET_COLUMN).eq(target))
                     .execute();
             return true;
         } catch (final DataAccessException e) {
@@ -320,7 +355,7 @@ public class SQLDialect extends Dialect {
             // Create table if missing
             try {
                 dsl
-                        .createTableIfNotExists(table)
+                        .createTableIfNotExists(table(table))
                         .column(StringData.TARGET_COLUMN, SQLDataType.VARCHAR(255))
                         .constraints(DSL.constraint().primaryKey(StringData.TARGET_COLUMN))
                         .execute();
@@ -334,7 +369,7 @@ public class SQLDialect extends Dialect {
                 final String keyLower = key.toLowerCase();
                 if (!keyLower.equals(StringData.TARGET_COLUMN)) try {
                     dsl
-                            .alterTableIfExists(table)
+                            .alterTableIfExists(table(table))
                             .addColumnIfNotExists(keyLower, SQLDataType.CLOB)
                             .execute();
                 } catch (final DataAccessException e) {
@@ -342,5 +377,15 @@ public class SQLDialect extends Dialect {
                 }
             }
         }
+    }
+
+    @NotNull
+    private static Table<Record> table(@NotNull String name) {
+        return DSL.table(DSL.name(name));
+    }
+
+    @NotNull
+    private static Field<String> field(@NotNull String name) {
+        return DSL.field(DSL.name(name), String.class);
     }
 }

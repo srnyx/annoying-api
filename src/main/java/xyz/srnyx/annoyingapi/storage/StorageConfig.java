@@ -73,15 +73,11 @@ public class StorageConfig extends RootConfig {
      * The remote connection details/properties
      */
     public static class RemoteConnection extends SubConfig<StorageConfig, StorageConfig> {
-        public RemoteConnection(@org.jetbrains.annotations.NotNull StorageConfig root) {
-            super(root);
-        }
-
         @Comment("The host of the database")
         @NotNull public String host = "localhost";
         @Comment("The port of the database")
         @Comment("Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL")
-        public int port = Objects.requireNonNullElse(getParent().method.defaultPort, 3306);
+        public int port = 3306;
 
         @Comment
         @Comment("The name of the database")
@@ -115,6 +111,12 @@ public class StorageConfig extends RootConfig {
                 "autoReconnect", "true",
                 "useUnicode", "true",
                 "characterEncoding", "UTF-8");
+
+
+        public RemoteConnection(@org.jetbrains.annotations.NotNull StorageConfig root) {
+            super(root);
+            if (root.method.sqlInfo != null && root.method.sqlInfo.defaultPort() != null) this.port = root.method.sqlInfo.defaultPort();
+        }
 
         @org.jetbrains.annotations.NotNull
         public static String getDefaultTablePrefix(@org.jetbrains.annotations.NotNull AnnoyingPlugin plugin) {

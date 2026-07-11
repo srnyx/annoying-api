@@ -3,8 +3,6 @@ package xyz.srnyx.annoyingapi.file.okaeri.migration;
 import eu.okaeri.configs.migrate.builtin.NamedMigration;
 import xyz.srnyx.annoyingapi.storage.StorageMethod;
 
-import java.util.Objects;
-
 import static eu.okaeri.configs.migrate.ConfigMigrationDsl.*;
 
 
@@ -15,7 +13,7 @@ public class S0002_Remote_connection_null_port extends NamedMigration {
                         not(exists("remote_connection.port")),
                         (config, view) -> {
                             final StorageMethod method = view.getOr("remote_connection.method", StorageMethod.class, StorageMethod.H2);
-                            view.set("remote_connection.port", Objects.requireNonNullElse(method.defaultPort, 3306));
+                            view.set("remote_connection.port", method.sqlInfo != null && method.sqlInfo.defaultPort() != null ? method.sqlInfo.defaultPort() : 3306);
                             return true;
                         }));
     }
