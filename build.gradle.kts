@@ -21,7 +21,7 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "a6e2414"
+    id("xyz.srnyx.gradle-galaxy") version "5c89c77"
     id("com.gradleup.shadow") version "9.5.1"
     id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
     id("net.kyori.blossom") version "2.2.0"

@@ -69,7 +69,7 @@ public enum StorageMethod {
     StorageMethod(@NotNull Consumer<Builder> builder) {
         final Builder b = new Builder();
         builder.accept(b);
-        if (b.dialect == null) throw new IllegalStateException("dialect cannot be null");
+        if (b.dialect == null) throw new NullPointerException("dialect cannot be null");
         this.dialect = b.dialect;
         this.sqlInfo = b.sqlInfo == null ? null : b.sqlInfo.build();
     }

@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 
 /**
@@ -277,7 +276,7 @@ public class SQLDialect extends Dialect {
         try {
             return dsl
                     .selectFrom(table(table))
-                    .where(field(StringData.TARGET_COLUMN).eq(target))
+                    .where(targetField().eq(target))
                     .fetchOptional()
                     .map(record -> record.get(key, String.class));
         } catch (final DataAccessException e) {
@@ -317,15 +316,23 @@ public class SQLDialect extends Dialect {
      * @throws  DataAccessException if a database access error occurs
      */
     private void upsert(@NotNull String table, @NotNull String target, @NotNull Map<String, String> values) {
-        int updated = dsl.update(table(table))
-                .set(values.entrySet().stream().collect(Collectors.toMap(entry -> field(entry.getKey()), Map.Entry::getValue)))
-                .where(field(StringData.TARGET_COLUMN).eq(target))
+        final Table<Record> tableRecord = table(table);
+        final Field<String> targetField = targetField();
+        final Map<Field<String>, String> fieldMap = new LinkedHashMap<>(values.size());
+        for (final Map.Entry<String, String> entry : values.entrySet()) fieldMap.put(field(entry.getKey()), entry.getValue());
+
+        // Update existing row, return if exist/updated
+        if (dsl.update(tableRecord)
+                .set(fieldMap)
+                .where(targetField.eq(target))
+                .execute() != 0) return;
+
+        // No existing row, insert new row
+        final Map<Field<String>, String> insertMap = new LinkedHashMap<>(fieldMap);
+        insertMap.put(targetField, target);
+        dsl.insertInto(tableRecord)
+                .set(insertMap)
                 .execute();
-        if (updated == 0) {
-            InsertSetMoreStep<Record> insertStep = dsl.insertInto(table(table)).set(field(StringData.TARGET_COLUMN), target);
-            for (final Map.Entry<String, String> entry : values.entrySet()) insertStep = insertStep.set(field(entry.getKey()), entry.getValue());
-            insertStep.execute();
-        }
     }
 
     @Override
@@ -334,7 +341,7 @@ public class SQLDialect extends Dialect {
             dsl
                     .update(table(table))
                     .setNull(field(key))
-                    .where(field(StringData.TARGET_COLUMN).eq(target))
+                    .where(targetField().eq(target))
                     .execute();
             return true;
         } catch (final DataAccessException e) {
@@ -387,5 +394,10 @@ public class SQLDialect extends Dialect {
     @NotNull
     private static Field<String> field(@NotNull String name) {
         return DSL.field(DSL.name(name), String.class);
+    }
+    
+    @NotNull
+    private static Field<String> targetField() {
+        return field(StringData.TARGET_COLUMN);
     }
 }
