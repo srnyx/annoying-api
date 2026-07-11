@@ -1,13 +1,10 @@
 package xyz.srnyx.annoyingapi.options;
 
 import org.bukkit.configuration.ConfigurationSection;
-
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.annoyingapi.PluginPlatform;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
-
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.ArrayList;
@@ -20,7 +17,17 @@ import java.util.List;
  * Represents the general options for the plugin
  */
 public class PluginOptions extends Stringable {
+    /**
+     * Whether this plugin is a MOCK plugin for unit tests
+     */
+    public boolean isMock = false;
+    /**
+     * Whether to send startup messages to the console
+     */
     public boolean sendStartupMessages = true;
+    /**
+     * Whether to check for updates when the plugin is enabled
+     */
     public boolean doUpdateCheck = true;
     /**
      * <i>{@code OPTIONAL}</i> The {@link AnnoyingLibrary AnnoyingLibraries} to load <b>before</b> initializing the plugin
@@ -65,8 +72,15 @@ public class PluginOptions extends Stringable {
     @NotNull
     public PluginOptions applyMockTemplate() {
         return this
+                .isMock(true)
                 .sendStartupMessages(false)
                 .doUpdateCheck(false);
+    }
+
+    @NotNull
+    public PluginOptions isMock(boolean isMock) {
+        this.isMock = isMock;
+        return this;
     }
 
     @NotNull
