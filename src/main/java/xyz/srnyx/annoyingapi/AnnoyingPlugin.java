@@ -37,7 +37,7 @@ import xyz.srnyx.annoyingapi.stats.provider.StatsProvider;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.StorageConfig;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
@@ -56,7 +56,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -217,11 +216,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Save cache
             if (dataManager.storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.DISABLE)) dataManager.dialect.saveCache();
             // Close connection (if SQL)
-            if (dataManager.dialect instanceof SQLDialect) try {
-                ((SQLDialect) dataManager.dialect).connection.close();
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&cFailed to close the database connection", e);
-            }
+            if (dataManager.dialect instanceof SQLDialect sqlDialect) sqlDialect.dataSource.close();
         }
 
         // Stats loaders
@@ -619,11 +614,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Save cache
             if (saveCache) dataManager.dialect.saveCache();
             // Close previous connection
-            if (dataManager.dialect instanceof SQLDialect) try {
-                ((SQLDialect) dataManager.dialect).connection.close();
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&cFailed to close the database connection, it's recommended to restart the server!", e);
-            }
+            if (dataManager.dialect instanceof SQLDialect sqlDialect) sqlDialect.dataSource.close();
             // Stop cache saving task
             if (dataManager.cacheSavingTask != null) dataManager.cacheSavingTask.cancel();
         }

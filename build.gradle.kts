@@ -168,11 +168,25 @@ val runtimeLibraries = listOf(
         relocations = listOf(Relocation("org.reflections")),
         dependencies = listOf("javassist")),
     RuntimeLibrary(
+        name = "hikaricp",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "com.zaxxer",
+        artifact = "HikariCP",
+        version = "7.1.0",
+        relocations = listOf(Relocation("com.zaxxer.hikari"))),
+    RuntimeLibrary(
+        name = "jooq",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.jooq",
+        artifact = "jooq",
+        version = "3.21.6",
+        relocations = listOf(Relocation("org.jooq"))),
+    RuntimeLibrary(
         name = "h2",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "com.h2database",
         artifact = "h2",
-        version = "2.2.224", // Don't update to keep support for Java 8
+        version = "2.4.240",
         relocations = listOf(Relocation("org.h2"))),
     RuntimeLibrary(
         name = "postgresql",

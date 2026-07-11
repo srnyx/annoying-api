@@ -7,17 +7,11 @@ import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.H2Dialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.MariaDBDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.MySQLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.PostgreSQLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLiteDialect;
-import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Function;
 
 
@@ -28,23 +22,23 @@ public enum StorageMethod {
     /**
      * H2 storage method
      */
-    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), AnnoyingAPILibrary.H2),
+    H2(org.jooq.SQLDialect.H2, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), AnnoyingAPILibrary.H2),
     /**
      * SQLite storage method
      */
-    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", pluginFolder -> "jdbc:sqlite:" + processPath(pluginFolder.resolve("data").resolve("sqlite").resolve("data.db")), null),
+    SQLITE(org.jooq.SQLDialect.SQLITE, "org{}sqlite{}JDBC", pluginFolder -> "jdbc:sqlite:" + processPath(pluginFolder.resolve("data").resolve("sqlite").resolve("data.db")), null),
     /**
      * MySQL storage method
      */
-    MYSQL(MySQLDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
+    MYSQL(org.jooq.SQLDialect.MYSQL, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
     /**
      * MariaDB storage method
      */
-    MARIADB(MariaDBDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
+    MARIADB(org.jooq.SQLDialect.MARIADB, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
     /**
      * PostgreSQL storage method
      */
-    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", AnnoyingAPILibrary.POSTGRESQL, 5432),
+    POSTGRESQL(org.jooq.SQLDialect.POSTGRES, "org{}postgresql{}Driver", "jdbc:postgresql://", AnnoyingAPILibrary.POSTGRESQL, 5432),
     /**
      * JSON storage method
      */
@@ -61,7 +55,7 @@ public enum StorageMethod {
     /**
      * The driver class name for the method. {@code null} if the method is not SQL
      */
-    @Nullable private final String driver;
+    @Nullable public final String driver;
     /**
      * <b>Local SQL:</b> The full URL for the method
      * <br><b>Remote SQL:</b> The beginning of the URL for the method
@@ -78,42 +72,32 @@ public enum StorageMethod {
     @Nullable public final Integer defaultPort;
 
     /**
-     * Construct a new {@link StorageMethod} with the given parameters (non-remote types)
-     *
-     * @param dialect   {@link #dialect}
-     * @param driver    {@link #driver}
-     * @param library   {@link #library}
-     * @param url       {@link #url}
+     * SQL types
      */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library) {
-        this.dialect = dialect;
-        this.driver = driver;
+    StorageMethod(@NotNull org.jooq.SQLDialect dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library, @Nullable Integer defaultPort) {
+        this.dialect = manager -> new SQLDialect(manager, dialect);
+        this.driver = AnnoyingPlugin.replaceBrackets(driver);
         this.url = url;
-        this.library = library;
-        this.defaultPort = null;
-    }
-
-    /**
-     * Construct a new {@link StorageMethod} with the given parameters (remote types)
-     *
-     * @param dialect     {@link #dialect}
-     * @param driver      {@link #driver}
-     * @param url         {@link #url}
-     * @param library     {@link #library}
-     * @param defaultPort {@link #defaultPort}
-     */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable AnnoyingLibrary library, int defaultPort) {
-        this.dialect = dialect;
-        this.driver = driver;
-        this.url = file -> url;
         this.library = library;
         this.defaultPort = defaultPort;
     }
 
     /**
-     * Construct a new {@link StorageMethod} with the given {@link Dialect} (non-SQL types)
-     *
-     * @param   dialect {@link #dialect}
+     * Non-remote SQL types
+     */
+    StorageMethod(@NotNull org.jooq.SQLDialect dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library) {
+        this(dialect, driver, url, library, null);
+    }
+
+    /**
+     * Remote SQL types
+     */
+    StorageMethod(@NotNull org.jooq.SQLDialect dialect, @NotNull String driver, @NotNull String url, @Nullable AnnoyingLibrary library, int defaultPort) {
+        this(dialect, driver, file -> url, library, defaultPort);
+    }
+
+    /**
+     * Non-SQL types
      */
     StorageMethod(@NotNull DialectFunction dialect) {
         this.dialect = dialect;
@@ -121,16 +105,6 @@ public enum StorageMethod {
         this.url = null;
         this.library = null;
         this.defaultPort = null;
-    }
-
-    /**
-     * Get the driver class name for the method
-     *
-     * @return  the driver class name for the method
-     */
-    @NotNull
-    public Optional<String> getDriver() {
-        return driver != null ? Optional.of(AnnoyingPlugin.replaceBrackets(driver)) : Optional.empty();
     }
 
     /**
@@ -149,17 +123,6 @@ public enum StorageMethod {
      */
     public boolean isSQL() {
         return driver != null;
-    }
-
-    /**
-     * Get the {@link StorageMethod} with the given name
-     *
-     * @param name the name of the method
-     * @return the {@link StorageMethod} with the given name, or {@link #H2} if the name is {@code null} or invalid
-     */
-    @NotNull
-    public static StorageMethod get(@Nullable String name) {
-        return Mapper.toEnum(name, StorageMethod.class).orElse(H2);
     }
 
     /**
@@ -188,6 +151,7 @@ public enum StorageMethod {
     /**
      * A function to create a new {@link Dialect}
      */
+    @FunctionalInterface
     public interface DialectFunction {
         /**
          * Apply the function to create a new {@link Dialect}

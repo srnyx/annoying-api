@@ -37,7 +37,7 @@ public class DataOptions extends Stringable {
     /**
      * Options for {@link EntityData entity data management}
      */
-    @NotNull public Entities entities = new Entities();
+    @Deprecated @NotNull public Entities entities = new Entities();
 
     /**
      * Sets {@link #enabled}
@@ -55,6 +55,7 @@ public class DataOptions extends Stringable {
     /**
      * Adds all the specified tables to {@link #tables}
      * <br>All tables and columns will be converted to lowercase
+     * <br><i>Also sets {@link #enabled} to true</i>
      *
      * @param   tables  the tables to add
      *
@@ -66,12 +67,13 @@ public class DataOptions extends Stringable {
                 .collect(HashMap::new, (map, entry) -> map.put(entry.getKey().toLowerCase(), entry.getValue().stream()
                         .map(String::toLowerCase)
                         .collect(HashSet::new, HashSet::add, HashSet::addAll)), HashMap::putAll));
-        return this;
+        return enabled(true);
     }
 
     /**
      * Adds the specified table to {@link #tables}
      * <br>The table and all columns will be converted to lowercase
+     * <br><i>Also sets {@link #enabled} to true</i>
      *
      * @param   table   the table to add
      * @param   columns the columns to add for the table
@@ -83,12 +85,13 @@ public class DataOptions extends Stringable {
         this.tables.put(table.toLowerCase(), columns.stream()
                 .map(String::toLowerCase)
                 .collect(HashSet::new, HashSet::add, HashSet::addAll));
-        return this;
+        return enabled(true);
     }
 
     /**
      * Adds the specified table to {@link #tables}
      * <br>The table and all columns will be converted to lowercase
+     * <br><i>Also sets {@link #enabled} to true</i>
      *
      * @param   table   the table to add
      * @param   columns the columns to add for the table
@@ -102,6 +105,7 @@ public class DataOptions extends Stringable {
 
     /**
      * Adds the specified columns to the {@link EntityData#TABLE_NAME} table
+     * <br><i>Also sets {@link #enabled} to true</i>
      *
      * @param   columns the columns to add
      *
@@ -112,11 +116,12 @@ public class DataOptions extends Stringable {
         final Set<String> entityDataColumns = tables.get(EntityData.TABLE_NAME);
         if (entityDataColumns == null) return table(EntityData.TABLE_NAME, new HashSet<>(columns));
         entityDataColumns.addAll(columns);
-        return this;
+        return enabled(true);
     }
 
     /**
      * Adds the specified columns to the {@link EntityData#TABLE_NAME} table
+     * <br><i>Also sets {@link #enabled} to true</i>
      *
      * @param   columns the columns to add
      *
@@ -147,7 +152,7 @@ public class DataOptions extends Stringable {
      *
      * @return              this {@link DataOptions} instance for chaining
      */
-    @NotNull
+    @Deprecated @NotNull
     public DataOptions entities(@NotNull Entities entities) {
         this.entities = entities;
         return this;
@@ -160,7 +165,7 @@ public class DataOptions extends Stringable {
      *
      * @return              this {@link DataOptions} instance for chaining
      */
-    @NotNull
+    @Deprecated @NotNull
     public DataOptions entities(@NotNull Consumer<Entities> consumer) {
         consumer.accept(entities);
         return this;
@@ -196,7 +201,7 @@ public class DataOptions extends Stringable {
     /**
      * Options for {@link EntityData entity data management}
      */
-    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
     public static class Entities extends Stringable {
         /**
          * The path to the folder (inside {@code plugins/PLUGIN/data/}) where the entity data files will be stored
