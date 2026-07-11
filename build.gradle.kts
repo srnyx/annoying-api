@@ -10,9 +10,9 @@ import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.RuntimeLibrariesConfig
 import xyz.srnyx.gradlegalaxy.data.config.publishing.PublishingPlatformConfig
 import xyz.srnyx.gradlegalaxy.data.config.publishing.TextArtifact
 import xyz.srnyx.gradlegalaxy.data.config.publishing.publishingSimpleConfig
-import xyz.srnyx.gradlegalaxy.data.platforms.PluginPlatform
 import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
 import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
+import xyz.srnyx.gradlegalaxy.enums.PluginPlatform
 import xyz.srnyx.gradlegalaxy.enums.Repository
 import xyz.srnyx.gradlegalaxy.enums.repository
 import xyz.srnyx.gradlegalaxy.utility.*
@@ -21,9 +21,10 @@ import xyz.srnyx.gradlegalaxy.utility.*
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "5c89c77"
+    id("xyz.srnyx.gradle-galaxy") version "ac4875a"
     id("com.gradleup.shadow") version "9.5.1"
     id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
+    id("io.papermc.hangar-publish-plugin") version "0.1.4"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
 }
@@ -282,7 +283,9 @@ setupPublishingPlatforms(
     config = PublishingPlatformConfig(
         platforms = mapOf(
             PluginPlatform.MODRINTH to "gzktm9GG",
+            PluginPlatform.HANGAR to "AnnoyingAPI",
             PluginPlatform.CURSEFORGE to "728930"),
         loaders = listOf("spigot", "paper", "purpur", "folia"),
         addAnnoyingApiDependency = false,
-        modrinthAction = { optional("placeholderapi") }))
+        modrinthAction = { optional("placeholderapi") },
+        hangarAction = { optional("PlaceholderAPI") }))
