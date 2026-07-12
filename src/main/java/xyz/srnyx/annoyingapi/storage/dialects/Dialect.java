@@ -122,7 +122,7 @@ public abstract class Dialect {
      * @param   key     the key
      * @param   value   the value
      *
-     * @return          the failed value information, null if successful
+     * @return  the failed value information, null if successful
      */
     @Nullable
     public final FailedSet setToDatabase(@NotNull String table, @NotNull String target, @NotNull String key, @NotNull String value) {
@@ -136,14 +136,12 @@ public abstract class Dialect {
      * @param   target  the target
      * @param   data    the data to set
      *
-     * @return          set of failed values as {@link FailedSet FailedSets}
+     * @return  failed values as {@link FailedSet FailedSets}
      */
     @NotNull
     public final List<FailedSet> setToDatabase(@NotNull String table, @NotNull String target, @NotNull Map<String, CachedValue> data) {
         final Map<String, String> dataLower = new LinkedHashMap<>();
-        for (final ConcurrentHashMap.Entry<String, CachedValue> entry : data.entrySet()) {
-            dataLower.put(entry.getKey().toLowerCase(), entry.getValue().value());
-        }
+        for (final Map.Entry<String, CachedValue> entry : data.entrySet()) dataLower.put(entry.getKey().toLowerCase(), entry.getValue().value());
         return setToDatabaseImpl(table.toLowerCase(), target, dataLower);
     }
 

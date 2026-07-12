@@ -241,12 +241,20 @@ public class SQLDialect extends Dialect {
         final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> values = new ConcurrentHashMap<>(); // {Table, {Target, {Key, Value}}}
         final int oldPrefixLength = dataManager.tablePrefix.length();
         for (final Table<?> table : dsl.meta().getTables()) {
-            // Skip tables that don't have target column
-            if (table.field(StringData.TARGET_COLUMN) == null) {
-                AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.getMigrationLogPrefix() + "Table &4" + table.getName() + "&c doesn't have a '&4target&c' key, skipping...");
+            // Skip tables that don't start with the old prefix
+            final String tableName = table.getName();
+            if (!tableName.startsWith(dataManager.tablePrefix)) {
+                AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.getMigrationLogPrefix() + "Table &4" + tableName + "&c doesn't start with the old prefix &4" + dataManager.tablePrefix + "&c, skipping...");
                 continue;
             }
-            final String tableWithoutPrefix = table.getName().substring(oldPrefixLength);
+
+            // Skip tables that don't have target column
+            if (table.field(StringData.TARGET_COLUMN) == null) {
+                AnnoyingPlugin.log(Level.WARNING, dataManager.storageConfig.getMigrationLogPrefix() + "Table &4" + tableName + "&c doesn't have a '&" + StringData.TARGET_COLUMN + "&c' key, skipping...");
+                continue;
+            }
+
+            final String tableWithoutPrefix =tableName.substring(oldPrefixLength);
 
             // Get all keys
             final Set<String> keys = new HashSet<>();

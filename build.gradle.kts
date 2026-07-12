@@ -23,7 +23,7 @@ plugins {
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "ac4875a"
     id("com.gradleup.shadow") version "9.5.1"
-    id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
+    id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
