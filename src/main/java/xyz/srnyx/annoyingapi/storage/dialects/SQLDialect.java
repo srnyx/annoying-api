@@ -48,16 +48,8 @@ public class SQLDialect extends Dialect {
     @NotNull public final HikariDataSource dataSource;
     @NotNull public final DSLContext dsl;
     /**
-     * <ul>
-     *     <li>Key: table name
-     *     <li>Value:<ul>
-     *         <li>Key: target
-     *         <li>Value:<ul>
-     *             <li>Key: data key
-     *             <li>Value: data value
-     *        </ul>
-     *     </ul>
-     * </ul>
+     * {@code [ Table name: [ Target: [ Data key: Data value ] ] ]}
+     * <br>{@code Map<Table name, Map<Target, Map<Data key, Data value>>>}
      */
     @NotNull public final ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> cache = new ConcurrentHashMap<>();
 
@@ -199,6 +191,17 @@ public class SQLDialect extends Dialect {
 
         // Create DSL
         dsl = DSL.using(dataSource, jooqDialect);
+    }
+
+    @Override @NotNull
+    public Stats getStats() {
+        long cacheTargets = 0L;
+        long cacheValues = 0L;
+        for (final ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>> table : cache.values()) {
+            cacheTargets += table.size();
+            if (!table.isEmpty()) for (final ConcurrentHashMap<String, CachedValue> target : table.values()) cacheValues += target.size();
+        }
+        return new Stats(cacheTargets, cacheValues);
     }
 
     @Override @Nullable

@@ -28,7 +28,6 @@ import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.message.MessagesProvider;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
-import xyz.srnyx.annoyingapi.stats.StatsHelper;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
 import xyz.srnyx.annoyingapi.stats.loader.FastStatsLoader;
 import xyz.srnyx.annoyingapi.stats.provider.BStatsProvider;
@@ -93,10 +92,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Loader for OkaeriConfig configs
      */
     @NotNull public final ConfigLoader configLoader;
-    /**
-     * Helper for stats providers (bStats, FastStats, etc.)
-     */
-    @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
     /**
      * The {@link DataManager} for the plugin
      */

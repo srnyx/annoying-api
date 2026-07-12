@@ -29,6 +29,21 @@ public class YAMLDialect extends Dialect {
         super(dataManager);
     }
 
+    @Override @NotNull
+    public Stats getStats() {
+        long cacheTargets = 0L;
+        long cacheValues = 0L;
+        for (final AnnoyingData table : tables.values()) {
+            final Set<String> targets = table.getKeys(false);
+            cacheTargets += targets.size();
+
+            if (!targets.isEmpty()) for (final Object target : table.getValues(false).values()) {
+                if (target instanceof ConfigurationSection section) cacheValues += section.getKeys(false).size();
+            }
+        }
+        return new Stats(cacheTargets, cacheValues);
+    }
+
     @NotNull
     private Optional<AnnoyingData> getTableFromCache(@NotNull String table) {
         return Optional.ofNullable(tables.get(table));

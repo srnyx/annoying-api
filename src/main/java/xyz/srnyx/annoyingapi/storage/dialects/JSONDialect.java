@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
@@ -41,6 +40,22 @@ public class JSONDialect extends Dialect {
      */
     public JSONDialect(@NotNull DataManager dataManager) {
         super(dataManager);
+    }
+
+    @Override @NotNull
+    public Stats getStats() {
+        long cacheTargets = 0L;
+        long cacheValues = 0L;
+        for (final JsonFile table : tables.values()) {
+            final Set<Map.Entry<String, JsonElement>> targets = table.json.entrySet();
+            cacheTargets += targets.size();
+
+            for (final Map.Entry<String, JsonElement> target : targets) {
+                final JsonElement element = target.getValue();
+                if (element.isJsonObject()) cacheValues += element.getAsJsonObject().entrySet().size();
+            }
+        }
+        return new Stats(cacheTargets, cacheValues);
     }
 
     @NotNull
@@ -221,8 +236,7 @@ public class JSONDialect extends Dialect {
         @Nullable
         private CachedValue get(@NotNull String target, @NotNull String key) {
             return getTargetData(target)
-                    .flatMap(jsonObject -> Mapper.convertJsonElement(jsonObject.get(key), JsonPrimitive.class))
-                    .flatMap(primitive -> Mapper.convertJsonPrimitive(primitive, String.class))
+                    .flatMap(jsonObject -> Mapper.convertJsonElementToPrimitive(jsonObject.get(key), String.class))
                     .map(CachedValue::new)
                     .orElse(null);
         }

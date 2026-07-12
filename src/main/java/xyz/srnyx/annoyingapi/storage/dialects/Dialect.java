@@ -180,6 +180,9 @@ public abstract class Dialect {
         return removeFromDatabaseImpl(table.toLowerCase(), target, key.toLowerCase());
     }
 
+    @NotNull
+    public abstract Stats getStats();
+
     /**
      * Get a value from the cache
      *
@@ -291,4 +294,6 @@ public abstract class Dialect {
      * @see #getMigrationDataFromDatabase(DataManager)
      */
     public record MigrationData(@NotNull Map<String, Set<String>> tablesKeys, @NotNull ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap<String, CachedValue>>> data) {}
+
+    public record Stats(long cacheTargets, long cacheValues) {}
 }
