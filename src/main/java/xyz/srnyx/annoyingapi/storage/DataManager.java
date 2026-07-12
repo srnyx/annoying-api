@@ -5,12 +5,11 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.scheduler.TaskWrapper;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.SQLDialect;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.sql.SQLException;
 import java.util.logging.Level;
 
 
@@ -54,7 +53,7 @@ public class DataManager {
         plugin = config.plugin;
         storageConfig = config;
         dialect = storageConfig.method.dialect.apply(this);
-        tablePrefix = storageConfig.method.isRemote() ? storageConfig.remote_connection.table_prefix : "";
+        tablePrefix = storageConfig.method.isSQLRemote() ? storageConfig.remote_connection.table_prefix : "";
     }
 
     /**
@@ -129,11 +128,7 @@ public class DataManager {
         }
 
         // OLD: Close old connection
-        if (dialect instanceof SQLDialect) try {
-            ((SQLDialect) dialect).connection.close();
-        } catch (final SQLException e) {
-            AnnoyingPlugin.log(Level.SEVERE, "&cFailed to close the old database connection, it's recommended to restart the server!", e);
-        }
+        if (dialect instanceof SQLDialect sqlDialect) sqlDialect.dataSource.close();
 
         // PREV: Delete storage-old.yml if it exists (from a previous migration)
         final File storageOld = new File(dataFolder, "storage-old.yml");

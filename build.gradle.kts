@@ -23,7 +23,7 @@ plugins {
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "ac4875a"
     id("com.gradleup.shadow") version "9.5.1"
-    id("me.modmuss50.mod-publish-plugin") version "bf05e3d"
+    id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
     id("net.kyori.blossom") version "2.2.0"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
@@ -169,11 +169,41 @@ val runtimeLibraries = listOf(
         relocations = listOf(Relocation("org.reflections")),
         dependencies = listOf("javassist")),
     RuntimeLibrary(
+        name = "hikaricp",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "com.zaxxer",
+        artifact = "HikariCP",
+        version = "7.1.0",
+        relocations = listOf(Relocation("com.zaxxer.hikari"))),
+    RuntimeLibrary(
+        name = "reactive_streams",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.reactivestreams",
+        artifact = "reactive-streams",
+        version = "1.0.4",
+        relocations = listOf(Relocation("org.reactivestreams"))),
+    RuntimeLibrary(
+        name = "r2dbc_spi",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "io.r2dbc",
+        artifact = "r2dbc-spi",
+        version = "1.0.0.RELEASE",
+        relocations = listOf(Relocation("io.r2dbc")),
+        dependencies = listOf("reactive_streams")),
+    RuntimeLibrary(
+        name = "jooq",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "org.jooq",
+        artifact = "jooq",
+        version = "3.19.36", // Keep on 3.19.x for Java 17 support (https://www.jooq.org/download/support-matrix-jdk#oss)
+        relocations = listOf(Relocation("org.jooq")),
+        dependencies = listOf("r2dbc_spi")),
+    RuntimeLibrary(
         name = "h2",
         repositories = listOf(Repository.MAVEN_CENTRAL.url),
         group = "com.h2database",
         artifact = "h2",
-        version = "2.2.224", // Don't update to keep support for Java 8
+        version = "2.4.240",
         relocations = listOf(Relocation("org.h2"))),
     RuntimeLibrary(
         name = "postgresql",

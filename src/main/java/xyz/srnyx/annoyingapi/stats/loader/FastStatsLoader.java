@@ -4,24 +4,25 @@ import dev.faststats.ErrorTracker;
 import dev.faststats.FeatureFlagService;
 import dev.faststats.Metrics;
 import dev.faststats.bukkit.BukkitContext;
+import dev.faststats.bukkit.BukkitMetrics;
 import dev.faststats.data.Metric;
+import dev.faststats.data.SourceId;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.schema.FieldDeclaration;
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.annoyingapi.stats.Statable;
+import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -31,11 +32,17 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     @NotNull public final ErrorTracker errorTracker = ErrorTracker.contextAware();
 
     @Nullable private BukkitContext apiStats;
+    @Nullable private Dialect.Stats storageStats;
 
     @Nullable
     public Map<String, Supplier<OkaeriConfig>> getConfigs() {
         return null;
     }
+
+    /**
+     * Do not use {@link BukkitMetrics.Factory#onFlush(Runnable)} <b>unless</b> you want to overwrite the default one the API creates (may break some metrics)!
+     */
+    public void onFlush() {}
 
     /**
      * Do not use {@link BukkitContext.Factory#metrics(Function)}, {@link BukkitContext.Factory#featureFlagService(Function)}, or other similar service creators <b>unless</b> you want to overwrite the default ones the API creates!
@@ -49,24 +56,43 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     @Override
     public void load() {
         final AnnoyingPlugin plugin = getAnnoyingPlugin();
-        final List<Metric<?>> commonMetrics = new ArrayList<>(List.of(
-                Metric.string("annoying_api_version", () -> BuildProperties.ANNOYING_API_VERSION),
-                Metric.string("placeholderapi_version", plugin.statsHelper::getPlaceholderAPIVersion),
-                Metric.string("update_checker_outdated_latest_version", plugin.statsHelper::getUpdateCheckerOutdatedLatestVersion),
-                Metric.stringArray("storage_cache_save_on", plugin.statsHelper::getStorageCacheSaveOn),
-                Metric.stringArray("messages_plugin_global_placeholders_keys", plugin.statsHelper::getMessagesPluginGlobalPlaceholdersKeys)));
 
+        // Common metrics
+        final List<Metric<?>> commonMetrics = new ArrayList<>(List.of(
+                // Config values that can't be in a map (arrays)
+                enumArray("storage_cache_save_on", () -> plugin.dataManager == null ? null : plugin.dataManager.storageConfig.cache.getSaveOn()),
+                stringArray("messages_plugin_global_placeholders_keys", () -> plugin.getAnnoyingMessages().plugin.global_placeholders.keySet()),
+                // Misc
+                Metric.string("annoying_api_version", () -> BuildProperties.ANNOYING_API_VERSION),
+                Metric.string("placeholderapi_version", () -> plugin.papiInstalled ? PlaceholderAPIPlugin.getInstance().getDescription().getVersion() : null),
+                Metric.string("update_checker_outdated_latest_version", () ->
+                        plugin.updateChecker != null && plugin.updateChecker.latestVersion != null && plugin.updateChecker.isUpdateAvailable()
+                                ? plugin.updateChecker.latestVersion.version().version
+                                : null),
+                Metric.number("storage_cache_targets", () -> getStorageStats()
+                        .map(Dialect.Stats::cacheTargets)
+                        .orElse(null)),
+                Metric.number("storage_cache_values", () -> getStorageStats()
+                        .map(Dialect.Stats::cacheValues)
+                        .orElse(null))));
         // Storage
         commonMetrics.add(Metric.stringMap("storage", () -> plugin.dataManager == null ? null : processFields(plugin.dataManager.storageConfig)));
+
+        // Common flush
+        final Runnable defaultFlush = () -> storageStats = null;
 
         // API
         apiStats = new BukkitContext.Factory(plugin, "724dd679781f2a22c15aefa4b8a7bbcd")
                 .errorTrackerService(errorTracker)
                 .metrics(factory -> {
+                    // Metrics
+                    commonMetrics.forEach(factory::addMetric);
                     factory.addMetric(Metric.string("plugins", plugin::getName));
                     factory.addMetric(Metric.stringMap("messages", () -> processFields(plugin.getAnnoyingMessages())));
 
-                    commonMetrics.forEach(factory::addMetric);
+                    // Flush
+                    factory.onFlush(defaultFlush);
+
                     return factory.create();
                 })
                 .create();
@@ -85,8 +111,16 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
                         factory.addMetric(Metric.stringMap(entry.getKey(), () -> processFields(entry.getValue().get())));
                     }
 
+                    // Metrics
                     commonMetrics.forEach(factory::addMetric);
                     mutateMetricsFactory(factory);
+
+                    // Flushes
+                    factory.onFlush(() -> {
+                        defaultFlush.run(); // Common
+                        onFlush(); // Custom
+                    });
+
                     return factory.create();
                 })
                 .featureFlagService(factory -> {
@@ -105,6 +139,46 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     public void unload() {
         if (apiStats != null) apiStats.shutdown();
         if (stats != null) stats.shutdown();
+    }
+
+    @NotNull
+    private Optional<Dialect.Stats> getStorageStats() {
+        if (storageStats == null) storageStats = getAnnoyingPlugin().dataManager != null ? getAnnoyingPlugin().dataManager.dialect.getStats() : null;
+        return Optional.ofNullable(storageStats);
+    }
+
+    @NotNull
+    public static Metric<String[]> stringArray(@NotNull @SourceId String id, @NotNull Callable<@Nullable Collection<String>> callable) {
+        return Metric.stringArray(id, () -> {
+            final Collection<String> collection = callable.call();
+            return collection == null ? null : collection.toArray(new String[0]);
+        });
+    }
+
+    @NotNull
+    public static Metric<String[]> enumArray(@NotNull @SourceId String id, @NotNull Callable<@Nullable Collection<? extends Enum<?>>> callable) {
+        return Metric.stringArray(id, () -> {
+            final Collection<? extends Enum<?>> collection = callable.call();
+            return collection == null ? null : collection.stream()
+                    .map(Enum::name)
+                    .toArray(String[]::new);
+        });
+    }
+
+    @NotNull
+    public static Metric<Boolean[]> booleanArray(@NotNull @SourceId String id, @NotNull Callable<@Nullable Collection<Boolean>> callable) {
+        return Metric.booleanArray(id, () -> {
+            final Collection<Boolean> collection = callable.call();
+            return collection == null ? null : collection.toArray(new Boolean[0]);
+        });
+    }
+
+    @NotNull
+    public static Metric<Number[]> numberArray(@NotNull @SourceId String id, @NotNull Callable<@Nullable Collection<Number>> callable) {
+        return Metric.numberArray(id, () -> {
+            final Collection<Number> collection = callable.call();
+            return collection == null ? null : collection.toArray(new Number[0]);
+        });
     }
 
     @NotNull

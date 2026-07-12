@@ -2,164 +2,94 @@ package xyz.srnyx.annoyingapi.storage;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.SQLDialect;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import xyz.srnyx.annoyingapi.storage.dialects.JSONDialect;
 import xyz.srnyx.annoyingapi.storage.dialects.YAMLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.H2Dialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.MariaDBDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.MySQLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.PostgreSQLDialect;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLiteDialect;
-import xyz.srnyx.javautilities.manipulation.Mapper;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
  * Available storage methods for the plugin
  */
 public enum StorageMethod {
-    /**
-     * H2 storage method
-     */
-    H2(H2Dialect::new, "org{}h2{}Driver", pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")), AnnoyingAPILibrary.H2),
-    /**
-     * SQLite storage method
-     */
-    SQLITE(SQLiteDialect::new, "org{}sqlite{}JDBC", pluginFolder -> "jdbc:sqlite:" + processPath(pluginFolder.resolve("data").resolve("sqlite").resolve("data.db")), null),
-    /**
-     * MySQL storage method
-     */
-    MYSQL(MySQLDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
-    /**
-     * MariaDB storage method
-     */
-    MARIADB(MariaDBDialect::new, getMysqlMariadbDriver(), "jdbc:mysql://", null, 3306),
-    /**
-     * PostgreSQL storage method
-     */
-    POSTGRESQL(PostgreSQLDialect::new, "org{}postgresql{}Driver", "jdbc:postgresql://", AnnoyingAPILibrary.POSTGRESQL, 5432),
-    /**
-     * JSON storage method
-     */
-    JSON(JSONDialect::new),
-    /**
-     * YAML storage method
-     */
-    YAML(YAMLDialect::new);
+    H2(builder -> builder
+            .dialect(() -> SQLDialect.H2)
+            .sqlInfo(sqlInfo -> sqlInfo
+                    .driver("org{}h2{}Driver")
+                    .url(pluginFolder -> "jdbc:h2:file:" + processPath(pluginFolder.resolve("data").resolve("h2").resolve("data")))
+                    .library(AnnoyingAPILibrary.H2))),
+
+    SQLITE(builder -> builder
+            .dialect(() -> SQLDialect.SQLITE)
+            .sqlInfo(sqlInfo -> sqlInfo
+                    .driver("org{}sqlite{}JDBC")
+                    .url(pluginFolder -> "jdbc:sqlite:" + processPath(pluginFolder.resolve("data").resolve("sqlite").resolve("data.db"))))),
+
+    MYSQL(builder -> builder
+            .dialect(() -> SQLDialect.MYSQL)
+            .sqlInfo(sqlInfo -> sqlInfo
+                    .driver(getMysqlMariadbDriver())
+                    .url("jdbc:mysql://")
+                    .defaultPort(3306))),
+
+    MARIADB(builder -> builder
+            .dialect(() -> SQLDialect.MARIADB)
+            .sqlInfo(sqlInfo -> sqlInfo
+                    .driver(getMysqlMariadbDriver())
+                    .url("jdbc:mysql://")
+                    .defaultPort(3306))),
+
+    POSTGRESQL(builder -> builder
+            .dialect(() -> SQLDialect.POSTGRES)
+            .sqlInfo(sqlInfo -> sqlInfo
+                    .driver("org{}postgresql{}Driver")
+                    .url("jdbc:postgresql://")
+                    .defaultPort(5432)
+                    .library(AnnoyingAPILibrary.POSTGRESQL))),
+
+    JSON(builder -> builder.dialect(JSONDialect::new)),
+
+    YAML(builder -> builder.dialect(YAMLDialect::new));
 
     /**
      * The {@link Dialect} constructor for the method
      */
     @NotNull public final DialectFunction dialect;
-    /**
-     * The driver class name for the method. {@code null} if the method is not SQL
-     */
-    @Nullable private final String driver;
-    /**
-     * <b>Local SQL:</b> The full URL for the method
-     * <br><b>Remote SQL:</b> The beginning of the URL for the method
-     * <br><b>Local Readable:</b> {@code null}
-     */
-    @Nullable public final Function<Path, String> url;
-    /**
-     * The {@link AnnoyingLibrary} to download/load if the method requires one
-     */
-    @Nullable public final AnnoyingLibrary library;
-    /**
-     * The default port for the method (only for remote connections)
-     */
-    @Nullable public final Integer defaultPort;
+    @Nullable public final SQLInfo sqlInfo;
 
-    /**
-     * Construct a new {@link StorageMethod} with the given parameters (non-remote types)
-     *
-     * @param dialect   {@link #dialect}
-     * @param driver    {@link #driver}
-     * @param library   {@link #library}
-     * @param url       {@link #url}
-     */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library) {
-        this.dialect = dialect;
-        this.driver = driver;
-        this.url = url;
-        this.library = library;
-        this.defaultPort = null;
+    StorageMethod(@NotNull Consumer<Builder> builder) {
+        final Builder b = new Builder();
+        builder.accept(b);
+        if (b.dialect == null) throw new NullPointerException("dialect cannot be null");
+        this.dialect = b.dialect;
+        this.sqlInfo = b.sqlInfo == null ? null : b.sqlInfo.build();
     }
 
     /**
-     * Construct a new {@link StorageMethod} with the given parameters (remote types)
-     *
-     * @param dialect     {@link #dialect}
-     * @param driver      {@link #driver}
-     * @param url         {@link #url}
-     * @param library     {@link #library}
-     * @param defaultPort {@link #defaultPort}
-     */
-    StorageMethod(@NotNull DialectFunction dialect, @NotNull String driver, @NotNull String url, @Nullable AnnoyingLibrary library, int defaultPort) {
-        this.dialect = dialect;
-        this.driver = driver;
-        this.url = file -> url;
-        this.library = library;
-        this.defaultPort = defaultPort;
-    }
-
-    /**
-     * Construct a new {@link StorageMethod} with the given {@link Dialect} (non-SQL types)
-     *
-     * @param   dialect {@link #dialect}
-     */
-    StorageMethod(@NotNull DialectFunction dialect) {
-        this.dialect = dialect;
-        this.driver = null;
-        this.url = null;
-        this.library = null;
-        this.defaultPort = null;
-    }
-
-    /**
-     * Get the driver class name for the method
-     *
-     * @return  the driver class name for the method
-     */
-    @NotNull
-    public Optional<String> getDriver() {
-        return driver != null ? Optional.of(AnnoyingPlugin.replaceBrackets(driver)) : Optional.empty();
-    }
-
-    /**
-     * Whether the method is remote (just checks if {@link #defaultPort} is not {@code null})
-     *
-     * @return {@code true} if the method is remote, {@code false} otherwise
-     */
-    public boolean isRemote() {
-        return defaultPort != null;
-    }
-
-    /**
-     * Whether the method is SQL (just checks if {@link #driver} is not {@code null})
+     * Whether the method is SQL (just checks if {@link #sqlInfo} is not {@code null})
      *
      * @return  {@code true} if the method is SQL, {@code false} otherwise
      */
     public boolean isSQL() {
-        return driver != null;
+        return sqlInfo != null;
     }
 
     /**
-     * Get the {@link StorageMethod} with the given name
+     * Whether the method is SQL and remote (just checks if {@link SQLInfo#defaultPort()} is not {@code null})
      *
-     * @param name the name of the method
-     * @return the {@link StorageMethod} with the given name, or {@link #H2} if the name is {@code null} or invalid
+     * @return {@code true} if the method is SQL and remote, {@code false} otherwise
      */
-    @NotNull
-    public static StorageMethod get(@Nullable String name) {
-        return Mapper.toEnum(name, StorageMethod.class).orElse(H2);
+    public boolean isSQLRemote() {
+        return isSQL() && sqlInfo.defaultPort != null;
     }
 
     /**
@@ -188,6 +118,7 @@ public enum StorageMethod {
     /**
      * A function to create a new {@link Dialect}
      */
+    @FunctionalInterface
     public interface DialectFunction {
         /**
          * Apply the function to create a new {@link Dialect}
@@ -200,5 +131,85 @@ public enum StorageMethod {
          */
         @NotNull
         Dialect apply(@NotNull DataManager dataManager) throws ConnectionException;
+    }
+
+    /**
+     * @param   url <b>Local:</b> The full URL for the method
+     *              <br><b>Remote:</b> The beginning of the URL for the method
+     */
+    public record SQLInfo(@NotNull String driver, @NotNull Function<Path, String> url, @Nullable AnnoyingLibrary library, @Nullable Integer defaultPort) {
+        private static class Builder {
+            @Nullable public String driver;
+            @Nullable public Function<Path, String> url;
+            @Nullable public AnnoyingLibrary library;
+            @Nullable public Integer defaultPort;
+
+            @NotNull
+            public Builder driver(@NotNull String driver) {
+                this.driver = AnnoyingPlugin.replaceBrackets(driver);
+                return this;
+            }
+
+            @NotNull
+            public Builder url(@NotNull Function<Path, String> url) {
+                this.url = url;
+                return this;
+            }
+
+            @NotNull
+            public Builder url(@NotNull String url) {
+                return url(file -> url);
+            }
+
+            @NotNull
+            public Builder library(@NotNull AnnoyingLibrary library) {
+                this.library = library;
+                return this;
+            }
+
+            @NotNull
+            public Builder defaultPort(int defaultPort) {
+                this.defaultPort = defaultPort;
+                return this;
+            }
+
+            @NotNull
+            public SQLInfo build() {
+                if (driver == null) throw new NullPointerException("driver cannot be null");
+                if (url == null) throw new NullPointerException("url cannot be null");
+                return new SQLInfo(driver, url, library, defaultPort);
+            }
+        }
+    }
+
+    private static class Builder {
+        @Nullable public DialectFunction dialect;
+        @Nullable public SQLInfo.Builder sqlInfo;
+
+        @NotNull
+        public Builder dialect(@NotNull DialectFunction dialect) {
+            this.dialect = dialect;
+            return this;
+        }
+
+        @NotNull
+        public Builder dialect(@NotNull Supplier<?> dialect) {
+            return dialect(manager -> {
+                // Load jOOQ library
+                if (manager.plugin.libraryManager != null && !manager.plugin.libraryManager.loadLibrary(AnnoyingAPILibrary.JOOQ)) {
+                    throw new IllegalStateException("Failed to download jOOQ library for " + manager.storageConfig.method);
+                }
+
+                // Create dialect
+                return new xyz.srnyx.annoyingapi.storage.dialects.SQLDialect(manager, (SQLDialect) dialect.get());
+            });
+        }
+
+        @NotNull
+        public Builder sqlInfo(@NotNull Consumer<SQLInfo.Builder> sqlInfo) {
+            this.sqlInfo = new SQLInfo.Builder();
+            sqlInfo.accept(this.sqlInfo);
+            return this;
+        }
     }
 }

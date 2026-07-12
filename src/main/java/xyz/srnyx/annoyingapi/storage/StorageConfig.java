@@ -4,7 +4,6 @@ import eu.okaeri.configs.annotation.Comment;
 import eu.okaeri.configs.annotation.Header;
 import eu.okaeri.validator.annotation.NotNull;
 import eu.okaeri.validator.annotation.Nullable;
-import net.byteflux.libby.classloader.IsolatedClassLoader;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.RootConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.SubConfig;
@@ -12,11 +11,6 @@ import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationTickFallback;
 import xyz.srnyx.annoyingapi.stats.Stat;
 import xyz.srnyx.javautilities.MapGenerator;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.*;
 
@@ -76,79 +70,14 @@ public class StorageConfig extends RootConfig {
     }
 
     /**
-     * Create a new {@link Connection} to the configured database
-     *
-     * @return  a new {@link Connection} to the database
-     *
-     * @throws  ConnectionException if the connection to the database fails for any reason
-     */
-    @org.jetbrains.annotations.NotNull
-    public Connection createConnection() throws ConnectionException {
-        if (method.url == null) throw new IllegalStateException("The storage method " + method + " is not an SQL method");
-        final Path dataPath = plugin.getDataFolder().toPath();
-
-        // Get url & properties
-        String url = method.url.apply(dataPath);
-        final Properties properties = new Properties();
-        if (method.isRemote()) {
-            url += remote_connection.host + ":" + remote_connection.port + "/" + remote_connection.database;
-            properties.putAll(remote_connection.properties);
-            if (!remote_connection.username.isEmpty()) properties.setProperty("user", remote_connection.username);
-            if (!remote_connection.password.isEmpty()) properties.setProperty("password", remote_connection.password);
-        }
-
-        // Get driver
-        final Optional<String> driver = method.getDriver();
-        if (driver.isEmpty()) throw new ConnectionException("Failed to get driver for " + method, url, properties);
-
-        // SQLite: create parent directories
-        if (method == StorageMethod.SQLITE) {
-            final File folder = dataPath.resolve("data").resolve("sqlite").toFile();
-            if (!folder.exists() && !folder.mkdirs()) throw new ConnectionException("Failed to create SQLite parent directories", url, properties);
-        }
-
-        // If downloading library, connect using an IsolatedClassLoader
-        if (method.library != null && plugin.libraryManager != null) {
-            // Get IsolatedClassLoader of library
-            final IsolatedClassLoader classLoader;
-            try {
-                classLoader = plugin.libraryManager.loadLibraryIsolated(method.library);
-            } catch (final Exception e) {
-                throw new ConnectionException(e, url, properties);
-            }
-            if (classLoader == null) throw new ConnectionException("Failed to load library for " + method, url, properties);
-
-            // Connect using driver from IsolatedClassLoader
-            try {
-                final Class<?> driverClass = classLoader.loadClass(driver.get());
-                return (Connection) driverClass.getMethod("connect", String.class, Properties.class).invoke(driverClass.getDeclaredConstructor().newInstance(), url, properties);
-            } catch (final Exception e) {
-                throw new ConnectionException(e, url, properties);
-            }
-        }
-
-        // Load driver and connect
-        try {
-            Class.forName(driver.get());
-            return DriverManager.getConnection(url, properties);
-        } catch (final ClassNotFoundException | SQLException e) {
-            throw new ConnectionException(e, url, properties);
-        }
-    }
-
-    /**
      * The remote connection details/properties
      */
     public static class RemoteConnection extends SubConfig<StorageConfig, StorageConfig> {
-        public RemoteConnection(@org.jetbrains.annotations.NotNull StorageConfig root) {
-            super(root);
-        }
-
         @Comment("The host of the database")
         @NotNull public String host = "localhost";
         @Comment("The port of the database")
         @Comment("Defaults: 3306 for MySQL/MariaDB, 5432 for PostgreSQL")
-        public int port = Objects.requireNonNullElse(getParent().method.defaultPort, 3306);
+        public int port = 3306;
 
         @Comment
         @Comment("The name of the database")
@@ -182,6 +111,12 @@ public class StorageConfig extends RootConfig {
                 "autoReconnect", "true",
                 "useUnicode", "true",
                 "characterEncoding", "UTF-8");
+
+
+        public RemoteConnection(@org.jetbrains.annotations.NotNull StorageConfig root) {
+            super(root);
+            if (root.method.sqlInfo != null && root.method.sqlInfo.defaultPort() != null) this.port = root.method.sqlInfo.defaultPort();
+        }
 
         @org.jetbrains.annotations.NotNull
         public static String getDefaultTablePrefix(@org.jetbrains.annotations.NotNull AnnoyingPlugin plugin) {

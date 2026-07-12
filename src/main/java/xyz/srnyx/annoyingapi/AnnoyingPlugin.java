@@ -28,7 +28,6 @@ import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.message.MessagesProvider;
 import xyz.srnyx.annoyingapi.options.AnnoyingOptions;
 import xyz.srnyx.annoyingapi.scheduler.AnnoyingScheduler;
-import xyz.srnyx.annoyingapi.stats.StatsHelper;
 import xyz.srnyx.annoyingapi.stats.loader.BStatsLoader;
 import xyz.srnyx.annoyingapi.stats.loader.FastStatsLoader;
 import xyz.srnyx.annoyingapi.stats.provider.BStatsProvider;
@@ -37,7 +36,7 @@ import xyz.srnyx.annoyingapi.stats.provider.StatsProvider;
 import xyz.srnyx.annoyingapi.storage.ConnectionException;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.StorageConfig;
-import xyz.srnyx.annoyingapi.storage.dialects.sql.SQLDialect;
+import xyz.srnyx.annoyingapi.storage.dialects.SQLDialect;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDependency;
 import xyz.srnyx.annoyingapi.dependency.AnnoyingDownload;
 import xyz.srnyx.annoyingapi.events.AdvancedPlayerMoveEvent;
@@ -56,7 +55,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -94,10 +92,6 @@ public class AnnoyingPlugin extends JavaPlugin {
      * Loader for OkaeriConfig configs
      */
     @NotNull public final ConfigLoader configLoader;
-    /**
-     * Helper for stats providers (bStats, FastStats, etc.)
-     */
-    @NotNull public final StatsHelper statsHelper = new StatsHelper(this);
     /**
      * The {@link DataManager} for the plugin
      */
@@ -217,11 +211,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Save cache
             if (dataManager.storageConfig.cache.getSaveOn().contains(StorageConfig.Cache.SaveOn.DISABLE)) dataManager.dialect.saveCache();
             // Close connection (if SQL)
-            if (dataManager.dialect instanceof SQLDialect) try {
-                ((SQLDialect) dataManager.dialect).connection.close();
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&cFailed to close the database connection", e);
-            }
+            if (dataManager.dialect instanceof SQLDialect sqlDialect) sqlDialect.dataSource.close();
         }
 
         // Stats loaders
@@ -619,11 +609,7 @@ public class AnnoyingPlugin extends JavaPlugin {
             // Save cache
             if (saveCache) dataManager.dialect.saveCache();
             // Close previous connection
-            if (dataManager.dialect instanceof SQLDialect) try {
-                ((SQLDialect) dataManager.dialect).connection.close();
-            } catch (final SQLException e) {
-                log(Level.SEVERE, "&cFailed to close the database connection, it's recommended to restart the server!", e);
-            }
+            if (dataManager.dialect instanceof SQLDialect sqlDialect) sqlDialect.dataSource.close();
             // Stop cache saving task
             if (dataManager.cacheSavingTask != null) dataManager.cacheSavingTask.cancel();
         }
@@ -651,15 +637,21 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Attempt database migration
         dataManager = dataManager.attemptDatabaseMigration();
+
         // Create tables/columns
-        if (dataManager.dialect instanceof SQLDialect) {
-            final Map<String, Set<String>> tablesCopy = new HashMap<>(options.dataOptions.tables);
+        if (dataManager.dialect instanceof final SQLDialect sqlDialect) {
+            final Map<String, Set<String>> tables = new HashMap<>(options.dataOptions.tables);
 
             // Remove entities table if it has no custom columns
-            final Set<String> entitiesTable = tablesCopy.get(EntityData.TABLE_NAME);
-            if (entitiesTable != null && entitiesTable.size() == 1) tablesCopy.remove(EntityData.TABLE_NAME);
+            final Set<String> entitiesTable = tables.get(EntityData.TABLE_NAME);
+            if (entitiesTable != null && entitiesTable.size() == 1) tables.remove(EntityData.TABLE_NAME);
 
-            ((SQLDialect) dataManager.dialect).createTablesKeys(tablesCopy);
+            sqlDialect.createTablesKeys(tables);
+
+            // Warm up jOOQ (see warmup docs)
+            tables.keySet().stream()
+                    .findFirst()
+                    .ifPresent(table -> scheduler.attemptAsync(() -> sqlDialect.warmup(table)));
         }
     }
 
