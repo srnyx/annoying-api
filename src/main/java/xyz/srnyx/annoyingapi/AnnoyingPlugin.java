@@ -637,15 +637,21 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Attempt database migration
         dataManager = dataManager.attemptDatabaseMigration();
+
         // Create tables/columns
-        if (dataManager.dialect instanceof SQLDialect) {
-            final Map<String, Set<String>> tablesCopy = new HashMap<>(options.dataOptions.tables);
+        if (dataManager.dialect instanceof final SQLDialect sqlDialect) {
+            final Map<String, Set<String>> tables = new HashMap<>(options.dataOptions.tables);
 
             // Remove entities table if it has no custom columns
-            final Set<String> entitiesTable = tablesCopy.get(EntityData.TABLE_NAME);
-            if (entitiesTable != null && entitiesTable.size() == 1) tablesCopy.remove(EntityData.TABLE_NAME);
+            final Set<String> entitiesTable = tables.get(EntityData.TABLE_NAME);
+            if (entitiesTable != null && entitiesTable.size() == 1) tables.remove(EntityData.TABLE_NAME);
 
-            ((SQLDialect) dataManager.dialect).createTablesKeys(tablesCopy);
+            sqlDialect.createTablesKeys(tables);
+
+            // Warm up jOOQ (see warmup docs)
+            tables.keySet().stream()
+                    .findFirst()
+                    .ifPresent(table -> scheduler.attemptAsync(() -> sqlDialect.warmup(table)));
         }
     }
 

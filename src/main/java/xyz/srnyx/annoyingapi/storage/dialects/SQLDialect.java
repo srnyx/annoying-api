@@ -389,6 +389,30 @@ public class SQLDialect extends Dialect {
         }
     }
 
+    /**
+     * Warms up jOOQ's SELECT/UPDATE/INSERT code paths for the given table so the classloading/JIT
+     * cost of first use doesn't impact real {@code get}/{@code set}/{@code remove} call
+     * <br>Uses a sentinel target that can never match a real row, so nothing is ever written or needs cleaning up
+     *
+     * @param   rawTable    the (unprefixed) table to warm up against
+     */
+    public void warmup(@NotNull String rawTable) {
+        try {
+            final Table<Record> tableRecord = table(dataManager.getTableName(rawTable));
+            final Field<String> targetField = targetField();
+            final String sentinel = "__annoyingapi_warmup__";
+
+            // SELECT: reads have no side effects
+            dsl.selectFrom(tableRecord).where(targetField.eq(sentinel)).fetchOptional();
+
+            // UPDATE: sentinel can never match real row, so it always affects 0 rows
+            dsl.update(tableRecord).set(Map.of(targetField, sentinel)).where(targetField.eq(sentinel)).execute();
+
+            // INSERT: build only (no execute), so no row is ever written
+            dsl.insertInto(tableRecord).set(Map.of(targetField, sentinel));
+        } catch (final DataAccessException ignored) {}
+    }
+
     @NotNull
     private static Table<Record> table(@NotNull String name) {
         return DSL.table(DSL.name(name));
