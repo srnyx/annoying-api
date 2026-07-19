@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.file;
 
 import com.cryptomorin.xseries.XSound;
+import com.google.gson.JsonObject;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -10,7 +11,6 @@ import xyz.srnyx.annoyingapi.stats.Statable;
 import xyz.srnyx.javautilities.manipulation.Mapper;
 import xyz.srnyx.javautilities.parents.Stringable;
 
-import java.util.Map;
 import java.util.Objects;
 
 
@@ -137,12 +137,13 @@ public class PlayableSound extends Stringable implements Statable {
     }
 
     @Override @NotNull
-    public Map<String, Object> toStatMap() {
-        return Map.of(
-                "sound", sound.name(),
-                "category", category.name(),
-                "volume", volume,
-                "pitch", pitch);
+    public JsonObject toStat() {
+        final JsonObject json = new JsonObject();
+        json.addProperty("sound", sound.name());
+        json.addProperty("category", category.name());
+        json.addProperty("volume", volume);
+        json.addProperty("pitch", pitch);
+        return json;
     }
 
     @Nullable

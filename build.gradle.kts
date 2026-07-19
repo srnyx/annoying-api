@@ -22,7 +22,7 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "ac4875a"
-    id("com.gradleup.shadow") version "9.5.1"
+    id("com.gradleup.shadow") version "9.6.0"
     id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
     id("net.kyori.blossom") version "2.2.0"
@@ -32,7 +32,7 @@ plugins {
 // Runtime libraries
 val okaeriConfigsVersion: String = "df8ae69"
 val bStatsVersion: String = "3.2.1"
-val fastStatsVersion: String = "0.27.2"
+val fastStatsVersion: String = "0.28.0"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
@@ -120,6 +120,13 @@ val runtimeLibraries = listOf(
         relocations = listOf(Relocation("org.bstats")),
         dependencies = listOf("bstats_base")),
     RuntimeLibrary(
+        name = "gson",
+        repositories = listOf(Repository.MAVEN_CENTRAL.url),
+        group = "com.google.code.gson",
+        artifact = "gson",
+        version = "2.14.0",
+        relocations = listOf(Relocation("com.google.gson"))),
+    RuntimeLibrary(
         name = "faststats_core",
         repositories = listOf(
             Repository.FASTSTATS_RELEASES.url,
@@ -127,8 +134,8 @@ val runtimeLibraries = listOf(
         group = "dev.faststats.metrics",
         artifact = "core",
         version = fastStatsVersion,
-        excludes = listOf(Exclude("com.google.code.gson", "gson")),
-        relocations = listOf(Relocation("dev.faststats"))),
+        relocations = listOf(Relocation("dev.faststats")),
+        dependencies = listOf("gson")),
     RuntimeLibrary(
         name = "faststats_config",
         repositories = listOf(
@@ -137,7 +144,6 @@ val runtimeLibraries = listOf(
         group = "dev.faststats.metrics",
         artifact = "config",
         version = fastStatsVersion,
-        excludes = listOf(Exclude("com.google.code.gson", "gson")),
         relocations = listOf(Relocation("dev.faststats")),
         dependencies = listOf("faststats_core")),
     RuntimeLibrary(
@@ -148,7 +154,6 @@ val runtimeLibraries = listOf(
         group = "dev.faststats.metrics",
         artifact = "bukkit",
         version = fastStatsVersion,
-        excludes = listOf(Exclude("com.google.code.gson", "gson")),
         relocations = listOf(Relocation("dev.faststats")),
         dependencies = listOf(
             "faststats_core",

@@ -13,7 +13,7 @@ public class SubConfig<R extends OkaeriConfig, P extends OkaeriConfig> extends A
     /**
      * This only exists for defaults!
      */
-    @Nullable private final P defaultsParent;
+    @Nullable private transient final P defaultsParent;
 
     /**
      * Okaeri Configs will do an "unsafe" initialization with default constructor (no args) for non-default value

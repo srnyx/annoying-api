@@ -67,7 +67,7 @@ public class AnnoyingMessages extends RootConfig {
         @Comment("Using a global placeholder is just like any other placeholder! Simply surround the placeholder name with \"%\" (ex: \"%prefix%\")")
         @Comment("WARNING: Global placeholders can conflict with local placeholders! Please be wary when creating your own global placeholder(s)!")
         @Comment("It's recommended to keep all the default global placeholders (prefix, p, s, pe, se)")
-        @Stat
+        @Stat(key = "global_placeholders", mapKeysOnly = true)
         @NotNull public Map<String, String> global_placeholders = MapGenerator.LINKED_HASH_MAP.mapOf(
                 "prefix", getParent().defaultPrefix,
                 "p", getParent().defaultP,
@@ -90,11 +90,11 @@ public class AnnoyingMessages extends RootConfig {
             }
 
             @Comment("This is the splitter for the JSON components. Default: \"@@\"")
-            @Stat
+            @Stat(key = "json")
             @NotNull public String json = "@@";
 
             @Comment("This is the splitter for placeholders with parameters. Default: \"==\"")
-            @Stat
+            @Stat(key = "placeholder")
             @NotNull public String placeholder = "==";
         }
     }

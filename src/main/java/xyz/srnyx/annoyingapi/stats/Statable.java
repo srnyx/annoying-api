@@ -1,21 +1,13 @@
 package xyz.srnyx.annoyingapi.stats;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
 
 
 public interface Statable {
     @Nullable
-    default Object toStatValue() {
-        return toString();
-    }
-
-    /**
-     * Overrides {@link #toStatValue()} if non-null
-     */
-    @Nullable
-    default Map<String, Object> toStatMap() {
-        return null;
+    default JsonElement toStat() {
+        return new JsonPrimitive(toString());
     }
 }
