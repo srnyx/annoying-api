@@ -22,7 +22,7 @@ plugins {
     java
     `java-library`
     id("xyz.srnyx.gradle-galaxy") version "ac4875a"
-    id("com.gradleup.shadow") version "9.6.0"
+    id("com.gradleup.shadow") version "9.6.1"
     id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
     id("net.kyori.blossom") version "2.2.0"
@@ -32,7 +32,7 @@ plugins {
 // Runtime libraries
 val okaeriConfigsVersion: String = "df8ae69"
 val bStatsVersion: String = "3.2.1"
-val fastStatsVersion: String = "0.28.0"
+val fastStatsVersion: String = "0.29.3"
 val runtimeLibraries = listOf(
     RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
         name = "annotations",
