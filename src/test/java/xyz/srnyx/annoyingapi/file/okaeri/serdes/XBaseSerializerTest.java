@@ -61,10 +61,12 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
     }
 
     @Test
-    void xMaterial_unknownValue_returnsNull() throws IOException {
-        final MaterialConfig config = load(tempDir, "material: NOT_A_REAL_MATERIAL_XYZ", MaterialConfig.class);
+    void xMaterial_unknownValue_throws() {
+        final Throwable throwable = assertThrows(Throwable.class, () -> load(tempDir, "material: NOT_A_REAL_MATERIAL_XYZ", MaterialConfig.class));
 
-        assertNull(config.material, "Unknown XMaterial name should deserialize to null");
+        assertInstanceOf(IllegalArgumentException.class, throwable.getCause(), "Expected cause to be IllegalArgumentException");
+        final String message = throwable.getCause().getMessage();
+        assertTrue(message.contains("Invalid XMaterial: NOT_A_REAL_MATERIAL_XYZ"), "Unexpected exception message: " + message);
     }
 
     @Test
@@ -84,10 +86,12 @@ public class XBaseSerializerTest extends MockBukkitTestSupport {
     }
 
     @Test
-    void xSound_unknownValue_returnsNull() throws IOException {
-        final SoundConfig config = load(tempDir, "sound: NOT_A_REAL_SOUND_XYZ", SoundConfig.class);
+    void xSound_unknownValue_throws() {
+        final Throwable throwable = assertThrows(Throwable.class, () -> load(tempDir, "sound: NOT_A_REAL_SOUND_XYZ", SoundConfig.class));
 
-        assertNull(config.sound, "Unknown XSound name should deserialize to null");
+        assertInstanceOf(IllegalArgumentException.class, throwable.getCause(), "Expected cause to be IllegalArgumentException");
+        final String message = throwable.getCause().getMessage();
+        assertTrue(message.contains("Invalid XSound: NOT_A_REAL_SOUND_XYZ"), "Unexpected exception message: " + message);
     }
 
     // ------------------------------------------------------------------ Serialization
