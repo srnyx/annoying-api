@@ -132,6 +132,7 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Load Okaeri Configs
         if (libraryManager != null && !libraryManager.loadLibrary(
+                AnnoyingAPILibrary.GSON,
                 AnnoyingAPILibrary.XSERIES,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_SERDES_COMMONS,
