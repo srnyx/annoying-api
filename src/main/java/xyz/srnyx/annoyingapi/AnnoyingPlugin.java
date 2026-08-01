@@ -678,7 +678,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull
     public Relocation getRelocation(@NotNull String from) {
-        return getRelocation(from, from.substring(from.lastIndexOf("{}") + 2).toLowerCase().replaceAll("[^a-z0-9._{}]", ""));
+        String name = from;
+        if (name.contains("{}")) {
+            name = name.substring(name.lastIndexOf("{}") + 2);
+        } else if (name.contains(".")) {
+            name = name.substring(name.lastIndexOf(".") + 1);
+        }
+        return getRelocation(from, name.toLowerCase().replaceAll("[^a-z0-9._{}]", ""));
     }
 
     /**

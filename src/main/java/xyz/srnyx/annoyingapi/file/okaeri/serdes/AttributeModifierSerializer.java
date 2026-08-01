@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_CLASS;
+import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_GET_AMOUNT_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_GET_NAME_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_GET_OPERATION_METHOD;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_GET_SLOT_GROUP_METHOD;
@@ -39,6 +40,13 @@ public class AttributeModifierSerializer implements ObjectSerializer<Object> {
         // name
         try {
             data.set("name", ATTRIBUTE_MODIFIER_GET_NAME_METHOD.invoke(object));
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+
+        // amount
+        if (ATTRIBUTE_MODIFIER_GET_AMOUNT_METHOD != null) try {
+            data.set("amount", ATTRIBUTE_MODIFIER_GET_AMOUNT_METHOD.invoke(object));
         } catch (final Exception e) {
             e.printStackTrace();
         }
