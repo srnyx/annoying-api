@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.storage.DataManager;
 import xyz.srnyx.annoyingapi.storage.FailedSet;
 import xyz.srnyx.annoyingapi.storage.CachedValue;
@@ -30,7 +29,7 @@ public class JSONDialect extends Dialect {
     @NotNull private static final Gson GSON = new Gson();
 
     // Need to use paths to ensure compatibility across operating systems
-    @NotNull private final File folder = dataManager.plugin.getDataFolder().toPath().resolve("data/json").toFile();
+    @NotNull private final File folder = dataManager.plugin.getDataFolder().toPath().resolve("data").resolve("json").toFile();
     @NotNull private final Map<String, JsonFile> tables = new HashMap<>();
 
     /**
@@ -108,7 +107,7 @@ public class JSONDialect extends Dialect {
         }
 
         // Return new file
-        return new JsonFile(dataManager.plugin, file, json);
+        return new JsonFile(file, json);
     }
 
     @Override @NotNull
@@ -174,8 +173,7 @@ public class JSONDialect extends Dialect {
     /**
      * A wrapper for a JSON file with utility methods
      */
-    public static class JsonFile {
-        @NotNull private final AnnoyingPlugin plugin;
+    public class JsonFile {
         /**
          * The file
          */
@@ -191,8 +189,7 @@ public class JSONDialect extends Dialect {
          * @param   file    {@link #file}
          * @param   json    {@link #json}
          */
-        private JsonFile(@NotNull AnnoyingPlugin plugin, @NotNull File file, @NotNull JsonObject json) {
-            this.plugin = plugin;
+        private JsonFile(@NotNull File file, @NotNull JsonObject json) {
             this.file = file;
             this.json = json;
         }
@@ -273,7 +270,7 @@ public class JSONDialect extends Dialect {
                 Files.createDirectories(file.getParentFile().toPath());
                 Files.createFile(file.toPath());
             } catch (final IOException e) {
-                plugin.logErrorTrack(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
+                dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to create file for table &4" + file.getName(), e);
                 return false;
             }
 
@@ -282,7 +279,7 @@ public class JSONDialect extends Dialect {
                 fileWriter.write(GSON.toJson(json));
                 return true;
             } catch (final IOException e) {
-                plugin.logErrorTrack(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
+                dataManager.plugin.logErrorTrack(Level.SEVERE, "&cFailed to save file for table &4" + file.getName(), e);
                 return false;
             }
         }

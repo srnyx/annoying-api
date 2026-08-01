@@ -192,6 +192,9 @@ public enum StorageMethod {
             return this;
         }
 
+        /**
+         * For SQLs
+         */
         @NotNull
         public Builder dialect(@NotNull Supplier<?> dialect) {
             return dialect(manager -> {
