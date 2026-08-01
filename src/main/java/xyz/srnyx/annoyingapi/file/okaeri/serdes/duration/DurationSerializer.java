@@ -17,7 +17,7 @@ public class DurationSerializer extends DurationTransformer {
         // TickFallback processing
         final boolean ticks = serdesContext.getFieldAnnotation(DurationTickFallback.class).isPresent();
         if (ticks) try {
-            duration = DurationUtility.fromTicks(Long.parseLong(data));
+            duration = DurationUtility.ticksToDuration(Long.parseLong(data));
         } catch (final NumberFormatException ignored) {}
 
         return duration;
