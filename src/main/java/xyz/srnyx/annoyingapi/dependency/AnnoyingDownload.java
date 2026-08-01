@@ -250,8 +250,9 @@ public class AnnoyingDownload extends AnnoyableClass {
             final byte[] buffer = new byte[1024];
             int numRead;
             while ((numRead = in.read(buffer)) != -1) out.write(buffer, 0, numRead);
-        } catch (final IOException ignored) {
-            //ignored
+        } catch (final IOException e) {
+            fail(dependency, platform);
+            return;
         }
 
         // Send success message
