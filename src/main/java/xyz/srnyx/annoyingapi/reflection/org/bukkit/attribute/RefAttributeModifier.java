@@ -50,6 +50,11 @@ public class RefAttributeModifier {
     @Nullable public static final Method ATTRIBUTE_MODIFIER_GET_NAME_METHOD = ReflectionUtility.getMethod(1, 13, 2, ATTRIBUTE_MODIFIER_CLASS, "getName");
 
     /**
+     * 1.13.2+ org.bukkit.attribute.AttributeModifier#getAmount()
+     */
+    @Nullable public static final Method ATTRIBUTE_MODIFIER_GET_AMOUNT_METHOD = ReflectionUtility.getMethod(1, 13, 2, ATTRIBUTE_MODIFIER_CLASS, "getAmount");
+
+    /**
      * 1.13.2+ org.bukkit.attribute.AttributeModifier#getOperation()
      */
     @Nullable public static final Method ATTRIBUTE_MODIFIER_GET_OPERATION_METHOD = ReflectionUtility.getMethod(1, 13, 2, ATTRIBUTE_MODIFIER_CLASS, "getOperation");
