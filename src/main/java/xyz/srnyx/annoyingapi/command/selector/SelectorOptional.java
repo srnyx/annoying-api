@@ -97,6 +97,7 @@ public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable Stri
      */
     @Nullable @Unmodifiable
     public List<T> orElse(@NotNull Function<String, List<T>> other) {
+        if (raw == null) return null;
         if (selector == null) return other.apply(raw);
         final List<T> expanded = selector.expand(sender);
         if (expanded == null) sender.invalidArgument(raw);
@@ -112,6 +113,7 @@ public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable Stri
      */
     @Nullable @Unmodifiable
     public List<T> orElseSingle(@NotNull Function<String, T> other) {
+        if (raw == null) return null;
         if (selector == null) return Collections.singletonList(other.apply(raw));
         final List<T> expanded = selector.expand(sender);
         if (expanded == null) sender.invalidArgument(raw);
@@ -127,6 +129,7 @@ public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable Stri
      */
     @Nullable @Unmodifiable
     public List<T> orElseFlat(@NotNull Function<String, Optional<List<T>>> other) {
+        if (raw == null) return null;
         if (selector == null) {
             final Optional<List<T>> result = other.apply(raw);
             if (result.isEmpty()) sender.invalidArgument(raw);
