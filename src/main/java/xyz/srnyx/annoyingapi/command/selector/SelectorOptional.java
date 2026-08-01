@@ -23,16 +23,6 @@ import java.util.function.Function;
  */
 public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable String raw, @Nullable Selector<T> selector) {
     /**
-     * Gets the sender who executed the command
-     *
-     * @return  the sender
-     */
-    @Override @NotNull
-    public AnnoyingSender sender() {
-        return sender;
-    }
-
-    /**
      * Gets the raw input string before being parsed as a selector
      *
      * @return  the raw input string
@@ -41,7 +31,7 @@ public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable Stri
      */
     @Override @NotNull
     public String raw() {
-        if (raw == null) throw new IllegalStateException("getRaw() called before checking isEmpty()");
+        if (raw == null) throw new IllegalStateException("raw() called before checking isEmpty()");
         return raw;
     }
 
@@ -54,7 +44,7 @@ public record SelectorOptional<T>(@NotNull AnnoyingSender sender, @Nullable Stri
      */
     @Override @NotNull
     public Selector<T> selector() {
-        if (selector == null) throw new IllegalStateException("getSelector() called before checking isEmpty()");
+        if (selector == null) throw new IllegalStateException("selector() called before checking isEmpty()");
         return selector;
     }
 

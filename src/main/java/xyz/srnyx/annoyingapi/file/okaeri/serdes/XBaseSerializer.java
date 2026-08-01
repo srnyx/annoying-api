@@ -36,10 +36,11 @@ public class XBaseSerializer implements ObjectSerializer<XBase<?, ?>> {
 
         // XMaterial (doesn't have of(String) method)
         if (XMaterial.class.isAssignableFrom(type)) {
-            return XMaterial.matchXMaterial(name).orElseThrow(() -> new IllegalArgumentException("Invalid " + type + ": " + name));
+            return XMaterial.matchXMaterial(name).orElseThrow(() -> new IllegalArgumentException("Invalid " + type.getSimpleName() + ": " + name));
         }
 
         // Everything else
+        final Optional<XBase<?, ?>> result;
         Method method = CACHED_METHODS.get(type);
         try {
             // Method not cached, get and cache
@@ -49,9 +50,10 @@ public class XBaseSerializer implements ObjectSerializer<XBase<?, ?>> {
             }
 
             // Invoke method
-            return ((Optional<XBase<?, ?>>) method.invoke(null, name)).orElseThrow(() -> new IllegalArgumentException("Invalid " + type + ": " + name));
+            result = ((Optional<XBase<?, ?>>) method.invoke(null, name));
         } catch (final IllegalArgumentException | ReflectiveOperationException e) {
-            throw new IllegalArgumentException("Failed to invoke of(String) method on " + type + " for " + name, e);
+            throw new IllegalArgumentException("Failed to invoke of(String) method on " + type.getSimpleName() + " for " + name, e);
         }
+        return result.orElseThrow(() -> new IllegalArgumentException("Invalid " + type.getSimpleName() + ": " + name));
     }
 }
