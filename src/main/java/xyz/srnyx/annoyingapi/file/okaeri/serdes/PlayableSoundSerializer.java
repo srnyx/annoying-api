@@ -27,11 +27,11 @@ public class PlayableSoundSerializer implements ObjectSerializer<PlayableSound> 
     public PlayableSound deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
         // sound (need to use XSeries because Sound isn't an enum in newer versions)
         final XSound sound = data.get("sound", XSound.class);
-        if (sound == null) throw new IllegalArgumentException("Missing or invalid required field: sound");
+        if (sound == null) throw new IllegalArgumentException("Missing required field: sound");
 
         // category
         final XSound.Category category = data.get("category", XSound.Category.class);
-        if (category == null) throw new IllegalArgumentException("Missing or invalid required field: category");
+        if (category == null) throw new IllegalArgumentException("Missing required field: category");
 
         // volume
         final Float volume = data.get("volume", Float.class);
