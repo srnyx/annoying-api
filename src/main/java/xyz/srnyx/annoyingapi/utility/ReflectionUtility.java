@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
-import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import org.semver4j.Semver;
 import xyz.srnyx.annoyingapi.ServerSoftware;
 
 import java.lang.reflect.Array;
@@ -19,7 +19,7 @@ import java.lang.reflect.Method;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ReflectionUtility {
     /**
-     * Returns a {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns a {@link Class} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major       the major version of the minimum version
      * @param   minor       the minor version of the minimum version
@@ -39,7 +39,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns a {@link Class} from a reflection class if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
@@ -55,7 +55,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns an {@link Enum} {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns an {@link Enum} {@link Class} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
@@ -75,7 +75,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns an {@link Enum} {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns an {@link Enum} {@link Class} from a reflection class if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
@@ -91,7 +91,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns an array {@link Class} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns an array {@link Class} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major       the major version of the minimum version
      * @param   minor       the minor version of the minimum version
@@ -111,7 +111,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns an array {@link Class} from a reflection class if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns an array {@link Class} from a reflection class if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
@@ -127,7 +127,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a {@link Constructor} if {@link AnnoyingPlugin#SERVER_SOFTWARE} has the given software, {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
+     * Returns a {@link Constructor} if {@link ServerSoftware#SOFTWARE} has the given software, {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
      *
      * @param   software        the server software or null to ignore software
      * @param   major           the major version of the minimum version
@@ -159,7 +159,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a {@link Method} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
+     * Returns a {@link Method} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version, the class is not null, and none of the parameter types are null
      *
      * @param   major           the major version of the minimum version
      * @param   minor           the minor version of the minimum version
@@ -183,7 +183,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a {@link Field} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns a {@link Field} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major       the major version of the minimum version
      * @param   minor       the minor version of the minimum version
@@ -206,7 +206,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns a <b>declared</b> {@link Field} if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns a <b>declared</b> {@link Field} if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major       the major version of the minimum version
      * @param   minor       the minor version of the minimum version
@@ -251,7 +251,7 @@ public class ReflectionUtility {
     }
 
     /**
-     * Returns an {@link Enum} value if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Returns an {@link Enum} value if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major                       the major version of the minimum version
      * @param   minor                       the minor version of the minimum version
@@ -284,11 +284,11 @@ public class ReflectionUtility {
     }
 
     private static boolean checkSoftware(@Nullable ServerSoftware software) {
-        return software == null || AnnoyingPlugin.SERVER_SOFTWARE.has(software);
+        return software == null || ServerSoftware.SOFTWARE.has(software);
     }
 
     /**
-     * Checks if {@link AnnoyingPlugin#MINECRAFT_VERSION} is greater than or equal to the minimum version
+     * Checks if {@link ServerSoftware#MINECRAFT_VERSION} is greater than or equal to the minimum version
      *
      * @param   major   the major version of the minimum version
      * @param   minor   the minor version of the minimum version
@@ -297,7 +297,7 @@ public class ReflectionUtility {
      * @return          true if the version is greater than or equal to the minimum version, otherwise false
      */
     private static boolean checkVersion(int major, int minor, int patch) {
-    	return AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(major, minor, patch);
+    	return ServerSoftware.MINECRAFT_VERSION != null && ServerSoftware.MINECRAFT_VERSION.isGreaterThanOrEqualTo(Semver.create(major, minor, patch));
     }
 
     private static boolean checkSoftwareAndVersion(@Nullable ServerSoftware software, int major, int minor, int patch) {

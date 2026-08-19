@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.BuildProperties;
 import xyz.srnyx.annoyingapi.PluginPlatform;
+import xyz.srnyx.annoyingapi.ServerSoftware;
 import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.javautilities.HttpUtility;
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -137,10 +138,17 @@ public class AnnoyingDownload extends AnnoyableClass {
      * @param   identifier  the identifier of the plugin on Modrinth
      */
     private void modrinth(@NotNull AnnoyingDependency dependency, @NotNull String identifier) {
+        if (ServerSoftware.MINECRAFT_VERSION == null) {
+            AnnoyingPlugin.log(Level.SEVERE, "&4" + dependency.name + " &8|&c Failed to get Minecraft version!");
+            fail(dependency, PluginPlatform.Platform.MODRINTH);
+            return;
+        }
+
+        // Retrieve latest
         final Optional<String> latest = HttpUtility.getJson(userAgent,
                 "https://api.modrinth.com/v2/project/" + identifier + "/version" +
                         "?loaders=%5B%22spigot%22,%22paper%22,%22purpur%22%5D" +
-                        "&game_versions=%5B%22" + AnnoyingPlugin.MINECRAFT_VERSION.version + "%22%5D", null)
+                        "&game_versions=%5B%22" + ServerSoftware.MINECRAFT_VERSION.getVersion() + "%22%5D", null)
                 .map(element -> element.getAsJsonArray().get(0).getAsJsonObject()
                         .getAsJsonArray("files").get(0).getAsJsonObject()
                         .get("url").getAsString());

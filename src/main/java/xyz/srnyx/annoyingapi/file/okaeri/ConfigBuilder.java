@@ -164,21 +164,19 @@ public class ConfigBuilder {
                     new SerdesBukkit(),
 
                     // Custom serdes
-                    registry -> {
-                        registry.register(new ColorSerializer());
-                        registry.register(new DurationSerializer());
-                        registry.register(new ColorAttachmentResolver());
-                        registry.register(new RecipeSerializer(plugin));
-                        registry.register(new RecipeAttachmentResolver());
-                        registry.register(new RecipeChoiceSerializer());
-                        registry.register(new AttributeModifierSerializer(plugin));
-                        registry.register(new ItemStackSerializer());
-                        registry.register(new JsonChatMessageSerializer(plugin));
-                        registry.register(new JsonTitleMessageSerializer(plugin));
-                        registry.register(new PlayableSoundSerializer());
-                        registry.register(new PotionEffectSerializer());
-                        registry.register(new XBaseSerializer());
-                    });
+                    new ColorSerializer(),
+                    new DurationSerializer(),
+                    new ColorAttachmentResolver(),
+                    new RecipeSerializer(plugin),
+                    new RecipeAttachmentResolver(),
+                    new RecipeChoiceSerializer(),
+                    new AttributeModifierSerializer(plugin),
+                    new ItemStackSerializer(),
+                    new JsonChatMessageSerializer(plugin),
+                    new JsonTitleMessageSerializer(plugin),
+                    new PlayableSoundSerializer(),
+                    new PotionEffectSerializer(),
+                    new XBaseSerializer());
 
             // Conditional serdes
             final NamespacedKeySerializer namespacedKeySerializer = new NamespacedKeySerializer(plugin);

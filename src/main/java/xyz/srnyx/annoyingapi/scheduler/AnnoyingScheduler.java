@@ -5,6 +5,7 @@ import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.ServerSoftware;
 import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 
 import java.lang.reflect.InvocationTargetException;
@@ -36,7 +37,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
     @NotNull
     public TaskWrapper runSync(@NotNull Runnable runnable) {
         // Folia
-        if (AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) {
+        if (ServerSoftware.SOFTWARE.hasFolia()) {
             try {
                 final Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
                 return new TaskWrapper(annoyingPlugin, scheduler.getClass().getMethod("run", Plugin.class, Consumer.class).invoke(scheduler, annoyingPlugin, new FoliaConsumer(runnable)));
@@ -64,7 +65,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
             return Optional.of(new TaskWrapper(annoyingPlugin, Bukkit.getScheduler().runTaskAsynchronously(annoyingPlugin, runnable)));
         } catch (final IllegalPluginAccessException | UnsupportedOperationException e) {
             // UnsupportedOperationException: Server is using Folia
-            if (e instanceof UnsupportedOperationException && AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) return Optional.of(runSync(runnable));
+            if (e instanceof UnsupportedOperationException && ServerSoftware.SOFTWARE.hasFolia()) return Optional.of(runSync(runnable));
             // IllegalPluginAccessException: Plugin is disabled
             runnable.run();
             return Optional.empty();
@@ -83,7 +84,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
     @NotNull
     public TaskWrapper runGlobalTaskLater(@NotNull Consumer<TaskWrapper> runnable, long delay) {
         // Folia
-        if (AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) return runGlobalTaskLaterFolia(runnable, delay);
+        if (ServerSoftware.SOFTWARE.hasFolia()) return runGlobalTaskLaterFolia(runnable, delay);
 
         // Bukkit
         final TaskWrapper wrapper = new TaskWrapper(annoyingPlugin);
@@ -103,7 +104,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
     @NotNull
     public TaskWrapper runGlobalTaskLaterAsync(@NotNull Consumer<TaskWrapper> runnable, long delay) {
         // Folia
-        if (AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) return runGlobalTaskLaterFolia(runnable, delay);
+        if (ServerSoftware.SOFTWARE.hasFolia()) return runGlobalTaskLaterFolia(runnable, delay);
 
         // Bukkit
         final TaskWrapper wrapper = new TaskWrapper(annoyingPlugin);
@@ -145,7 +146,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
     @NotNull @SuppressWarnings("UnusedReturnValue")
     public TaskWrapper runGlobalTaskTimer(@NotNull Consumer<TaskWrapper> runnable, long delay, long interval) {
         // Folia
-        if (AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) return runGlobalTaskTimerFolia(runnable, delay, interval);
+        if (ServerSoftware.SOFTWARE.hasFolia()) return runGlobalTaskTimerFolia(runnable, delay, interval);
 
         // Bukkit
         final TaskWrapper wrapper = new TaskWrapper(annoyingPlugin);
@@ -166,7 +167,7 @@ public class AnnoyingScheduler extends AnnoyableClass {
     @NotNull @SuppressWarnings("UnusedReturnValue")
     public TaskWrapper runGlobalTaskTimerAsync(@NotNull Consumer<TaskWrapper> runnable, long delay, long interval) {
         // Folia
-        if (AnnoyingPlugin.SERVER_SOFTWARE.hasFolia()) return runGlobalTaskTimerFolia(runnable, delay, interval);
+        if (ServerSoftware.SOFTWARE.hasFolia()) return runGlobalTaskTimerFolia(runnable, delay, interval);
 
         // Bukkit
         final TaskWrapper wrapper = new TaskWrapper(annoyingPlugin);

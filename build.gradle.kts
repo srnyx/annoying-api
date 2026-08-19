@@ -1,27 +1,7 @@
-import kotlinx.serialization.json.Json
-import xyz.srnyx.gradlegalaxy.data.annoyingapi.AnnoyingMetadata
-import xyz.srnyx.gradlegalaxy.data.annoyingapi.Exclude
-import xyz.srnyx.gradlegalaxy.data.annoyingapi.Relocation
-import xyz.srnyx.gradlegalaxy.data.annoyingapi.RuntimeLibrary
-import xyz.srnyx.gradlegalaxy.data.config.DependencyConfig
-import xyz.srnyx.gradlegalaxy.data.config.JavaSetupConfig
-import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.GenerateRuntimeLibraryEnumConfig
-import xyz.srnyx.gradlegalaxy.data.config.annoyingapi.RuntimeLibrariesConfig
-import xyz.srnyx.gradlegalaxy.data.config.publishing.PublishingPlatformConfig
-import xyz.srnyx.gradlegalaxy.data.config.publishing.TextArtifact
-import xyz.srnyx.gradlegalaxy.data.config.publishing.publishingSimpleConfig
-import xyz.srnyx.gradlegalaxy.data.pom.DeveloperData
-import xyz.srnyx.gradlegalaxy.data.pom.LicenseData
-import xyz.srnyx.gradlegalaxy.enums.PluginPlatform
-import xyz.srnyx.gradlegalaxy.enums.Repository
-import xyz.srnyx.gradlegalaxy.enums.repository
-import xyz.srnyx.gradlegalaxy.utility.*
-
-
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "ac4875a"
+    id("xyz.srnyx.gradle-galaxy") version "c73e7ed"
     id("com.gradleup.shadow") version "9.6.1"
     id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
@@ -29,268 +9,278 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1" // For Blossom
 }
 
-// Runtime libraries
-val okaeriConfigsVersion: String = "df8ae69"
-val bStatsVersion: String = "3.2.1"
-val fastStatsVersion: String = "0.29.3"
-val runtimeLibraries = listOf(
-    RuntimeLibrary( // Technically not runtime, but better for consumers to not have to specify it
-        name = "annotations",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.jetbrains",
-        artifact = "annotations",
-        version = "26.1.0"),
-    RuntimeLibrary(
-        name = "xseries",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "com.github.cryptomorin",
-        artifact = "XSeries",
-        version = "13.7.0",
-        relocations = listOf(Relocation("com.cryptomorin.xseries"))),
-    RuntimeLibrary(
-        name = "okaeri_configs_core",
-        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-configs-core",
-        version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri"))),
-    RuntimeLibrary(
-        name = "okaeri_configs_yaml_bukkit",
-        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-configs-yaml-bukkit",
-        version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri")),
-        dependencies = listOf("okaeri_configs_core")),
-    RuntimeLibrary(
-        name = "okaeri_configs_serdes_commons",
-        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-configs-serdes-commons",
-        version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri")),
-        dependencies = listOf("okaeri_configs_core")),
-    RuntimeLibrary(
-        name = "okaeri_configs_serdes_bukkit",
-        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-configs-serdes-bukkit",
-        version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri")),
-        dependencies = listOf(
-            "okaeri_configs_core",
-            "okaeri_configs_yaml_bukkit")),
-    RuntimeLibrary(
-        name = "okaeri_validator",
-        repositories = listOf(Repository.OKAERI_RELEASES.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-validator",
-        version = "2.0.5",
-        relocations = listOf(Relocation("eu.okaeri"))),
-    RuntimeLibrary(
-        name = "okaeri_configs_validator_okaeri",
-        repositories = listOf(Repository.SRNYX_SNAPSHOTS.url),
-        group = "eu.okaeri",
-        artifact = "okaeri-configs-validator-okaeri",
-        version = okaeriConfigsVersion,
-        relocations = listOf(Relocation("eu.okaeri")),
-        dependencies = listOf(
-            "okaeri_configs_core",
-            "okaeri_validator")),
-    RuntimeLibrary(
-        name = "item_nbt_api",
-        repositories = listOf(Repository.CODE_MC.url),
-        group = "de.tr7zw",
-        artifact = "item-nbt-api",
-        version = "2.15.7",
-        relocations = listOf(Relocation("de.tr7zw.changeme.nbtapi"))),
-    RuntimeLibrary(
-        name = "bstats_base",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.bstats",
-        artifact = "bstats-base",
-        version = bStatsVersion,
-        relocations = listOf(Relocation("org.bstats"))),
-    RuntimeLibrary(
-        name = "bstats_bukkit",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.bstats",
-        artifact = "bstats-bukkit",
-        version = bStatsVersion,
-        relocations = listOf(Relocation("org.bstats")),
-        dependencies = listOf("bstats_base")),
-    RuntimeLibrary(
-        name = "gson",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "com.google.code.gson",
-        artifact = "gson",
-        version = "2.14.0",
-        relocations = listOf(Relocation("com.google.gson"))),
-    RuntimeLibrary(
-        name = "faststats_core",
-        repositories = listOf(
-            Repository.FASTSTATS_RELEASES.url,
-            Repository.FASTSTATS_SNAPSHOTS.url),
-        group = "dev.faststats.metrics",
-        artifact = "core",
-        version = fastStatsVersion,
-        relocations = listOf(Relocation("dev.faststats")),
-        dependencies = listOf("gson")),
-    RuntimeLibrary(
-        name = "faststats_config",
-        repositories = listOf(
-            Repository.FASTSTATS_RELEASES.url,
-            Repository.FASTSTATS_SNAPSHOTS.url),
-        group = "dev.faststats.metrics",
-        artifact = "config",
-        version = fastStatsVersion,
-        relocations = listOf(Relocation("dev.faststats")),
-        dependencies = listOf("faststats_core")),
-    RuntimeLibrary(
-        name = "faststats_bukkit",
-        repositories = listOf(
-            Repository.FASTSTATS_RELEASES.url,
-            Repository.FASTSTATS_SNAPSHOTS.url),
-        group = "dev.faststats.metrics",
-        artifact = "bukkit",
-        version = fastStatsVersion,
-        relocations = listOf(Relocation("dev.faststats")),
-        dependencies = listOf(
-            "faststats_core",
-            "faststats_config")),
-    RuntimeLibrary(
-        name = "javassist",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.javassist",
-        artifact = "javassist",
-        version = "3.28.0-GA",
-        relocations = listOf(Relocation("javassist.", "{package}.libs.javassist."))),
-    RuntimeLibrary(
-        name = "reflections",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.reflections",
-        artifact = "reflections",
-        version = "0.10.2",
-        relocations = listOf(Relocation("org.reflections")),
-        dependencies = listOf("javassist")),
-    RuntimeLibrary(
-        name = "hikaricp",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "com.zaxxer",
-        artifact = "HikariCP",
-        version = "7.1.0",
-        relocations = listOf(Relocation("com.zaxxer.hikari"))),
-    RuntimeLibrary(
-        name = "reactive_streams",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.reactivestreams",
-        artifact = "reactive-streams",
-        version = "1.0.4",
-        relocations = listOf(Relocation("org.reactivestreams"))),
-    RuntimeLibrary(
-        name = "r2dbc_spi",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "io.r2dbc",
-        artifact = "r2dbc-spi",
-        version = "1.0.0.RELEASE",
-        relocations = listOf(Relocation("io.r2dbc")),
-        dependencies = listOf("reactive_streams")),
-    RuntimeLibrary(
-        name = "jooq",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.jooq",
-        artifact = "jooq",
-        version = "3.19.36", // Keep on 3.19.x for Java 17 support (https://www.jooq.org/download/support-matrix-jdk#oss)
-        relocations = listOf(Relocation("org.jooq")),
-        dependencies = listOf("r2dbc_spi")),
-    RuntimeLibrary(
-        name = "h2",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "com.h2database",
-        artifact = "h2",
-        version = "2.4.240",
-        relocations = listOf(Relocation("org.h2"))),
-    RuntimeLibrary(
-        name = "postgresql",
-        repositories = listOf(Repository.MAVEN_CENTRAL.url),
-        group = "org.postgresql",
-        artifact = "postgresql",
-        version = "42.7.11",
-        relocations = listOf(Relocation("org.postgresql"))))
+group = "xyz.srnyx"
+description = "General purpose API with tons of features"
 
-val javaVersion: JavaVersion = JavaVersion.VERSION_17
+galaxy {
+    java {
+        javaVersion = JavaVersion.VERSION_17
+    }
 
-spigotAPI(config = DependencyConfig(version = "1.8.8"))
-setupMC(javaSetupConfig = JavaSetupConfig(
-    group = "xyz.srnyx",
-    description = "General purpose API with tons of features",
-    javaVersion = javaVersion))
+    repository {
+        add(SRNYX_RELEASES, SRNYX_SNAPSHOTS, ALESSIO_DP)
+    }
 
-// Process runtime libraries
-processRuntimeLibraries(runtimeLibraries, RuntimeLibrariesConfig(
-    configurations = listOf("compileOnlyApi", "testImplementation"),
-    relocate = false))
+    dependency {
+        add {
+            repositories.add(ALESSIO_DP)
+            configurations = listOf("api")
+            group = "net.byteflux"
+            artifact = "libby-bukkit"
+            version = "1.3.1"
+            relocate("net.byteflux.libby")
+        }
+        add {
+            repositories.addAll(SRNYX_RELEASES, SRNYX_SNAPSHOTS)
+            configurations = listOf("api")
+            group = "xyz.srnyx"
+            artifact = "java-utilities"
+            version = "0c7c450"
+            relocate("xyz.srnyx.javautilities")
+        }
+    }
 
-// Generate runtime library enum
-generateAnnoyingApiRuntimeLibraryEnum(runtimeLibraries, GenerateRuntimeLibraryEnumConfig(
-    relocateImports = false))
+    minecraft {
+        spigotAPI("1.8.8")
+        folia = true
 
-// Repositories
-repository(Repository.SRNYX_RELEASES, Repository.SRNYX_SNAPSHOTS, Repository.PLACEHOLDER_API, Repository.ALESSIO_DP, Repository.PAPER)
+        dependency {
+            optional {
+                repositories.add(PLACEHOLDER_API)
+                group = "me.clip"
+                artifact = "placeholderapi"
+                version = "2.12.2"
 
-// Dependencies
-dependencies {
-    // Bundled
-    dependencyRelocate("net.byteflux:libby-bukkit:1.3.1", "net.byteflux.libby", configuration = "api")
-    dependencyRelocate("xyz.srnyx:java-utilities:3575647", "xyz.srnyx.javautilities", configuration = "api")
+                pluginYml = "PlaceholderAPI"
+                modrinth = "placeholderapi"
+                hangar = "PlaceholderAPI"
+            }
+        }
+        
+        annoyingAPI.customRuntimeLibraries {
+            configurations = listOf("compileOnlyApi", "testImplementation")
+            relocate = false
 
-    // Optional
-    compileOnly("me.clip:placeholderapi:2.12.2")
+            generateRuntimeLibraryEnum {
+                relocateImports = false
+            }
+
+            library("annotations") { // Technically not runtime, but better for consumers to not have to specify it
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.jetbrains"
+                artifact = "annotations"
+                version = "26.1.0"
+            }
+            library("semver4j") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.semver4j"
+                artifact = "semver4j"
+                version = "6.0.0"
+                relocate()
+
+                action {
+                    exclude("org.jspecify", "jspecify")
+                }
+            }
+            library("xseries") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "com.github.cryptomorin"
+                artifact = "XSeries"
+                version = "13.7.0"
+                relocate("com.cryptomorin.xseries")
+            }
+            library("okaeri_configs_core") {
+                repositories.add(SRNYX_SNAPSHOTS)
+                group = "eu.okaeri"
+                artifact = "okaeri-configs-core"
+                version = "df8ae69"
+                relocate()
+
+                library("okaeri_configs_yaml_bukkit") {
+                    artifact = "okaeri-configs-yaml-bukkit"
+
+                    library("okaeri_configs_serdes_bukkit") {
+                        artifact = "okaeri-configs-serdes-bukkit"
+                    }
+                }
+                library("okaeri_configs_serdes_commons") {
+                    artifact = "okaeri-configs-serdes-commons"
+                }
+                library("okaeri_configs_validator_okaeri") {
+                    artifact = "okaeri-configs-validator-okaeri"
+
+                    dependency("okaeri_validator") {
+                        repositories.add(OKAERI_RELEASES)
+                        group = "eu.okaeri"
+                        artifact = "okaeri-validator"
+                        version = "2.0.5"
+                        relocate()
+                    }
+                }
+            }
+            library("item_nbt_api") {
+                repositories.add(CODE_MC)
+                group = "de.tr7zw"
+                artifact = "item-nbt-api"
+                version = "2.15.7"
+                relocate("de.tr7zw.changeme.nbtapi")
+            }
+            library("bstats_base") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.bstats"
+                artifact = "bstats-base"
+                version = "3.2.1"
+                relocate()
+
+                library("bstats_bukkit") {
+                    artifact = "bstats-bukkit"
+                }
+            }
+            library("faststats_core") {
+                repositories.addAll(FASTSTATS_RELEASES, FASTSTATS_SNAPSHOTS)
+                group = "dev.faststats.metrics"
+                artifact = "core"
+                version = "0.29.4"
+                relocate("dev.faststats")
+
+                library("faststats_config") {
+                    artifact = "config"
+                }
+                library("faststats_bukkit") {
+                    artifact = "bukkit"
+                    dependencies.addAll("faststats_config")
+                }
+
+                dependency("gson") {
+                    repositories.add(MAVEN_CENTRAL)
+                    group = "com.google.code.gson"
+                    artifact = "gson"
+                    version = "2.14.0"
+                    relocate("com.google.gson")
+                }
+            }
+            library("reflections") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.reflections"
+                artifact = "reflections"
+                version = "0.10.2"
+                relocate()
+
+                dependency("javassist") {
+                    repositories.add(MAVEN_CENTRAL)
+                    group = "org.javassist"
+                    artifact = "javassist"
+                    version = "3.28.0-GA"
+                    relocate("javassist.", "{package}.libs.javassist.")
+                }
+            }
+            library("hikaricp") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "com.zaxxer"
+                artifact = "HikariCP"
+                version = "7.1.0"
+                relocate("com.zaxxer.hikari")
+            }
+            library("jooq") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.jooq"
+                artifact = "jooq"
+                version = "3.19.36" // Keep on 3.19.x for Java 17 support (https://www.jooq.org/download/support-matrix-jdk#oss)
+                relocate()
+
+                dependency("r2dbc_spi") {
+                    repositories.add(MAVEN_CENTRAL)
+                    group = "io.r2dbc"
+                    artifact = "r2dbc-spi"
+                    version = "1.0.0.RELEASE"
+                    relocate()
+
+                    dependency("reactive_streams") {
+                        repositories.add(MAVEN_CENTRAL)
+                        group = "org.reactivestreams"
+                        artifact = "reactive-streams"
+                        version = "1.0.4"
+                        relocate()
+                    }
+                }
+            }
+            library("h2") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "com.h2database"
+                artifact = "h2"
+                version = "2.4.240"
+                relocate("org.h2")
+            }
+            library("postgresql") {
+                repositories.add(MAVEN_CENTRAL)
+                group = "org.postgresql"
+                artifact = "postgresql"
+                version = "42.7.11"
+                relocate()
+            }
+        }
+
+        pluginYml {
+            developerData(SRNYX)
+            main = "${getPackage()}.AnnoyingPlugin"
+        }
+
+        platformPublishing {
+            github("srnyx/annoying-api")
+            hangar("AnnoyingAPI")
+            modrinth("gzktm9GG")
+            hangar("AnnoyingAPI")
+            curseforge("728930")
+
+            addAnnoyingApiDependency = false
+
+            projectData("annoying-api")
+        }
+    }
+
+    mavenPublishing {
+        artifactId = "annoying-api"
+        silenceMissingJavadocWarnings = true
+        licenses.add(MIT)
+        developers.add(SRNYX)
+
+        textArtifact {
+            classifier = "metadata"
+            extension = "json"
+            text = provider {
+                val metadata = annoyingMetadata {
+                    packageName = "${project.group}.annoyingapi"
+                    javaVersion = java.javaVersion.get().majorVersion.toInt()
+                    repositories.add(ALESSIO_DP)
+                    runtimeLibraries = minecraft.annoyingAPI.customRuntimeLibraries.libraries
+                    exclude("net.byteflux", "libby-bukkit")
+                    exclude("xyz.srnyx", "java-utilities")
+                }
+                return@provider json {
+                    prettyPrint = true
+                    prettyPrintIndent = "  "
+                }.encodeToString(metadata)
+            }
+        }
+
+        publication {
+            pom {
+                url = "https://annoying-api.srnyx.com"
+            }
+        }
+    }
+
+    testing {
+        jUnit("6.1.0")
+        mockBukkit("3.9.0")
+    }
+}
+
+tasks.shadowJar {
+    exclude("META-INF/maven/**")
 }
 
 // Blossom (see java-templates module)
 sourceSets.main {
     blossom.javaSources { property("annoying_api_version", version.toString()) }
 }
-
-// Testing
-setupMockBukkit(
-    junitBomConfig = DependencyConfig(version = "6.1.0"),
-    mockBukkitDependencyConfig = DependencyConfig(version = "3.9.0"))
-
-// Library publishing
-setupPublishingEnv(publishingSimpleConfig(
-    artifactId = "annoying-api",
-    silenceMissingJavadocWarnings = true,
-    url = "https://annoying-api.srnyx.com",
-    licenses = listOf(LicenseData.MIT),
-    developers = listOf(DeveloperData.srnyx),
-    textArtifacts = listOf(TextArtifact(
-        text = {
-            val metadata = AnnoyingMetadata(
-                packageName = "${project.group}.annoyingapi",
-                javaVersion = javaVersion.majorVersion.toInt(),
-                repositories = listOf(Repository.ALESSIO_DP.url),
-                runtimeLibraries = runtimeLibraries,
-                excludes = listOf(
-                    Exclude("net.byteflux", "libby-bukkit"),
-                    Exclude("xyz.srnyx", "java-utilities")))
-            return@TextArtifact Json {
-                prettyPrint = true
-                prettyPrintIndent = "  "
-            }.encodeToString(metadata)
-        },
-        classifier = "metadata",
-        extension = "json"))))
-
-// Platform publishing
-setupPublishingPlatforms(
-    config = PublishingPlatformConfig(
-        platforms = mapOf(
-            PluginPlatform.MODRINTH to "gzktm9GG",
-            PluginPlatform.HANGAR to "AnnoyingAPI",
-            PluginPlatform.CURSEFORGE to "728930"),
-        loaders = listOf("spigot", "paper", "purpur", "folia"),
-        addAnnoyingApiDependency = false,
-        modrinthAction = { optional("placeholderapi") },
-        hangarAction = { optional("PlaceholderAPI") }))

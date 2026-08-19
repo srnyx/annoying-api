@@ -19,6 +19,7 @@ import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -49,8 +50,8 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
                 Metric.string("annoying_api_version", () -> BuildProperties.ANNOYING_API_VERSION),
                 Metric.string("placeholderapi_version", () -> plugin.papiInstalled ? PlaceholderAPIPlugin.getInstance().getDescription().getVersion() : null),
                 Metric.string("update_checker_outdated_latest_version", () ->
-                        plugin.updateChecker != null && plugin.updateChecker.latestVersion != null && plugin.updateChecker.isUpdateAvailable()
-                                ? plugin.updateChecker.latestVersion.version().version
+                        plugin.updateChecker != null && plugin.updateChecker.isUpdateAvailable()
+                                ? Objects.requireNonNull(Objects.requireNonNull(plugin.updateChecker.latestVersion).version()).getVersion()
                                 : null),
                 Metric.number("storage_cache_targets", () -> getStorageStats()
                         .map(Dialect.Stats::cacheTargets)

@@ -6,10 +6,9 @@ import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 
-public abstract class MessagesProvider extends Registrable implements Consumer<AnnoyingMessages>, Supplier<AnnoyingMessages> {
+public abstract class MessagesProvider extends Registrable {
     @NotNull public Consumer<ConfigBuilder> builder = build -> build
             .config(new AnnoyingMessages(build.plugin))
             .file("messages.yml");
@@ -24,6 +23,11 @@ public abstract class MessagesProvider extends Registrable implements Consumer<A
         this.builder = this.builder.andThen(builder);
         return this;
     }
+
+    public abstract void accept(@NotNull AnnoyingMessages messages);
+    
+    @NotNull
+    public abstract AnnoyingMessages get();
 
     public static class Defaults extends Stringable {
         @NotNull public String prefix = "&3&lANNOYING &8&l| &b";

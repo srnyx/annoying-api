@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.semver4j.Semver;
 import xyz.srnyx.annoyingapi.command.selector.SelectorManager;
 import xyz.srnyx.annoyingapi.cooldown.CooldownManager;
 import xyz.srnyx.annoyingapi.data.EntityData;
@@ -45,7 +46,6 @@ import xyz.srnyx.annoyingapi.library.AnnoyingLibraryManager;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 import xyz.srnyx.javautilities.manipulation.Mapper;
-import xyz.srnyx.javautilities.objects.SemanticVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,8 +76,6 @@ public class AnnoyingPlugin extends JavaPlugin {
             super.log(logRecord);
         }
     };
-    @NotNull public static final ServerSoftware SERVER_SOFTWARE = ServerSoftware.get();
-    @NotNull public static final SemanticVersion MINECRAFT_VERSION = new SemanticVersion(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
 
     /**
      * The API options for the plugin
@@ -130,8 +128,9 @@ public class AnnoyingPlugin extends JavaPlugin {
     public AnnoyingPlugin() {
         LOGGER = getLogger();
 
-        // Load Okaeri Configs
+        // Load required libraries
         if (libraryManager != null && !libraryManager.loadLibrary(
+                AnnoyingAPILibrary.SEMVER4J,
                 AnnoyingAPILibrary.GSON,
                 AnnoyingAPILibrary.XSERIES,
                 AnnoyingAPILibrary.OKAERI_CONFIGS_YAML_BUKKIT,
@@ -706,13 +705,21 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public static void log(@Nullable Level level, @Nullable Object message, @Nullable Throwable throwable) {
         if (level == null) level = Level.INFO;
-        final String messageString = String.valueOf(message);
-        LOGGER.log(level,
-                // Only color the message if the server version is between 1.12 and 1.20
-                MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 12, 0) && MINECRAFT_VERSION.isLessThanOrEqualTo(1, 20, 0)
+        String messageString = String.valueOf(message);
+
+        // Only color the message if the server version is between 1.12 and 1.20
+        try {
+            messageString = ServerSoftware.MINECRAFT_VERSION != null
+                    && ServerSoftware.MINECRAFT_VERSION.isGreaterThanOrEqualTo(Semver.create(1, 12, 0))
+                    && ServerSoftware.MINECRAFT_VERSION.isLowerThanOrEqualTo(Semver.create(1, 20, 0))
                         ? BukkitUtility.color(messageString)
-                        : BukkitUtility.stripUntranslatedColor(messageString),
-                throwable);
+                        : BukkitUtility.stripUntranslatedColor(messageString);
+        } catch (final Exception e) {
+            // This can happen if Semver isn't loaded before this method is called
+            LOGGER.log(Level.WARNING, "Failed to parse server version for logging. Message will not have colors processed.", e);
+        }
+
+        LOGGER.log(level, messageString, throwable);
     }
 
     /**

@@ -3,7 +3,9 @@ package xyz.srnyx.annoyingapi.storage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.SQLDialect;
+import org.semver4j.Semver;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.ServerSoftware;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 import xyz.srnyx.annoyingapi.library.AnnoyingLibrary;
 import xyz.srnyx.annoyingapi.storage.dialects.Dialect;
@@ -100,7 +102,9 @@ public enum StorageMethod {
      */
     @NotNull
     private static String getMysqlMariadbDriver() {
-        return AnnoyingPlugin.MINECRAFT_VERSION.isGreaterThanOrEqualTo(1, 16, 5) ? "com{}mysql{}cj{}jdbc{}Driver" : "com{}mysql{}jdbc{}Driver";
+        return ServerSoftware.MINECRAFT_VERSION != null && ServerSoftware.MINECRAFT_VERSION.isGreaterThanOrEqualTo(Semver.create(1, 16, 5))
+                ? "com{}mysql{}cj{}jdbc{}Driver"
+                : "com{}mysql{}jdbc{}Driver";
     }
 
     /**

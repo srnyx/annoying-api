@@ -1,7 +1,9 @@
 package xyz.srnyx.annoyingapi;
 
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.semver4j.Semver;
 
 
 /**
@@ -51,21 +53,24 @@ public enum ServerSoftware {
         };
     }
 
-    @NotNull
-    public static ServerSoftware get() {
+    @NotNull public static final ServerSoftware SOFTWARE;
+    @Nullable public static final Semver MINECRAFT_VERSION = Semver.parse(Bukkit.getVersion().split("MC: ")[1].split("\\)")[0]);
+    static {
+        // Default to SPIGOT
+        ServerSoftware newSoftware = SPIGOT;
+
         // Detect software by class existence
         for (final ServerSoftware software : values()) {
             if (software.possibleClasses != null) {
                 for (final String possibleClass : software.possibleClasses) {
                     try {
                         Class.forName(possibleClass);
-                        return software;
+                        newSoftware = software;
                     } catch (final ClassNotFoundException ignored) {}
                 }
             }
         }
 
-        // Default to SPIGOT
-        return SPIGOT;
+        SOFTWARE = newSoftware;
     }
 }

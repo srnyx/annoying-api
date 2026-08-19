@@ -7,12 +7,11 @@ import org.bukkit.plugin.PluginBase;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.semver4j.Semver;
 import xyz.srnyx.annoyingapi.message.AnnoyingMessages;
 import xyz.srnyx.annoyingapi.parents.AnnoyableClass;
 import xyz.srnyx.javautilities.HttpUtility;
-import xyz.srnyx.javautilities.MiscUtility;
 import xyz.srnyx.javautilities.manipulation.Mapper;
-import xyz.srnyx.javautilities.objects.SemanticVersion;
 import xyz.srnyx.javautilities.parents.Stringable;
 
 import java.util.Objects;
@@ -27,7 +26,11 @@ public class UpdateChecker extends AnnoyableClass {
     /**
      * The current version of Minecraft in short form (ex: 1.17 instead of 1.17.0)
      */
-    @NotNull private static final String MINECRAFT_VERSION_SHORT = AnnoyingPlugin.MINECRAFT_VERSION.patch != 0 ? AnnoyingPlugin.MINECRAFT_VERSION.version : AnnoyingPlugin.MINECRAFT_VERSION.major + "." + AnnoyingPlugin.MINECRAFT_VERSION.minor;
+    @Nullable private static final String MINECRAFT_VERSION_SHORT = ServerSoftware.MINECRAFT_VERSION != null
+            ? (ServerSoftware.MINECRAFT_VERSION.getPatch() != 0
+               ? ServerSoftware.MINECRAFT_VERSION.getVersion()
+               : ServerSoftware.MINECRAFT_VERSION.getMajor() + "." + ServerSoftware.MINECRAFT_VERSION.getMinor())
+            : null;
     @NotNull private static final String SPIGET_RESOURCES_URL = "https://api.spiget.org/v2/resources/";
 
     /**
@@ -41,7 +44,7 @@ public class UpdateChecker extends AnnoyableClass {
     /**
      * {@code null} if on a snapshot/development version
      */
-    @Nullable private final SemanticVersion currentVersionSemantic;
+    @Nullable private final Semver currentVersionSemantic;
     /**
      * The user agent to use when making requests
      */
@@ -66,7 +69,7 @@ public class UpdateChecker extends AnnoyableClass {
         super(annoyingPlugin);
         this.pluginName = pluginDescription.getName();
         this.currentVersion = pluginDescription.getVersion();
-        this.currentVersionSemantic = MiscUtility.handleException(() -> new SemanticVersion(currentVersion)).orElse(null);
+        this.currentVersionSemantic = Semver.parse(currentVersion);
         this.userAgent = annoyingPlugin.getName() + "/" + annoyingPlugin.getDescription().getVersion() + " via Annoying API (update)";
         this.platforms = new PluginPlatform.Multi(platforms);
         this.latestVersion = retrieveLatestVersion();
@@ -109,7 +112,7 @@ public class UpdateChecker extends AnnoyableClass {
         if (update) annoyingPlugin.getAnnoyingMessages().plugin.update_available.newMessage()
                 .replace("%plugin%", pluginName)
                 .replace("%current%", currentVersion)
-                .replace("%new%", Objects.requireNonNull(latestVersion).version.version)
+                .replace("%new%", Objects.requireNonNull(Objects.requireNonNull(latestVersion).version).getVersion())
                 .replace("%link%", latestVersion.link)
                 .log(Level.WARNING);
         return update;
@@ -121,7 +124,7 @@ public class UpdateChecker extends AnnoyableClass {
      * @return  {@code true} if an update is available, {@code false} otherwise
      */
     public boolean isUpdateAvailable() {
-        if (latestVersion == null) return false;
+        if (latestVersion == null || latestVersion.version == null) return false;
         if (currentVersionSemantic == null) return true;
         return latestVersion.version.isGreaterThan(currentVersionSemantic);
     }
@@ -161,7 +164,7 @@ public class UpdateChecker extends AnnoyableClass {
                         "&game_versions=%5B%22" + MINECRAFT_VERSION_SHORT + "%22%5D" +
                         "&include_changelog=false", null)
                 .flatMap(element -> Mapper.convertJsonElement(element, JsonArray.class))
-                .filter(versions -> versions.size() != 0)
+                .filter(versions -> !versions.isEmpty())
                 .map(versions -> {
                     for (final JsonElement version : versions) {
                         final JsonObject versionObject = Mapper.convertJsonElement(version, JsonObject.class).orElse(null);
@@ -196,7 +199,7 @@ public class UpdateChecker extends AnnoyableClass {
                         "&channel=Release&limit=1",null)
                 .flatMap(element -> Mapper.convertJsonElement(element, JsonObject.class))
                 .flatMap(object -> Mapper.convertJsonElement(object.get("result"), JsonArray.class))
-                .filter(array -> array.size() != 0)
+                .filter(array -> !array.isEmpty())
                 .flatMap(version -> Mapper.convertJsonElement(version.get(0), JsonObject.class))
                 .flatMap(object -> Mapper.convertJsonElementToPrimitive(object.get("name"), String.class))
                 .map(version -> new LatestVersion(version, "https://hangar.papermc.io/" + identifier + "/versions/" + version));
@@ -225,9 +228,9 @@ public class UpdateChecker extends AnnoyableClass {
                 });
     }
 
-    public record LatestVersion(@NotNull SemanticVersion version, @NotNull String link) {
+    public record LatestVersion(@Nullable Semver version, @NotNull String link) {
         public LatestVersion(@NotNull String version, @NotNull String link) {
-            this(new SemanticVersion(version), link);
+            this(Semver.parse(version), link);
         }
     }
 }
