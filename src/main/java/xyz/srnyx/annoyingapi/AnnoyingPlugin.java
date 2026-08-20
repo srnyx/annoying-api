@@ -50,6 +50,7 @@ import xyz.srnyx.javautilities.manipulation.Mapper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -313,44 +314,45 @@ public class AnnoyingPlugin extends JavaPlugin {
                 if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers()) || clazz.isAnonymousClass()) continue;
                 // Ignore classes with @Registrable.Ignore and specific ignored classes
                 if (clazz.isAnnotationPresent(Registrable.Ignore.class) || ignoredClasses.contains(clazz)) continue;
+                final String className = clazz.getSimpleName();
+
+                // Get constructor
+                Constructor<? extends Registrable> constructor;
+                try {
+                    // Try with plugin's instance first
+                    constructor = clazz.getConstructor(this.getClass());
+                } catch (final Throwable e) {
+                    try {
+                        // Fallback to general AnnoyingPlugin constructor
+                        constructor = clazz.getConstructor(AnnoyingPlugin.class);
+                    } catch (final Throwable e2) {
+                        logErrorTrack(Level.WARNING, "&eFailed to register &6" + className + "&e! It likely doesn't have a constructor that takes an instance of the plugin.", e2);
+                        continue;
+                    }
+                }
 
                 // Register class
-                final String className = clazz.getSimpleName();
-                log(Level.FINE, "Automatically registering " + className);
+                log(Level.FINE, "Automatically registering " + className + " using constructor " + constructor);
                 try {
-                    clazz.getConstructor(this.getClass()).newInstance(this).register();
+                    constructor.newInstance(this).register();
                     registered.add(className);
                 } catch (final Throwable t) {
-                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + className, t);
+                    logErrorTrack(Level.WARNING, "&eFailed to register &6" + className + "&e!", t);
                 }
             }
             log(Level.INFO, "Automatically registered " + registered.size() + " classes: " + String.join(", ", registered));
         }
 
+        // Register default messages provider if custom one not defined
+        if (getRegistrable(MessagesProvider.class) == null) new MessagesProvider() {
+            @Override @NotNull
+            public AnnoyingPlugin getAnnoyingPlugin() {
+                return AnnoyingPlugin.this;
+            }
+        }.register();
+
         // Load messages
-        MessagesProvider provider = getRegistrable(MessagesProvider.class);
-        if (provider == null) {
-            provider = new MessagesProvider() {
-                private AnnoyingMessages messages;
-
-                @Override @NotNull
-                public AnnoyingPlugin getAnnoyingPlugin() {
-                    return AnnoyingPlugin.this;
-                }
-
-                @Override
-                public void accept(@NotNull AnnoyingMessages messages) {
-                    this.messages = messages;
-                }
-
-                @Override @NotNull
-                public AnnoyingMessages get() {
-                    return messages;
-                }
-            };
-            provider.register();
-        }
-        provider.build();
+        getMessages().build();
 
         // Manual stats registration
         registerBStatsManually();
@@ -424,8 +426,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     public void reloadPlugin() {
         // Reload messages
-        final MessagesProvider provider = getRegistrable(MessagesProvider.class);
-        if (provider != null) provider.get().load(true);
+        getMessages().get().load(true);
 
         // Save cache if new config has RELOAD in save-on OR cache used to be enabled but now disabled
         StorageConfig storageConfig = null;

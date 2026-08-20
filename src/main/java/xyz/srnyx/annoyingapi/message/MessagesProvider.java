@@ -1,6 +1,7 @@
 package xyz.srnyx.annoyingapi.message;
 
 import org.jetbrains.annotations.NotNull;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigBuilder;
 import xyz.srnyx.annoyingapi.parents.Registrable;
 import xyz.srnyx.javautilities.parents.Stringable;
@@ -9,25 +10,28 @@ import java.util.function.Consumer;
 
 
 public abstract class MessagesProvider extends Registrable {
-    @NotNull public Consumer<ConfigBuilder> builder = build -> build
-            .config(new AnnoyingMessages(build.plugin))
-            .file("messages.yml");
-    @NotNull public Defaults defaults = new Defaults();
+    @NotNull public final Defaults defaults = new Defaults();
+    protected AnnoyingMessages messages;
 
     public void build() {
-        accept(getAnnoyingPlugin().configLoader.build(builder));
+        final AnnoyingPlugin plugin = getAnnoyingPlugin();
+
+        // Builder
+        Consumer<ConfigBuilder> builder = build -> build
+                .config(new AnnoyingMessages(plugin))
+                .file("messages.yml");
+        builder = builder.andThen(this::mutateBuilder);
+
+        // Build
+        messages = plugin.configLoader.build(builder);
     }
 
-    @NotNull
-    public MessagesProvider builder(@NotNull Consumer<ConfigBuilder> builder) {
-        this.builder = this.builder.andThen(builder);
-        return this;
-    }
-
-    public abstract void accept(@NotNull AnnoyingMessages messages);
+    public void mutateBuilder(@NotNull ConfigBuilder builder) {}
     
     @NotNull
-    public abstract AnnoyingMessages get();
+    public AnnoyingMessages get() {
+        return messages;
+    }
 
     public static class Defaults extends Stringable {
         @NotNull public String prefix = "&3&lANNOYING &8&l| &b";
