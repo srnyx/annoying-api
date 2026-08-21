@@ -56,6 +56,6 @@ public class NestedSoundMigration extends NamedMigration {
      * }</pre>
      */
     public NestedSoundMigration(@NotNull String key) {
-        this(key, key + ".sound");
+        this(key, "sound");
     }
 }
