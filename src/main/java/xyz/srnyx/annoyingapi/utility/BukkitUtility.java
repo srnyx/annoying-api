@@ -48,8 +48,16 @@ public class BukkitUtility {
      * @return          the translated objects/strings
      */
     @NotNull
-    public static List<String> color(@Nullable Object object1, @Nullable Object... objects) {
-        return colorCollection(Arrays.asList(object1, objects));
+    public static List<String> color(@Nullable Object object1, @Nullable Object @Nullable ... objects) {
+        if (objects == null) {
+            if (object1 == null) return List.of();
+            return Collections.singletonList(color(object1));
+        }
+
+        final List<String> list = new ArrayList<>(objects.length + 1);
+        list.add(color(object1));
+        for (final Object object : objects) list.add(color(object));
+        return list;
     }
 
     /**
@@ -61,8 +69,8 @@ public class BukkitUtility {
      */
     @NotNull
     public static List<String> colorCollection(@Nullable Collection<?> objects) {
-        if (objects == null) return new ArrayList<>();
         final List<String> list = new ArrayList<>();
+        if (objects == null) return list;
         for (final Object object : objects) list.add(color(object));
         return list;
     }
@@ -106,8 +114,16 @@ public class BukkitUtility {
      * Replaces {@link ChatColor#COLOR_CHAR} with {@link #ALT_COLOR_CHAR} for each string
      */
     @NotNull
-    public static List<String> colorCharToAlt(@Nullable Object object1, @Nullable Object... objects) {
-        return colorCharToAltCollection(Arrays.asList(object1, objects));
+    public static List<String> colorCharToAlt(@Nullable Object object1, @Nullable Object @Nullable ... objects) {
+        if (objects == null) {
+            if (object1 == null) return List.of();
+            return Collections.singletonList(colorCharToAlt(object1));
+        }
+
+        final List<String> list = new ArrayList<>(objects.length + 1);
+        list.add(colorCharToAlt(object1));
+        for (final Object object : objects) list.add(colorCharToAlt(object));
+        return list;
     }
 
     /**
@@ -115,8 +131,8 @@ public class BukkitUtility {
      */
     @NotNull
     public static List<String> colorCharToAltCollection(@Nullable Collection<?> objects) {
-        if (objects == null) return new ArrayList<>();
         final List<String> list = new ArrayList<>();
+        if (objects == null) return list;
         for (final Object string : objects) list.add(colorCharToAlt(string));
         return list;
     }
