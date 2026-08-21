@@ -176,6 +176,7 @@ public class ConfigBuilder {
                     new JsonTitleMessageSerializer(plugin),
                     new PlayableSoundSerializer(),
                     new PotionEffectSerializer(),
+                    new UniversalParticleSerializer(),
                     new XBaseSerializer());
 
             // Conditional serdes
