@@ -3,6 +3,7 @@ package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
+import eu.okaeri.configs.serdes.SerdesContext;
 import eu.okaeri.configs.serdes.SerializationData;
 import org.bukkit.Material;
 import org.bukkit.inventory.FurnaceRecipe;
@@ -13,6 +14,7 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
 
 import java.lang.reflect.InvocationTargetException;
@@ -175,8 +177,10 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
     @Override @NotNull
     public Recipe deserialize(@NotNull DeserializationData data, @NotNull GenericsDeclaration generics) {
+        final SerdesContext context = data.getContext();
+
         // Get spec data
-        final RecipeSpecData specData = data.getContext()
+        final RecipeSpecData specData = context
                 .getAttachment(RecipeSpecData.class)
                 .orElseThrow(() -> new IllegalStateException("DEVELOPER: Recipe name is required with @RecipeSpec"));
 
@@ -201,7 +205,10 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         } catch (final Exception e) {
             plugin.logErrorTrack(Level.SEVERE, "DEVELOPER: Failed to construct transformer " + transformerClass.getName() + " for recipe " + name, e);
         }
-        if (transformer != null) result = transformer.apply(this, result);
+        if (transformer != null) {
+            final AnnoyingConfig config = (AnnoyingConfig) context.getConfigContext().getRootConfig();
+            result = transformer.apply(result, new ResultTransformer.Context<>(this, context, config));
+        }
         if (result == null) throw new IllegalStateException("Result transformer " + transformerClass.getName() + " returned null for recipe " + name);
 
         final Class<?> type = generics.getType();

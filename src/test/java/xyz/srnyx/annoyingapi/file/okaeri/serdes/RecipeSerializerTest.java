@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSpec;
 
@@ -30,17 +31,17 @@ public class RecipeSerializerTest extends MockBukkitTestSupport {
 
     // ------------------------------------------------------------------ Test config classes
 
-    public static class ShapelessConfig extends OkaeriConfig {
+    public static class ShapelessConfig extends AnnoyingConfig {
         @RecipeSpec(name = "test_shapeless")
         public Recipe recipe = null;
     }
 
-    public static class ShapedConfig extends OkaeriConfig {
+    public static class ShapedConfig extends AnnoyingConfig {
         @RecipeSpec(name = "test_shaped")
         public Recipe recipe = null;
     }
 
-    public static class FurnaceConfig extends OkaeriConfig {
+    public static class FurnaceConfig extends AnnoyingConfig {
         @RecipeSpec(name = "test_furnace")
         public FurnaceRecipe recipe = null;
     }
