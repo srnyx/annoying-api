@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import static eu.okaeri.configs.migrate.ConfigMigrationDsl.*;
 
 
-public abstract class NestedSoundMigration extends NamedMigration {
+public class NestedSoundMigration extends NamedMigration {
     /**
      * <pre>{@code
      * KEY:
