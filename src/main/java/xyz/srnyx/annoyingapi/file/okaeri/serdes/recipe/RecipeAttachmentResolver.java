@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.file.okaeri.CommonAnnotationResolver;
 
 import java.util.Optional;
+import java.util.Set;
 
 
 public class RecipeAttachmentResolver implements CommonAnnotationResolver<RecipeSpec, RecipeSpecData> {
@@ -14,6 +15,6 @@ public class RecipeAttachmentResolver implements CommonAnnotationResolver<Recipe
 
     @Override @NotNull
     public Optional<RecipeSpecData> resolveAttachment(@NotNull RecipeSpec annotation) {
-        return Optional.of(new RecipeSpecData(annotation.name(), annotation.resultTransformer()));
+        return Optional.of(new RecipeSpecData(annotation.name(), annotation.resultTransformer(), Set.of(annotation.disabledFeatures())));
     }
 }

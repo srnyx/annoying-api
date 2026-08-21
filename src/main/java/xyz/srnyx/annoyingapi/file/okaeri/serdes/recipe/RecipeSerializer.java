@@ -11,6 +11,7 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
 
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 
@@ -54,8 +56,12 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
 
     @Override
     public void serialize(@NotNull Recipe object, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
+        final Set<RecipeFeature> disabledFeatures = data.getContext().getAttachment(RecipeSpecData.class)
+                .map(RecipeSpecData::disabledFeatures)
+                .orElse(Set.of());
+
         // result
-        data.set("result", rawResults.getOrDefault(object, object.getResult()));
+        if (!disabledFeatures.contains(RecipeFeature.RESULT)) data.set("result", rawResults.getOrDefault(object, object.getResult()));
 
         // 1.14+ CookingRecipe
         if (COOKING_RECIPE_CLASS != null && COOKING_RECIPE_CLASS.isAssignableFrom(object.getClass())) {
@@ -175,9 +181,13 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
                 .orElseThrow(() -> new IllegalStateException("DEVELOPER: Recipe name is required with @RecipeSpec"));
 
         // result
-        final ItemStack rawResult = data.get("result", ItemStack.class);
-        if (rawResult == null) throw new IllegalArgumentException("Missing required field: result");
-        ItemStack result = rawResult.clone();
+        ItemStack rawResult = null;
+        ItemStack result = null;
+        if (!specData.disabledFeatures().contains(RecipeFeature.RESULT)) {
+            rawResult = data.get("result", ItemStack.class);
+            if (rawResult == null) throw new IllegalArgumentException("Missing required field: result");
+            result = rawResult.clone();
+        }
 
         // name
         final String name = specData.name();
@@ -192,6 +202,7 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
             plugin.logErrorTrack(Level.SEVERE, "DEVELOPER: Failed to construct transformer " + transformerClass.getName() + " for recipe " + name, e);
         }
         if (transformer != null) result = transformer.apply(this, result);
+        if (result == null) throw new IllegalStateException("Result transformer " + transformerClass.getName() + " returned null for recipe " + name);
 
         final Class<?> type = generics.getType();
 
@@ -319,9 +330,12 @@ public class RecipeSerializer implements ObjectSerializer<Recipe> {
         return storeRawResult(shaped, rawResult);
     }
 
+    /**
+     * @param   rawResult   no-op if null
+     */
     @NotNull
-    private Recipe storeRawResult(@NotNull Recipe recipe, @NotNull ItemStack rawResult) {
-        rawResults.put(recipe, rawResult);
+    private Recipe storeRawResult(@NotNull Recipe recipe, @Nullable ItemStack rawResult) {
+        if (rawResult != null) rawResults.put(recipe, rawResult);
         return recipe;
     }
 }
