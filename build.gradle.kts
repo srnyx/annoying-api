@@ -86,7 +86,7 @@ galaxy {
                 repositories.add(MAVEN_CENTRAL)
                 group = "com.github.cryptomorin"
                 artifact = "XSeries"
-                version = "13.7.0"
+                version = "13.7.1"
                 relocate("com.cryptomorin.xseries")
             }
             library("okaeri_configs_core") {

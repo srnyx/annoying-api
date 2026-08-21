@@ -1,25 +1,19 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 
+import com.cryptomorin.xseries.XPotion;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
 import eu.okaeri.configs.serdes.SerializationData;
 import eu.okaeri.configs.util.EnumMatcher;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Arrays;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_HAS_ICON_METHOD;
 
 
 public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
-    @NotNull private static final String[] POTION_EFFECT_TYPE_NAMES = Arrays.stream(PotionEffectType.values())
-            .map(PotionEffectType::getName)
-            .toArray(String[]::new);
-
     @Override
     public boolean supports(@NotNull Class<?> type) {
         return PotionEffect.class.isAssignableFrom(type);
@@ -46,8 +40,8 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
         // type
         final String typeName = data.get("type", String.class);
         if (typeName == null) throw new IllegalArgumentException("Missing required field: type");
-        final PotionEffectType type = PotionEffectType.getByName(typeName);
-        if (type == null) throw new IllegalArgumentException(EnumMatcher.suggest(typeName, POTION_EFFECT_TYPE_NAMES, 5));
+        final XPotion type = XPotion.of(typeName).orElse(null);
+        if (type == null) throw new IllegalArgumentException(EnumMatcher.suggest(typeName, XPotion.class));
 
         // duration
         final Integer duration = data.get("duration", Integer.class);
@@ -67,6 +61,6 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
         }
 
         // 1.12.2- (or icon null)
-        return new PotionEffect(type, duration, amplifier, ambient, particles);
+        return new PotionEffect(type.get(), duration, amplifier, ambient, particles);
     }
 }
