@@ -1,12 +1,12 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 
-import eu.okaeri.configs.OkaeriConfig;
 import org.bukkit.Material;
 import org.bukkit.inventory.RecipeChoice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,7 +31,7 @@ public class RecipeChoiceSerializerTest extends MockBukkitTestSupport {
         assumeTrue(RECIPE_CHOICE_CLASS != null, "RecipeChoice not available — skipping on pre-1.13 runtime");
     }
 
-    public static class TestConfig extends OkaeriConfig {
+    public static class TestConfig extends AnnoyingConfig {
         public RecipeChoice choice = null;
     }
 

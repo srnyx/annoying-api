@@ -1,6 +1,5 @@
 package xyz.srnyx.annoyingapi.file.okaeri.serdes;
 
-import eu.okaeri.configs.OkaeriConfig;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -8,6 +7,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
 import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.ItemStackSerializer;
@@ -33,11 +33,11 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.RefItem
 public class ItemStackSerializerTest extends MockBukkitTestSupport {
     @TempDir Path tempDir;
 
-    public static class TestConfig extends OkaeriConfig {
+    public static class TestConfig extends AnnoyingConfig {
         public ItemStack item = new ItemStack(Material.STONE);
     }
 
-    public static class ListConfig extends OkaeriConfig {
+    public static class ListConfig extends AnnoyingConfig {
         public List<ItemStack> items = new ArrayList<>();
     }
 
