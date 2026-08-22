@@ -1,10 +1,11 @@
-package xyz.srnyx.annoyingapi.file.okaeri.serdes;
+package xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack;
 
 import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.collect.Multimap;
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
+import eu.okaeri.configs.serdes.SerdesContext;
 import eu.okaeri.configs.serdes.SerializationData;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -13,14 +14,16 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.spec.ItemStackSpecData;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.transformer.ItemStackTransformer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.transformer.NoopItemStackTransformer;
 import xyz.srnyx.annoyingapi.utility.BukkitUtility;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Level;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttribute.ATTRIBUTE_ENUM;
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.attribute.RefAttributeModifier.ATTRIBUTE_MODIFIER_CLASS;
@@ -33,6 +36,17 @@ import static xyz.srnyx.annoyingapi.reflection.org.bukkit.inventory.meta.compone
 
 
 public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
+    @NotNull private static final Map<Class<? extends ItemStackTransformer>, ItemStackTransformer> TRANSFORMERS = new HashMap<>();
+
+    /**
+     * For transformers
+     */
+    @NotNull public final AnnoyingPlugin plugin;
+
+    public ItemStackSerializer(@NotNull AnnoyingPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     @Override
     public boolean supports(@NotNull Class<?> type) {
         return ItemStack.class.isAssignableFrom(type);
@@ -170,7 +184,7 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
 
         // Create ItemStack
         final boolean useDamageable = DAMAGEABLE_CLASS != null && DAMAGEABLE_SET_DAMAGE_METHOD != null;
-        final ItemStack item = useDamageable ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) durability);
+        ItemStack item = useDamageable ? new ItemStack(material, amount) : new ItemStack(material, amount, (short) durability);
 
         // Meta stuff
         final ItemMeta meta = item.getItemMeta();
@@ -283,6 +297,29 @@ public class ItemStackSerializer implements ObjectSerializer<ItemStack> {
 
             // Set meta
             item.setItemMeta(meta);
+        }
+
+        // Get transformer class
+        final SerdesContext context = data.getContext();
+        Class<? extends ItemStackTransformer> transformerClass = context
+                .getAttachment(ItemStackSpecData.class)
+                .map(ItemStackSpecData::transformer)
+                .orElse(null);
+        if (transformerClass == null) transformerClass = NoopItemStackTransformer.class;
+
+        // Get transformer
+        ItemStackTransformer transformer = TRANSFORMERS.get(transformerClass);
+        if (transformer == null) try {
+            transformer = transformerClass.getDeclaredConstructor().newInstance();
+            TRANSFORMERS.put(transformerClass, transformer);
+        } catch (final Exception e) {
+            plugin.logErrorTrack(Level.SEVERE, "DEVELOPER: Failed to construct transformer " + transformerClass.getName(), e);
+        }
+
+        // Transform
+        if (transformer != null) {
+            final AnnoyingConfig config = (AnnoyingConfig) context.getConfigContext().getRootConfig();
+            item = transformer.apply(item, new ItemStackTransformer.Context<>(this, context, config));
         }
 
         return item;

@@ -1,8 +1,7 @@
-package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result;
+package xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.transformer;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.data.ItemData;
 import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 
@@ -10,12 +9,11 @@ import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 /**
  * @param   <R> Must match the ROOT config type
  */
-public abstract class DataResultTransformer<R extends AnnoyingConfig> implements ResultTransformer<R> {
+public abstract class DataItemStackTransformer<R extends AnnoyingConfig> implements ItemStackTransformer<R> {
     public abstract void transform(@NotNull ItemData data, @NotNull Context<R> context);
 
     @Override @NotNull
-    public final ItemStack apply(@Nullable ItemStack itemStack, @NotNull Context<R> context) {
-        if (itemStack == null) throw new IllegalArgumentException("result cannot be disabled if using a DataResultTransformer");
+    public final ItemStack apply(@NotNull ItemStack itemStack, @NotNull Context<R> context) {
         final ItemData data = new ItemData(context.serializer().plugin, itemStack);
         transform(data, context);
         return data.target;

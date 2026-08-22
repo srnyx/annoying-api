@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import xyz.srnyx.annoyingapi.file.okaeri.ConfigTestSupport;
 import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.ItemStackSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
+package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec;
 
 import eu.okaeri.configs.serdes.SerdesContextAttachment;
 import org.jetbrains.annotations.NotNull;

@@ -15,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
 import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec.RecipeFeature;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec.RecipeSpecData;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
 
 import java.lang.reflect.InvocationTargetException;

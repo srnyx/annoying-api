@@ -93,7 +93,7 @@ galaxy {
                 repositories.add(SRNYX_SNAPSHOTS)
                 group = "eu.okaeri"
                 artifact = "okaeri-configs-core"
-                version = "df8ae69"
+                version = "692adbe"
                 relocate()
 
                 library("okaeri_configs_yaml_bukkit") {

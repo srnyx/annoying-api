@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import xyz.srnyx.annoyingapi.MockBukkitTestSupport;
 import xyz.srnyx.annoyingapi.file.okaeri.AnnoyingConfig;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSpec;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec.RecipeSpec;
 
 import java.io.IOException;
 import java.nio.file.Files;

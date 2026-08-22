@@ -17,7 +17,9 @@ import xyz.srnyx.annoyingapi.file.okaeri.serdes.*;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorAttachmentResolver;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.color.ColorSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.duration.DurationSerializer;
-import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeAttachmentResolver;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.ItemStackSerializer;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.itemstack.spec.ItemStackAttachmentResolver;
+import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec.RecipeAttachmentResolver;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.RecipeSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipechoice.RecipeChoiceSerializer;
 import xyz.srnyx.annoyingapi.file.okaeri.validator.AnnoyingConfigValidator;
@@ -166,12 +168,13 @@ public class ConfigBuilder {
                     // Custom serdes
                     new ColorSerializer(),
                     new DurationSerializer(),
+                    new ItemStackAttachmentResolver(),
+                    new ItemStackSerializer(plugin),
                     new ColorAttachmentResolver(),
                     new RecipeSerializer(plugin),
                     new RecipeAttachmentResolver(),
                     new RecipeChoiceSerializer(),
                     new AttributeModifierSerializer(plugin),
-                    new ItemStackSerializer(),
                     new JsonChatMessageSerializer(plugin),
                     new JsonTitleMessageSerializer(plugin),
                     new PlayableSoundSerializer(),

@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
+package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec;
 
 import org.jetbrains.annotations.NotNull;
 import xyz.srnyx.annoyingapi.file.okaeri.CommonAnnotationResolver;

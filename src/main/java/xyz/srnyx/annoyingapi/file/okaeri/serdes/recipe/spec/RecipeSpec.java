@@ -1,4 +1,4 @@
-package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe;
+package xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.spec;
 
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.NoopResultTransformer;
 import xyz.srnyx.annoyingapi.file.okaeri.serdes.recipe.transformer.result.ResultTransformer;
