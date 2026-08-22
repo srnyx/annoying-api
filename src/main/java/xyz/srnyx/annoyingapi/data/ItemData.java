@@ -8,6 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.srnyx.annoyingapi.AnnoyingPlugin;
+import xyz.srnyx.annoyingapi.ServerSoftware;
 import xyz.srnyx.annoyingapi.library.AnnoyingAPILibrary;
 
 import java.util.Optional;
@@ -46,7 +47,7 @@ public class ItemData extends Data<ItemStack> {
      * @return              the result of the runnable
      */
     @NotNull
-    public Optional<String> attemptItemNbtApi(@NotNull Supplier<String> supplier) {
+    public <T> Optional<T> attemptItemNbtApi(@NotNull Supplier<T> supplier) {
         if (annoyingPlugin.libraryManager != null) annoyingPlugin.libraryManager.loadIfNotLoaded(AnnoyingAPILibrary.ITEM_NBT_API);
         return Optional.ofNullable(supplier.get());
     }
@@ -62,11 +63,43 @@ public class ItemData extends Data<ItemStack> {
     }
 
     /**
+     * Check if the item stack has the given key in its NBT data
+     *
+     * @param   key the key to check for
+     *
+     * @return      {@code true} if the item stack has the key, {@code false} otherwise
+     */
+    public boolean hasNbt(@NotNull String key) {
+        return attemptItemNbtApi(() -> NBT.get(target, (Function<ReadableItemNBT, Boolean>) nbt -> nbt.hasTag(key))).orElse(false);
+    }
+
+    /**
+     * Check if the data value exists for the given key
+     * <br>Uses special method for Item NBT API (1.13.1-) as it returns a default empty string "" for non-existent keys instead of null for {@link #get(String)}
+     *
+     * @param   key the key to check for
+     *
+     * @return      {@code true} if the data value exists, {@code false} otherwise
+     */
+    @Override
+    public boolean has(@NotNull String key) {
+        // 1.13.1- (Item NBT API)
+        if (ServerSoftware.MINECRAFT_VERSION != null && ServerSoftware.MINECRAFT_VERSION.isLowerThanOrEqualTo("1.13.1")) {
+            // We can't just check "get != null" because Item NBT API returns empty string "", not null
+            return hasNbt(key);
+        }
+
+        // Everything else
+        return super.has(key);
+    }
+
+    /**
      * Get the data value for the given key
      *
      * @param   key the key to get the data value for
      *
-     * @return      the data value, or null if not found
+     * @return      the data value, or null if not found (Item NBT API [1.13.1-] will return empty string "" for non-existent keys, use {@link #has(String)} for null/existence checks)
+     *              <br><i>We don't want to flatten empty NBT strings to null in-case we want to store an actual empty string</i>
      */
     @Override @Nullable
     public String get(@NotNull String key) {
