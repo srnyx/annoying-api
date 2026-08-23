@@ -2,6 +2,7 @@ package xyz.srnyx.annoyingapi.utility;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import xyz.srnyx.javautilities.MiscUtility;
 
 import java.time.Duration;
 
@@ -37,5 +38,17 @@ public class DurationUtility {
     @Contract(pure = true)
     public static Duration ticksToDuration(long ticks) {
         return Duration.ofMillis(ticksToMillis(ticks));
+    }
+
+    /**
+     * @param   min inclusive
+     * @param   max inclusive
+     */
+    @NotNull
+    public static Duration getRandomDuration(@NotNull Duration min, @NotNull Duration max) {
+        final long minMillis = min.toMillis();
+        final long maxMillis = max.toMillis();
+        if (minMillis >= maxMillis) return max;
+        return Duration.ofMillis(MiscUtility.RANDOM.nextLong(minMillis, maxMillis == Long.MAX_VALUE ? Long.MAX_VALUE : maxMillis + 1));
     }
 }
