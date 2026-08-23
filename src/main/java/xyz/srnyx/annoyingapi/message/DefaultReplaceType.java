@@ -1,7 +1,6 @@
 package xyz.srnyx.annoyingapi.message;
 
 import org.jetbrains.annotations.NotNull;
-
 import xyz.srnyx.javautilities.StringUtility;
 import xyz.srnyx.javautilities.manipulation.DurationFormatter;
 

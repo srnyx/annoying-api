@@ -85,6 +85,11 @@ public class AnnoyingMessage extends Stringable {
         this(message, message.jsonMessage);
     }
 
+    @NotNull
+    public AnnoyingMessage copy() {
+        return new AnnoyingMessage(this);
+    }
+
     /**
      * @see #parsePapiPlaceholders
      */
