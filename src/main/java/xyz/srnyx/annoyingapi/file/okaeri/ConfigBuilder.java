@@ -156,7 +156,9 @@ public class ConfigBuilder {
         config.configure(opt -> {
             // Configurer
             final YamlBukkitConfigurer configurer = new YamlBukkitConfigurer()
-                    .setLineWidth(Integer.MAX_VALUE);
+                    .setLineWidth(Integer.MAX_VALUE)
+                    .setIndicatorIndent(2)
+                    .setUseDoubleQuotesForMultilineStrings(true);
             if (this.configurer != null) this.configurer.accept(configurer);
             opt.configurer(
                     configurer,
