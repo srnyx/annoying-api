@@ -149,6 +149,10 @@ public class ExampleConfig extends OkaeriConfig {
         @Comment("A nested bag of sub-collections")
         @NotNull public Bags bags = new Bags();
 
+        @Comment("A list of free-form entry maps for migration/serializer coverage")
+        @NotNull public List<Map<String, Object>> entries = new ArrayList<>(List.of(
+                Map.of("entry_name", "alpha", "entry_count", 1)));
+
         public static class Bags extends OkaeriConfig {
             @Comment("A sequence of placeholder tags")
             @NotNull public List<String> tags = new ArrayList<>(List.of("red", "green", "blue"));

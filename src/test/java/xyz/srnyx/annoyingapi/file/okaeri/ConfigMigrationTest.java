@@ -194,6 +194,133 @@ public class ConfigMigrationTest extends MockBukkitTestSupport {
                 () -> assertEquals(afterFirstLoad, afterSecondLoad));
     }
 
+    @Test
+    void migratesKebabCaseKeysInsideListOfMaps() throws IOException {
+        final Path configFile = writeConfig("""
+                collections:
+                  entries:
+                    - entry-name: alpha
+                      nested-info:
+                        inner-key: value1
+                    - entry-name: beta
+                """);
+
+        final ExampleConfig config = loadConfig(configFile, new A0001_Rename_kebab_case_to_snake_case());
+
+        final List<Map<String, Object>> entries = config.collections.entries;
+        assertAll(
+                () -> assertEquals(2, entries.size()),
+                () -> assertEquals("alpha", entries.get(0).get("entry_name")),
+                () -> assertEquals(Map.of("inner_key", "value1"), entries.get(0).get("nested_info")),
+                () -> assertEquals("beta", entries.get(1).get("entry_name")));
+
+        final String migrated = Files.readString(configFile, StandardCharsets.UTF_8);
+        assertAll(
+                () -> assertFalse(migrated.contains("entry-name:")),
+                () -> assertFalse(migrated.contains("nested-info:")),
+                () -> assertFalse(migrated.contains("inner-key:")),
+                () -> assertTrue(migrated.contains("entry_name:")),
+                () -> assertTrue(migrated.contains("nested_info:")),
+                () -> assertTrue(migrated.contains("inner_key:")));
+    }
+
+    @Test
+    void migratesKebabCaseKeysInHeterogeneousList() throws IOException {
+        // "orphan-list" is intentionally not bound to any ExampleConfig field: it exercises the
+        // migration's own internal-state walk (Map entries mixed with a non-Map scalar) without
+        // the typed List<Map<String, Object>> binding rejecting a heterogeneous list on update().
+        final Path configFile = writeConfig("""
+                orphan-list:
+                  - orphan-key: value
+                  - just-a-string
+
+                collections:
+                  entries:
+                    - entry-name: alpha
+                """);
+
+        final ExampleConfig config = assertDoesNotThrow(() -> loadConfig(configFile, new A0001_Rename_kebab_case_to_snake_case()));
+
+        assertEquals("alpha", config.collections.entries.get(0).get("entry_name"));
+    }
+
+    @Test
+    void doesNotDuplicateRenamedKeysInListOfMaps() throws IOException {
+        final Path configFile = writeConfig("""
+                collections:
+                  entries:
+                    - entry-name: alpha
+                """);
+
+        final ExampleConfig config = loadConfig(configFile, new A0001_Rename_kebab_case_to_snake_case());
+
+        final Map<String, Object> entry = config.collections.entries.get(0);
+        assertAll(
+                () -> assertEquals(Set.of("entry_name"), entry.keySet()),
+                () -> assertFalse(entry.containsKey("entry-name")),
+                () -> assertEquals("alpha", entry.get("entry_name")));
+    }
+
+    @Test
+    void loadIsIdempotentForListOfMapsAfterMigration() throws IOException {
+        final Path configFile = writeConfig("""
+                collections:
+                  entries:
+                    - entry-name: alpha
+                      nested-info:
+                        inner-key: value1
+                """);
+
+        final ExampleConfig firstLoad = loadConfig(configFile, new A0001_Rename_kebab_case_to_snake_case());
+        final String afterFirstLoad = Files.readString(configFile, StandardCharsets.UTF_8);
+
+        final ExampleConfig secondLoad = loadConfig(configFile);
+        final String afterSecondLoad = Files.readString(configFile, StandardCharsets.UTF_8);
+
+        assertAll(
+                () -> assertEquals(firstLoad.collections.entries, secondLoad.collections.entries),
+                () -> assertEquals(afterFirstLoad, afterSecondLoad));
+    }
+
+    @Test
+    void migratesKebabCaseKeysInNestedListOfMapsInsideListItem() throws IOException {
+        final Path configFile = writeConfig("""
+                collections:
+                  entries:
+                    - entry-name: alpha
+                      child-entries:
+                        - grandchild-name: beta
+                          deep-info:
+                            deep-key: value1
+                """);
+
+        final ExampleConfig config = loadConfig(configFile, new A0001_Rename_kebab_case_to_snake_case());
+
+        final Map<String, Object> entry = config.collections.entries.get(0);
+        assertEquals("alpha", entry.get("entry_name"));
+
+        @SuppressWarnings("unchecked")
+        final List<Map<String, Object>> childEntries = (List<Map<String, Object>>) entry.get("child_entries");
+        assertNotNull(childEntries);
+        final Map<String, Object> grandchild = childEntries.get(0);
+        assertEquals("beta", grandchild.get("grandchild_name"));
+
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> deepInfo = (Map<String, Object>) grandchild.get("deep_info");
+        assertEquals("value1", deepInfo.get("deep_key"));
+
+        final String migrated = Files.readString(configFile, StandardCharsets.UTF_8);
+        assertAll(
+                () -> assertFalse(migrated.contains("child-entries:")),
+                () -> assertFalse(migrated.contains("grandchild-name:")),
+                () -> assertFalse(migrated.contains("deep-info:")),
+                () -> assertFalse(migrated.contains("deep-key:")),
+                () -> assertTrue(migrated.contains("child_entries:")),
+                () -> assertTrue(migrated.contains("grandchild_name:")),
+                () -> assertTrue(migrated.contains("deep_info:")),
+                () -> assertTrue(migrated.contains("deep_key:")));
+    }
+
     @NotNull
     private ExampleConfig loadConfig(@NotNull Path configFile, @NotNull ConfigMigration... migrations) {
         return configBuilder(configFile, ExampleConfig.class)
