@@ -118,6 +118,7 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @NotNull public final AnnoyingScheduler scheduler = new AnnoyingScheduler(this);
     @Nullable public UpdateChecker updateChecker;
+    private boolean loadingFailed = false;
     /**
      * Whether PlaceholderAPI is installed
      */
@@ -165,16 +166,34 @@ public class AnnoyingPlugin extends JavaPlugin {
 
         // Load required libraries
         if (libraryManager != null && !libraryManager.loadLibrary(options.pluginOptions.libraries)) {
-            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because required libraries failed to load");
-            disablePlugin();
+            loadingFailed = true;
+            log(Level.SEVERE, "&cRequired libraries failed to load! Disabling &4" + getName() + "&c...");
             return;
         }
 
-        selectorManager.registerSelectors();
-        loadDataManger(null, false);
+        // Register selectors
+        try {
+            selectorManager.registerSelectors();
+        } catch (final Throwable t) {
+            logErrorTrack(Level.WARNING, "&cFailed to register selectors!", t);
+        }
+
+        // Laod DataManager
+        try {
+            loadDataManger(null, false);
+        } catch (final Throwable t) {
+            loadingFailed = true;
+            logErrorTrack(Level.SEVERE, "&cFailed to load data manager! Disabling &4" + getName() + "&c...", t);
+            return;
+        }
 
         // Run custom onLoad
-        load();
+        try {
+            load();
+        } catch (final Throwable t) {
+            loadingFailed = true;
+            logErrorTrack(Level.SEVERE, "&cFailed to run custom load method! Disabling &4" + getName() + "&c...", t);
+        }
     }
 
     /**
@@ -185,6 +204,13 @@ public class AnnoyingPlugin extends JavaPlugin {
      */
     @Override
     public final void onEnable() {
+        // Loading failed -> don't enable plugin
+        if (loadingFailed) {
+            log(Level.SEVERE, "&cDisabling &4" + getName() + "&c because loading failed! Check earlier warnings/errors for more info.");
+            disablePlugin();
+            return;
+        }
+
         // Get missing dependencies
         final List<AnnoyingDependency> missingDependencies = new ArrayList<>();
         for (final AnnoyingDependency dependency : options.pluginOptions.dependencies) if (dependency.isNotInstalled() && missingDependencies.stream().noneMatch(dep -> dep.name.equals(dependency.name))) missingDependencies.add(dependency);
