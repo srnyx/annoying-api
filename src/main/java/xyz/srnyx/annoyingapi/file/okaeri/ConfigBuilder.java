@@ -3,6 +3,8 @@ package xyz.srnyx.annoyingapi.file.okaeri;
 import eu.okaeri.configs.ConfigManager;
 import eu.okaeri.configs.OkaeriConfig;
 import eu.okaeri.configs.OkaeriConfigOptions;
+import eu.okaeri.configs.exception.OkaeriConfigException;
+import eu.okaeri.configs.exception.OkaeriException;
 import eu.okaeri.configs.migrate.ConfigMigration;
 import eu.okaeri.configs.serdes.commons.SerdesCommons;
 import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
@@ -40,6 +42,10 @@ public class ConfigBuilder {
     @Nullable private OkaeriConfig config;
     @Nullable private Consumer<OkaeriConfigOptions> configure;
     @Nullable private Consumer<YamlBukkitConfigurer> configurer;
+    /**
+     * Basically just creates the file (with defaults) if it doesn't exist
+     */
+    private boolean saveDefaults = true;
     @NotNull private final List<ConfigMigration> internalStateMigrations = new ArrayList<>();
     @NotNull private final List<ConfigMigration> configMigrations = new ArrayList<>();
     private boolean renameKebabCaseToSnakeCase = true;
@@ -111,6 +117,12 @@ public class ConfigBuilder {
     @NotNull
     public ConfigBuilder configurer(@Nullable Consumer<YamlBukkitConfigurer> configurer) {
         this.configurer = configurer;
+        return this;
+    }
+
+    @NotNull
+    public ConfigBuilder saveDefaults(boolean saveDefaults) {
+        this.saveDefaults = saveDefaults;
         return this;
     }
 
@@ -197,7 +209,14 @@ public class ConfigBuilder {
         });
 
         // Save defaults (basically just creates file if it doesn't exist)
-        config.saveDefaults();
+        if (saveDefaults) config.saveDefaults();
+
+        // Check if file exists
+        if (!file.exists()) throw OkaeriConfigException.builder()
+                .configurer(config.getEffectiveConfigurer())
+                .configContext(config.getContext())
+                .message("Config file does not exist: " + file.getAbsolutePath())
+                .build();
 
         // Initial load (for migrations)
         config.load();
