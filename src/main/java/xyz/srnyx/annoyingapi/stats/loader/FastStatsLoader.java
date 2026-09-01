@@ -1,5 +1,6 @@
 package xyz.srnyx.annoyingapi.stats.loader;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.faststats.ErrorTracker;
 import dev.faststats.FeatureFlagService;
@@ -158,7 +159,10 @@ public abstract class FastStatsLoader extends StatsLoader<String, BukkitContext>
     public static Metric<JsonObject> config(@NotNull @SourceId String id, @NotNull Callable<@Nullable OkaeriConfig> callable) {
         return Metric.object(id, () -> {
             final OkaeriConfig config = callable.call();
-            return config == null ? null : StatsGson.GSON.toJsonTree(config, OkaeriConfig.class).getAsJsonObject();
+            if (config == null) return null;
+            final JsonElement json = StatsGson.GSON.toJsonTree(config, OkaeriConfig.class);
+            if (!json.isJsonObject()) return null;
+            return json.getAsJsonObject();
         });
     }
 }
