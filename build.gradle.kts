@@ -1,7 +1,7 @@
 plugins {
     java
     `java-library`
-    id("xyz.srnyx.gradle-galaxy") version "a8227b9"
+    id("xyz.srnyx.gradle-galaxy") version "4.0.0"
     id("com.gradleup.shadow") version "9.6.1"
     id("me.modmuss50.mod-publish-plugin") version "675051c"
     id("io.papermc.hangar-publish-plugin") version "0.1.4"
@@ -140,7 +140,7 @@ galaxy {
                 repositories.addAll(FASTSTATS_RELEASES, FASTSTATS_SNAPSHOTS)
                 group = "dev.faststats.metrics"
                 artifact = "core"
-                version = "0.29.4"
+                version = "0.30.1"
                 relocate("dev.faststats")
 
                 library("faststats_config") {
