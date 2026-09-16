@@ -7,6 +7,7 @@ import eu.okaeri.configs.serdes.ObjectSerializer;
 import eu.okaeri.configs.serdes.SerializationData;
 import eu.okaeri.configs.util.EnumMatcher;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
 
 import static xyz.srnyx.annoyingapi.reflection.org.bukkit.potion.RefPotionEffect.POTION_EFFECT_CONSTRUCTOR_1_13;
@@ -40,8 +41,9 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
         // type
         final String typeName = data.get("type", String.class);
         if (typeName == null) throw new IllegalArgumentException("Missing required field: type");
-        final XPotion type = XPotion.of(typeName).orElse(null);
-        if (type == null) throw new IllegalArgumentException(EnumMatcher.suggest(typeName, XPotion.class));
+        final XPotion xType = XPotion.of(typeName).orElse(null);
+        if (xType == null) throw new IllegalArgumentException(EnumMatcher.suggest(typeName, XPotion.class));
+        final PotionEffectType type = xType.get();
 
         // duration
         final Integer duration = data.get("duration", Integer.class);
@@ -61,6 +63,6 @@ public class PotionEffectSerializer implements ObjectSerializer<PotionEffect> {
         }
 
         // 1.12.2- (or icon null)
-        return new PotionEffect(type.get(), duration, amplifier, ambient, particles);
+        return new PotionEffect(type, duration, amplifier, ambient, particles);
     }
 }
